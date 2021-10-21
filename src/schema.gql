@@ -1,0 +1,39 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input CreatePostInput {
+  tag: String!
+  text: String!
+  userId: Int!
+}
+
+type Mutation {
+  createPost(input: CreatePostInput!): Post!
+}
+
+type Post {
+  date: String!
+  id: Int!
+  tags: [Tag!]
+  text: String!
+  userId: Int!
+}
+
+type Query {
+  posts(tag: String!): [Post!]!
+}
+
+type Tag {
+  id: Int!
+  owner: User!
+  posts: [Post!]
+  text: String!
+}
+
+type User {
+  firstName: String
+  id: Int!
+  lastName: String
+  posts: [Post!]
+}
