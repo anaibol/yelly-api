@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model city {
+  id              Bytes           @id @db.Binary(16)
+  country_id      Bytes?          @db.Binary(16)
+  name            String          @db.VarChar(255)
+  google_place_id String?         @db.VarChar(255)
+  lat             String?         @db.VarChar(255)
+  lng             String?         @db.VarChar(255)
+  is_valid        Boolean?
+  country         country?        @relation(fields: [country_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_2D5B0234F92F3E70")
+  user_training   user_training[]
+
+  @@index([country_id], map: "IDX_2D5B0234F92F3E70")
+}
+
+model country {
+  id     Bytes    @id @db.Binary(16)
+  name   String   @db.VarChar(255)
+  city   city[]
+  school school[]
+}
+
+model doctrine_migration_versions {
+  version        String    @id
+  executed_at    DateTime? @db.DateTime(0)
+  execution_time Int?
+}
+
+model group {
+  id                       Bytes                      @id @db.Binary(16)
+  owner_id                 Bytes?                     @db.Binary(16)
+  name                     String                     @db.VarChar(255)
+  description              String?                    @db.VarChar(255)
+  created_at               DateTime                   @db.DateTime(0)
+  updated_at               DateTime?                  @db.DateTime(0)
+  user                     user?                      @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_6DC044C57E3C61F9")
+  group_members            group_members[]
+  group_membership_request group_membership_request[]
+
+  @@index([owner_id], map: "IDX_6DC044C57E3C61F9")
+}
+
+model group_members {
+  id            Bytes     @id @db.Binary(16)
+  group_info_id Bytes     @db.Binary(16)
+  user_id       Bytes     @db.Binary(16)
+  role          String?   @db.VarChar(255)
+  created_at    DateTime  @db.DateTime(0)
+  updated_at    DateTime? @db.DateTime(0)
+  banned        Boolean?
+  group         group     @relation(fields: [group_info_id], references: [id], onUpdate: Restrict, map: "FK_C3A086F3DB8B95F4")
+  user          user      @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "FK_C3A086F3A76ED395")
+
+  @@index([user_id], map: "IDX_C3A086F3A76ED395")
+  @@index([group_info_id], map: "IDX_C3A086F3DB8B95F4")
+}
+
+model group_membership_request {
+  id            Bytes     @id @db.Binary(16)
+  user_id       Bytes     @db.Binary(16)
+  group_info_id Bytes     @db.Binary(16)
+  status        String    @db.VarChar(255)
+  created_at    DateTime  @db.DateTime(0)
+  updated_at    DateTime? @db.DateTime(0)
+  group         group     @relation(fields: [group_info_id], references: [id], onUpdate: Restrict, map: "FK_9D8B2166DB8B95F4")
+  user          user      @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "FK_9D8B2166A76ED395")
+
+  @@index([user_id], map: "IDX_9D8B2166A76ED395")
+  @@index([group_info_id], map: "IDX_9D8B2166DB8B95F4")
+}
+
+model notification {
+  id                                     Bytes                @id @db.Binary(16)
+  user_source_id                         Bytes                @db.Binary(16)
+  user_target_id                         Bytes?               @db.Binary(16)
+  action                                 notification_action?
+  is_seen                                Boolean
+  created_at                             DateTime             @db.DateTime(0)
+  item_id                                String?              @db.VarChar(255)
+  user_notification_user_source_idTouser user                 @relation("notification_user_source_idTouser", fields: [user_source_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA95DC9185")
+  user_notification_user_target_idTouser user?                @relation("notification_user_target_idTouser", fields: [user_target_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA156E8682")
+
+  @@index([user_target_id], map: "IDX_BF5476CA156E8682")
+  @@index([user_source_id], map: "IDX_BF5476CA95DC9185")
+}
+
+model school {
+  id              Bytes           @id @db.Binary(16)
+  country_id      Bytes?          @db.Binary(16)
+  name            String          @db.VarChar(255)
+  postal_code     String?         @db.VarChar(255)
+  google_place_id String?         @db.VarChar(255)
+  lat             String?         @db.VarChar(255)
+  lng             String?         @db.VarChar(255)
+  is_valid        Boolean?
+  country         country?        @relation(fields: [country_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_F99EDABBF92F3E70")
+  user_training   user_training[]
+
+  @@index([country_id], map: "IDX_F99EDABBF92F3E70")
+}
+
+model training {
+  id            Bytes           @id @db.Binary(16)
+  name          String          @db.VarChar(255)
+  user_training user_training[]
+}
+
+model user {
+  id                                             Bytes                      @id @db.Binary(16)
+  first_name                                     String                     @db.VarChar(255)
+  last_name                                      String                     @db.VarChar(255)
+  email                                          String                     @unique(map: "UNIQ_8D93D649E7927C74") @db.VarChar(180)
+  roles                                          String                     @db.LongText
+  password                                       String                     @db.VarChar(255)
+  birthdate                                      DateTime                   @db.Date
+  picture_id                                     String?                    @db.VarChar(255)
+  snapchat                                       String?                    @db.VarChar(100)
+  instagram                                      String?                    @db.VarChar(100)
+  reset_token                                    String?                    @db.VarChar(255)
+  is_verified                                    Boolean
+  created_at                                     DateTime                   @db.DateTime(0)
+  updated_at                                     DateTime?                  @db.DateTime(0)
+  is_actived                                     Boolean
+  is_filled                                      Boolean
+  android_push_notification_token                String?                    @db.VarChar(255)
+  sendbird_access_token                          String?                    @db.VarChar(255)
+  expo_push_notification_token                   String?                    @db.VarChar(255)
+  ios_push_notification_token                    String?                    @db.VarChar(255)
+  about                                          String?                    @db.VarChar(255)
+  localization                                   String?                    @db.VarChar(255)
+  group                                          group[]
+  group_members                                  group_members[]
+  group_membership_request                       group_membership_request[]
+  notification_notification_user_source_idTouser notification[]             @relation("notification_user_source_idTouser")
+  notification_notification_user_target_idTouser notification[]             @relation("notification_user_target_idTouser")
+  user_training                                  user_training[]
+  posts                                          post[]
+  tags                                           tag[]
+}
+
+model user_training {
+  id          Bytes     @id @db.Binary(16)
+  user_id     Bytes?    @db.Binary(16)
+  training_id Bytes     @db.Binary(16)
+  school_id   Bytes     @db.Binary(16)
+  city_id     Bytes     @db.Binary(16)
+  date_begin  DateTime  @db.Date
+  date_end    DateTime? @db.Date
+  created_at  DateTime  @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  city        city      @relation(fields: [city_id], references: [id], onUpdate: Restrict, map: "FK_359F6E8F8BAC62AF")
+  school      school    @relation(fields: [school_id], references: [id], onUpdate: Restrict, map: "FK_359F6E8FC32A47EE")
+  training    training  @relation(fields: [training_id], references: [id], onUpdate: Restrict, map: "FK_359F6E8FBEFD98D1")
+  user        user?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_359F6E8FA76ED395")
+
+  @@index([city_id], map: "IDX_359F6E8F8BAC62AF")
+  @@index([user_id], map: "IDX_359F6E8FA76ED395")
+  @@index([training_id], map: "IDX_359F6E8FBEFD98D1")
+  @@index([school_id], map: "IDX_359F6E8FC32A47EE")
+}
+
+model waiting_list {
+  id    Bytes  @id @db.Binary(16)
+  email String @db.VarChar(255)
+}
+
+enum notification_action {
+  seen
+  add
+  groupMembershipRequest
+}
+
+model post {
+  id       Bytes    @id @db.Binary(16)
+  text     String
+  date     DateTime @db.Date
+  owner    user     @relation(fields: [owner_id], references: [id])
+  owner_id Bytes    @db.Binary(16)
+  tags     tag[]
+}
+
+model tag {
+  id       Bytes  @id @db.Binary(16)
+  text     String
+  owner    user   @relation(fields: [owner_id], references: [id])
+  owner_id Bytes  @db.Binary(16)
+  posts    post[]
+}
