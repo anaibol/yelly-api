@@ -8,136 +8,151 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model city {
+model City {
   id            Bytes          @id @db.Binary(16)
+  countryId     Bytes?         @map("country_id") @db.Binary(16)
   name          String         @db.VarChar(255)
   googlePlaceid String?        @map("google_place_id") @db.VarChar(255)
   lat           String?        @db.VarChar(255)
   lng           String?        @db.VarChar(255)
-  countryId     Bytes          @map("country_id") @db.Binary(16)
   isValid       Boolean?       @map("is_valid")
-  country       country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK2D5B0234F92F3E70")
-  userTraining  userTraining[]
+  country       Country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_2D5B0234F92F3E70")
+  userTraining  UserTraining[]
 
-  @@index([countryId], map: "IDX2D5B0234F92F3E70")
+  @@index([countryId], map: "IDX_2D5B0234F92F3E70")
+  @@map("city")
 }
 
-model country {
+model Country {
   id     Bytes    @id @db.Binary(16)
   name   String   @db.VarChar(255)
-  city   city[]
-  school school[]
+  city   City[]
+  school School[]
+
+  @@map("country")
 }
 
-model doctrine_migration_versions {
+model DoctrineMigrationVersions {
   version       String    @id
   executedAt    DateTime? @map("executed_at") @db.DateTime(0)
   executionTime Int?      @map("execution_time")
+
+  @@map("doctrine_migration_versions")
 }
 
-model group {
-  id           Bytes          @id @db.Binary(16)
-  name         String         @db.VarChar(255)
-  description  String?        @db.VarChar(255)
-  createdAt    DateTime       @map("created_at") @db.DateTime(0)
-  updatedAt    DateTime?      @map("updated_at") @db.DateTime(0)
-  ownerId      Bytes          @map("owner_id") @db.Binary(16)
-  user         user?          @relation(fields: [ownerId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK6DC044C57E3C61F9")
-  groupMembers groupMembers[]
+model Group {
+  id                     Bytes                    @id @db.Binary(16)
+  ownerId                Bytes?                   @map("owner_id") @db.Binary(16)
+  name                   String                   @db.VarChar(255)
+  description            String?                  @db.VarChar(255)
+  createdAt              DateTime                 @map("created_at") @db.DateTime(0)
+  updatedAt              DateTime?                @map("updated_at") @db.DateTime(0)
+  user                   User?                    @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_6DC044C57E3C61F9")
+  groupMembers           GroupMembers[]
+  groupMembershipRequest GroupMembershipRequest[]
+
 
   @@index([ownerId], map: "IDX_6DC044C57E3C61F9")
+  @@map("group")
 }
 
-model groupMembers {
+model GroupMembers {
   id          Bytes     @id @db.Binary(16)
   groupInfoid Bytes     @map("group_info_id") @db.Binary(16)
   userId      Bytes     @map("user_id") @db.Binary(16)
   role        String?   @db.VarChar(255)
   createdAt   DateTime  @map("created_at") @db.DateTime(0)
   updatedAt   DateTime? @map("updated_at") @db.DateTime(0)
-  group       group     @relation(fields: [groupInfoid], references: [id], onUpdate: Restrict, map: "FKC3A086F3DB8B95F4")
-  user        user      @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "FKC3A086F3A76ED395")
+  banned      Boolean?
+  group       Group     @relation(fields: [groupInfoid], references: [id], onUpdate: Restrict, map: "FK_C3A086F3DB8B95F4")
+  user        User      @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "FK_C3A086F3A76ED395")
 
   @@index([userId], map: "IDX_C3A086F3A76ED395")
   @@index([groupInfoid], map: "IDX_C3A086F3DB8B95F4")
   @@map("group_members")
 }
 
-model notification {
-  id                                 Bytes               @id @db.Binary(16)
-  userSourceid                       Bytes               @map("user_source_id") @db.Binary(16)
-  userTargetid                       Bytes               @map("user_target_id") @db.Binary(16)
-  action                             notificationAction?
-  isSeen                             Boolean             @map("is_seen")
-  createdAt                          DateTime            @map("created_at") @db.DateTime(0)
-  userNotificationusersourceidTouser user                @relation("notificationUsersourceidTouser", fields: [userSourceid], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FKBF5476CA95DC9185")
-  userNotificationusertargetidTouser user                @relation("notificationUsertargetidTouser", fields: [userTargetid], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FKBF5476CA156E8682")
-  user                               user                @relation(fields: [userTargetid], references: [id])
-  userSource                         user                @relation(name: "userSource", fields: [userSourceid], references: [id])
+model Notification {
+  id           Bytes               @id @db.Binary(16)
+  userSourceid Bytes               @map("user_source_id") @db.Binary(16)
+  userTargetid Bytes?              @map("user_target_id") @db.Binary(16)
+  action       NotificationAction?
+  isSeen       Boolean             @map("is_seen")
+  createdAt    DateTime            @map("created_at") @db.DateTime(0)
+  itemId       String?             @map("item_id") @db.VarChar(255)
+  userSource   User                @relation("userSource", fields: [userSourceid], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA95DC9185")
+  user         User?               @relation(fields: [userTargetid], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA156E8682")
+
 
   @@index([userTargetid], map: "IDX_BF5476CA156E8682")
   @@index([userSourceid], map: "IDX_BF5476CA95DC9185")
+  @@map("notification")
 }
 
-model school {
+model School {
   id            Bytes          @id @db.Binary(16)
-  name          Bytes?         @db.Binary(16)
-  postalCode    Bytes?         @map("postal_code") @db.Binary(16)
+  countryId     Bytes?         @map("country_id") @db.Binary(16)
+  name          String         @db.VarChar(255)
+  postalCode    String?        @map("postal_code") @db.VarChar(255)
   googlePlaceid String?        @map("google_place_id") @db.VarChar(255)
   lat           String?        @db.VarChar(255)
   lng           String?        @db.VarChar(255)
-  countryId     Bytes          @map("country_id") @db.Binary(16)
   isValid       Boolean?       @map("is_valid")
-  country       country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FKF99EDABBF92F3E70")
-  userTraining  userTraining[]
+  country       Country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_F99EDABBF92F3E70")
+  userTraining  UserTraining[]
+
 
   @@index([countryId], map: "IDX_F99EDABBF92F3E70")
+  @@map("school")
 }
 
-model training {
+model Training {
   id           Bytes          @id @db.Binary(16)
   name         String         @db.VarChar(255)
-  userTraining userTraining[]
+  userTraining UserTraining[]
+
+  @@map("training")
 }
 
-model user {
-  id                                         Bytes          @id @db.Binary(16)
-  firstName                                  String         @map("first_name") @db.VarChar(255)
-  lastName                                   String         @map("last_name") @db.VarChar(255)
-  email                                      String         @unique(map: "UNIQ8D93D649E7927C74") @db.VarChar(180)
-  roles                                      String         @db.LongText
-  password                                   String         @db.VarChar(255)
-  birthdate                                  DateTime       @db.Date
-  pictureId                                  String?        @map("picture_id") @db.VarChar(255)
-  snapchat                                   String?        @db.VarChar(100)
-  instagram                                  String?        @db.VarChar(100)
-  resetToken                                 String?        @map("reset_token") @db.VarChar(255)
-  isVerified                                 Boolean        @map("is_verified")
-  createdAt                                  DateTime       @map("created_at") @db.DateTime(0)
-  updatedAt                                  DateTime?      @map("updated_at") @db.DateTime(0)
-  isActived                                  Boolean        @map("is_actived")
-  isFilled                                   Boolean        @map("is_filled")
-  androidPushnotificationtoken               String?        @map("android_push_notification_token") @db.VarChar(255)
-  sendbirdAccesstoken                        String?        @map("sendbird_access_token") @db.VarChar(255)
-  iosPushnotificationtoken                   String?        @map("ios_push_notification_token") @db.VarChar(255)
-  expoPushNotificationToken                  String?        @map("expo_push_notification_token") @db.VarChar(255)
-  about                                      String?        @db.VarChar(255)
-  group                                      group[]
-  groupMembers                               groupMembers[]
-  notificationNotificationusersourceidTouser notification[] @relation("notificationUsersourceidTouser")
-  notificationNotificationusertargetidTouser notification[] @relation("notificationUsertargetidTouser")
-  userTraining                               userTraining[]
-  notifications                              notification[]
-  notification                               notification[] @relation("userSource")
-  posts                                      post[]
-  tags                                       tag[]
+model User {
+  id                           Bytes                    @id @db.Binary(16)
+  firstName                    String                   @map("first_name") @db.VarChar(255)
+  lastName                     String                   @map("last_name") @db.VarChar(255)
+  email                        String                   @unique(map: "UNIQ_8D93D649E7927C74") @db.VarChar(180)
+  roles                        String                   @db.LongText
+  password                     String                   @db.VarChar(255)
+  birthdate                    DateTime                 @db.Date
+  pictureId                    String?                  @map("picture_id") @db.VarChar(255)
+  snapchat                     String?                  @db.VarChar(100)
+  instagram                    String?                  @db.VarChar(100)
+  resetToken                   String?                  @map("reset_token") @db.VarChar(255)
+  isVerified                   Boolean                  @map("is_verified")
+  createdAt                    DateTime                 @map("created_at") @db.DateTime(0)
+  updatedAt                    DateTime?                @map("updated_at") @db.DateTime(0)
+  isActived                    Boolean                  @map("is_actived")
+  isFilled                     Boolean                  @map("is_filled")
+  androidPushnotificationtoken String?                  @map("android_push_notification_token") @db.VarChar(255)
+  sendbirdAccesstoken          String?                  @map("sendbird_access_token") @db.VarChar(255)
+  expoPushNotificationToken    String?                  @map("expo_push_notification_token") @db.VarChar(255)
+  iosPushnotificationtoken     String?                  @map("ios_push_notification_token") @db.VarChar(255)
+  about                        String?                  @db.VarChar(255)
+  localization                 String?                  @db.VarChar(255)
+  group                        Group[]
+  groupMembers                 GroupMembers[]
+  groupMembershipRequest       GroupMembershipRequest[]
+  notification                 Notification[]           @relation("userSource")
+  notifications                Notification[]
+  userTraining                 UserTraining[]
+  posts                        Post[]
+  tags                         Tag[]
+
+
+  @@map("user")
 }
 
-// TODO: check notifications vs notification
-
-model userTraining {
+model UserTraining {
   id         Bytes     @id @db.Binary(16)
-  userId     Bytes     @map("user_id") @db.Binary(16)
+  userId     Bytes?    @map("user_id") @db.Binary(16)
   trainingId Bytes     @map("training_id") @db.Binary(16)
   schoolId   Bytes     @map("school_id") @db.Binary(16)
   cityId     Bytes     @map("city_id") @db.Binary(16)
@@ -145,10 +160,10 @@ model userTraining {
   dateEnd    DateTime? @map("date_end") @db.Date
   createdAt  DateTime  @map("created_at") @db.DateTime(0)
   updatedAt  DateTime? @map("updated_at") @db.DateTime(0)
-  city       city      @relation(fields: [cityId], references: [id], onUpdate: Restrict, map: "FK359F6E8F8BAC62AF")
-  school     school    @relation(fields: [schoolId], references: [id], onUpdate: Restrict, map: "FK359F6E8FC32A47EE")
-  training   training  @relation(fields: [trainingId], references: [id], onUpdate: Restrict, map: "FK359F6E8FBEFD98D1")
-  user       user?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK359F6E8FA76ED395")
+  city       City      @relation(fields: [cityId], references: [id], onUpdate: Restrict, map: "FK_359F6E8F8BAC62AF")
+  school     School    @relation(fields: [schoolId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FC32A47EE")
+  training   Training  @relation(fields: [trainingId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FBEFD98D1")
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_359F6E8FA76ED395")
 
   @@index([cityId], map: "IDX_359F6E8F8BAC62AF")
   @@index([userId], map: "IDX_359F6E8FA76ED395")
@@ -157,30 +172,52 @@ model userTraining {
   @@map("user_training")
 }
 
-model waiting_list {
+model WaitingList {
   id    Bytes  @id @db.Binary(16)
   email String @db.VarChar(255)
+
+  @@map("waiting_list")
 }
 
-enum notificationAction {
+model GroupMembershipRequest {
+  id          Bytes     @id @db.Binary(16)
+  userId      Bytes     @map("user_id") @db.Binary(16)
+  groupInfoId Bytes     @map("group_info_id") @db.Binary(16)
+  status      String    @db.VarChar(255)
+  createdAt   DateTime  @map("created_at") @db.DateTime(0)
+  updatedAt   DateTime? @map("updated_at") @db.DateTime(0)
+  group       Group     @relation(fields: [groupInfoId], references: [id], onUpdate: Restrict, map: "FK_9D8B2166DB8B95F4")
+  user        User      @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "FK_9D8B2166A76ED395")
+
+
+  @@index([userId], map: "IDX_9D8B2166A76ED395")
+  @@index([groupInfoId], map: "IDX_9D8B2166DB8B95F4")
+  @@map("group_membership_request")
+}
+
+enum NotificationAction {
   seen
   add
   groupMembershipRequest
+
+  @@map("notificationAction")
 }
 
-model post {
-  id      Bytes    @id @db.Binary(16)
-  text    String   @db.VarChar(255)
-  date    DateTime @db.Date
-  owner   user     @relation(fields: [ownerId], references: [id])
-  ownerId Bytes    @map("owner_id") @db.Binary(16)
-  tags    tag[]
+model Post {
+  id        Bytes    @id @db.Binary(16)
+  text      String   @db.VarChar(255)
+  createdAt DateTime @db.DateTime(0)
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   Bytes    @map("owner_id") @db.Binary(16)
+  tags      Tag[]
+
+  @@map("post")
 }
 
-model tag {
+model Tag {
   id      Bytes  @id @db.Binary(16)
   text    String @db.VarChar(30)
-  owner   user   @relation(fields: [ownerId], references: [id])
+  owner   User   @relation(fields: [ownerId], references: [id])
   ownerId Bytes  @map("owner_id") @db.Binary(16)
-  posts   post[]
+  posts   Post[]
 }
