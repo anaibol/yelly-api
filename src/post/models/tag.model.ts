@@ -1,11 +1,11 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { User } from '../../user/models/user';
+import { User } from '../../user/models/user.model';
 import { Post } from './post.model';
 
 @ObjectType()
 export class Tag {
-  @Field((type) => Int)
-  id: number;
+  @Field()
+  id: string;
 
   @Field()
   text: string;

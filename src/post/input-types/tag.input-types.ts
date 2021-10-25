@@ -5,8 +5,8 @@ export class CreatePostInput {
   @Field()
   text: string;
 
-  @Field((type) => Int)
-  userId: number;
+  @Field()
+  ownerId: string;
 
   @Field()
   tag: string;

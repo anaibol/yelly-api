@@ -190,41 +190,29 @@ model GroupMembershipRequest {
   @@map("group_membership_request")
 }
 
-model Post {
-  id        Bytes       @id @db.Binary(16)
-  text      String      @db.VarChar(255)
-  createdAt DateTime    @db.DateTime(0)
-  ownerId   Bytes       @map("owner_id") @db.Binary(16)
-  owner     User        @relation(fields: [ownerId], references: [id])
-  PostToTag PostToTag[] @relation("PostToTagTopost")
-
-  @@index([ownerId], map: "post_owner_id_fkey")
-  @@map("post")
-}
-
-model Tag {
-  id        Bytes       @id @db.Binary(16)
-  text      String      @db.VarChar(30)
-  ownerId   Bytes       @map("owner_id") @db.Binary(16)
-  owner     User        @relation(fields: [ownerId], references: [id])
-  PostToTag PostToTag[] @relation("TagTo_PostToTag")
-
-  @@index([ownerId], map: "Tag_owner_id_fkey")
-}
-
-model PostToTag {
-  A    Bytes @db.Binary(16)
-  B    Bytes @db.Binary(16)
-  post Post  @relation("PostToTagTopost", fields: [A], references: [id], onDelete: Cascade, map: "_PostToTag_ibfk_1")
-  Tag  Tag   @relation("TagTo_PostToTag", fields: [B], references: [id], onDelete: Cascade, map: "_PostToTag_ibfk_2")
-
-  @@unique([A, B], map: "_PostToTag_AB_unique")
-  @@index([B], map: "_PostToTag_B_index")
-  @@map("_PostToTag")
-}
-
 enum NotificationAction {
   seen
   add
   groupMembershipRequest
+}
+
+model Tag {
+  id      String @id @default(uuid())
+  text    String @unique @db.VarChar(30)
+  ownerId Bytes  @map("owner_id") @db.Binary(16)
+  owner   User   @relation(fields: [ownerId], references: [id])
+  posts   Post[]
+
+  @@map("tag")
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  text      String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   Bytes    @map("owner_id") @db.Binary(16)
+  tags      Tag[]
+
+  @@map("post")
 }

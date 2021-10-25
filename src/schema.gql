@@ -3,9 +3,9 @@
 # ------------------------------------------------------
 
 input CreatePostInput {
+  ownerId: String!
   tag: String!
   text: String!
-  userId: Int!
 }
 
 type Mutation {
@@ -13,19 +13,20 @@ type Mutation {
 }
 
 type Post {
-  date: String!
-  id: Int!
+  createdAt: String!
+  id: String!
+  owner: User
+  ownerId: String!
   tags: [Tag!]
   text: String!
-  userId: Int!
 }
 
 type Query {
-  posts(tag: String!): [Post!]!
+  posts(tag: String): [Post!]!
 }
 
 type Tag {
-  id: Int!
+  id: String!
   owner: User!
   posts: [Post!]
   text: String!
@@ -33,7 +34,8 @@ type Tag {
 
 type User {
   firstName: String
-  id: Int!
+  id: String!
   lastName: String
+  pictureId: String
   posts: [Post!]
 }

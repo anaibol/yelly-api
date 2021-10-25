@@ -9,8 +9,12 @@ export class PostResolver {
   constructor(private postsService: PostService) {}
 
   @Query((returns) => [Post], { name: 'posts' })
-  getPostsByTag(@Args('tag') tag: string) {
-    return this.postsService.findByTag(tag);
+  async getPosts(@Args('tag', { nullable: true }) tag?: string) {
+    const result = await this.postsService.find(tag);
+
+    console.log(result);
+
+    return result;
   }
 
   @Mutation((returns) => Post)

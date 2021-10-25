@@ -1,75 +1,77 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/core/services/prisma.service';
 import { CreatePostInput } from '../input-types/tag.input-types';
-import { Post } from '../models/post.model';
 
 @Injectable()
 export class PostService {
-  private posts: Post[] = [
-    {
-      id: 1,
-      text: 'post title 1',
-      userId: 123,
-      date: '0000',
-      tags: [
-        {
-          id: 1,
-          text: 'tag-1',
-          owner: {
-            id: 123,
-          }
-        },
-      ],
-    },
-    {
-      id: 2,
-      text: 'post title 2',
-      userId: 234,
-      date: '1111',
-      tags: [
-        {
-          id: 1,
-          text: 'tag-2',
-          owner: {
-            id: 234,
+  constructor(private prismaService: PrismaService) {}
+
+  // TODO: Add return type, is not q expected result
+  async find(tagText = '') {
+    let whereConditions = {};
+
+    if (tagText.length > 0) {
+      whereConditions = {
+        tags: {
+          every: {
+            text: tagText,
           },
         },
-      ],
-    },
-  ];
-  findByTag(tagText: string): Post[] {
-    return this.posts.filter((post) => {
-      for (const tag of post.tags) {
-        if (tag.text === tagText) {
-          return true;
-        }
-
-        return false;
-      }
+      };
+    }
+    return this.prismaService.post.findMany({
+      where: {
+        ...whereConditions,
+      },
+      include: {
+        owner: {
+          select: {
+            pictureId: true,
+          },
+        },
+        tags: {
+          select: {
+            text: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
-  create(createPostInput: CreatePostInput) {
-    // TODO: Check if the tag already exists.. if not exists generate the new one { owner: userId, text: tag}, if already exists add the new relation with the new post
+  // TODO: Add return type, is not q expected result
+  async create(createPostInput: CreatePostInput) {
+    const { text, ownerId: ownerIdString, tag: tagText } = createPostInput;
+    const ownerId = this.prismaService.mapStringIdToBuffer(ownerIdString);
 
-    // await this.tagService.findOrFail({text: createPostInput.tag});
-
-    const newPost: Post = {
-      id: (Math.floor(Math.random() * 100) + 1),
-      text: createPostInput.text,
-      userId: createPostInput.userId,
-      date: new Date().toDateString(),
-      tags: [
-        {
-          id: 123,
-          text: createPostInput.tag,
-          owner: {
-            id: 123,
+    return this.prismaService.post.create({
+      data: {
+        text,
+        owner: {
+          connect: {
+            id: ownerId,
           },
         },
-      ],
-    };
-    this.posts.push(newPost);
-
-    return newPost;
+        tags: {
+          connectOrCreate: [
+            {
+              where: {
+                text: tagText,
+              },
+              create: {
+                text: tagText,
+                owner: {
+                  connect: {
+                    id: ownerId,
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+    });
   }
 }
