@@ -4,9 +4,9 @@ on:
   release:
     types: [created]
   push:
-    branches: [ develop ]
+    branches: [ development ]
   pull_request:
-    branches: [ develop ]
+    branches: [ development ]
 
 env:
   AWS_REGION: eu-west-2
