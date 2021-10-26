@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { AlgoliaService } from 'src/core/services/algolia.service';
 import { PrismaService } from 'src/core/services/prisma.service';
 import { CreatePostInput } from '../input-types/tag.input-types';
+import { TagService } from './tag.service';
 
 @Injectable()
 export class PostService {
   constructor(
     private prismaService: PrismaService,
-    private algoliaService: AlgoliaService,
+    private tagService: TagService,
   ) {}
 
   // TODO: Add return type, is not q expected result
@@ -78,59 +79,7 @@ export class PostService {
       },
     });
 
-    const owner = await this.prismaService.user.findFirst({
-      select: {
-        pictureId: true,
-      },
-      where: {
-        id: ownerId,
-      },
-    });
-
-    const tag = await this.prismaService.tag.findFirst({
-      select: {
-        createdAt: true,
-        posts: {
-          select: {
-            owner: {
-              select: {
-                pictureId: true,
-                firstName: true,
-              },
-            },
-          },
-          take: 5,
-          distinct: 'ownerId',
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
-      },
-      where: {
-        text: tagText,
-      },
-    });
-
-    // console.log(JSON.stringify(tag));
-
-    const algoliaTagIndex = await this.algoliaService.initIndex('TAGS');
-    const objectToUpdateOrCreate = {
-      lastUsers: {
-        _operation: 'AddUnique',
-        value: owner.pictureId,
-      },
-      postCount: {
-        _operation: 'Increment',
-        value: 1,
-      },
-      createdAtTimestamp: Date.parse(tag.createdAt.toString()),
-      updatedAtTimestamp: Date.now(),
-    };
-    await this.algoliaService.partialUpdateObject(
-      algoliaTagIndex,
-      objectToUpdateOrCreate,
-      tagText,
-    );
+    this.tagService.syncTagIndexWithAlgolia(tagText, post);
 
     return post;
   }
