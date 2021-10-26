@@ -2,6 +2,7 @@
 CREATE TABLE `tag` (
     `id` VARCHAR(191) NOT NULL,
     `text` VARCHAR(30) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `owner_id` BINARY(16) NOT NULL,
 
     UNIQUE INDEX `tag_text_key`(`text`),

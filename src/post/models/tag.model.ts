@@ -10,6 +10,9 @@ export class Tag {
   @Field()
   text: string;
 
+  @Field()
+  createdAt: string;
+
   @Field((type) => User)
   owner: User;
 

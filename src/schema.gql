@@ -26,6 +26,7 @@ type Query {
 }
 
 type Tag {
+  createdAt: String!
   id: String!
   owner: User!
   posts: [Post!]

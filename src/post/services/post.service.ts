@@ -87,6 +87,17 @@ export class PostService {
       },
     });
 
+    const tag = await this.prismaService.tag.findFirst({
+      select: {
+        createdAt: true,
+      },
+      where: {
+        text: tagText,
+      },
+    });
+
+    console.log(tag);
+
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS');
     const objectToUpdateOrCreate = {
       lastUsers: {
@@ -97,8 +108,8 @@ export class PostService {
         _operation: 'Increment',
         value: 1,
       },
-      createdAtTimestamp: post.createdAt,
-      updatedAtTimestamp: post.createdAt,
+      createdAtTimestamp: Date.parse(tag.createdAt.toString()),
+      updatedAtTimestamp: Date.now(),
     };
     await this.algoliaService.partialUpdateObject(
       algoliaTagIndex,
