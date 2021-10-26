@@ -90,13 +90,28 @@ export class PostService {
     const tag = await this.prismaService.tag.findFirst({
       select: {
         createdAt: true,
+        posts: {
+          select: {
+            owner: {
+              select: {
+                pictureId: true,
+                firstName: true,
+              },
+            },
+          },
+          take: 5,
+          distinct: 'ownerId',
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
       where: {
         text: tagText,
       },
     });
 
-    console.log(tag);
+    // console.log(JSON.stringify(tag));
 
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS');
     const objectToUpdateOrCreate = {
