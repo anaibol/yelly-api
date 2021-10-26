@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { AlgoliaService } from 'src/core/services/algolia.service';
 import { PrismaService } from 'src/core/services/prisma.service';
 import { CreatePostInput } from '../input-types/tag.input-types';
 
 @Injectable()
 export class PostService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private algoliaService: AlgoliaService,
+  ) {}
 
   // TODO: Add return type, is not q expected result
   async find(tagText = '') {
@@ -46,7 +50,7 @@ export class PostService {
     const { text, ownerId: ownerIdString, tag: tagText } = createPostInput;
     const ownerId = this.prismaService.mapStringIdToBuffer(ownerIdString);
 
-    return this.prismaService.post.create({
+    const post = await this.prismaService.post.create({
       data: {
         text,
         owner: {
@@ -73,5 +77,35 @@ export class PostService {
         },
       },
     });
+
+    const owner = await this.prismaService.user.findFirst({
+      select: {
+        pictureId: true,
+      },
+      where: {
+        id: ownerId,
+      },
+    });
+
+    const algoliaTagIndex = await this.algoliaService.initIndex('TAGS');
+    const objectToUpdateOrCreate = {
+      lastUsers: {
+        _operation: 'AddUnique',
+        value: owner.pictureId,
+      },
+      postCount: {
+        _operation: 'Increment',
+        value: 1,
+      },
+      createdAtTimestamp: post.createdAt,
+      updatedAtTimestamp: post.createdAt,
+    };
+    await this.algoliaService.partialUpdateObject(
+      algoliaTagIndex,
+      objectToUpdateOrCreate,
+      tagText,
+    );
+
+    return post;
   }
 }
