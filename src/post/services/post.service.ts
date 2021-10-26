@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { AlgoliaService } from 'src/core/services/algolia.service';
+import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant';
 import { PrismaService } from 'src/core/services/prisma.service';
-import { CreatePostInput } from '../input-types/tag.input-types';
+import { CreatePostInput } from '../dto/create-post.input';
 import { TagService } from './tag.service';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class PostService {
   ) {}
 
   // TODO: Add return type, is not q expected result
-  async find(tagText = '') {
+  async find(tagText = '', offset = 0, limit = DEFAULT_LIMIT) {
     let whereConditions = {};
 
     if (tagText.length > 0) {
@@ -43,6 +43,8 @@ export class PostService {
       orderBy: {
         createdAt: 'desc',
       },
+      take: limit,
+      skip: offset,
     });
   }
 

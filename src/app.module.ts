@@ -4,6 +4,7 @@ import { join } from 'path';
 import { UserModule } from './user/user.module';
 import { PostModule } from './post/post.module';
 import { CoreModule } from './core/core.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CoreModule } from './core/core.module';
     UserModule,
     PostModule,
     CoreModule,
+    CommonModule,
   ],
 })
 export class AppModule {}

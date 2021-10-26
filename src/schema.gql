@@ -15,21 +15,21 @@ type Mutation {
 type Post {
   createdAt: String!
   id: String!
-  owner: User
+  owner: User!
   ownerId: String!
-  tags: [Tag!]
+  tags: [Tag!]!
   text: String!
 }
 
 type Query {
-  posts(tag: String): [Post!]!
+  posts(limit: Int = 10, offset: Int = 0, tag: String): [Post!]!
 }
 
 type Tag {
   createdAt: String!
   id: String!
   owner: User!
-  posts: [Post!]
+  posts: [Post!]!
   text: String!
 }
 

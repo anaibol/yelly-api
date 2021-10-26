@@ -15,6 +15,6 @@ export class User {
   @Field({ nullable: true })
   pictureId?: string;
 
-  @Field((type) => [Post], { nullable: true }) // TODO: try to figure out how to avoid doing this optional. Its just to avoid deadlock in the responses. users => posts, posts => owners => users
+  @Field((type) => [Post], { nullable: true })
   posts?: Post[];
 }

@@ -1,6 +1,7 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { PostService } from 'src/post/services/post.service';
-import { CreatePostInput } from '../input-types/tag.input-types';
+import { CreatePostInput } from '../dto/create-post.input';
+import { GetPostsArgs } from '../dto/get-post.args';
 import { Post } from '../models/post.model';
 import { Tag } from '../models/tag.model';
 
@@ -9,8 +10,12 @@ export class PostResolver {
   constructor(private postsService: PostService) {}
 
   @Query((returns) => [Post], { name: 'posts' })
-  async getPosts(@Args('tag', { nullable: true }) tag?: string) {
-    const result = await this.postsService.find(tag);
+  async getPosts(@Args() GetPostsArgs?: GetPostsArgs) {
+    const result = await this.postsService.find(
+      GetPostsArgs.tag,
+      GetPostsArgs.offset,
+      GetPostsArgs.limit,
+    );
 
     return result;
   }

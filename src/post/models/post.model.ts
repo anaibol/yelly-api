@@ -16,9 +16,9 @@ export class Post {
   @Field()
   ownerId: string;
 
-  @Field((type) => [Tag], { nullable: true }) // TODO: try to figure out how to avoid doing this optional. Its just to avoid deadlock in the responses. tag => posts, posts => tag
-  tags?: Tag[];
+  @Field((type) => [Tag])
+  tags: Tag[];
 
-  @Field((type) => User, { nullable: true })
-  owner?: User;
+  @Field((type) => User)
+  owner: User;
 }
