@@ -48,31 +48,3 @@ export class AlgoliaService {
     });
   }
 }
-
-// const tagsIndex = client.initIndex(indexPrefix + 'tags');
-// tagsIndex.addObject(
-//   {
-//     lastUsers: [
-//       {
-//         pictureId: 'am3enjn3',
-//       },
-//     ],
-//     postCount: 1,
-//     _createdAt: Math.round(ad.createdAt.getTime()),
-//   },
-//   tag.text,
-// );
-// tagsIndex
-//   .partialUpdateObject({
-//     objectID: tag.text,
-//     postCount: 6565323,
-//     lastUsers: [
-//       {
-//         pictureId: 'am3enjn3',
-//       },
-//     ],
-//   })
-//   .then((e) => console.log(e))
-//   .catch((e) => {
-//     console.error(e);
-//   });
