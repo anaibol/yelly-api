@@ -13,9 +13,6 @@ export class Post {
   @Field()
   createdAt: string;
 
-  @Field()
-  ownerId: string;
-
   @Field((type) => [Tag])
   tags: Tag[];
 

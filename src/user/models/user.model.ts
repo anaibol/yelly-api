@@ -13,6 +13,9 @@ export class User {
   lastName?: string;
 
   @Field({ nullable: true })
+  birthdate?: string;
+
+  @Field({ nullable: true })
   pictureId?: string;
 
   @Field((type) => [Post], { nullable: true })

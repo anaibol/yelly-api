@@ -24,19 +24,33 @@ export class PostService {
         },
       };
     }
-    return this.prismaService.post.findMany({
+    const posts = await this.prismaService.post.findMany({
       where: {
         ...whereConditions,
       },
       include: {
         owner: {
           select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            birthdate: true,
             pictureId: true,
           },
         },
         tags: {
           select: {
+            id: true,
+            createdAt: true,
             text: true,
+            owner: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                pictureId: true,
+              },
+            },
           },
         },
       },
@@ -45,6 +59,33 @@ export class PostService {
       },
       take: limit,
       skip: offset,
+    });
+    const mappedPosts = this.mapOwnerBufferIdToUUID(posts);
+
+    return mappedPosts;
+  }
+
+  mapOwnerBufferIdToUUID(posts) {
+    return posts.map((post) => {
+      const postWithUUID = {
+        ...post,
+      };
+      postWithUUID.owner.id = this.prismaService.mapBufferIdToString(
+        post.owner.id,
+      );
+
+      postWithUUID.tags = post.tags.map((tag) => {
+        const tagWithUUID = {
+          ...tag,
+        };
+        tagWithUUID.owner.id = this.prismaService.mapBufferIdToString(
+          tag.owner.id,
+        );
+
+        return tagWithUUID;
+      });
+
+      return postWithUUID;
     });
   }
 

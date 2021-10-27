@@ -16,7 +16,6 @@ type Post {
   createdAt: String!
   id: String!
   owner: User!
-  ownerId: String!
   tags: [Tag!]!
   text: String!
 }
@@ -34,6 +33,7 @@ type Tag {
 }
 
 type User {
+  birthdate: String
   firstName: String
   id: String!
   lastName: String
