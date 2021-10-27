@@ -4,21 +4,21 @@ on:
   release:
     types: [created]
   push:
-    branches: [ development ]
+    branches: [ main ]
   pull_request:
-    branches: [ development ]
+    branches: [ main ]
 
 env:
-  AWS_REGION: eu-west-2
-  ECR_REGISTRY: 968886285118.dkr.ecr.eu-west-2.amazonaws.com
+  AWS_REGION: eu-west-3
+  ECR_REGISTRY: 968886285118.dkr.ecr.eu-west-3.amazonaws.com
   ECR_REPOSITORY: yelly_app
   IMAGE_TAG: latest
   #IMAGE_TAG: ${{ github.sha }} # Tag Commit large (git) 
   #ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-  ECS_SERVICE: service-dev-yelly-8080
-  ECS_CLUSTER: Dev-YELLY
-  ECS_TASK_DEFINITION: task-dev-yelly-8080
-  ECS_CONTAINER_NAME: dev-yelly
+  ECS_CLUSTER: Pro-YELLY
+  ECS_SERVICE: service-pro-yelly-8080
+  ECS_TASK_DEFINITION: task-pro-yelly-8080
+  ECS_CONTAINER_NAME: pro-yelly
 
 jobs:
   deploy:
