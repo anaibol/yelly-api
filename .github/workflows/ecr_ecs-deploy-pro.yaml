@@ -1,11 +1,7 @@
-name: Deploy to Amazon ECS
+name: Deploy production to Amazon ECS
 
 on:
-  release:
-    types: [created]
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
 
 env:
