@@ -39,6 +39,7 @@ export class TagService {
     // INFO: Map data to fit Tag index algolia interface
     const lastUsers = tag.posts.map((lastPost) => lastPost.owner);
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
+      text: tagText,
       lastUsers: [...lastUsers],
       postCount: {
         _operation: 'Increment',
