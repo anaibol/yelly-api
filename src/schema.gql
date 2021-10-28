@@ -34,9 +34,9 @@ type Tag {
 
 type User {
   birthdate: String
-  firstName: String
+  firstName: String!
   id: String!
-  lastName: String
+  lastName: String!
   pictureId: String
   posts: [Post!]
 }
