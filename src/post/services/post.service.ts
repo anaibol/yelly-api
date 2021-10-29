@@ -95,6 +95,20 @@ export class PostService {
     const ownerId = this.prismaService.mapStringIdToBuffer(ownerIdString);
 
     const post = await this.prismaService.post.create({
+      select: {
+        id: true,
+        text: true,
+        createdAt: true,
+        owner: true,
+        tags: {
+          select: {
+            id: true,
+            text: true,
+            createdAt: true,
+            owner: true,
+          },
+        },
+      },
       data: {
         text,
         owner: {
@@ -122,8 +136,12 @@ export class PostService {
       },
     });
 
-    this.tagService.syncTagIndexWithAlgolia(tagText, post);
+    // INFO: generate an array to reuse the same mapFunction
+    const posts = [post];
+    const mappedPost = this.mapOwnerBufferIdToUUID(posts)[0];
 
-    return post;
+    this.tagService.syncTagIndexWithAlgolia(tagText, mappedPost);
+
+    return mappedPost;
   }
 }

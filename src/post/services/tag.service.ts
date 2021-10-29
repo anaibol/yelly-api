@@ -10,7 +10,7 @@ export class TagService {
     private prismaService: PrismaService,
     private algoliaService: AlgoliaService,
   ) {}
-  async syncTagIndexWithAlgolia(tagText: string, post: Post) {
+  async syncTagIndexWithAlgolia(tagText: string, post) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS');
 
     const tag = await this.prismaService.tag.findFirst({
