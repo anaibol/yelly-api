@@ -11,6 +11,7 @@ import { Tag } from '../models/tag.model';
 export class PostResolver {
   constructor(private postsService: PostService) {}
 
+  @UseGuards(AuthGuard)
   @Query((returns) => [Post], { name: 'posts' })
   async getPosts(@Args() GetPostsArgs?: GetPostsArgs) {
     const result = await this.postsService.find(
