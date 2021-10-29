@@ -3,7 +3,6 @@
 # ------------------------------------------------------
 
 input CreatePostInput {
-  ownerId: String!
   tag: String!
   text: String!
 }

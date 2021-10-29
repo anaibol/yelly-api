@@ -1,5 +1,5 @@
 import { Req, UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { PostService } from 'src/post/services/post.service';
 import { CreatePostInput } from '../dto/create-post.input';
@@ -24,7 +24,10 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation((returns) => Post)
-  async createPost(@Args('input') createPostData: CreatePostInput) {
-    return this.postsService.create(createPostData);
+  async createPost(
+    @Args('input') createPostData: CreatePostInput,
+    @Context() context,
+  ) {
+    return this.postsService.create(createPostData, context.req.username);
   }
 }

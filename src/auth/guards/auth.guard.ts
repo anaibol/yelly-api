@@ -20,7 +20,9 @@ export class AuthGuard implements CanActivate {
 
       const jwt = this.getJwtFromRequest(request);
 
-      this.jwtService.verify(jwt, { algorithms: ['RS256'] });
+      const jwtPayload = this.jwtService.verify(jwt, { algorithms: ['RS256'] });
+
+      request.username = jwtPayload.username
 
       return true;
     } catch (err) {

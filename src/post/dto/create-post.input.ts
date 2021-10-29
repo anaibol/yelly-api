@@ -6,8 +6,5 @@ export class CreatePostInput {
   text: string;
 
   @Field()
-  ownerId: string;
-
-  @Field()
   tag: string;
 }

@@ -90,9 +90,9 @@ export class PostService {
   }
 
   // TODO: Add return type, is not q expected result
-  async create(createPostInput: CreatePostInput) {
-    const { text, ownerId: ownerIdString, tag: tagText } = createPostInput;
-    const ownerId = this.prismaService.mapStringIdToBuffer(ownerIdString);
+  // INFO: the usernamen is the email, it's called like this to be consist with the name defined in the JWT
+  async create(createPostInput: CreatePostInput, username: string) {
+    const { text, tag: tagText } = createPostInput;
 
     const post = await this.prismaService.post.create({
       select: {
@@ -113,7 +113,7 @@ export class PostService {
         text,
         owner: {
           connect: {
-            id: ownerId,
+            email: username,
           },
         },
         tags: {
@@ -126,7 +126,7 @@ export class PostService {
                 text: tagText,
                 owner: {
                   connect: {
-                    id: ownerId,
+                    email: username,
                   },
                 },
               },
