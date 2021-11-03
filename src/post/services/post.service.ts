@@ -12,22 +12,13 @@ export class PostService {
   ) {}
 
   // TODO: Add return type, is not q expected result
-  async find(tagText = '', offset = 0, limit = DEFAULT_LIMIT) {
-    let whereConditions = {};
+  async find(tagText = '', currentCursor = '', limit = DEFAULT_LIMIT) {
+    const whereConditions = this.getFindWhereConditions(tagText);
+    const cursorDefinition = this.getFindCursorDefinition(currentCursor);
 
-    if (tagText.length > 0) {
-      whereConditions = {
-        tags: {
-          every: {
-            text: tagText,
-          },
-        },
-      };
-    }
     const posts = await this.prismaService.post.findMany({
-      where: {
-        ...whereConditions,
-      },
+      where: whereConditions,
+      ...cursorDefinition,
       include: {
         owner: {
           select: {
@@ -58,11 +49,55 @@ export class PostService {
         createdAt: 'desc',
       },
       take: limit,
-      skip: offset,
     });
     const mappedPosts = this.mapOwnerBufferIdToUUID(posts);
+    const cursor = this.getCursor(mappedPosts, limit);
 
-    return mappedPosts;
+    return { posts: mappedPosts, cursor };
+  }
+
+  private getFindWhereConditions(tagText) {
+    let whereConditions = {};
+    if (tagText.length > 0) {
+      whereConditions = {
+        tags: {
+          every: {
+            text: tagText,
+          },
+        },
+      };
+    }
+
+    return whereConditions;
+  }
+
+  private getFindCursorDefinition(currentCursor) {
+    let cursorDefinition = {};
+    if (currentCursor !== '') {
+      cursorDefinition = {
+        cursor: {
+          createdAt: new Date(+currentCursor).toISOString(),
+        },
+        skip: 1, // Skip the cursor
+      };
+    }
+
+    return cursorDefinition;
+  }
+
+  private getCursor(posts, limit: number) {
+    let areMoreRecordsAvailable = false;
+    let cursor = '';
+
+    if (posts.length === limit) {
+      areMoreRecordsAvailable = true; // INFO: if limit > taken records so there aren't more records to read.
+    }
+    if (areMoreRecordsAvailable) {
+      const lastPostInResults = posts[limit - 1]; // Remember: zero-based index! :)
+      cursor = lastPostInResults.createdAt;
+    }
+
+    return cursor;
   }
 
   mapOwnerBufferIdToUUID(posts) {
@@ -94,7 +129,7 @@ export class PostService {
   async create(createPostInput: CreatePostInput, username: string) {
     const { text, tag: tagText } = createPostInput;
 
-    const post = await this.prismaService.post.create({
+    const newPostPrismaData = {
       select: {
         id: true,
         text: true,
@@ -134,7 +169,15 @@ export class PostService {
           ],
         },
       },
-    });
+    };
+    let post;
+
+    // INFO: try a create post twice because of added createdAt as unique to solve cursor pagination logic.
+    try {
+      post = await this.prismaService.post.create(newPostPrismaData);
+    } catch (e) {
+      post = await this.prismaService.post.create(newPostPrismaData);
+    }
 
     // INFO: generate an array to reuse the same mapFunction
     const posts = [post];

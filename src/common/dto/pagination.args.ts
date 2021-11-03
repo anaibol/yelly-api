@@ -3,8 +3,8 @@ import { DEFAULT_LIMIT } from '../constants/pagination.constant';
 
 @ArgsType()
 export class PaginationArgs {
-  @Field((type) => Int)
-  offset: number = 0;
+  @Field({ nullable: true })
+  after?: string;
 
   @Field((type) => Int)
   limit: number = DEFAULT_LIMIT;

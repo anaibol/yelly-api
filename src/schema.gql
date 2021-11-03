@@ -11,6 +11,11 @@ type Mutation {
   createPost(input: CreatePostInput!): Post!
 }
 
+type PaginatedPosts {
+  items: [Post!]!
+  nextCursor: String!
+}
+
 type Post {
   createdAt: String!
   id: String!
@@ -20,7 +25,7 @@ type Post {
 }
 
 type Query {
-  posts(limit: Int = 10, offset: Int = 0, tag: String): [Post!]!
+  posts(after: String, limit: Int = 10, tag: String): PaginatedPosts!
 }
 
 type Tag {

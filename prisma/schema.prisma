@@ -197,12 +197,12 @@ enum NotificationAction {
 }
 
 model Tag {
-  id      String @id @default(uuid())
-  text    String @unique @db.VarChar(30)
+  id        String   @id @default(uuid())
+  text      String   @unique @db.VarChar(30)
   createdAt DateTime @default(now())
-  ownerId Bytes  @map("owner_id") @db.Binary(16)
-  owner   User   @relation(fields: [ownerId], references: [id])
-  posts   Post[]
+  ownerId   Bytes    @map("owner_id") @db.Binary(16)
+  owner     User     @relation(fields: [ownerId], references: [id])
+  posts     Post[]
 
   @@map("tag")
 }
@@ -210,7 +210,7 @@ model Tag {
 model Post {
   id        String   @id @default(uuid())
   text      String   @db.VarChar(255)
-  createdAt DateTime @default(now())
+  createdAt DateTime @unique @default(now())
   owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   Bytes    @map("owner_id") @db.Binary(16)
   tags      Tag[]
