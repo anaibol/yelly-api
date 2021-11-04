@@ -20,7 +20,10 @@ type Post {
 }
 
 type Query {
+  me: User!
   posts(limit: Int = 10, offset: Int = 0, tag: String): [Post!]!
+  user(id: String!): User!
+  users(limit: Int = 10, offset: Int = 0): [User!]!
 }
 
 type Tag {
@@ -32,10 +35,17 @@ type Tag {
 }
 
 type User {
+  about: String
   birthdate: String
+  countNotifications: Float!
   firstName: String!
   id: String!
+  instagram: String
+  isFilled: Boolean
   lastName: String!
+  locale: String
   pictureId: String
   posts: [Post!]
+  sendbirdAccessToken: String
+  snapchat: String
 }
