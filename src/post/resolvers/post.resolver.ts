@@ -12,8 +12,8 @@ export class PostResolver {
   constructor(private postsService: PostService) {}
 
   @UseGuards(AuthGuard)
-  @Query(() => PaginatedPosts, { name: 'posts' })
-  async getPosts(@Args() GetPostsArgs?: GetPostsArgs) {
+  @Query(() => PaginatedPosts, { name: 'postsFeed' })
+  async getPostsFeed(@Args() GetPostsArgs?: GetPostsArgs) {
     const { posts, cursor } = await this.postsService.find(
       GetPostsArgs.tag,
       GetPostsArgs.after,

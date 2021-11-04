@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Post } from '@prisma/client';
 import { AlgoliaService } from 'src/core/services/algolia.service';
 import { PrismaService } from 'src/core/services/prisma.service';
+import { NotFoundLiveTagException } from '../exceptions/not-found-live-tag.exception';
 import { TagIndexAlgoliaInterface } from '../interfaces/tag-index-algolia.interface';
 
 @Injectable()
@@ -56,5 +56,23 @@ export class TagService {
       objectToUpdateOrCreate,
       tagText,
     );
+  }
+
+  async getLiveTag() {
+    const liveTag = await this.prismaService.tag.findFirst({
+      select: {
+        id: true,
+        text: true,
+      },
+      where: {
+        isLive: true,
+      },
+    });
+
+    if (liveTag == null) {
+      throw new NotFoundLiveTagException();
+    }
+
+    return liveTag;
   }
 }

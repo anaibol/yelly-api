@@ -7,6 +7,12 @@ input CreatePostInput {
   text: String!
 }
 
+type LiveTagAuthUser {
+  authUserPosted: Boolean!
+  id: String!
+  text: String!
+}
+
 type Mutation {
   createPost(input: CreatePostInput!): Post!
 }
@@ -25,12 +31,14 @@ type Post {
 }
 
 type Query {
-  posts(after: String, limit: Int = 10, tag: String): PaginatedPosts!
+  liveTag: LiveTagAuthUser!
+  postsFeed(after: String, limit: Int = 10, tag: String): PaginatedPosts!
 }
 
 type Tag {
   createdAt: String!
   id: String!
+  isLive: Boolean!
   owner: User!
   posts: [Post!]!
   text: String!

@@ -34,6 +34,7 @@ export class PostService {
             id: true,
             createdAt: true,
             text: true,
+            isLive: true,
             owner: {
               select: {
                 id: true,

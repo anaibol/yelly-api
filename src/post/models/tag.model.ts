@@ -13,6 +13,9 @@ export class Tag {
   @Field()
   createdAt: string;
 
+  @Field()
+  isLive: boolean;
+
   @Field((type) => User)
   owner: User;
 
