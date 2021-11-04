@@ -18,7 +18,7 @@ export class UserService {
       skip: offset,
     })
 
-    return this.mapUserBufferIdToUUID(users)
+    return this.mapBufferIdToUUID(users)
   }
 
   async findOne(id) {
@@ -39,17 +39,46 @@ export class UserService {
       where: {
         email: email,
       },
+      include: {
+        posts: true,
+        userTraining: {
+          include: {
+            city: true,
+            school: true,
+            training: true,
+          },
+        },
+      },
     })
 
     if (!user) return null
 
-    return this.mapUserBufferIdToUUID([user])[0]
+    return this.mapBufferIdToUUID([user])[0]
   }
 
-  mapUserBufferIdToUUID(users) {
-    return users.map((user) => ({
-      ...user,
-      id: this.prismaService.mapBufferIdToString(user.id),
-    }))
+  mapBufferIdToUUID(users) {
+    return users.map((user) => {
+      const userWithUUID = {
+        ...user,
+      }
+      userWithUUID.id = this.prismaService.mapBufferIdToString(user.id)
+
+      if (userWithUUID.userTraining) {
+        userWithUUID.userTraining = user.userTraining.map((ut) => {
+          const utWithUUID = {
+            ...ut,
+          }
+
+          utWithUUID.id = this.prismaService.mapBufferIdToString(ut.id)
+          utWithUUID.city.id = this.prismaService.mapBufferIdToString(ut.city.id)
+          utWithUUID.school.id = this.prismaService.mapBufferIdToString(ut.school.id)
+          utWithUUID.training.id = this.prismaService.mapBufferIdToString(ut.training.id)
+
+          return utWithUUID
+        })
+      }
+
+      return userWithUUID
+    })
   }
 }

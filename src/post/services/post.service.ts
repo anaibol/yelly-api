@@ -1,19 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant';
-import { PrismaService } from 'src/core/services/prisma.service';
-import { CreatePostInput } from '../dto/create-post.input';
-import { TagService } from './tag.service';
+import { Injectable } from '@nestjs/common'
+import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
+import { PrismaService } from 'src/core/services/prisma.service'
+import { CreatePostInput } from '../dto/create-post.input'
+import { TagService } from './tag.service'
 
 @Injectable()
 export class PostService {
-  constructor(
-    private prismaService: PrismaService,
-    private tagService: TagService,
-  ) {}
+  constructor(private prismaService: PrismaService, private tagService: TagService) {}
 
   // TODO: Add return type, is not q expected result
   async find(tagText = '', offset = 0, limit = DEFAULT_LIMIT) {
-    let whereConditions = {};
+    let whereConditions = {}
 
     if (tagText.length > 0) {
       whereConditions = {
@@ -22,7 +19,7 @@ export class PostService {
             text: tagText,
           },
         },
-      };
+      }
     }
     const posts = await this.prismaService.post.findMany({
       where: {
@@ -59,40 +56,36 @@ export class PostService {
       },
       take: limit,
       skip: offset,
-    });
-    const mappedPosts = this.mapOwnerBufferIdToUUID(posts);
+    })
+    const mappedPosts = this.mapOwnerBufferIdToUUID(posts)
 
-    return mappedPosts;
+    return mappedPosts
   }
 
   mapOwnerBufferIdToUUID(posts) {
     return posts.map((post) => {
       const postWithUUID = {
         ...post,
-      };
-      postWithUUID.owner.id = this.prismaService.mapBufferIdToString(
-        post.owner.id,
-      );
+      }
+      postWithUUID.owner.id = this.prismaService.mapBufferIdToString(post.owner.id)
 
       postWithUUID.tags = post.tags.map((tag) => {
         const tagWithUUID = {
           ...tag,
-        };
-        tagWithUUID.owner.id = this.prismaService.mapBufferIdToString(
-          tag.owner.id,
-        );
+        }
+        tagWithUUID.owner.id = this.prismaService.mapBufferIdToString(tag.owner.id)
 
-        return tagWithUUID;
-      });
+        return tagWithUUID
+      })
 
-      return postWithUUID;
-    });
+      return postWithUUID
+    })
   }
 
   // TODO: Add return type, is not q expected result
   // INFO: the usernamen is the email, it's called like this to be consist with the name defined in the JWT
   async create(createPostInput: CreatePostInput, username: string) {
-    const { text, tag: tagText } = createPostInput;
+    const { text, tag: tagText } = createPostInput
 
     const post = await this.prismaService.post.create({
       select: {
@@ -134,14 +127,14 @@ export class PostService {
           ],
         },
       },
-    });
+    })
 
     // INFO: generate an array to reuse the same mapFunction
-    const posts = [post];
-    const mappedPost = this.mapOwnerBufferIdToUUID(posts)[0];
+    const posts = [post]
+    const mappedPost = this.mapOwnerBufferIdToUUID(posts)[0]
 
-    this.tagService.syncTagIndexWithAlgolia(tagText, mappedPost);
+    this.tagService.syncTagIndexWithAlgolia(tagText, mappedPost)
 
-    return mappedPost;
+    return mappedPost
   }
 }

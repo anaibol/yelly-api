@@ -1,21 +1,21 @@
-import { Field, ObjectType } from '@nestjs/graphql';
-import { User } from '../../user/models/user.model';
-import { Tag } from './tag.model';
+import { Field, ObjectType } from '@nestjs/graphql'
+import { User } from '../../user/models/user.model'
+import { Tag } from './tag.model'
 
 @ObjectType()
 export class Post {
   @Field()
-  id: string;
+  id: string
 
   @Field()
-  text: string;
+  text: string
 
   @Field()
-  createdAt: string;
+  createdAt: string
 
   @Field((type) => [Tag])
-  tags: Tag[];
+  tags: Tag[]
 
   @Field((type) => User)
-  owner: User;
+  owner: User
 }
