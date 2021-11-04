@@ -2,6 +2,10 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input CreateLiveTagInput {
+  text: String!
+}
+
 input CreatePostInput {
   tag: String!
   text: String!
@@ -14,6 +18,7 @@ type LiveTagAuthUser {
 }
 
 type Mutation {
+  createLiveTag(input: CreateLiveTagInput!): Tag!
   createPost(input: CreatePostInput!): Post!
 }
 

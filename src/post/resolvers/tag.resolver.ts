@@ -1,8 +1,10 @@
 import { UseGuards } from '@nestjs/common';
-import { Context, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { UserService } from 'src/user/services/user.service';
+import { CreateLiveTagInput } from '../dto/create-live-tag.input';
 import { LiveTagAuthUser } from '../models/live-tag-auth-user.model';
+import { Tag } from '../models/tag.model';
 import { TagService } from '../services/tag.service';
 
 @Resolver()
@@ -23,5 +25,19 @@ export class TagResolver {
     );
 
     return { ...liveTag, authUserPosted };
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Tag)
+  async createLiveTag(
+    @Args('input') createLiveTag: CreateLiveTagInput,
+    @Context() context,
+  ) {
+    const liveTag = await this.tagService.createLiveTag(
+      createLiveTag.text,
+      context.req.username,
+    );
+
+    return liveTag;
   }
 }

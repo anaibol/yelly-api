@@ -75,4 +75,33 @@ export class TagService {
 
     return liveTag;
   }
+
+  async createLiveTag(text: string, email: string) {
+    await this.prismaService.tag.updateMany({
+      where: {
+        isLive: true,
+      },
+      data: {
+        isLive: false,
+      },
+    });
+
+    return this.prismaService.tag.upsert({
+      where: {
+        text,
+      },
+      create: {
+        text,
+        isLive: true,
+        owner: {
+          connect: {
+            email,
+          },
+        },
+      },
+      update: {
+        isLive: true,
+      },
+    });
+  }
 }
