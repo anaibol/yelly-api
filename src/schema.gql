@@ -2,29 +2,13 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-input CreateLiveTagInput {
-  text: String!
-}
-
 input CreatePostInput {
   tag: String!
   text: String!
 }
 
-type LiveTagAuthUser {
-  authUserPosted: Boolean!
-  id: String!
-  text: String!
-}
-
 type Mutation {
-  createLiveTag(input: CreateLiveTagInput!): Tag!
   createPost(input: CreatePostInput!): Post!
-}
-
-type PaginatedPosts {
-  items: [Post!]!
-  nextCursor: String!
 }
 
 type Post {
@@ -36,24 +20,32 @@ type Post {
 }
 
 type Query {
-  liveTag: LiveTagAuthUser!
-  postsFeed(after: String, limit: Int = 10, tag: String): PaginatedPosts!
+  me: User!
+  posts(limit: Int = 10, offset: Int = 0, tag: String): [Post!]!
+  user(id: String!): User!
+  users(limit: Int = 10, offset: Int = 0): [User!]!
 }
 
 type Tag {
   createdAt: String!
   id: String!
-  isLive: Boolean!
   owner: User!
   posts: [Post!]!
   text: String!
 }
 
 type User {
+  about: String
   birthdate: String
+  countNotifications: Float!
   firstName: String!
   id: String!
+  instagram: String
+  isFilled: Boolean
   lastName: String!
+  locale: String
   pictureId: String
   posts: [Post!]
+  sendbirdAccessToken: String
+  snapchat: String
 }
