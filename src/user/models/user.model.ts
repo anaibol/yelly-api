@@ -1,4 +1,5 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql'
+import { Notification } from 'src/notification/models/notification.model'
 import { UserTraining } from 'src/user-training/models/userTraining.model'
 import { Post } from '../../post/models/post.model'
 
@@ -26,7 +27,7 @@ export class User {
   instagram?: string
 
   @Field({ defaultValue: 0 })
-  countNotifications?: number
+  unreadNotificationsCount?: number
 
   @Field({ nullable: true })
   isFilled?: boolean

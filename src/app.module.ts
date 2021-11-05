@@ -10,6 +10,7 @@ import { UserTrainingModule } from './user-training/user-training.module'
 import { CityModule } from './city/city.module'
 import { SchoolModule } from './school/school.module'
 import { TrainingModule } from './training/training.module'
+import { NotificationModule } from './notification/notification.module'
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { TrainingModule } from './training/training.module'
     CityModule,
     SchoolModule,
     TrainingModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}

@@ -1,11 +1,11 @@
-import { Req, UseGuards } from '@nestjs/common';
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { PostService } from 'src/post/services/post.service';
-import { CreatePostInput } from '../dto/create-post.input';
-import { GetPostsArgs } from '../dto/get-post.args';
-import { Post } from '../models/post.model';
-import { Tag } from '../models/tag.model';
+import { Req, UseGuards } from '@nestjs/common'
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql'
+import { AuthGuard } from 'src/auth/guards/auth.guard'
+import { PostService } from 'src/post/services/post.service'
+import { CreatePostInput } from '../dto/create-post.input'
+import { GetPostsArgs } from '../dto/get-post.args'
+import { Post } from '../models/post.model'
+import { Tag } from '../models/tag.model'
 
 @Resolver((of) => Tag)
 export class PostResolver {
@@ -14,21 +14,14 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Query((returns) => [Post], { name: 'posts' })
   async getPosts(@Args() GetPostsArgs?: GetPostsArgs) {
-    const result = await this.postsService.find(
-      GetPostsArgs.tag,
-      GetPostsArgs.offset,
-      GetPostsArgs.limit,
-    );
+    const result = await this.postsService.find(GetPostsArgs.tag, GetPostsArgs.offset, GetPostsArgs.limit)
 
-    return result;
+    return result
   }
 
   @UseGuards(AuthGuard)
   @Mutation((returns) => Post)
-  async createPost(
-    @Args('input') createPostData: CreatePostInput,
-    @Context() context,
-  ) {
-    return this.postsService.create(createPostData, context.req.username);
+  async createPost(@Args('input') createPostData: CreatePostInput, @Context() context) {
+    return this.postsService.create(createPostData, context.req.username)
   }
 }
