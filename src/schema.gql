@@ -2,13 +2,34 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input CreateLiveTagInput {
+  text: String!
+}
+
 input CreatePostInput {
   tag: String!
   text: String!
 }
 
+input ForgotPasswordInput {
+  email: String!
+}
+
+type LiveTagAuthUser {
+  authUserPosted: Boolean!
+  id: String!
+  text: String!
+}
+
 type Mutation {
+  createLiveTag(input: CreateLiveTagInput!): Tag!
   createPost(input: CreatePostInput!): Post!
+  forgotPassword(input: ForgotPasswordInput!): User!
+}
+
+type PaginatedPosts {
+  items: [Post!]!
+  nextCursor: String!
 }
 
 type Post {
@@ -20,15 +41,16 @@ type Post {
 }
 
 type Query {
+  liveTag: LiveTagAuthUser!
   me: User!
-  posts(limit: Int = 10, offset: Int = 0, tag: String): [Post!]!
+  postsFeed(after: String, limit: Int = 10, tag: String): PaginatedPosts!
   user(id: String!): User!
-  users(limit: Int = 10, offset: Int = 0): [User!]!
 }
 
 type Tag {
   createdAt: String!
   id: String!
+  isLive: Boolean!
   owner: User!
   posts: [Post!]!
   text: String!
