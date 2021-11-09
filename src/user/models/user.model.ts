@@ -1,4 +1,6 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql'
+import { Notification } from 'src/notification/models/notification.model'
+import { UserTraining } from 'src/user-training/models/userTraining.model'
 import { Post } from '../../post/models/post.model'
 
 @ObjectType()
@@ -12,7 +14,7 @@ export class User {
   @Field()
   lastName: string
 
-  @Field({ nullable: true })
+  @Field((type) => Date, { nullable: true })
   birthdate?: string
 
   @Field({ nullable: true })
@@ -25,7 +27,7 @@ export class User {
   instagram?: string
 
   @Field({ defaultValue: 0 })
-  countNotifications?: number
+  unreadNotificationsCount?: number
 
   @Field({ nullable: true })
   isFilled?: boolean
@@ -39,10 +41,8 @@ export class User {
   @Field({ nullable: true })
   locale?: string
 
-  /*
-  @Field((type) => [Post], { nullable: true })
-  userTrainings?: Post[];
-  */
+  @Field((type) => [UserTraining], { nullable: true })
+  userTraining?: UserTraining[]
 
   @Field((type) => [Post], { nullable: true })
   posts?: Post[]
