@@ -2,7 +2,7 @@ name: Deploy development to Amazon ECS
 
 on:
   push:
-    branches: [development]
+    branches: [develop]
 
 env:
   AWS_REGION: eu-west-2
