@@ -2,6 +2,19 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type City {
+  googlePlaceid: String
+  id: String!
+  name: String!
+}
+
+input CreateCityInput {
+  country: String!
+  geolocation: GeolocationInput!
+  googlePlaceId: String!
+  name: String!
+}
+
 input CreateLiveTagInput {
   text: String!
 }
@@ -11,8 +24,33 @@ input CreatePostInput {
   text: String!
 }
 
+input CreateSchoolInput {
+  country: String!
+  geolocation: GeolocationInput!
+  googlePlaceId: String!
+  name: String!
+  postalCode: String!
+}
+
+input CreateUserTrainingInput {
+  city: CreateCityInput!
+  dateBegin: DateTime!
+  school: CreateSchoolInput!
+  training: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 input ForgotPasswordInput {
   email: String!
+}
+
+input GeolocationInput {
+  lat: String!
+  lng: String!
 }
 
 type LiveTagAuthUser {
@@ -25,6 +63,7 @@ type Mutation {
   createLiveTag(input: CreateLiveTagInput!): Tag!
   createPost(input: CreatePostInput!): Post!
   forgotPassword(input: ForgotPasswordInput!): User!
+  signup(input: SignupInput!): User!
 }
 
 type PaginatedPosts {
@@ -45,6 +84,18 @@ type Query {
   me: User!
   postsFeed(after: String, limit: Int = 10, tag: String): PaginatedPosts!
   user(id: String!): User!
+  users(after: String, limit: Int = 10): [User!]!
+}
+
+type School {
+  googlePlaceid: String
+  id: String!
+  name: String!
+}
+
+input SignupInput {
+  user: UserCreateInput!
+  userTraining: CreateUserTrainingInput!
 }
 
 type Tag {
@@ -56,10 +107,14 @@ type Tag {
   text: String!
 }
 
+type Training {
+  id: String!
+  name: String!
+}
+
 type User {
   about: String
-  birthdate: String
-  countNotifications: Float!
+  birthdate: DateTime
   firstName: String!
   id: String!
   instagram: String
@@ -70,4 +125,27 @@ type User {
   posts: [Post!]
   sendbirdAccessToken: String
   snapchat: String
+  unreadNotificationsCount: Float!
+  userTraining: [UserTraining!]
+}
+
+input UserCreateInput {
+  birthdate: DateTime!
+  email: String!
+  firstName: String!
+  instagram: String!
+  lastName: String!
+  password: String!
+  pictureId: String!
+  snapchat: String!
+}
+
+type UserTraining {
+  city: City
+  createdAt: DateTime!
+  dateBegin: DateTime!
+  id: String!
+  school: School
+  training: Training
+  updatedAt: DateTime!
 }

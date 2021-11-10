@@ -1,20 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant';
-import { PrismaService } from 'src/core/services/prisma.service';
-import { CreatePostInput } from '../dto/create-post.input';
-import { TagService } from './tag.service';
+import { Injectable } from '@nestjs/common'
+import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
+import { PrismaService } from 'src/core/services/prisma.service'
+import { CreatePostInput } from '../dto/create-post.input'
+import { TagService } from './tag.service'
 
 @Injectable()
 export class PostService {
-  constructor(
-    private prismaService: PrismaService,
-    private tagService: TagService,
-  ) {}
+  constructor(private prismaService: PrismaService, private tagService: TagService) {}
 
   // TODO: Add return type, is not q expected result
   async find(tagText = '', currentCursor = '', limit = DEFAULT_LIMIT) {
-    const whereConditions = this.getFindWhereConditions(tagText);
-    const cursorDefinition = this.getFindCursorDefinition(currentCursor);
+    const whereConditions = this.getFindWhereConditions(tagText)
+    const cursorDefinition = this.getFindCursorDefinition(currentCursor)
 
     const posts = await this.prismaService.post.findMany({
       where: whereConditions,
@@ -50,15 +47,15 @@ export class PostService {
         createdAt: 'desc',
       },
       take: limit,
-    });
-    const mappedPosts = this.mapOwnerBufferIdToUUID(posts);
-    const cursor = this.getCursor(mappedPosts, limit);
+    })
+    const mappedPosts = this.mapOwnerBufferIdToUUID(posts)
+    const cursor = this.getCursor(mappedPosts, limit)
 
-    return { posts: mappedPosts, cursor };
+    return { posts: mappedPosts, cursor }
   }
 
   private getFindWhereConditions(tagText) {
-    let whereConditions = {};
+    let whereConditions = {}
     if (tagText.length > 0) {
       whereConditions = {
         tags: {
@@ -66,69 +63,65 @@ export class PostService {
             text: tagText,
           },
         },
-      };
+      }
     }
 
-    return whereConditions;
+    return whereConditions
   }
 
   private getFindCursorDefinition(currentCursor) {
-    let cursorDefinition = {};
+    let cursorDefinition = {}
     if (currentCursor !== '') {
       cursorDefinition = {
         cursor: {
           createdAt: new Date(+currentCursor).toISOString(),
         },
         skip: 1, // Skip the cursor
-      };
+      }
     }
 
-    return cursorDefinition;
+    return cursorDefinition
   }
 
   private getCursor(posts, limit: number) {
-    let areMoreRecordsAvailable = false;
-    let cursor = '';
+    let areMoreRecordsAvailable = false
+    let cursor = ''
 
     if (posts.length === limit) {
-      areMoreRecordsAvailable = true; // INFO: if limit > taken records so there aren't more records to read.
+      areMoreRecordsAvailable = true // INFO: if limit > taken records so there aren't more records to read.
     }
     if (areMoreRecordsAvailable) {
-      const lastPostInResults = posts[limit - 1]; // Remember: zero-based index! :)
-      cursor = lastPostInResults.createdAt;
+      const lastPostInResults = posts[limit - 1] // Remember: zero-based index! :)
+      cursor = lastPostInResults.createdAt
     }
 
-    return cursor;
+    return cursor
   }
 
   mapOwnerBufferIdToUUID(posts) {
     return posts.map((post) => {
       const postWithUUID = {
         ...post,
-      };
-      postWithUUID.owner.id = this.prismaService.mapBufferIdToString(
-        post.owner.id,
-      );
+      }
+      postWithUUID.owner.id = this.prismaService.mapBufferIdToString(post.owner.id)
 
       postWithUUID.tags = post.tags.map((tag) => {
         const tagWithUUID = {
           ...tag,
-        };
-        tagWithUUID.owner.id = this.prismaService.mapBufferIdToString(
-          tag.owner.id,
-        );
+        }
+        tagWithUUID.owner.id = this.prismaService.mapBufferIdToString(tag.owner.id)
 
-        return tagWithUUID;
-      });
+        return tagWithUUID
+      })
 
-      return postWithUUID;
-    });
+      return postWithUUID
+    })
   }
 
   // TODO: Add return type, is not q expected result
   // INFO: the usernamen is the email, it's called like this to be consist with the name defined in the JWT
   async create(createPostInput: CreatePostInput, username: string) {
-    const { text, tag: tagText } = createPostInput;
+    const { text, tag: tagText } = createPostInput
 
     const newPostPrismaData = {
       select: {
@@ -170,22 +163,22 @@ export class PostService {
           ],
         },
       },
-    };
-    let post;
+    }
+    let post
 
     // INFO: try a create post twice because of added createdAt as unique to solve cursor pagination logic.
     try {
-      post = await this.prismaService.post.create(newPostPrismaData);
+      post = await this.prismaService.post.create(newPostPrismaData)
     } catch (e) {
-      post = await this.prismaService.post.create(newPostPrismaData);
+      post = await this.prismaService.post.create(newPostPrismaData)
     }
 
     // INFO: generate an array to reuse the same mapFunction
-    const posts = [post];
-    const mappedPost = this.mapOwnerBufferIdToUUID(posts)[0];
+    const posts = [post]
+    const mappedPost = this.mapOwnerBufferIdToUUID(posts)[0]
 
-    this.tagService.syncTagIndexWithAlgolia(tagText, mappedPost);
+    this.tagService.syncTagIndexWithAlgolia(tagText, mappedPost)
 
-    return mappedPost;
+    return mappedPost
   }
 }

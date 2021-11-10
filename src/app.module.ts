@@ -1,11 +1,13 @@
-import { Module } from '@nestjs/common';
-import { GraphQLModule } from '@nestjs/graphql';
-import { join } from 'path';
-import { UserModule } from './user/user.module';
-import { PostModule } from './post/post.module';
-import { CoreModule } from './core/core.module';
-import { CommonModule } from './common/common.module';
-import { AuthModule } from './auth/auth.module';
+import { Module } from '@nestjs/common'
+import { GraphQLModule } from '@nestjs/graphql'
+import { join } from 'path'
+import { UserModule } from './user/user.module'
+import { PostModule } from './post/post.module'
+import { CoreModule } from './core/core.module'
+import { CommonModule } from './common/common.module'
+import { AuthModule } from './auth/auth.module'
+import { UserTrainingModule } from './user-training/user-training.module'
+import { NotificationModule } from './notification/notification.module'
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { AuthModule } from './auth/auth.module';
     CoreModule,
     CommonModule,
     AuthModule,
+    UserTrainingModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}
