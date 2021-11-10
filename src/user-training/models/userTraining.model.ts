@@ -1,7 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql'
-import { City } from 'src/city/models/city.model'
-import { School } from 'src/school/models/school.model'
-import { Training } from 'src/training/models/training.model'
+import { City } from 'src/user-training/models/city.model'
+import { School } from 'src/user-training/models/school.model'
+import { Training } from 'src/user-training/models/training.model'
 
 @ObjectType()
 export class UserTraining {

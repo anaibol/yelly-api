@@ -1,5 +1,4 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql'
-import { Notification } from 'src/notification/models/notification.model'
+import { Field, ObjectType } from '@nestjs/graphql'
 import { UserTraining } from 'src/user-training/models/userTraining.model'
 import { Post } from '../../post/models/post.model'
 

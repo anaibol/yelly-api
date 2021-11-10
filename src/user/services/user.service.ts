@@ -1,14 +1,20 @@
 import { Injectable } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
 import { randomBytes, randomUUID } from 'crypto'
 import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
 import { EmailService } from 'src/core/services/email.service'
 import { PrismaService } from 'src/core/services/prisma.service'
 import { UserCreateInput } from '../dto/create-user.input'
 import { NotFoundUserException } from '../exceptions/not-found-user.exception'
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class UserService {
-  constructor(private prismaService: PrismaService, private emailService: EmailService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private emailService: EmailService,
+    private jwtService: JwtService
+  ) {}
 
   async hasUserPostedOnTag(email, tagText) {
     const post = await this.prismaService.post.findFirst({
@@ -34,6 +40,13 @@ export class UserService {
     const users = await this.prismaService.user.findMany({
       include: {
         posts: true,
+        userTraining: {
+          include: {
+            city: true,
+            training: true,
+            school: true,
+          },
+        },
       },
       orderBy: {
         firstName: 'asc',
@@ -54,6 +67,7 @@ export class UserService {
       },
       include: {
         posts: true,
+        userTraining: true,
       },
     })
   }
@@ -100,29 +114,30 @@ export class UserService {
   }
 
   async create(createUserData: UserCreateInput) {
-    console.log(randomUUID())
+    const saltOrRounds = 10
+    const password = createUserData.password
+    const hash = await bcrypt.hash(password, saltOrRounds)
 
-    return await this.prismaService.user.create({
-      select: {
-        id: true,
-      },
+    const user = await this.prismaService.user.create({
       data: {
         id: this.prismaService.mapStringIdToBuffer(randomUUID()),
         firstName: createUserData.firstName,
         lastName: createUserData.lastName,
         email: createUserData.email,
-        password: createUserData.password,
-        birthdate: new Date(),
+        password: hash,
+        birthdate: new Date(createUserData.birthdate),
         pictureId: createUserData.pictureId,
         snapchat: createUserData.snapchat,
         instagram: createUserData.instagram,
-        roles: 'test',
+        roles: '[]',
         isVerified: true,
         createdAt: new Date(),
         isFilled: true,
         isActived: true,
       },
     })
+
+    return user
   }
 
   private generateResetToken() {
