@@ -7,7 +7,7 @@ import { NotificationService } from 'src/notification/services/notification.serv
 import { CityService } from 'src/user-training/services/city.service'
 import { SchoolService } from 'src/user-training/services/school.service'
 import { TrainingService } from 'src/user-training/services/training.service'
-import { userTrainingService } from 'src/user-training/services/user-training.service'
+import { UserTrainingService } from 'src/user-training/services/user-training.service'
 
 @Module({
   imports: [CoreModule, AuthModule],
@@ -18,7 +18,7 @@ import { userTrainingService } from 'src/user-training/services/user-training.se
     CityService,
     SchoolService,
     TrainingService,
-    userTrainingService,
+    UserTrainingService,
   ],
   exports: [UserService],
 })
