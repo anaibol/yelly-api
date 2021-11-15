@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { JwtService } from '@nestjs/jwt'
 import { randomBytes, randomUUID } from 'crypto'
 import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
 import { EmailService } from 'src/core/services/email.service'
@@ -10,11 +9,7 @@ import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class UserService {
-  constructor(
-    private prismaService: PrismaService,
-    private emailService: EmailService,
-    private jwtService: JwtService
-  ) {}
+  constructor(private prismaService: PrismaService, private emailService: EmailService) {}
 
   async hasUserPostedOnTag(email, tagText) {
     const post = await this.prismaService.post.findFirst({
@@ -142,6 +137,19 @@ export class UserService {
 
   private generateResetToken() {
     return randomBytes(5).toString('hex')
+  }
+
+  async deleteByEmail(email: string) {
+    try {
+      await this.prismaService.user.delete({
+        where: {
+          email: email,
+        },
+      })
+      return true
+    } catch {
+      throw new NotFoundUserException()
+    }
   }
 
   mapBufferIdToUUID(users) {

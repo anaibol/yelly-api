@@ -62,6 +62,7 @@ type LiveTagAuthUser {
 type Mutation {
   createLiveTag(input: CreateLiveTagInput!): Tag!
   createPost(input: CreatePostInput!): Post!
+  deleteAuthUser: Boolean!
   forgotPassword(input: ForgotPasswordInput!): User!
   signup(input: SignupInput!): User!
 }
