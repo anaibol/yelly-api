@@ -38,12 +38,14 @@ export class UserResolver {
   }
 
   @Query(() => [User], { name: 'users' })
+  @UseGuards(AuthGuard)
   async find(@Args() getUsersArgs: GetUsersArgs) {
     const result = await this.userService.find(0, getUsersArgs.limit)
     return result
   }
 
   @Query(() => User, { name: 'user' })
+  @UseGuards(AuthGuard)
   async findOne(@Args('id') id: string) {
     const result = await this.userService.findOne(id)
     return result
@@ -64,5 +66,13 @@ export class UserResolver {
     await this.userTrainingService.create(user.id, training.id, city.id, school.id, signupData.userTraining.dateBegin)
 
     return user
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation((returns) => Boolean)
+  async deleteAuthUser(@Context() context) {
+    console.log(context.req.username)
+
+    return await this.userService.deleteByEmail(context.req.username)
   }
 }
