@@ -20,7 +20,7 @@ export class UserResolver {
     private notificationService: NotificationService,
     private cityService: CityService,
     private schoolService: SchoolService,
-    private traininService: TrainingService,
+    private trainingService: TrainingService,
     private userTrainingService: UserTrainingService,
     private prismaService: PrismaService
   ) {}
@@ -60,9 +60,8 @@ export class UserResolver {
   async signup(@Args('input') signupData: SignupInput) {
     const city = await this.cityService.create(signupData.userTraining.city)
     const school = await this.schoolService.create(signupData.userTraining.school)
-    const training = await this.traininService.create(signupData.userTraining.training)
+    const training = await this.trainingService.create(signupData.userTraining.training)
     const user = await this.userService.create(signupData.user)
-
     await this.userTrainingService.create(user.id, training.id, city.id, school.id, signupData.userTraining.dateBegin)
 
     return user
