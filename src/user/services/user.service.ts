@@ -61,7 +61,12 @@ export class UserService {
         id: bufferId,
       },
       include: {
-        posts: true,
+        posts: {
+          include: {
+            tags: true,
+            owner: true,
+          },
+        },
         userTraining: true,
       },
     })
