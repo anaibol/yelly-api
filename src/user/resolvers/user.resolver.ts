@@ -11,7 +11,7 @@ import { SignupInput } from '../dto/signup.input'
 import { CityService } from 'src/user-training/services/city.service'
 import { SchoolService } from 'src/user-training/services/school.service'
 import { TrainingService } from 'src/user-training/services/training.service'
-import { userTrainingService } from 'src/user-training/services/user-training.service'
+import { UserTrainingService } from 'src/user-training/services/user-training.service'
 
 @Resolver()
 export class UserResolver {
@@ -21,7 +21,7 @@ export class UserResolver {
     private cityService: CityService,
     private schoolService: SchoolService,
     private traininService: TrainingService,
-    private userTrainingService: userTrainingService,
+    private userTrainingService: UserTrainingService,
     private prismaService: PrismaService
   ) {}
 
@@ -72,7 +72,6 @@ export class UserResolver {
   @Mutation((returns) => Boolean)
   async deleteAuthUser(@Context() context) {
     console.log(context.req.username)
-
     return await this.userService.deleteByEmail(context.req.username)
   }
 }

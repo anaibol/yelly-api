@@ -65,6 +65,7 @@ type Mutation {
   deleteAuthUser: Boolean!
   forgotPassword(input: ForgotPasswordInput!): User!
   signup(input: SignupInput!): User!
+  updateAuthUserTraining(id: String!, input: UpdateUserTrainingInput!): UserTraining!
 }
 
 type PaginatedPosts {
@@ -111,6 +112,13 @@ type Tag {
 type Training {
   id: String!
   name: String!
+}
+
+input UpdateUserTrainingInput {
+  city: CreateCityInput
+  dateBegin: DateTime
+  school: CreateSchoolInput
+  training: String
 }
 
 type User {
