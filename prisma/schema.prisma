@@ -210,7 +210,7 @@ model Tag {
 
 model Post {
   id        String   @id @default(uuid())
-  text      String   @db.VarChar(255)
+  text      String   @db.Text()
   createdAt DateTime @unique @default(now())
   owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   Bytes    @map("owner_id") @db.Binary(16)

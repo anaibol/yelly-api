@@ -12,6 +12,7 @@ export class TagService {
 
     const tag = await this.prismaService.tag.findFirst({
       select: {
+        id: true,
         createdAt: true,
         posts: {
           select: {
@@ -37,6 +38,7 @@ export class TagService {
     // INFO: Map data to fit Tag index algolia interface
     const lastUsers = this.mapOwnerBufferIdToUUID(tag.posts)
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
+      id: tag.id,
       text: tagText,
       lastUsers: [...lastUsers],
       postCount: {
