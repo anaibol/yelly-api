@@ -1,17 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { AlgoliaService } from 'src/core/services/algolia.service';
-import { PrismaService } from 'src/core/services/prisma.service';
-import { NotFoundLiveTagException } from '../exceptions/not-found-live-tag.exception';
-import { TagIndexAlgoliaInterface } from '../interfaces/tag-index-algolia.interface';
+import { Injectable } from '@nestjs/common'
+import { AlgoliaService } from 'src/core/services/algolia.service'
+import { PrismaService } from 'src/core/services/prisma.service'
+import { NotFoundLiveTagException } from '../exceptions/not-found-live-tag.exception'
+import { TagIndexAlgoliaInterface } from '../interfaces/tag-index-algolia.interface'
 
 @Injectable()
 export class TagService {
-  constructor(
-    private prismaService: PrismaService,
-    private algoliaService: AlgoliaService,
-  ) {}
+  constructor(private prismaService: PrismaService, private algoliaService: AlgoliaService) {}
   async syncTagIndexWithAlgolia(tagText: string, post) {
-    const algoliaTagIndex = await this.algoliaService.initIndex('TAGS');
+    const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
 
     const tag = await this.prismaService.tag.findFirst({
       select: {
@@ -20,6 +17,7 @@ export class TagService {
           select: {
             owner: {
               select: {
+                id: true,
                 pictureId: true,
                 firstName: true,
               },
@@ -35,9 +33,9 @@ export class TagService {
       where: {
         text: tagText,
       },
-    });
+    })
     // INFO: Map data to fit Tag index algolia interface
-    const lastUsers = tag.posts.map((lastPost) => lastPost.owner);
+    const lastUsers = this.mapOwnerBufferIdToUUID(tag.posts)
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       text: tagText,
       lastUsers: [...lastUsers],
@@ -49,13 +47,9 @@ export class TagService {
       updatedAtTimestamp: Date.parse(post.createdAt.toString()),
       createdAt: tag.createdAt,
       updatedAt: post.createdAt,
-    };
+    }
 
-    return this.algoliaService.partialUpdateObject(
-      algoliaTagIndex,
-      objectToUpdateOrCreate,
-      tagText,
-    );
+    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tagText)
   }
 
   async getLiveTag() {
@@ -67,13 +61,13 @@ export class TagService {
       where: {
         isLive: true,
       },
-    });
+    })
 
     if (liveTag == null) {
-      throw new NotFoundLiveTagException();
+      throw new NotFoundLiveTagException()
     }
 
-    return liveTag;
+    return liveTag
   }
 
   async createLiveTag(text: string, email: string) {
@@ -84,7 +78,7 @@ export class TagService {
       data: {
         isLive: false,
       },
-    });
+    })
 
     return this.prismaService.tag.upsert({
       where: {
@@ -102,6 +96,17 @@ export class TagService {
       update: {
         isLive: true,
       },
-    });
+    })
+  }
+
+  mapOwnerBufferIdToUUID(posts) {
+    return posts.map((post) => {
+      const ownerWithUUID = {
+        ...post.owner,
+      }
+      ownerWithUUID.id = this.prismaService.mapBufferIdToString(post.owner.id)
+
+      return ownerWithUUID
+    })
   }
 }
