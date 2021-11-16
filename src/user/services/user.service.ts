@@ -86,7 +86,12 @@ export class UserService {
         email: email,
       },
       include: {
-        posts: true,
+        posts: {
+          include: {
+            tags: true,
+            owner: true,
+          },
+        },
         userTraining: {
           include: {
             city: true,
