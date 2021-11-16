@@ -40,8 +40,8 @@ export class User {
   @Field({ nullable: true })
   locale?: string
 
-  @Field((type) => [UserTraining], { nullable: true })
-  userTraining?: UserTraining[]
+  @Field(() => UserTraining)
+  userTraining: UserTraining
 
   @Field((type) => [Post], { nullable: true })
   posts?: Post[]

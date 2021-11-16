@@ -141,7 +141,7 @@ model User {
   notification                 Notification[]           @relation("userSource")
   notifications                Notification[]
   posts                        Post[]
-  userTraining                 UserTraining[]
+  userTraining                 UserTraining
 
   @@map("user")
 }
@@ -159,7 +159,7 @@ model UserTraining {
   city       City      @relation(fields: [cityId], references: [id], onUpdate: Restrict, map: "FK_359F6E8F8BAC62AF")
   school     School    @relation(fields: [schoolId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FC32A47EE")
   training   Training  @relation(fields: [trainingId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FBEFD98D1")
-  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_359F6E8FA76ED395")
+  user       User?     @relation(fields: [userId], references: [id], map: "FK_359F6E8FA76ED395")
 
   @@index([cityId], map: "IDX_359F6E8F8BAC62AF")
   @@index([userId], map: "IDX_359F6E8FA76ED395")

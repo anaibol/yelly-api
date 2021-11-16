@@ -135,7 +135,7 @@ type User {
   sendbirdAccessToken: String
   snapchat: String
   unreadNotificationsCount: Float!
-  userTraining: [UserTraining!]
+  userTraining: UserTraining!
 }
 
 input UserCreateInput {

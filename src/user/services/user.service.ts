@@ -56,7 +56,7 @@ export class UserService {
   async findOne(id) {
     const bufferId = this.prismaService.mapStringIdToBuffer(id)
 
-    return await this.prismaService.user.findUnique({
+    const user = await this.prismaService.user.findUnique({
       where: {
         id: bufferId,
       },
@@ -67,9 +67,17 @@ export class UserService {
             owner: true,
           },
         },
-        userTraining: true,
+        userTraining: {
+          include: {
+            city: true,
+            school: true,
+            training: true,
+          },
+        },
       },
     })
+
+    return this.mapBufferIdToUUID([user])[0]
   }
 
   async findByEmail(email: string) {
@@ -162,23 +170,12 @@ export class UserService {
       const userWithUUID = {
         ...user,
       }
+
       userWithUUID.id = this.prismaService.mapBufferIdToString(user.id)
-
-      if (userWithUUID.userTraining) {
-        userWithUUID.userTraining = user.userTraining.map((ut) => {
-          const utWithUUID = {
-            ...ut,
-          }
-
-          utWithUUID.id = this.prismaService.mapBufferIdToString(ut.id)
-          utWithUUID.city.id = this.prismaService.mapBufferIdToString(ut.city.id)
-          utWithUUID.school.id = this.prismaService.mapBufferIdToString(ut.school.id)
-          utWithUUID.training.id = this.prismaService.mapBufferIdToString(ut.training.id)
-
-          return utWithUUID
-        })
-      }
-
+      userWithUUID.userTraining.id = this.prismaService.mapBufferIdToString(user.userTraining.id)
+      userWithUUID.userTraining.city.id = this.prismaService.mapBufferIdToString(user.userTraining.city.id)
+      userWithUUID.userTraining.school.id = this.prismaService.mapBufferIdToString(user.userTraining.school.id)
+      userWithUUID.userTraining.training.id = this.prismaService.mapBufferIdToString(user.userTraining.training.id)
       return userWithUUID
     })
   }
