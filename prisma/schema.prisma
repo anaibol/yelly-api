@@ -141,7 +141,7 @@ model User {
   notification                 Notification[]           @relation("userSource")
   notifications                Notification[]
   posts                        Post[]
-  userTraining                 UserTraining
+  userTraining                 UserTraining?
 
   @@map("user")
 }
