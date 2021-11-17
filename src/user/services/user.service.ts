@@ -62,6 +62,10 @@ export class UserService {
       },
       include: {
         posts: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 10,
           include: {
             tags: true,
             owner: true,
@@ -87,6 +91,10 @@ export class UserService {
       },
       include: {
         posts: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 10,
           include: {
             tags: true,
             owner: true,
