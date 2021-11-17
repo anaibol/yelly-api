@@ -14,7 +14,12 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts, { name: 'postsFeed' })
   async getPostsFeed(@Args() GetPostsArgs?: GetPostsArgs) {
-    const { posts, cursor } = await this.postsService.find(GetPostsArgs.tag, GetPostsArgs.after, GetPostsArgs.limit)
+    const { posts, cursor } = await this.postsService.find(
+      GetPostsArgs.tag,
+      GetPostsArgs.userId,
+      GetPostsArgs.after,
+      GetPostsArgs.limit
+    )
 
     return { items: posts, nextCursor: cursor }
   }

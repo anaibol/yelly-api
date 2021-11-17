@@ -9,14 +9,30 @@ export class PostService {
   constructor(private prismaService: PrismaService, private tagService: TagService) {}
 
   // TODO: Add return type, is not q expected result
-  async find(tagText = '', currentCursor = '', limit = DEFAULT_LIMIT) {
-    const whereConditions = this.getFindWhereConditions(tagText)
+  async find(tagText = '', userId = '', currentCursor = '', limit = DEFAULT_LIMIT) {
     const cursorDefinition = this.getFindCursorDefinition(currentCursor)
 
     const posts = await this.prismaService.post.findMany({
-      where: whereConditions,
+      where: {
+        ...(tagText.length && {
+          tags: {
+            every: {
+              text: tagText,
+            },
+          },
+        }),
+        AND: [
+          userId.length && {
+            owner: {
+              is: {
+                id: this.prismaService.mapStringIdToBuffer(userId),
+              },
+            },
+          },
+        ],
+      },
       ...cursorDefinition,
-      include: {
+      select: {
         owner: {
           select: {
             id: true,
@@ -52,21 +68,6 @@ export class PostService {
     const cursor = this.getCursor(mappedPosts, limit)
 
     return { posts: mappedPosts, cursor }
-  }
-
-  private getFindWhereConditions(tagText) {
-    let whereConditions = {}
-    if (tagText.length > 0) {
-      whereConditions = {
-        tags: {
-          every: {
-            text: tagText,
-          },
-        },
-      }
-    }
-
-    return whereConditions
   }
 
   private getFindCursorDefinition(currentCursor) {
