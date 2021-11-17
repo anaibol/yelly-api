@@ -65,6 +65,7 @@ export class UserService {
           orderBy: {
             createdAt: 'desc',
           },
+          take: 10,
           include: {
             tags: true,
             owner: true,
@@ -93,6 +94,7 @@ export class UserService {
           orderBy: {
             createdAt: 'desc',
           },
+          take: 10,
           include: {
             tags: true,
             owner: true,
