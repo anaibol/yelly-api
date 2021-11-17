@@ -62,6 +62,9 @@ export class UserService {
       },
       include: {
         posts: {
+          orderBy: {
+            createdAt: 'desc',
+          },
           include: {
             tags: true,
             owner: true,
@@ -87,6 +90,9 @@ export class UserService {
       },
       include: {
         posts: {
+          orderBy: {
+            createdAt: 'desc',
+          },
           include: {
             tags: true,
             owner: true,
