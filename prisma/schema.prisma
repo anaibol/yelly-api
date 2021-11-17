@@ -134,14 +134,14 @@ model User {
   iosPushnotificationtoken     String?                  @map("ios_push_notification_token") @db.VarChar(255)
   about                        String?                  @db.VarChar(255)
   locale                       String?                  @db.VarChar(255)
-  tags                         Tag[]
   group                        Group[]
   groupMembers                 GroupMembers[]
   groupMembershipRequest       GroupMembershipRequest[]
   notification                 Notification[]           @relation("userSource")
   notifications                Notification[]
   posts                        Post[]
-  userTraining                 UserTraining?
+  tags                         Tag[]
+  userTraining                 UserTraining[]
 
   @@map("user")
 }
@@ -159,7 +159,7 @@ model UserTraining {
   city       City      @relation(fields: [cityId], references: [id], onUpdate: Restrict, map: "FK_359F6E8F8BAC62AF")
   school     School    @relation(fields: [schoolId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FC32A47EE")
   training   Training  @relation(fields: [trainingId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FBEFD98D1")
-  user       User?     @relation(fields: [userId], references: [id], map: "FK_359F6E8FA76ED395")
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_359F6E8FA76ED395")
 
   @@index([cityId], map: "IDX_359F6E8F8BAC62AF")
   @@index([userId], map: "IDX_359F6E8FA76ED395")
@@ -190,31 +190,33 @@ model GroupMembershipRequest {
   @@map("group_membership_request")
 }
 
-enum NotificationAction {
-  seen
-  add
-  groupMembershipRequest
-}
-
 model Tag {
   id        String   @id @default(uuid())
   text      String   @unique @db.VarChar(30)
   createdAt DateTime @default(now())
-  isLive    Boolean  @default(false)
   ownerId   Bytes    @map("owner_id") @db.Binary(16)
+  isLive    Boolean  @default(false)
   owner     User     @relation(fields: [ownerId], references: [id])
   posts     Post[]
 
+  @@index([ownerId], map: "tag_owner_id_fkey")
   @@map("tag")
 }
 
 model Post {
   id        String   @id @default(uuid())
-  text      String   @db.Text()
+  text      String   @db.Text
   createdAt DateTime @unique @default(now())
-  owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   Bytes    @map("owner_id") @db.Binary(16)
+  owner     User     @relation(fields: [ownerId], references: [id])
   tags      Tag[]
 
+  @@index([ownerId], map: "post_owner_id_fkey")
   @@map("post")
+}
+
+enum NotificationAction {
+  seen
+  add
+  groupMembershipRequest
 }
