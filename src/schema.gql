@@ -84,7 +84,7 @@ type Post {
 type Query {
   liveTag: LiveTagAuthUser!
   me: User!
-  postsFeed(after: String, limit: Int = 10, tag: String): PaginatedPosts!
+  postsFeed(after: String, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   user(id: String!): User!
   users(after: String, limit: Int = 10): [User!]!
 }
