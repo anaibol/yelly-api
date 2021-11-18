@@ -228,6 +228,7 @@ model PostComment {
   author    User     @relation(fields: [authorId], references: [id])
 
   @@map("post_comment")
+  @@index([authorId], map: "post_comment_author_id_fkey")
 }
 
 enum NotificationAction {
