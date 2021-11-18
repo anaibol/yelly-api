@@ -21,18 +21,16 @@ export class PostService {
             },
           },
         }),
-        AND: [
-          userId.length && {
-            owner: {
-              is: {
-                id: this.prismaService.mapStringIdToBuffer(userId),
-              },
+        ...(userId.length && {
+          owner: {
+            is: {
+              id: this.prismaService.mapStringIdToBuffer(userId),
             },
           },
-        ],
+        }),
       },
       ...cursorDefinition,
-      select: {
+      include: {
         owner: {
           select: {
             id: true,

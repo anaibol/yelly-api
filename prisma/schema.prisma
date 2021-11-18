@@ -141,14 +141,14 @@ model User {
   notifications                Notification[]
   posts                        Post[]
   tags                         Tag[]
-  userTraining                 UserTraining[]
+  userTraining                 UserTraining?
 
   @@map("user")
 }
 
 model UserTraining {
   id         Bytes     @id @db.Binary(16)
-  userId     Bytes?    @map("user_id") @db.Binary(16)
+  userId     Bytes?    @map("user_id") @db.Binary(16)@unique
   trainingId Bytes     @map("training_id") @db.Binary(16)
   schoolId   Bytes     @map("school_id") @db.Binary(16)
   cityId     Bytes     @map("city_id") @db.Binary(16)
@@ -159,7 +159,7 @@ model UserTraining {
   city       City      @relation(fields: [cityId], references: [id], onUpdate: Restrict, map: "FK_359F6E8F8BAC62AF")
   school     School    @relation(fields: [schoolId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FC32A47EE")
   training   Training  @relation(fields: [trainingId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FBEFD98D1")
-  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_359F6E8FA76ED395")
+  user       User?     @relation(fields: [userId], references: [id], map: "FK_359F6E8FA76ED395")
 
   @@index([cityId], map: "IDX_359F6E8F8BAC62AF")
   @@index([userId], map: "IDX_359F6E8FA76ED395")
