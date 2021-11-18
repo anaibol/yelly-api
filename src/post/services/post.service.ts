@@ -17,7 +17,7 @@ export class PostService {
       where: whereConditions,
       ...cursorDefinition,
       include: {
-        owner: {
+        author: {
           select: {
             id: true,
             firstName: true,
@@ -32,7 +32,7 @@ export class PostService {
             createdAt: true,
             text: true,
             isLive: true,
-            owner: {
+            author: {
               select: {
                 id: true,
                 firstName: true,
@@ -48,7 +48,7 @@ export class PostService {
       },
       take: limit,
     })
-    const mappedPosts = this.mapOwnerBufferIdToUUID(posts)
+    const mappedPosts = this.mapauthorBufferIdToUUID(posts)
     const cursor = this.getCursor(mappedPosts, limit)
 
     return { posts: mappedPosts, cursor }
@@ -98,18 +98,18 @@ export class PostService {
     return cursor
   }
 
-  mapOwnerBufferIdToUUID(posts) {
+  mapauthorBufferIdToUUID(posts) {
     return posts.map((post) => {
       const postWithUUID = {
         ...post,
       }
-      postWithUUID.owner.id = this.prismaService.mapBufferIdToString(post.owner.id)
+      postWithUUID.author.id = this.prismaService.mapBufferIdToString(post.author.id)
 
       postWithUUID.tags = post.tags.map((tag) => {
         const tagWithUUID = {
           ...tag,
         }
-        tagWithUUID.owner.id = this.prismaService.mapBufferIdToString(tag.owner.id)
+        tagWithUUID.author.id = this.prismaService.mapBufferIdToString(tag.author.id)
 
         return tagWithUUID
       })
@@ -128,19 +128,19 @@ export class PostService {
         id: true,
         text: true,
         createdAt: true,
-        owner: true,
+        author: true,
         tags: {
           select: {
             id: true,
             text: true,
             createdAt: true,
-            owner: true,
+            author: true,
           },
         },
       },
       data: {
         text,
-        owner: {
+        author: {
           connect: {
             email: username,
           },
@@ -153,7 +153,7 @@ export class PostService {
               },
               create: {
                 text: tagText,
-                owner: {
+                author: {
                   connect: {
                     email: username,
                   },
@@ -175,7 +175,7 @@ export class PostService {
 
     // INFO: generate an array to reuse the same mapFunction
     const posts = [post]
-    const mappedPost = this.mapOwnerBufferIdToUUID(posts)[0]
+    const mappedPost = this.mapauthorBufferIdToUUID(posts)[0]
 
     this.tagService.syncTagIndexWithAlgolia(tagText, mappedPost)
 

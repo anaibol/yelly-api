@@ -9,5 +9,5 @@ export class City {
   name: string
 
   @Field({ nullable: true })
-  googlePlaceid: string
+  googlePlaceId: string
 }

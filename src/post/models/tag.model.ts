@@ -1,24 +1,24 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { User } from '../../user/models/user.model';
-import { Post } from './post.model';
+import { Field, ObjectType } from '@nestjs/graphql'
+import { User } from '../../user/models/user.model'
+import { Post } from './post.model'
 
 @ObjectType()
 export class Tag {
   @Field()
-  id: string;
+  id: string
 
   @Field()
-  text: string;
+  text: string
 
   @Field()
-  createdAt: string;
+  createdAt: string
 
   @Field()
-  isLive: boolean;
+  isLive: boolean
 
-  @Field((type) => User)
-  owner: User;
+  @Field(() => User)
+  author: User
 
-  @Field((type) => [Post])
-  posts: Post[];
+  @Field(() => [Post])
+  posts: Post[]
 }

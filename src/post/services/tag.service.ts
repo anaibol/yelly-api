@@ -16,7 +16,7 @@ export class TagService {
         createdAt: true,
         posts: {
           select: {
-            owner: {
+            author: {
               select: {
                 id: true,
                 pictureId: true,
@@ -25,7 +25,7 @@ export class TagService {
             },
           },
           take: 5,
-          distinct: 'ownerId',
+          distinct: 'authorId',
           orderBy: {
             createdAt: 'desc',
           },
@@ -36,7 +36,7 @@ export class TagService {
       },
     })
     // INFO: Map data to fit Tag index algolia interface
-    const lastUsers = this.mapOwnerBufferIdToUUID(tag.posts)
+    const lastUsers = this.mapauthorBufferIdToUUID(tag.posts)
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       id: tag.id,
       text: tagText,
@@ -89,7 +89,7 @@ export class TagService {
       create: {
         text,
         isLive: true,
-        owner: {
+        author: {
           connect: {
             email,
           },
@@ -101,14 +101,14 @@ export class TagService {
     })
   }
 
-  mapOwnerBufferIdToUUID(posts) {
+  mapauthorBufferIdToUUID(posts) {
     return posts.map((post) => {
-      const ownerWithUUID = {
-        ...post.owner,
+      const authorWithUUID = {
+        ...post.author,
       }
-      ownerWithUUID.id = this.prismaService.mapBufferIdToString(post.owner.id)
+      authorWithUUID.id = this.prismaService.mapBufferIdToString(post.author.id)
 
-      return ownerWithUUID
+      return authorWithUUID
     })
   }
 }

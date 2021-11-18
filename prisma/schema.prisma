@@ -12,7 +12,7 @@ model City {
   id            Bytes          @id @db.Binary(16)
   countryId     Bytes?         @map("country_id") @db.Binary(16)
   name          String         @db.VarChar(255)
-  googlePlaceid String?        @map("google_place_id") @db.VarChar(255)
+  googlePlaceId String?        @map("google_place_id") @db.VarChar(255)
   lat           String?        @db.VarChar(255)
   lng           String?        @db.VarChar(255)
   isValid       Boolean?       @map("is_valid")
@@ -57,17 +57,17 @@ model Group {
 
 model GroupMembers {
   id          Bytes     @id @db.Binary(16)
-  groupInfoid Bytes     @map("group_info_id") @db.Binary(16)
+  groupInfoId Bytes     @map("group_info_id") @db.Binary(16)
   userId      Bytes     @map("user_id") @db.Binary(16)
   role        String?   @db.VarChar(255)
   createdAt   DateTime  @map("created_at") @db.DateTime(0)
   updatedAt   DateTime? @map("updated_at") @db.DateTime(0)
   banned      Boolean?
-  group       Group     @relation(fields: [groupInfoid], references: [id], onUpdate: Restrict, map: "FK_C3A086F3DB8B95F4")
+  group       Group     @relation(fields: [groupInfoId], references: [id], onUpdate: Restrict, map: "FK_C3A086F3DB8B95F4")
   user        User      @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "FK_C3A086F3A76ED395")
 
   @@index([userId], map: "IDX_C3A086F3A76ED395")
-  @@index([groupInfoid], map: "IDX_C3A086F3DB8B95F4")
+  @@index([groupInfoId], map: "IDX_C3A086F3DB8B95F4")
   @@map("group_members")
 }
 
@@ -92,7 +92,7 @@ model School {
   countryId     Bytes?         @map("country_id") @db.Binary(16)
   name          String         @db.VarChar(255)
   postalCode    String?        @map("postal_code") @db.VarChar(255)
-  googlePlaceid String?        @map("google_place_id") @db.VarChar(255)
+  googlePlaceId String?        @map("google_place_id") @db.VarChar(255)
   lat           String?        @db.VarChar(255)
   lng           String?        @db.VarChar(255)
   isValid       Boolean?       @map("is_valid")
@@ -140,10 +140,12 @@ model User {
   notification                 Notification[]           @relation("userSource")
   notifications                Notification[]
   posts                        Post[]
+  postComments                 PostComment[]
   tags                         Tag[]
   userTraining                 UserTraining?
   followers                    User[]                   @relation("followship")
   following                    User[]                   @relation("followship")
+  likes                        Post[]                   @relation("posts_like")
 
   @@map("user")
 }
@@ -196,12 +198,12 @@ model Tag {
   id        String   @id @default(uuid())
   text      String   @unique @db.VarChar(30)
   createdAt DateTime @default(now())
-  ownerId   Bytes    @map("owner_id") @db.Binary(16)
+  authorId  Bytes    @map("author_id") @db.Binary(16)
   isLive    Boolean  @default(false)
-  owner     User     @relation(fields: [ownerId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
   posts     Post[]
 
-  @@index([ownerId], map: "tag_owner_id_fkey")
+  @@index([authorId], map: "tag_author_id_fkey")
   @@map("tag")
 }
 
@@ -209,12 +211,23 @@ model Post {
   id        String   @id @default(uuid())
   text      String   @db.Text
   createdAt DateTime @unique @default(now())
-  ownerId   Bytes    @map("owner_id") @db.Binary(16)
-  owner     User     @relation(fields: [ownerId], references: [id])
+  authorId  Bytes    @map("author_id") @db.Binary(16)
+  author    User     @relation(fields: [authorId], references: [id])
   tags      Tag[]
+  likedBy   User[]   @relation("posts_like")
 
-  @@index([ownerId], map: "post_owner_id_fkey")
+  @@index([authorId], map: "post_author_id_fkey")
   @@map("post")
+}
+
+model PostComment {
+  id        String   @id @default(uuid())
+  text      String   @db.Text
+  createdAt DateTime @unique @default(now())
+  authorId  Bytes    @map("author_id") @db.Binary(16)
+  author    User     @relation(fields: [authorId], references: [id])
+
+  @@map("post_comment")
 }
 
 enum NotificationAction {
