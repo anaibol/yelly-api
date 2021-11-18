@@ -146,6 +146,7 @@ model User {
   followers                    User[]                   @relation("followship")
   following                    User[]                   @relation("followship")
   likes                        Post[]                   @relation("posts_like")
+  viewsCount                   Int @default(0)
 
   @@map("user")
 }
