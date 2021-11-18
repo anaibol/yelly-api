@@ -142,13 +142,15 @@ model User {
   posts                        Post[]
   tags                         Tag[]
   userTraining                 UserTraining?
+  followers                    User[]                   @relation("followship")
+  following                    User[]                   @relation("followship")
 
   @@map("user")
 }
 
 model UserTraining {
   id         Bytes     @id @db.Binary(16)
-  userId     Bytes?    @map("user_id") @db.Binary(16)@unique
+  userId     Bytes?    @unique @map("user_id") @db.Binary(16)
   trainingId Bytes     @map("training_id") @db.Binary(16)
   schoolId   Bytes     @map("school_id") @db.Binary(16)
   cityId     Bytes     @map("city_id") @db.Binary(16)
