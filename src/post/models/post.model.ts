@@ -13,9 +13,9 @@ export class Post {
   @Field()
   createdAt: string
 
-  @Field((type) => [Tag])
+  @Field(() => [Tag])
   tags: Tag[]
 
-  @Field((type) => User)
-  owner: User
+  @Field(() => User)
+  author: User
 }

@@ -12,13 +12,12 @@ model City {
   id            Bytes          @id @db.Binary(16)
   countryId     Bytes?         @map("country_id") @db.Binary(16)
   name          String         @db.VarChar(255)
-  googlePlaceid String?        @map("google_place_id") @db.VarChar(255)
+  googlePlaceId String?        @map("google_place_id") @db.VarChar(255)
   lat           String?        @db.VarChar(255)
   lng           String?        @db.VarChar(255)
   isValid       Boolean?       @map("is_valid")
   country       Country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_2D5B0234F92F3E70")
   userTraining  UserTraining[]
-
   @@index([countryId], map: "IDX_2D5B0234F92F3E70")
   @@map("city")
 }
@@ -28,7 +27,6 @@ model Country {
   name   String   @db.VarChar(255)
   city   City[]
   school School[]
-
   @@map("country")
 }
 
@@ -36,7 +34,6 @@ model DoctrineMigrationVersions {
   version       String    @id
   executedAt    DateTime? @map("executed_at") @db.DateTime(0)
   executionTime Int?      @map("execution_time")
-
   @@map("doctrine_migration_versions")
 }
 
@@ -50,24 +47,22 @@ model Group {
   user                   User?                    @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_6DC044C57E3C61F9")
   groupMembers           GroupMembers[]
   groupMembershipRequest GroupMembershipRequest[]
-
   @@index([ownerId], map: "IDX_6DC044C57E3C61F9")
   @@map("group")
 }
 
 model GroupMembers {
   id          Bytes     @id @db.Binary(16)
-  groupInfoid Bytes     @map("group_info_id") @db.Binary(16)
+  groupInfoId Bytes     @map("group_info_id") @db.Binary(16)
   userId      Bytes     @map("user_id") @db.Binary(16)
   role        String?   @db.VarChar(255)
   createdAt   DateTime  @map("created_at") @db.DateTime(0)
   updatedAt   DateTime? @map("updated_at") @db.DateTime(0)
   banned      Boolean?
-  group       Group     @relation(fields: [groupInfoid], references: [id], onUpdate: Restrict, map: "FK_C3A086F3DB8B95F4")
+  group       Group     @relation(fields: [groupInfoId], references: [id], onUpdate: Restrict, map: "FK_C3A086F3DB8B95F4")
   user        User      @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "FK_C3A086F3A76ED395")
-
   @@index([userId], map: "IDX_C3A086F3A76ED395")
-  @@index([groupInfoid], map: "IDX_C3A086F3DB8B95F4")
+  @@index([groupInfoId], map: "IDX_C3A086F3DB8B95F4")
   @@map("group_members")
 }
 
@@ -81,7 +76,6 @@ model Notification {
   itemId       String?             @map("item_id") @db.VarChar(255)
   userSource   User                @relation("userSource", fields: [userSourceid], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA95DC9185")
   user         User?               @relation(fields: [userTargetid], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA156E8682")
-
   @@index([userTargetid], map: "IDX_BF5476CA156E8682")
   @@index([userSourceid], map: "IDX_BF5476CA95DC9185")
   @@map("notification")
@@ -92,14 +86,13 @@ model School {
   countryId     Bytes?         @map("country_id") @db.Binary(16)
   name          String         @db.VarChar(255)
   postalCode    String?        @map("postal_code") @db.VarChar(255)
-  googlePlaceid String?        @map("google_place_id") @db.VarChar(255)
+  googlePlaceId String?        @map("google_place_id") @db.VarChar(255)
   lat           String?        @db.VarChar(255)
   lng           String?        @db.VarChar(255)
   isValid       Boolean?       @map("is_valid")
   cityId        Bytes?         @map("city_id") @db.Binary(16)
   country       Country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_F99EDABBF92F3E70")
   userTraining  UserTraining[]
-
   @@index([countryId], map: "IDX_F99EDABBF92F3E70")
   @@map("school")
 }
@@ -108,7 +101,6 @@ model Training {
   id           Bytes          @id @db.Binary(16)
   name         String         @db.VarChar(255)
   userTraining UserTraining[]
-
   @@map("training")
 }
 
@@ -135,26 +127,25 @@ model User {
   iosPushnotificationtoken     String?                  @map("ios_push_notification_token") @db.VarChar(255)
   about                        String?                  @db.VarChar(255)
   locale                       String?                  @db.VarChar(255)
-  viewsCount                   Int                      @default(0)
   group                        Group[]
   groupMembers                 GroupMembers[]
   groupMembershipRequest       GroupMembershipRequest[]
   notification                 Notification[]           @relation("userSource")
   notifications                Notification[]
-  post_postTouser              Post[]                   @relation("postTouser")
-  post_comment                 post_comment[]           @relation("post_commentTouser")
-  tag                          Tag[]                    @relation("tagTouser")
-  userTraining                 UserTraining[]
-  user_B                       User[]                   @relation("followship")
-  user_A                       User[]                   @relation("followship")
-  post_posts_like              Post[]                   @relation("posts_like")
-
+  posts                        Post[]
+  postComments                 PostComment[]
+  tags                         Tag[]
+  userTraining                 UserTraining?
+  followers                    User[]                   @relation("followship")
+  following                    User[]                   @relation("followship")
+  likes                        Post[]                   @relation("posts_like")
+  viewsCount                   Int @default(0)
   @@map("user")
 }
 
 model UserTraining {
   id         Bytes     @id @db.Binary(16)
-  userId     Bytes?    @map("user_id") @db.Binary(16)
+  userId     Bytes?    @unique @map("user_id") @db.Binary(16)
   trainingId Bytes     @map("training_id") @db.Binary(16)
   schoolId   Bytes     @map("school_id") @db.Binary(16)
   cityId     Bytes     @map("city_id") @db.Binary(16)
@@ -166,7 +157,6 @@ model UserTraining {
   school     School    @relation(fields: [schoolId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FC32A47EE")
   training   Training  @relation(fields: [trainingId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FBEFD98D1")
   user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_359F6E8FA76ED395")
-
   @@index([cityId], map: "IDX_359F6E8F8BAC62AF")
   @@index([userId], map: "IDX_359F6E8FA76ED395")
   @@index([trainingId], map: "IDX_359F6E8FBEFD98D1")
@@ -177,7 +167,6 @@ model UserTraining {
 model WaitingList {
   id    Bytes  @id @db.Binary(16)
   email String @db.VarChar(255)
-
   @@map("waiting_list")
 }
 
@@ -190,7 +179,6 @@ model GroupMembershipRequest {
   updatedAt   DateTime? @map("updated_at") @db.DateTime(0)
   group       Group     @relation(fields: [groupInfoId], references: [id], onUpdate: Restrict, map: "FK_9D8B2166DB8B95F4")
   user        User      @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "FK_9D8B2166A76ED395")
-
   @@index([userId], map: "IDX_9D8B2166A76ED395")
   @@index([groupInfoId], map: "IDX_9D8B2166DB8B95F4")
   @@map("group_membership_request")
@@ -200,36 +188,34 @@ model Tag {
   id        String   @id @default(uuid())
   text      String   @unique @db.VarChar(30)
   createdAt DateTime @default(now())
-  author_id Bytes    @db.Binary(16)
+  authorId  Bytes    @map("author_id") @db.Binary(16)
   isLive    Boolean  @default(false)
-  user      User     @relation("tagTouser", fields: [author_id], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
   posts     Post[]
-
-  @@index([author_id], map: "tag_author_id_fkey")
+  @@index([authorId], map: "tag_author_id_fkey")
   @@map("tag")
 }
 
 model Post {
-  id              String   @id @default(uuid())
-  text            String   @db.Text
-  createdAt       DateTime @unique @default(now())
-  author_id       Bytes    @db.Binary(16)
-  user_postTouser User     @relation("postTouser", fields: [author_id], references: [id])
-  tags            Tag[]
-  user_posts_like User[]   @relation("posts_like")
-
-  @@index([author_id], map: "post_author_id_fkey")
+  id        String   @id @default(uuid())
+  text      String   @db.Text
+  createdAt DateTime @unique @default(now())
+  authorId  Bytes    @map("author_id") @db.Binary(16)
+  author    User     @relation(fields: [authorId], references: [id])
+  tags      Tag[]
+  likedBy   User[]   @relation("posts_like")
+  @@index([authorId], map: "post_author_id_fkey")
   @@map("post")
 }
 
-model post_comment {
-  id        String   @id
+model PostComment {
+  id        String   @id @default(uuid())
   text      String   @db.Text
   createdAt DateTime @unique @default(now())
-  author_id Bytes    @db.Binary(16)
-  user      User     @relation("post_commentTouser", fields: [author_id], references: [id])
-
-  @@index([author_id], map: "post_comment_author_id_fkey")
+  authorId  Bytes    @map("author_id") @db.Binary(16)
+  author    User     @relation(fields: [authorId], references: [id])
+  @@map("post_comment")
+  @@index([authorId], map: "post_comment_author_id_fkey")
 }
 
 enum NotificationAction {

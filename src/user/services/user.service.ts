@@ -17,7 +17,7 @@ export class UserService {
         id: true,
       },
       where: {
-        owner: {
+        author: {
           email: email,
         },
         tags: {
@@ -68,7 +68,7 @@ export class UserService {
           take: 10,
           include: {
             tags: true,
-            owner: true,
+            author: true,
           },
         },
         userTraining: {
@@ -97,7 +97,7 @@ export class UserService {
           take: 10,
           include: {
             tags: true,
-            owner: true,
+            author: true,
           },
         },
         userTraining: {

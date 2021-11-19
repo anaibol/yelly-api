@@ -17,7 +17,7 @@ export class SchoolService {
       data: {
         id: this.prismaService.mapStringIdToBuffer(uuid),
         name: schoolData.name,
-        googlePlaceid: schoolData.googlePlaceId,
+        googlePlaceId: schoolData.googlePlaceId,
       },
     })
   }
@@ -25,7 +25,7 @@ export class SchoolService {
   async findByGooglePlaceId(googlePlaceId: string) {
     return await this.prismaService.school.findFirst({
       where: {
-        googlePlaceid: googlePlaceId,
+        googlePlaceId: googlePlaceId,
       },
     })
   }

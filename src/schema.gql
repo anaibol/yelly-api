@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 
 type City {
-  googlePlaceid: String
+  googlePlaceId: String
   id: String!
   name: String!
 }
@@ -76,7 +76,7 @@ type PaginatedPosts {
 type Post {
   createdAt: String!
   id: String!
-  owner: User!
+  author: User!
   tags: [Tag!]!
   text: String!
 }
@@ -84,13 +84,13 @@ type Post {
 type Query {
   liveTag: LiveTagAuthUser!
   me: User!
-  postsFeed(after: String, limit: Int = 10, tag: String): PaginatedPosts!
+  postsFeed(after: String, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   user(id: String!): User!
   users(after: String, limit: Int = 10): [User!]!
 }
 
 type School {
-  googlePlaceid: String
+  googlePlaceId: String
   id: String!
   name: String!
 }
@@ -104,7 +104,7 @@ type Tag {
   createdAt: String!
   id: String!
   isLive: Boolean!
-  owner: User!
+  author: User!
   posts: [Post!]!
   text: String!
 }
