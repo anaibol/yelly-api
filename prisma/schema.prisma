@@ -142,7 +142,6 @@ model User {
   followers                    User[]                   @relation("followship")
   following                    User[]                   @relation("followship")
   likes                        Post[]                   @relation("posts_like")
-  viewsCount                   Int @default(0)
   @@map("user")
 }
 
@@ -200,13 +199,14 @@ model Tag {
 }
 
 model Post {
-  id        String   @id @default(uuid())
-  text      String   @db.Text
-  createdAt DateTime @unique @default(now())
-  authorId  Bytes    @map("author_id") @db.Binary(16)
-  author    User     @relation(fields: [authorId], references: [id])
-  tags      Tag[]
-  likedBy   User[]   @relation("posts_like")
+  id         String   @id @default(uuid())
+  text       String   @db.Text
+  createdAt  DateTime @unique @default(now())
+  authorId   Bytes    @map("author_id") @db.Binary(16)
+  author     User     @relation(fields: [authorId], references: [id])
+  tags       Tag[]
+  likedBy    User[]   @relation("posts_like")
+  viewsCount Int      @default(0)
   @@index([authorId], map: "post_author_id_fkey")
   @@map("post")
 }
