@@ -22,7 +22,7 @@ export class PostService {
           },
         }),
         ...(userId.length && {
-          ownerId: this.prismaService.mapStringIdToBuffer(userId),
+          authorId: this.prismaService.mapStringIdToBuffer(userId),
         }),
       },
       ...cursorDefinition,
