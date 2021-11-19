@@ -96,6 +96,7 @@ model School {
   lat           String?        @db.VarChar(255)
   lng           String?        @db.VarChar(255)
   isValid       Boolean?       @map("is_valid")
+  cityId        Bytes?         @map("city_id") @db.Binary(16)
   country       Country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_F99EDABBF92F3E70")
   userTraining  UserTraining[]
 
@@ -134,14 +135,19 @@ model User {
   iosPushnotificationtoken     String?                  @map("ios_push_notification_token") @db.VarChar(255)
   about                        String?                  @db.VarChar(255)
   locale                       String?                  @db.VarChar(255)
+  viewsCount                   Int                      @default(0)
   group                        Group[]
   groupMembers                 GroupMembers[]
   groupMembershipRequest       GroupMembershipRequest[]
   notification                 Notification[]           @relation("userSource")
   notifications                Notification[]
-  posts                        Post[]
-  tags                         Tag[]
+  post_postTouser              Post[]                   @relation("postTouser")
+  post_comment                 post_comment[]           @relation("post_commentTouser")
+  tag                          Tag[]                    @relation("tagTouser")
   userTraining                 UserTraining[]
+  user_B                       User[]                   @relation("followship")
+  user_A                       User[]                   @relation("followship")
+  post_posts_like              Post[]                   @relation("posts_like")
 
   @@map("user")
 }
@@ -194,25 +200,36 @@ model Tag {
   id        String   @id @default(uuid())
   text      String   @unique @db.VarChar(30)
   createdAt DateTime @default(now())
-  ownerId   Bytes    @map("owner_id") @db.Binary(16)
+  author_id Bytes    @db.Binary(16)
   isLive    Boolean  @default(false)
-  owner     User     @relation(fields: [ownerId], references: [id])
+  user      User     @relation("tagTouser", fields: [author_id], references: [id])
   posts     Post[]
 
-  @@index([ownerId], map: "tag_owner_id_fkey")
+  @@index([author_id], map: "tag_author_id_fkey")
   @@map("tag")
 }
 
 model Post {
-  id        String   @id @default(uuid())
+  id              String   @id @default(uuid())
+  text            String   @db.Text
+  createdAt       DateTime @unique @default(now())
+  author_id       Bytes    @db.Binary(16)
+  user_postTouser User     @relation("postTouser", fields: [author_id], references: [id])
+  tags            Tag[]
+  user_posts_like User[]   @relation("posts_like")
+
+  @@index([author_id], map: "post_author_id_fkey")
+  @@map("post")
+}
+
+model post_comment {
+  id        String   @id
   text      String   @db.Text
   createdAt DateTime @unique @default(now())
-  ownerId   Bytes    @map("owner_id") @db.Binary(16)
-  owner     User     @relation(fields: [ownerId], references: [id])
-  tags      Tag[]
+  author_id Bytes    @db.Binary(16)
+  user      User     @relation("post_commentTouser", fields: [author_id], references: [id])
 
-  @@index([ownerId], map: "post_owner_id_fkey")
-  @@map("post")
+  @@index([author_id], map: "post_comment_author_id_fkey")
 }
 
 enum NotificationAction {
