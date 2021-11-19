@@ -74,9 +74,9 @@ type PaginatedPosts {
 }
 
 type Post {
+  author: User!
   createdAt: String!
   id: String!
-  author: User!
   tags: [Tag!]!
   text: String!
 }
@@ -101,10 +101,10 @@ input SignupInput {
 }
 
 type Tag {
+  author: User!
   createdAt: String!
   id: String!
   isLive: Boolean!
-  author: User!
   posts: [Post!]!
   text: String!
 }
