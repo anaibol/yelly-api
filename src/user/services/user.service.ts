@@ -61,6 +61,12 @@ export class UserService {
         id: bufferId,
       },
       include: {
+        _count: {
+          select: {
+            following: true,
+            followers: true,
+          },
+        },
         posts: {
           orderBy: {
             createdAt: 'desc',
@@ -90,6 +96,12 @@ export class UserService {
         email: email,
       },
       include: {
+        _count: {
+          select: {
+            following: true,
+            followers: true,
+          },
+        },
         posts: {
           orderBy: {
             createdAt: 'desc',
@@ -178,6 +190,35 @@ export class UserService {
     }
   }
 
+  async toggleFollow(authUserEmail: string, otherUserId: string, value: boolean) {
+    const { id: authUserId } = await this.prismaService.user.findUnique({
+      where: {
+        email: authUserEmail,
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    await this.prismaService.user.update({
+      data: {
+        following: {
+          [value ? 'connect' : 'disconnect']: {
+            id: this.prismaService.mapStringIdToBuffer(otherUserId),
+          },
+        },
+      },
+      where: {
+        id: authUserId,
+      },
+      include: {
+        following: true,
+      },
+    })
+
+    return true
+  }
+
   mapBufferIdToUUID(users) {
     return users.map((user) => {
       const userWithUUID = {
@@ -189,6 +230,8 @@ export class UserService {
       userWithUUID.userTraining.city.id = this.prismaService.mapBufferIdToString(user.userTraining.city.id)
       userWithUUID.userTraining.school.id = this.prismaService.mapBufferIdToString(user.userTraining.school.id)
       userWithUUID.userTraining.training.id = this.prismaService.mapBufferIdToString(user.userTraining.training.id)
+      userWithUUID.followingCount = user._count.following
+      userWithUUID.followersCount = user._count.followers
       return userWithUUID
     })
   }

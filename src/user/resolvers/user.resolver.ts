@@ -5,6 +5,7 @@ import { PrismaService } from 'src/core/services/prisma.service'
 import { NotificationService } from 'src/notification/services/notification.service'
 import { GetUsersArgs } from '../dto/get-users.input'
 import { ForgotPasswordInput } from '../dto/forgot-password.input'
+import { ToggleFollowInput } from '../dto/toggle-follow.input'
 import { User } from '../models/user.model'
 import { UserService } from '../services/user.service'
 import { SignupInput } from '../dto/signup.input'
@@ -72,5 +73,11 @@ export class UserResolver {
   async deleteAuthUser(@Context() context) {
     console.log(context.req.username)
     return await this.userService.deleteByEmail(context.req.username)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @Context() context) {
+    return this.userService.toggleFollow(context.req.username, toggleFollowInput.otherUserId, toggleFollowInput.value)
   }
 }
