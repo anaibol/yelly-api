@@ -18,6 +18,8 @@ model City {
   isValid       Boolean?       @map("is_valid")
   country       Country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_2D5B0234F92F3E70")
   userTraining  UserTraining[]
+  schools School[]
+
   @@index([countryId], map: "IDX_2D5B0234F92F3E70")
   @@map("city")
 }
@@ -91,6 +93,7 @@ model School {
   lng           String?        @db.VarChar(255)
   isValid       Boolean?       @map("is_valid")
   cityId        Bytes?         @map("city_id") @db.Binary(16)
+  city          City?          @relation(fields: [cityId], references: [id])
   country       Country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_F99EDABBF92F3E70")
   userTraining  UserTraining[]
   @@index([countryId], map: "IDX_F99EDABBF92F3E70")
