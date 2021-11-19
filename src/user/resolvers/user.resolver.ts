@@ -8,7 +8,7 @@ import { ForgotPasswordInput } from '../dto/forgot-password.input'
 import { ToggleFollowInput } from '../dto/toggle-follow.input'
 import { User } from '../models/user.model'
 import { UserService } from '../services/user.service'
-import { SignupInput } from '../dto/signup.input'
+import { SignUpInput } from '../dto/sign-up.input'
 import { CityService } from 'src/user-training/services/city.service'
 import { SchoolService } from 'src/user-training/services/school.service'
 import { TrainingService } from 'src/user-training/services/training.service'
@@ -58,14 +58,8 @@ export class UserResolver {
   }
 
   @Mutation(() => User)
-  async signup(@Args('input') signupData: SignupInput) {
-    const city = await this.cityService.create(signupData.userTraining.city)
-    const school = await this.schoolService.create(signupData.userTraining.school)
-    const training = await this.trainingService.create(signupData.userTraining.training)
-    const user = await this.userService.create(signupData.user)
-    await this.userTrainingService.create(user.id, training.id, city.id, school.id, signupData.userTraining.dateBegin)
-
-    return user
+  signUp(@Args('input') signUpData: SignUpInput) {
+    return this.userService.signUp(signUpData)
   }
 
   @UseGuards(AuthGuard)

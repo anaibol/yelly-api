@@ -6,9 +6,10 @@ import { PrismaService } from 'src/core/services/prisma.service'
 export class UserTrainingService {
   constructor(private prismaService: PrismaService) {}
 
-  async create(userId: Buffer, trainingId: Buffer, cityId: Buffer, schoolId: Buffer, dateBegin: Date) {
+  create(userId: Buffer, trainingId: Buffer, cityId: Buffer, schoolId: Buffer, dateBegin: Date) {
     const uuid = randomUUID()
-    return await this.prismaService.userTraining.create({
+
+    return this.prismaService.userTraining.create({
       data: {
         id: this.prismaService.mapStringIdToBuffer(uuid),
         userId: userId,

@@ -3,7 +3,7 @@ import { CreateUserTrainingInput } from 'src/user-training/dto/create-user-train
 import { UserCreateInput } from './create-user.input'
 
 @InputType()
-export class SignupInput {
+export class SignUpInput {
   @Field()
   user: UserCreateInput
 

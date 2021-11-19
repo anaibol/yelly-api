@@ -64,7 +64,7 @@ type Mutation {
   createPost(input: CreatePostInput!): Post!
   deleteAuthUser: Boolean!
   forgotPassword(input: ForgotPasswordInput!): User!
-  signup(input: SignupInput!): User!
+  signUp(input: SignUpInput!): User!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
   updateAuthUserTraining(id: String!, input: UpdateUserTrainingInput!): UserTraining!
 }
@@ -96,7 +96,7 @@ type School {
   name: String!
 }
 
-input SignupInput {
+input SignUpInput {
   user: UserCreateInput!
   userTraining: CreateUserTrainingInput!
 }

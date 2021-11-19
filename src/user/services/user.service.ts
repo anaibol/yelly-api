@@ -1,15 +1,31 @@
 import { Injectable } from '@nestjs/common'
+import { School, Training, User, UserTraining } from '@prisma/client'
+import * as bcrypt from 'bcrypt'
 import { randomBytes, randomUUID } from 'crypto'
 import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
+import { AlgoliaService } from 'src/core/services/algolia.service'
 import { EmailService } from 'src/core/services/email.service'
 import { PrismaService } from 'src/core/services/prisma.service'
+import { CityService } from 'src/user-training/services/city.service'
+import { SchoolService } from 'src/user-training/services/school.service'
+import { TrainingService } from 'src/user-training/services/training.service'
+import { UserTrainingService } from 'src/user-training/services/user-training.service'
 import { UserCreateInput } from '../dto/create-user.input'
+import { SignUpInput } from '../dto/sign-up.input'
 import { NotFoundUserException } from '../exceptions/not-found-user.exception'
-import * as bcrypt from 'bcrypt'
+import { UserIndexAlgoliaInterface } from '../interfaces/user-index-algolia.interface'
 
 @Injectable()
 export class UserService {
-  constructor(private prismaService: PrismaService, private emailService: EmailService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private emailService: EmailService,
+    private algoliaService: AlgoliaService,
+    private cityService: CityService,
+    private schoolService: SchoolService,
+    private trainingService: TrainingService,
+    private userTrainingService: UserTrainingService
+  ) {}
 
   async hasUserPostedOnTag(email, tagText) {
     const post = await this.prismaService.post.findFirst({
@@ -217,6 +233,67 @@ export class UserService {
     })
 
     return true
+  }
+  async syncUsersIndexWithAlgolia(user: User, userTraining: UserTraining, training: Training, school: School) {
+    const usersIndex = this.algoliaService.initIndex('USERS')
+
+    const countryOfTheSchool = await this.prismaService.country.findFirst({
+      where: {
+        id: school.countryId,
+      },
+    })
+
+    const newUserAlgoliaObject: UserIndexAlgoliaInterface = {
+      lastName: user.lastName,
+      firstName: user.firstName,
+      birthdateTimestamp: Date.parse(user.birthdate.toString()),
+      hasPicture: user.pictureId != null,
+      id: this.prismaService.mapBufferIdToString(user.id),
+      lastTraining: {
+        id: this.prismaService.mapBufferIdToString(userTraining.id),
+        training: {
+          id: this.prismaService.mapBufferIdToString(training.id),
+          name: training.name,
+        },
+        school: {
+          id: this.prismaService.mapBufferIdToString(school.id),
+          name: school.name,
+          countryName: countryOfTheSchool.name,
+          postalCode: school.postalCode,
+          googlePlaceId: school.googlePlaceId,
+          _geoloc: {
+            lat: school.lat,
+            lng: school.lng,
+          },
+        },
+      },
+    }
+
+    return this.algoliaService.saveObject(
+      usersIndex,
+      newUserAlgoliaObject,
+      this.prismaService.mapBufferIdToString(user.id)
+    )
+  }
+
+  async signUp(signUpData: SignUpInput) {
+    const [city, school, training, user] = await Promise.all([
+      this.cityService.create(signUpData.userTraining.city),
+      this.schoolService.create(signUpData.userTraining.school),
+      this.trainingService.create(signUpData.userTraining.training),
+      this.create(signUpData.user),
+    ])
+    const userTraining = await this.userTrainingService.create(
+      user.id,
+      training.id,
+      city.id,
+      school.id,
+      signUpData.userTraining.dateBegin
+    )
+
+    this.syncUsersIndexWithAlgolia(user, userTraining, training, school)
+
+    return user
   }
 
   mapBufferIdToUUID(users) {

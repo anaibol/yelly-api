@@ -1,28 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import algoliasearch from 'algoliasearch';
+import { Injectable } from '@nestjs/common'
+import algoliasearch from 'algoliasearch'
 
 @Injectable()
 export class AlgoliaService {
-  client;
-  indexPrefix = process.env.ALGOLIA_INDEX_PREFIX;
+  client
+  indexPrefix = process.env.ALGOLIA_INDEX_PREFIX
   constructor() {
-    this.client = algoliasearch(
-      process.env.ALGOLIA_APP_ID,
-      process.env.ALGOLIA_API_KEY,
-    );
+    this.client = algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_API_KEY)
   }
 
   initIndex(indexName: string) {
-    return this.client.initIndex(this.indexPrefix + indexName);
+    return this.client.initIndex(this.indexPrefix + indexName)
   }
 
-  addObject(index: any, objectToAdd: any, objectID: any) {
-    return index.addObject(
-      {
-        ...objectToAdd,
-      },
+  saveObject(index: any, objectToAdd: any, objectID: any) {
+    return index.saveObject({
+      ...objectToAdd,
       objectID,
-    );
+    })
   }
 
   partialUpdateObject(index: any, objectToUpdate: any, objectID: any) {
@@ -33,8 +28,8 @@ export class AlgoliaService {
       },
       {
         createIfNotExists: true,
-      },
-    );
+      }
+    )
   }
 
   incrementValue(index: any, objectToUpdateOrCreate: any, objectID: any) {
@@ -45,6 +40,6 @@ export class AlgoliaService {
         value: 1,
       },
       objectID,
-    });
+    })
   }
 }
