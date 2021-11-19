@@ -65,6 +65,7 @@ type Mutation {
   deleteAuthUser: Boolean!
   forgotPassword(input: ForgotPasswordInput!): User!
   signup(input: SignupInput!): User!
+  toggleFollowUser(input: ToggleFollowInput!): Boolean!
   updateAuthUserTraining(id: String!, input: UpdateUserTrainingInput!): UserTraining!
 }
 
@@ -109,6 +110,11 @@ type Tag {
   text: String!
 }
 
+input ToggleFollowInput {
+  otherUserId: String!
+  value: Boolean!
+}
+
 type Training {
   id: String!
   name: String!
@@ -125,6 +131,8 @@ type User {
   about: String
   birthdate: DateTime
   firstName: String!
+  followersCount: Float
+  followingCount: Float
   id: String!
   instagram: String
   isFilled: Boolean

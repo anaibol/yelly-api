@@ -43,6 +43,12 @@ export class User {
   @Field(() => UserTraining)
   userTraining: UserTraining
 
-  @Field((type) => [Post], { nullable: true })
+  @Field(() => [Post], { nullable: true })
   posts?: Post[]
+
+  @Field(() => Number, { nullable: true })
+  followersCount
+
+  @Field(() => Number, { nullable: true })
+  followingCount
 }
