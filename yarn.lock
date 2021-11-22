@@ -967,7 +967,7 @@
     semver "^7.3.5"
     tar "^6.1.11"
 
-"@nestjs/cli@^8.0.0":
+"@nestjs/cli@8.1.5":
   version "8.1.5"
   resolved "https://registry.yarnpkg.com/@nestjs/cli/-/cli-8.1.5.tgz#3149c89c18901bfd31a7458369e4d03b9e130bd3"
   integrity sha512-eGlSTCFf/M3ACSNpW3mx5raZ+qq7k/4v6nFuaGpKafQKSKNw7cRVqSeAtHzd7bcK0ik7tKTyhQ8oxnygMLm5Iw==
