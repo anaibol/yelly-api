@@ -30,6 +30,7 @@ export class PostService {
         }),
       },
       select: {
+        id: true,
         createdAt: true,
         viewsCount: true,
         text: true,
@@ -76,8 +77,8 @@ export class PostService {
     return posts.map((post) => ({
       ...post,
       author: {
-        id: this.prismaService.mapBufferIdToString(post.author.id),
         ...post.author,
+        id: this.prismaService.mapBufferIdToString(post.author.id),
       },
       tags: post.tags.map((tag) => {
         return {
