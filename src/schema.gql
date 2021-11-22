@@ -80,6 +80,7 @@ type Post {
   id: String!
   tags: [Tag!]!
   text: String!
+  viewsCount: Float!
 }
 
 type Query {
