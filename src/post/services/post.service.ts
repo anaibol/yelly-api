@@ -10,8 +10,6 @@ export class PostService {
 
   // TODO: Add return type, is not q expected result
   async find(tagText = '', userId = '', currentCursor = '', limit = DEFAULT_LIMIT) {
-    const cursorDefinition = this.getFindCursorDefinition(currentCursor)
-
     const posts = await this.prismaService.post.findMany({
       where: {
         ...(tagText.length && {
@@ -24,10 +22,17 @@ export class PostService {
         ...(userId.length && {
           authorId: this.prismaService.mapStringIdToBuffer(userId),
         }),
+        ...(currentCursor && {
+          cursor: {
+            createdAt: new Date(+currentCursor).toISOString(),
+          },
+          skip: 1, // Skip the cursor
+        }),
       },
-      ...cursorDefinition,
       select: {
+        createdAt: true,
         viewsCount: true,
+        text: true,
         author: {
           select: {
             id: true,
@@ -59,39 +64,12 @@ export class PostService {
       },
       take: limit,
     })
+
     const mappedPosts = this.mapAuthorBufferIdToUUID(posts)
-    const cursor = this.getCursor(mappedPosts, limit)
+
+    const cursor = posts.length === limit && posts[limit - 1].createdAt
 
     return { posts: mappedPosts, cursor }
-  }
-
-  private getFindCursorDefinition(currentCursor) {
-    let cursorDefinition = {}
-    if (currentCursor !== '') {
-      cursorDefinition = {
-        cursor: {
-          createdAt: new Date(+currentCursor).toISOString(),
-        },
-        skip: 1, // Skip the cursor
-      }
-    }
-
-    return cursorDefinition
-  }
-
-  private getCursor(posts, limit: number) {
-    let areMoreRecordsAvailable = false
-    let cursor = ''
-
-    if (posts.length === limit) {
-      areMoreRecordsAvailable = true // INFO: if limit > taken records so there aren't more records to read.
-    }
-    if (areMoreRecordsAvailable) {
-      const lastPostInResults = posts[limit - 1] // Remember: zero-based index! :)
-      cursor = lastPostInResults.createdAt
-    }
-
-    return cursor
   }
 
   mapAuthorBufferIdToUUID(posts) {
