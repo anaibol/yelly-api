@@ -95,24 +95,22 @@ export class PostService {
   }
 
   mapAuthorBufferIdToUUID(posts) {
-    return posts.map((post) => {
-      return {
-        ...post,
-        author: {
-          id: this.prismaService.mapBufferIdToString(post.author.id),
-          ...post.author,
-        },
-        tags: post.tags.map((tag) => {
-          return {
+    return posts.map((post) => ({
+      ...post,
+      author: {
+        id: this.prismaService.mapBufferIdToString(post.author.id),
+        ...post.author,
+      },
+      tags: post.tags.map((tag) => {
+        return {
+          ...tag,
+          author: {
+            id: this.prismaService.mapBufferIdToString(tag.author.id),
             ...tag,
-            author: {
-              id: this.prismaService.mapBufferIdToString(tag.author.id),
-              ...tag,
-            },
-          }
-        }),
-      }
-    })
+          },
+        }
+      }),
+    }))
   }
 
   trackPostView(postId: string) {
