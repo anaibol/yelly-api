@@ -21,7 +21,8 @@ COPY yarn.lock ./
 COPY package.json ./
 COPY prisma ./prisma/
 
-RUN yarn --frozen-lockfile --production
+RUN yarn --frozen-lockfile
+# RUN yarn --frozen-lockfile --production
 
 COPY . .
 
