@@ -18,8 +18,8 @@ ENV EMAIL_PROVIDER_API_KEY=$EMAIL_PROVIDER_API_KEY
 WORKDIR /app
 COPY package*.json ./
 
-RUN npm install
+RUN yarn --frozen-lockfile
 COPY . /app
 
-CMD npm run start
+CMD yarn start
 EXPOSE 8080
