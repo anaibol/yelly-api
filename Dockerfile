@@ -16,10 +16,14 @@ ENV EMAIL_PROVIDER_API_KEY=$EMAIL_PROVIDER_API_KEY
 # PROVISIONING #
 #==============#
 WORKDIR /app
-COPY yarn.lock ./
 
-RUN yarn --frozen-lockfile
-COPY . /app
+COPY yarn.lock ./
+COPY package.json ./
+COPY prisma ./prisma/
+
+RUN yarn --frozen-lockfile --production
+
+COPY . .
 
 CMD yarn start
 EXPOSE 8080
