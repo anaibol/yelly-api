@@ -118,6 +118,7 @@ export class UserService {
             followers: true,
           },
         },
+        following: true,
         posts: {
           orderBy: {
             createdAt: 'desc',
@@ -302,11 +303,19 @@ export class UserService {
         ...user,
       }
 
+      console.log('user:', user.following)
+
       userWithUUID.id = this.prismaService.mapBufferIdToString(user.id)
       userWithUUID.userTraining.id = this.prismaService.mapBufferIdToString(user.userTraining.id)
       userWithUUID.userTraining.city.id = this.prismaService.mapBufferIdToString(user.userTraining.city.id)
       userWithUUID.userTraining.school.id = this.prismaService.mapBufferIdToString(user.userTraining.school.id)
       userWithUUID.userTraining.training.id = this.prismaService.mapBufferIdToString(user.userTraining.training.id)
+      userWithUUID.following = user.following
+        ? user.following.map((userFollowing) => ({
+            ...userFollowing,
+            id: this.prismaService.mapBufferIdToString(userFollowing.id),
+          }))
+        : []
       userWithUUID.followingCount = user._count.following
       userWithUUID.followersCount = user._count.followers
       return userWithUUID
