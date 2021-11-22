@@ -132,6 +132,7 @@ type User {
   about: String
   birthdate: DateTime
   firstName: String!
+  followers: [User!]
   followersCount: Float
   following: [User!]
   followingCount: Float

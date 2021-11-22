@@ -83,6 +83,24 @@ export class UserService {
             followers: true,
           },
         },
+        following: {
+          include: {
+            userTraining: {
+              include: {
+                school: true,
+              },
+            },
+          },
+        },
+        followers: {
+          include: {
+            userTraining: {
+              include: {
+                school: true,
+              },
+            },
+          },
+        },
         posts: {
           orderBy: {
             createdAt: 'desc',
@@ -118,7 +136,24 @@ export class UserService {
             followers: true,
           },
         },
-        following: true,
+        following: {
+          include: {
+            userTraining: {
+              include: {
+                school: true,
+              },
+            },
+          },
+        },
+        followers: {
+          include: {
+            userTraining: {
+              include: {
+                school: true,
+              },
+            },
+          },
+        },
         posts: {
           orderBy: {
             createdAt: 'desc',
@@ -314,6 +349,12 @@ export class UserService {
         ? user.following.map((userFollowing) => ({
             ...userFollowing,
             id: this.prismaService.mapBufferIdToString(userFollowing.id),
+          }))
+        : []
+      userWithUUID.followers = user.followers
+        ? user.followers.map((userFollower) => ({
+            ...userFollower,
+            id: this.prismaService.mapBufferIdToString(userFollower.id),
           }))
         : []
       userWithUUID.followingCount = user._count.following

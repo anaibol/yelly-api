@@ -54,4 +54,7 @@ export class User {
 
   @Field(() => [User], { nullable: true })
   following
+
+  @Field(() => [User], { nullable: true })
+  followers
 }
