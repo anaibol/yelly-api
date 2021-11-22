@@ -1,13 +1,13 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql'
 
 @ObjectType()
 export class LiveTagAuthUser {
   @Field()
-  id: string;
+  id: string
 
   @Field()
-  text: string;
+  text: string
 
   @Field()
-  authUserPosted: boolean;
+  authUserPosted: boolean
 }

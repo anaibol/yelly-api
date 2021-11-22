@@ -26,7 +26,8 @@ export class PostService {
         }),
       },
       ...cursorDefinition,
-      include: {
+      select: {
+        viewsCount: true,
         author: {
           select: {
             id: true,
@@ -58,7 +59,7 @@ export class PostService {
       },
       take: limit,
     })
-    const mappedPosts = this.mapauthorBufferIdToUUID(posts)
+    const mappedPosts = this.mapAuthorBufferIdToUUID(posts)
     const cursor = this.getCursor(mappedPosts, limit)
 
     return { posts: mappedPosts, cursor }
@@ -93,23 +94,31 @@ export class PostService {
     return cursor
   }
 
-  mapauthorBufferIdToUUID(posts) {
+  mapAuthorBufferIdToUUID(posts) {
     return posts.map((post) => {
-      const postWithUUID = {
+      return {
         ...post,
+        author: {
+          id: this.prismaService.mapBufferIdToString(post.author.id),
+          ...post.author,
+        },
+        tags: post.tags.map((tag) => {
+          return {
+            ...tag,
+            author: {
+              id: this.prismaService.mapBufferIdToString(tag.author.id),
+              ...tag,
+            },
+          }
+        }),
       }
-      postWithUUID.author.id = this.prismaService.mapBufferIdToString(post.author.id)
+    })
+  }
 
-      postWithUUID.tags = post.tags.map((tag) => {
-        const tagWithUUID = {
-          ...tag,
-        }
-        tagWithUUID.author.id = this.prismaService.mapBufferIdToString(tag.author.id)
-
-        return tagWithUUID
-      })
-
-      return postWithUUID
+  trackPostView(postId: string) {
+    this.prismaService.post.update({
+      where: { id: postId },
+      data: { viewsCount: { increment: 1 } },
     })
   }
 
@@ -170,7 +179,7 @@ export class PostService {
 
     // INFO: generate an array to reuse the same mapFunction
     const posts = [post]
-    const mappedPost = this.mapauthorBufferIdToUUID(posts)[0]
+    const mappedPost = this.mapAuthorBufferIdToUUID(posts)[0]
 
     this.tagService.syncTagIndexWithAlgolia(tagText, mappedPost)
 
