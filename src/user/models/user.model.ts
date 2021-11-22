@@ -51,4 +51,7 @@ export class User {
 
   @Field(() => Number, { nullable: true })
   followingCount
+
+  @Field(() => [User], { nullable: true })
+  following
 }

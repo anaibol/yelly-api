@@ -132,6 +132,7 @@ type User {
   birthdate: DateTime
   firstName: String!
   followersCount: Float
+  following: [User!]
   followingCount: Float
   id: String!
   instagram: String
