@@ -68,7 +68,7 @@ export class PostService {
 
     const mappedPosts = this.mapAuthorBufferIdToUUID(posts)
 
-    const cursor = posts.length === limit && posts[limit - 1].createdAt
+    const cursor = (posts.length === limit && posts[limit - 1].createdAt) || ''
 
     return { posts: mappedPosts, cursor }
   }

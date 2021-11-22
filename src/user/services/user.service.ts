@@ -66,7 +66,7 @@ export class UserService {
       skip: offset,
     })
 
-    return this.mapBufferIdToUUID(users)
+    return this.mapUsers(users)
   }
 
   async findOne(id) {
@@ -103,7 +103,7 @@ export class UserService {
       },
     })
 
-    return this.mapBufferIdToUUID([user])[0]
+    return this.mapUsers([user])[0]
   }
 
   async findByEmail(email: string) {
@@ -141,7 +141,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundUserException()
     }
-    return this.mapBufferIdToUUID([user])[0]
+    return this.mapUsers([user])[0]
   }
 
   async requestResetPassword(email: string) {
@@ -297,7 +297,7 @@ export class UserService {
     return user
   }
 
-  mapBufferIdToUUID(users) {
+  mapUsers(users) {
     return users.map((user) => {
       const userWithUUID = {
         ...user,
