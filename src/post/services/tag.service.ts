@@ -36,7 +36,7 @@ export class TagService {
       },
     })
     // INFO: Map data to fit Tag index algolia interface
-    const lastUsers = this.mapauthorBufferIdToUUID(tag.posts)
+    const lastUsers = this.mapAuthorBufferIdToUUID(tag.posts)
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       id: tag.id,
       text: tagText,
@@ -101,7 +101,7 @@ export class TagService {
     })
   }
 
-  mapauthorBufferIdToUUID(posts) {
+  mapAuthorBufferIdToUUID(posts) {
     return posts.map((post) => {
       const authorWithUUID = {
         ...post.author,

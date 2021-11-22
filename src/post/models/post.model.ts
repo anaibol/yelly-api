@@ -13,6 +13,9 @@ export class Post {
   @Field()
   createdAt: string
 
+  @Field()
+  viewsCount: number
+
   @Field(() => [Tag])
   tags: Tag[]
 
