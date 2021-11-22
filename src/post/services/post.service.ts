@@ -9,26 +9,26 @@ export class PostService {
   constructor(private prismaService: PrismaService, private tagService: TagService) {}
 
   // TODO: Add return type, is not q expected result
-  async find(tagText = '', userId = '', currentCursor = '', limit = DEFAULT_LIMIT) {
+  async find(tagText, userId, currentCursor, limit = DEFAULT_LIMIT) {
     const posts = await this.prismaService.post.findMany({
       where: {
-        ...(tagText.length && {
+        ...(tagText && {
           tags: {
             every: {
               text: tagText,
             },
           },
         }),
-        ...(userId.length && {
+        ...(userId && {
           authorId: this.prismaService.mapStringIdToBuffer(userId),
         }),
-        ...(currentCursor && {
-          cursor: {
-            createdAt: new Date(+currentCursor).toISOString(),
-          },
-          skip: 1, // Skip the cursor
-        }),
       },
+      ...(currentCursor && {
+        cursor: {
+          createdAt: new Date(+currentCursor).toISOString(),
+        },
+        skip: 1, // Skip the cursor
+      }),
       select: {
         id: true,
         createdAt: true,
@@ -68,7 +68,7 @@ export class PostService {
 
     const mappedPosts = this.mapAuthorBufferIdToUUID(posts)
 
-    const cursor = (posts.length === limit && posts[limit - 1].createdAt) || ''
+    const cursor = posts.length === limit && posts[limit - 1].createdAt
 
     return { posts: mappedPosts, cursor }
   }
