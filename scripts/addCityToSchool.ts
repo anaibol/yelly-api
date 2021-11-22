@@ -15,18 +15,29 @@ async function main() {
         },
       ],
       cityId: null,
+      isValid: true,
     },
     select: {
       id: true,
       name: true,
       googlePlaceId: true,
     },
-    take: 300,
+    take: 1000,
   })
 
+  //console.log(allSchools)
   allSchools.map(async ({ id, googlePlaceId }) => {
+    await prisma.school.update({
+      where: {
+        id,
+      },
+      data: {
+        isValid: false,
+      },
+    })
     const googlePlaceCityName = await getCityNameWithCountry(googlePlaceId)
 
+    console.log(googlePlaceId + ' ' + googlePlaceCityName)
     if (googlePlaceCityName) {
       const predictions = await getGoogleCityByName(googlePlaceCityName)
 
@@ -34,13 +45,35 @@ async function main() {
         const googlePlaceCity = await getGooglePlaceDetails(predictions[0].place_id)
 
         if (googlePlaceCity) {
-          const { id: cityId } =
-            (await prisma.city.findFirst({
-              where: {
-                googlePlaceId: googlePlaceCity.place_id,
-              },
-            })) ||
-            (await prisma.city.create({
+          let cityExist = await prisma.city.findFirst({
+            where: {
+              googlePlaceId: googlePlaceCity.place_id,
+            },
+          })
+
+          if (!cityExist) {
+            const address_components = googlePlaceCity.address_components
+
+            let countryName: string
+
+            address_components.map((component) => {
+              if (component.types.includes('country')) countryName = component.long_name
+            })
+
+            const { id: countryId } =
+              (await prisma.country.findFirst({
+                where: {
+                  name: countryName,
+                },
+              })) ||
+              (await prisma.country.create({
+                data: {
+                  id: mapStringIdToBuffer(randomUUID()),
+                  name: countryName,
+                },
+              }))
+
+            cityExist = await prisma.city.create({
               data: {
                 id: mapStringIdToBuffer(randomUUID()),
                 name: googlePlaceCity.name,
@@ -48,15 +81,19 @@ async function main() {
                 isValid: true,
                 lat: googlePlaceCity.geometry.location.lat.toString(),
                 lng: googlePlaceCity.geometry.location.lng.toString(),
+                countryId: countryId,
               },
-            }))
+            })
+          }
 
+          console.log(googlePlaceId + ' ' + cityExist.name)
           await prisma.school.update({
             where: {
               id,
             },
             data: {
-              cityId,
+              cityId: cityExist.id,
+              isValid: true,
             },
           })
         }
@@ -75,16 +112,12 @@ async function getCityNameWithCountry(googlePlaceId: string): Promise<string> {
   )
 
   if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined') return null
-  const address_components = response.data.result.address_components
+  const { address_components: addressComponents } = response.data.result.address_components
 
-  let city: string
-  let country: string
+  const locality = addressComponents.find((component) => component.types.includes('locality'))
+  const postal_town = addressComponents.find((component) => component.types.includes('postal_town'))
 
-  address_components.map((component) => {
-    if (component.types.includes('locality')) city = component.long_name
-    if (component.types.includes('country')) country = component.long_name
-  })
-  return city + ' ' + country
+  return locality || postal_town
 }
 
 async function getGooglePlaceDetails(googlePlaceId: string) {
