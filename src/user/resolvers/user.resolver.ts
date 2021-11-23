@@ -52,6 +52,20 @@ export class UserResolver {
     return result
   }
 
+  @Query(() => User, { name: 'userFollowers' })
+  @UseGuards(AuthGuard)
+  async getUserFollowers(@Args('id') id: string, @Context() context) {
+    const result = await this.userService.getUserFollowers(context.req.username, id)
+    return result
+  }
+
+  @Query(() => User, { name: 'userFollowing' })
+  @UseGuards(AuthGuard)
+  async getUserFollowing(@Args('id') id: string, @Context() context) {
+    const result = await this.userService.getUserFollowing(context.req.username, id)
+    return result
+  }
+
   @Mutation(() => User)
   async forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput) {
     return this.userService.requestResetPassword(forgotPasswordInput.email)

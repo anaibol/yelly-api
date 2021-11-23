@@ -88,6 +88,8 @@ type Query {
   me: User!
   postsFeed(after: String, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   user(id: String!): User!
+  userFollowers(id: String!): User!
+  userFollowing(id: String!): User!
   users(after: String, limit: Int = 10): [User!]!
 }
 
@@ -138,6 +140,7 @@ type User {
   followingCount: Float
   id: String!
   instagram: String
+  isAuthUserFollowing: Boolean
   isFilled: Boolean
   lastName: String!
   locale: String
