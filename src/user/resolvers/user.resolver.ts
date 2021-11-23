@@ -31,43 +31,40 @@ export class UserResolver {
   async me(@Context() context) {
     const user = await this.userService.findByEmail(context.req.username)
 
-    user.unreadNotificationsCount = await this.notificationService.countUnreadNotifications(
-      this.prismaService.mapStringIdToBuffer(user.id)
-    )
-
-    return user
+    return {
+      ...user,
+      unreadNotificationsCount: await this.notificationService.countUnreadNotifications(
+        this.prismaService.mapStringIdToBuffer(user.id)
+      ),
+    }
   }
 
   @Query(() => [User], { name: 'users' })
   @UseGuards(AuthGuard)
-  async find(@Args() getUsersArgs: GetUsersArgs) {
-    const result = await this.userService.find(0, getUsersArgs.limit)
-    return result
+  find(@Args() getUsersArgs: GetUsersArgs) {
+    return this.userService.find(0, getUsersArgs.limit)
   }
 
   @Query(() => User, { name: 'user' })
   @UseGuards(AuthGuard)
-  async findOne(@Args('id') id: string) {
-    const result = await this.userService.findOne(id)
-    return result
+  findOne(@Args('id') id: string) {
+    return this.userService.findOne(id)
   }
 
   @Query(() => FollowshipUser, { name: 'userFollowers' })
   @UseGuards(AuthGuard)
-  async getUserFollowers(@Args('id') id: string, @Context() context) {
-    const result = await this.userService.getUserFollowers(context.req.username, id)
-    return result
+  getUserFollowers(@Args('id') id: string, @Context() context) {
+    return this.userService.getUserFollowers(context.req.username, id)
   }
 
   @Query(() => FollowshipUser, { name: 'userFollowing' })
   @UseGuards(AuthGuard)
-  async getUserFollowing(@Args('id') id: string, @Context() context) {
-    const result = await this.userService.getUserFollowing(context.req.username, id)
-    return result
+  getUserFollowing(@Args('id') id: string, @Context() context) {
+    return this.userService.getUserFollowing(context.req.username, id)
   }
 
   @Mutation(() => User)
-  async forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput) {
+  forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput) {
     return this.userService.requestResetPassword(forgotPasswordInput.email)
   }
 
@@ -79,8 +76,7 @@ export class UserResolver {
   @UseGuards(AuthGuard)
   @Mutation((returns) => Boolean)
   async deleteAuthUser(@Context() context) {
-    console.log(context.req.username)
-    return await this.userService.deleteByEmail(context.req.username)
+    return this.userService.deleteByEmail(context.req.username)
   }
 
   @UseGuards(AuthGuard)

@@ -181,7 +181,11 @@ export class UserService {
             firstName: true,
             userTraining: {
               select: {
-                school: true,
+                school: {
+                  select: {
+                    name: true,
+                  },
+                },
               },
             },
           },
@@ -244,7 +248,11 @@ export class UserService {
             id: true,
             userTraining: {
               select: {
-                school: true,
+                school: {
+                  select: {
+                    name: true,
+                  },
+                },
               },
             },
           },
