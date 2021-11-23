@@ -92,11 +92,13 @@ export class PostService {
     }))
   }
 
-  trackPostView(postId: string) {
-    this.prismaService.post.update({
+  async trackPostView(postId: string) {
+    await this.prismaService.post.update({
       where: { id: postId },
       data: { viewsCount: { increment: 1 } },
     })
+
+    return true
   }
 
   // TODO: Add return type, is not q expected result
