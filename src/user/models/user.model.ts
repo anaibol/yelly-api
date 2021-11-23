@@ -3,6 +3,18 @@ import { UserTraining } from 'src/user-training/models/userTraining.model'
 import { Post } from '../../post/models/post.model'
 
 @ObjectType()
+export class FollowshipUser {
+  @Field(() => Boolean, { nullable: true })
+  isAuthUserFollowing
+
+  @Field(() => [User], { nullable: true })
+  following
+
+  @Field(() => [User], { nullable: true })
+  followers
+}
+
+@ObjectType()
 export class User {
   @Field()
   id: string
@@ -53,5 +65,11 @@ export class User {
   followingCount
 
   @Field(() => [User], { nullable: true })
-  following
+  following: FollowshipUser
+
+  @Field(() => [User], { nullable: true })
+  followers: FollowshipUser
+
+  @Field(() => Boolean, { nullable: true })
+  isAuthUserFollowing
 }
