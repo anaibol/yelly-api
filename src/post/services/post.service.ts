@@ -92,9 +92,9 @@ export class PostService {
     }))
   }
 
-  async trackPostView(postId: string) {
-    await this.prismaService.post.update({
-      where: { id: postId },
+  async trackPostViews(postsIds: string[]) {
+    await this.prismaService.post.updateMany({
+      where: { id: { in: postsIds } },
       data: { viewsCount: { increment: 1 } },
     })
 
