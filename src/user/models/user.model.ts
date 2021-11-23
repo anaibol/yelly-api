@@ -3,7 +3,7 @@ import { UserTraining } from 'src/user-training/models/userTraining.model'
 import { Post } from '../../post/models/post.model'
 
 @ObjectType()
-class FollowshipUser {
+export class FollowshipUser {
   @Field(() => Boolean, { nullable: true })
   isAuthUserFollowing
 
@@ -69,4 +69,7 @@ export class User {
 
   @Field(() => [User], { nullable: true })
   followers: FollowshipUser
+
+  @Field(() => Boolean, { nullable: true })
+  isAuthUserFollowing
 }

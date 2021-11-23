@@ -6,7 +6,7 @@ import { NotificationService } from 'src/notification/services/notification.serv
 import { GetUsersArgs } from '../dto/get-users.input'
 import { ForgotPasswordInput } from '../dto/forgot-password.input'
 import { ToggleFollowInput } from '../dto/toggle-follow.input'
-import { User } from '../models/user.model'
+import { FollowshipUser, User } from '../models/user.model'
 import { UserService } from '../services/user.service'
 import { SignUpInput } from '../dto/sign-up.input'
 import { CityService } from 'src/user-training/services/city.service'
@@ -52,14 +52,14 @@ export class UserResolver {
     return result
   }
 
-  @Query(() => User, { name: 'userFollowers' })
+  @Query(() => FollowshipUser, { name: 'userFollowers' })
   @UseGuards(AuthGuard)
   async getUserFollowers(@Args('id') id: string, @Context() context) {
     const result = await this.userService.getUserFollowers(context.req.username, id)
     return result
   }
 
-  @Query(() => User, { name: 'userFollowing' })
+  @Query(() => FollowshipUser, { name: 'userFollowing' })
   @UseGuards(AuthGuard)
   async getUserFollowing(@Args('id') id: string, @Context() context) {
     const result = await this.userService.getUserFollowing(context.req.username, id)
