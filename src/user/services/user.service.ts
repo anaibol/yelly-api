@@ -14,7 +14,6 @@ import { UserCreateInput } from '../dto/create-user.input'
 import { SignUpInput } from '../dto/sign-up.input'
 import { NotFoundUserException } from '../exceptions/not-found-user.exception'
 import { UserIndexAlgoliaInterface } from '../interfaces/user-index-algolia.interface'
-import { set } from 'lodash'
 
 @Injectable()
 export class UserService {
@@ -77,7 +76,14 @@ export class UserService {
       where: {
         id: bufferId,
       },
-      include: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        pictureId: true,
+        birthdate: true,
+        about: true,
+        instagram: true,
         _count: {
           select: {
             following: true,
@@ -85,18 +91,18 @@ export class UserService {
           },
         },
         following: {
-          include: {
+          select: {
             userTraining: {
-              include: {
+              select: {
                 school: true,
               },
             },
           },
         },
         followers: {
-          include: {
+          select: {
             userTraining: {
-              include: {
+              select: {
                 school: true,
               },
             },
@@ -107,16 +113,25 @@ export class UserService {
             createdAt: 'desc',
           },
           take: 10,
-          include: {
+          select: {
+            createdAt: true,
+            id: true,
             tags: true,
             author: true,
+            text: true,
           },
         },
         userTraining: {
-          include: {
+          select: {
+            id: true,
+            dateBegin: true,
             city: true,
             school: true,
-            training: true,
+            training: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },
@@ -180,9 +195,12 @@ export class UserService {
       }
     })
 
-    set(userFollowers, 'followers', otherUserFollowers)
+    const formattedFollowers = {
+      ...userFollowers,
+      followers: otherUserFollowers,
+    }
 
-    return userFollowers
+    return formattedFollowers
   }
 
   async getUserFollowing(email, id) {
@@ -230,7 +248,7 @@ export class UserService {
       },
     })
 
-    const otherUserFollowings = userFollowers.following.map((otherUserFollowings) => {
+    const otherUserFollowing = userFollowers.following.map((otherUserFollowings) => {
       const id = this.prismaService.mapBufferIdToString(otherUserFollowings.id)
       const isAuthUserFollowing = followingIds.includes(id)
       return {
@@ -240,9 +258,12 @@ export class UserService {
       }
     })
 
-    set(userFollowers, 'following', otherUserFollowings)
+    const formattedFollowing = {
+      ...userFollowers,
+      following: otherUserFollowing,
+    }
 
-    return userFollowers
+    return formattedFollowing
   }
 
   async findByEmail(email: string) {
@@ -250,7 +271,14 @@ export class UserService {
       where: {
         email: email,
       },
-      include: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        pictureId: true,
+        birthdate: true,
+        about: true,
+        instagram: true,
         _count: {
           select: {
             following: true,
@@ -258,18 +286,18 @@ export class UserService {
           },
         },
         following: {
-          include: {
+          select: {
             userTraining: {
-              include: {
+              select: {
                 school: true,
               },
             },
           },
         },
         followers: {
-          include: {
+          select: {
             userTraining: {
-              include: {
+              select: {
                 school: true,
               },
             },
@@ -280,16 +308,25 @@ export class UserService {
             createdAt: 'desc',
           },
           take: 10,
-          include: {
+          select: {
+            createdAt: true,
+            id: true,
             tags: true,
             author: true,
+            text: true,
           },
         },
         userTraining: {
-          include: {
+          select: {
+            id: true,
+            dateBegin: true,
             city: true,
             school: true,
-            training: true,
+            training: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },
