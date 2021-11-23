@@ -9,12 +9,12 @@ import { Post } from '../models/post.model'
 
 @Resolver()
 export class PostResolver {
-  constructor(private postsService: PostService) {}
+  constructor(private postService: PostService) {}
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts, { name: 'postsFeed' })
   async getPostsFeed(@Args() GetPostsArgs?: GetPostsArgs) {
-    const { posts, cursor } = await this.postsService.find(
+    const { posts, cursor } = await this.postService.find(
       GetPostsArgs.tag,
       GetPostsArgs.userId,
       GetPostsArgs.after,
@@ -27,6 +27,12 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Mutation((returns) => Post)
   async createPost(@Args('input') createPostData: CreatePostInput, @Context() context) {
-    return this.postsService.create(createPostData, context.req.username)
+    return this.postService.create(createPostData, context.req.username)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation((returns) => Boolean)
+  async trackPostView(@Args('postId') postId: string) {
+    return this.postService.trackPostView(postId)
   }
 }
