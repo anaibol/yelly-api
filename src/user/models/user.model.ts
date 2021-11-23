@@ -69,7 +69,4 @@ export class User {
 
   @Field(() => [User], { nullable: true })
   followers: FollowshipUser
-
-  @Field(() => Boolean, { nullable: true })
-  isAuthUserFollowing
 }

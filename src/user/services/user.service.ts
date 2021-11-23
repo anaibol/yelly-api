@@ -90,24 +90,6 @@ export class UserService {
             followers: true,
           },
         },
-        following: {
-          select: {
-            userTraining: {
-              select: {
-                school: true,
-              },
-            },
-          },
-        },
-        followers: {
-          select: {
-            userTraining: {
-              select: {
-                school: true,
-              },
-            },
-          },
-        },
         posts: {
           orderBy: {
             createdAt: 'desc',
@@ -116,8 +98,19 @@ export class UserService {
           select: {
             createdAt: true,
             id: true,
-            tags: true,
-            author: true,
+            tags: {
+              select: {
+                text: true,
+                isLive: true,
+              },
+            },
+            author: {
+              select: {
+                firstName: true,
+                lastName: true,
+                pictureId: true,
+              },
+            },
             text: true,
           },
         },
@@ -125,10 +118,21 @@ export class UserService {
           select: {
             id: true,
             dateBegin: true,
-            city: true,
-            school: true,
+            city: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            school: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
             training: {
               select: {
+                id: true,
                 name: true,
               },
             },
@@ -287,20 +291,7 @@ export class UserService {
         },
         following: {
           select: {
-            userTraining: {
-              select: {
-                school: true,
-              },
-            },
-          },
-        },
-        followers: {
-          select: {
-            userTraining: {
-              select: {
-                school: true,
-              },
-            },
+            id: true,
           },
         },
         posts: {
@@ -311,8 +302,19 @@ export class UserService {
           select: {
             createdAt: true,
             id: true,
-            tags: true,
-            author: true,
+            tags: {
+              select: {
+                text: true,
+                isLive: true,
+              },
+            },
+            author: {
+              select: {
+                firstName: true,
+                lastName: true,
+                pictureId: true,
+              },
+            },
             text: true,
           },
         },
@@ -320,10 +322,21 @@ export class UserService {
           select: {
             id: true,
             dateBegin: true,
-            city: true,
-            school: true,
+            city: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            school: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
             training: {
               select: {
+                id: true,
                 name: true,
               },
             },

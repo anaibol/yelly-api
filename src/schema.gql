@@ -140,7 +140,6 @@ type User {
   followingCount: Float
   id: String!
   instagram: String
-  isAuthUserFollowing: Boolean
   isFilled: Boolean
   lastName: String!
   locale: String
