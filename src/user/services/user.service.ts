@@ -467,6 +467,21 @@ export class UserService {
     formattedUser.userTraining.training.id = this.prismaService.mapBufferIdToString(user.userTraining.training.id)
     formattedUser.followingCount = user._count.following
     formattedUser.followersCount = user._count.followers
+
+    formattedUser.following = user.following
+      ? user.following.map((userFollowing) => ({
+          ...userFollowing,
+          id: this.prismaService.mapBufferIdToString(userFollowing.id),
+        }))
+      : []
+
+    formattedUser.followers = user.followers
+      ? user.followers.map((userFollower) => ({
+          ...userFollower,
+          id: this.prismaService.mapBufferIdToString(userFollower.id),
+        }))
+      : []
+
     return formattedUser
   }
 }
