@@ -7,8 +7,8 @@ import { CreateCityInput } from '../dto/create-city.input'
 export class CityService {
   constructor(private prismaService: PrismaService) {}
 
-  async create(cityData: CreateCityInput) {
-    const cityExist = await this.findByGooglePlaceId(cityData.googlePlaceId)
+  async create(name, googlePlaceId) {
+    const cityExist = await this.findByGooglePlaceId(googlePlaceId)
 
     if (cityExist) return cityExist
 
@@ -16,8 +16,8 @@ export class CityService {
     return await this.prismaService.city.create({
       data: {
         id: this.prismaService.mapStringIdToBuffer(uuid),
-        name: cityData.name,
-        googlePlaceId: cityData.googlePlaceId,
+        name,
+        googlePlaceId,
       },
     })
   }

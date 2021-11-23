@@ -11,8 +11,5 @@ export class CreateUserTrainingInput {
   dateBegin: Date
 
   @Field()
-  city: CreateCityInput
-
-  @Field()
-  school: CreateSchoolInput
+  schoolGooglePlaceId: string
 }

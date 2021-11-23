@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { School, Training, User, UserTraining } from '@prisma/client'
+import axios from 'axios'
 import * as bcrypt from 'bcrypt'
 import { randomBytes, randomUUID } from 'crypto'
 import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
 import { AlgoliaService } from 'src/core/services/algolia.service'
 import { EmailService } from 'src/core/services/email.service'
 import { PrismaService } from 'src/core/services/prisma.service'
+import { SendbirdService } from 'src/core/services/sendbird.service'
 import { CityService } from 'src/user-training/services/city.service'
 import { SchoolService } from 'src/user-training/services/school.service'
 import { TrainingService } from 'src/user-training/services/training.service'
@@ -17,6 +19,7 @@ import { UserIndexAlgoliaInterface } from '../interfaces/user-index-algolia.inte
 
 @Injectable()
 export class UserService {
+  googleApiKey = process.env.GOOGLE_API_KEY
   constructor(
     private prismaService: PrismaService,
     private emailService: EmailService,
@@ -24,7 +27,8 @@ export class UserService {
     private cityService: CityService,
     private schoolService: SchoolService,
     private trainingService: TrainingService,
-    private userTrainingService: UserTrainingService
+    private userTrainingService: UserTrainingService,
+    private sendbirdService: SendbirdService
   ) {}
 
   async hasUserPostedOnTag(email, tagText) {
@@ -428,12 +432,36 @@ export class UserService {
   }
 
   async signUp(signUpData: SignUpInput) {
+    /*
     const [city, school, training, user] = await Promise.all([
       this.cityService.create(signUpData.userTraining.city),
       this.schoolService.create(signUpData.userTraining.school),
       this.trainingService.create(signUpData.userTraining.training),
       this.create(signUpData.user),
     ])
+  
+    const userTraining = await this.userTrainingService.create(
+      user.id,
+      training.id,
+      city.id,
+      school.id,
+      signUpData.userTraining.dateBegin
+    )
+    */
+
+    const googlePlaceDetail = await this.getGooglePlaceById(signUpData.userTraining.schoolGooglePlaceId)
+
+    const locality = googlePlaceDetail.address_components.find((component) => component.types.includes('locality'))
+
+    const googleCity = await this.getGoogleCityByName(locality.long_name)
+    const cityGooggleplaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
+    const [training, school, city, user] = await Promise.all([
+      this.trainingService.create(signUpData.userTraining.training),
+      this.schoolService.create(googlePlaceDetail.name, googlePlaceDetail.place_id),
+      this.cityService.create(cityGooggleplaceDetail.name, cityGooggleplaceDetail.place_id),
+      this.create(signUpData.user),
+    ])
+
     const userTraining = await this.userTrainingService.create(
       user.id,
       training.id,
@@ -443,8 +471,9 @@ export class UserService {
     )
 
     this.syncUsersIndexWithAlgolia(user, userTraining, training, school)
+    this.sendbirdService.createUser(user)
 
-    return user
+    return true
   }
 
   formatUser(user) {
@@ -485,5 +514,29 @@ export class UserService {
       : []
 
     return formattedUser
+  }
+
+  async getGooglePlaceById(googlePlaceId: string) {
+    const response = await axios.get(
+      'https://maps.googleapis.com/maps/api/place/details/json?language=fr&place_id=' +
+        googlePlaceId +
+        '&key=' +
+        this.googleApiKey
+    )
+    if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined') return null
+
+    return response.data.result as google.maps.places.PlaceResult
+  }
+
+  async getGoogleCityByName(cityName: string) {
+    const { data } = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
+      params: {
+        types: '(cities)',
+        language: 'fr',
+        input: cityName,
+        key: this.googleApiKey,
+      },
+    })
+    return data.predictions as google.maps.places.AutocompletePrediction[]
   }
 }
