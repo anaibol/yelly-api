@@ -32,7 +32,7 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation((returns) => Boolean)
-  async trackPostView(@Args('postId') postId: string) {
-    return this.postService.trackPostView(postId)
+  async trackPostViews(@Args({ name: 'postsIds', type: () => [String] }) postsIds: string[]) {
+    return this.postService.trackPostViews(postsIds)
   }
 }

@@ -72,7 +72,7 @@ type Mutation {
   forgotPassword(input: ForgotPasswordInput!): User!
   signUp(input: SignUpInput!): User!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
-  trackPostView(postId: String!): Boolean!
+  trackPostViews(postsIds: [String!]!): Boolean!
   updateAuthUserTraining(id: String!, input: UpdateUserTrainingInput!): UserTraining!
 }
 
