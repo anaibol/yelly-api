@@ -13,4 +13,15 @@ export class NotificationService {
       },
     })
   }
+
+  formatNotification(notification) {
+    return {
+      ...notification,
+      id: this.prismaService.mapBufferIdToString(notification.id),
+      userSource: {
+        ...notification.userSource,
+        id: this.prismaService.mapBufferIdToString(notification.userSource.id),
+      },
+    }
+  }
 }

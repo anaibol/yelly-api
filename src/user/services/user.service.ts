@@ -6,6 +6,7 @@ import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
 import { AlgoliaService } from 'src/core/services/algolia.service'
 import { EmailService } from 'src/core/services/email.service'
 import { PrismaService } from 'src/core/services/prisma.service'
+import { NotificationService } from 'src/notification/services/notification.service'
 import { CityService } from 'src/user-training/services/city.service'
 import { SchoolService } from 'src/user-training/services/school.service'
 import { TrainingService } from 'src/user-training/services/training.service'
@@ -24,7 +25,8 @@ export class UserService {
     private cityService: CityService,
     private schoolService: SchoolService,
     private trainingService: TrainingService,
-    private userTrainingService: UserTrainingService
+    private userTrainingService: UserTrainingService,
+    private notificationsService: NotificationService
   ) {}
 
   async hasUserPostedOnTag(email, tagText) {
@@ -233,6 +235,21 @@ export class UserService {
           select: {
             following: true,
             followers: true,
+          },
+        },
+        notifications: {
+          select: {
+            id: true,
+            action: true,
+            createdAt: true,
+            isSeen: true,
+            userSource: {
+              select: {
+                id: true,
+                firstName: true,
+                pictureId: true,
+              },
+            },
           },
         },
         following: {
@@ -463,6 +480,10 @@ export class UserService {
     formattedUser.userTraining.training.id = this.prismaService.mapBufferIdToString(user.userTraining.training.id)
     formattedUser.followingCount = user._count.following
     formattedUser.followersCount = user._count.followers
+
+    formattedUser.notifications = user.notifications
+      ? user.notifications.map((notification) => this.notificationsService.formatNotification(notification))
+      : []
 
     formattedUser.following = user.following
       ? user.following.map((userFollowing) => ({

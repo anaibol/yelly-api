@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql'
 import { UserTraining } from 'src/user-training/models/userTraining.model'
 import { Post } from '../../post/models/post.model'
+import { Notification } from '../../notification/models/notification.model'
 
 @ObjectType()
 export class User {
@@ -42,6 +43,9 @@ export class User {
 
   @Field(() => UserTraining)
   userTraining: UserTraining
+
+  @Field(() => [Notification])
+  notifications: Notification[]
 
   @Field(() => [Post], { nullable: true })
   posts?: Post[]

@@ -70,6 +70,16 @@ type Mutation {
   updateAuthUserTraining(id: String!, input: UpdateUserTrainingInput!): UserTraining!
 }
 
+type Notification {
+  action: String!
+  createdAt: DateTime!
+  id: String!
+  isSeen: Boolean!
+  itemId: String
+  user: User!
+  userSource: User!
+}
+
 type PaginatedPosts {
   items: [Post!]!
   nextCursor: String!
@@ -142,6 +152,7 @@ type User {
   isFilled: Boolean
   lastName: String!
   locale: String
+  notifications: [Notification!]!
   pictureId: String
   posts: [Post!]
   sendbirdAccessToken: String
