@@ -161,7 +161,7 @@ export class UserService {
       },
     })
 
-    const authUserFollowingIds = authUserFollowing.map((followedUser) =>
+    const authUserFollowingsIds = authUserFollowing.map((followedUser) =>
       this.prismaService.mapBufferIdToString(followedUser.id)
     )
 
@@ -194,7 +194,7 @@ export class UserService {
       return {
         ...otherUserFollowers,
         id,
-        isAuthUserFollowing: authUserFollowingIds.includes(id),
+        isAuthUserFollowing: authUserFollowingsIds.includes(id),
       }
     })
   }
@@ -216,7 +216,7 @@ export class UserService {
       },
     })
 
-    const authUserFollowingIds = authUserFollowing.map((followedUser) =>
+    const authUserFollowingsIds = authUserFollowing.map((followedUser) =>
       this.prismaService.mapBufferIdToString(followedUser.id)
     )
 
@@ -249,7 +249,7 @@ export class UserService {
       return {
         ...otherUserFollowings,
         id,
-        isAuthUserFollowing: authUserFollowingIds.includes(id),
+        isAuthUserFollowing: authUserFollowingsIds.includes(id),
       }
     })
   }
