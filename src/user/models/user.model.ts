@@ -4,14 +4,17 @@ import { Post } from '../../post/models/post.model'
 
 @ObjectType()
 export class FollowshipUser {
+  @Field()
+  id: string
+
+  @Field()
+  firstName: string
+
+  @Field(() => UserTraining)
+  userTraining: UserTraining
+
   @Field(() => Boolean, { nullable: true })
   isAuthUserFollowing
-
-  @Field(() => [User], { nullable: true })
-  following
-
-  @Field(() => [User], { nullable: true })
-  followers
 }
 
 @ObjectType()
@@ -25,7 +28,7 @@ export class User {
   @Field()
   lastName: string
 
-  @Field((type) => Date, { nullable: true })
+  @Field(() => Date, { nullable: true })
   birthdate?: string
 
   @Field({ nullable: true })
@@ -64,12 +67,15 @@ export class User {
   @Field(() => Number, { nullable: true })
   followingCount
 
-  @Field(() => [User], { nullable: true })
-  following: FollowshipUser
+  @Field(() => [FollowshipUser], { nullable: true })
+  followings: FollowshipUser
 
-  @Field(() => [User], { nullable: true })
+  @Field(() => [FollowshipUser], { nullable: true })
   followers: FollowshipUser
 
   @Field(() => Boolean, { nullable: true })
   isAuthUserFollowing
+
+  // @Field(() => [User], { nullable: true })
+  // followers
 }
