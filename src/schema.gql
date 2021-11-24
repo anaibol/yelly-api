@@ -44,12 +44,6 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type FollowshipUser {
-  followers: [User!]
-  following: [User!]
-  isAuthUserFollowing: Boolean
-}
-
 input ForgotPasswordInput {
   email: String!
 }
@@ -95,8 +89,6 @@ type Query {
   me: User!
   postsFeed(after: String, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   user(id: String!): User!
-  userFollowers(id: String!): FollowshipUser!
-  userFollowing(id: String!): FollowshipUser!
   users(after: String, limit: Int = 10): [User!]!
 }
 
@@ -143,11 +135,10 @@ type User {
   firstName: String!
   followers: [User!]
   followersCount: Float
-  following: [User!]
   followingCount: Float
+  followings: [User!]
   id: String!
   instagram: String
-  isAuthUserFollowing: Boolean
   isFilled: Boolean
   lastName: String!
   locale: String
