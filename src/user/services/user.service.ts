@@ -144,26 +144,8 @@ export class UserService {
     return this.formatUser(user)
   }
 
-  async getUserFollowers(email, id) {
+  async getUserFollowers(id) {
     const bufferId = this.prismaService.mapStringIdToBuffer(id)
-
-    const { following: authUserFollowing } = await this.prismaService.user.findUnique({
-      where: {
-        email,
-      },
-      select: {
-        id: true,
-        following: {
-          select: {
-            id: true,
-          },
-        },
-      },
-    })
-
-    const authUserFollowingsIds = authUserFollowing.map((followedUser) =>
-      this.prismaService.mapBufferIdToString(followedUser.id)
-    )
 
     const { followers } = await this.prismaService.user.findUnique({
       where: {
@@ -194,31 +176,12 @@ export class UserService {
       return {
         ...otherUserFollowers,
         id,
-        isAuthUserFollowing: authUserFollowingsIds.includes(id),
       }
     })
   }
 
-  async getUserFollowings(email, id) {
+  async getUserFollowings(id) {
     const bufferId = this.prismaService.mapStringIdToBuffer(id)
-
-    const { following: authUserFollowing } = await this.prismaService.user.findUnique({
-      where: {
-        email,
-      },
-      select: {
-        id: true,
-        following: {
-          select: {
-            id: true,
-          },
-        },
-      },
-    })
-
-    const authUserFollowingsIds = authUserFollowing.map((followedUser) =>
-      this.prismaService.mapBufferIdToString(followedUser.id)
-    )
 
     const otherUser = await this.prismaService.user.findUnique({
       where: {
@@ -249,7 +212,6 @@ export class UserService {
       return {
         ...otherUserFollowings,
         id,
-        isAuthUserFollowing: authUserFollowingsIds.includes(id),
       }
     })
   }

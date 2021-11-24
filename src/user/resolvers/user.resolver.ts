@@ -10,7 +10,7 @@ import { User } from '../models/user.model'
 import { UserService } from '../services/user.service'
 import { SignUpInput } from '../dto/sign-up.input'
 
-@Resolver((of) => User)
+@Resolver(() => User)
 export class UserResolver {
   constructor(
     private userService: UserService,
@@ -54,7 +54,7 @@ export class UserResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation((returns) => Boolean)
+  @Mutation(() => Boolean)
   async deleteAuthUser(@Context() context) {
     return this.userService.deleteByEmail(context.req.username)
   }
@@ -66,12 +66,12 @@ export class UserResolver {
   }
 
   @ResolveField()
-  async followers(@Parent() user: User, @Context() context) {
-    return this.userService.getUserFollowers(context.req.username, user.id)
+  async followers(@Parent() user: User) {
+    return this.userService.getUserFollowers(user.id)
   }
 
   @ResolveField()
-  async followings(@Parent() user: User, @Context() context) {
-    return this.userService.getUserFollowings(context.req.username, user.id)
+  async followings(@Parent() user: User) {
+    return this.userService.getUserFollowings(user.id)
   }
 }
