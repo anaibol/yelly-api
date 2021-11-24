@@ -7,7 +7,7 @@ import { CreateCityInput } from '../dto/create-city.input'
 export class CityService {
   constructor(private prismaService: PrismaService) {}
 
-  async create(name, googlePlaceId) {
+  async create(name, googlePlaceId, lat, lng) {
     const cityExist = await this.findByGooglePlaceId(googlePlaceId)
 
     if (cityExist) return cityExist
@@ -18,6 +18,8 @@ export class CityService {
         id: this.prismaService.mapStringIdToBuffer(uuid),
         name,
         googlePlaceId,
+        lat,
+        lng,
       },
     })
   }
@@ -26,6 +28,14 @@ export class CityService {
     return await this.prismaService.city.findFirst({
       where: {
         googlePlaceId: googlePlaceId,
+      },
+    })
+  }
+
+  async findById(id) {
+    return await this.prismaService.city.findUnique({
+      where: {
+        id: id,
       },
     })
   }

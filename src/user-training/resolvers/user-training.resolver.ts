@@ -42,8 +42,14 @@ export class UserTrainingResolver {
     if (updateUserTrainingInput.city) {
       const city = await this.cityService.findByGooglePlaceId(updateUserTrainingInput.city.googlePlaceId)
       cityId = !city
-        ? (await this.cityService.create(updateUserTrainingInput.city.name, updateUserTrainingInput.city.googlePlaceId))
-            .id
+        ? (
+            await this.cityService.create(
+              updateUserTrainingInput.city.name,
+              updateUserTrainingInput.city.googlePlaceId,
+              updateUserTrainingInput.city.geolocation.lat,
+              updateUserTrainingInput.city.geolocation.lng
+            )
+          ).id
         : city.id
     }
 

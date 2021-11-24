@@ -10,4 +10,10 @@ export class City {
 
   @Field({ nullable: true })
   googlePlaceId: string
+
+  @Field({ nullable: true })
+  lat?: string
+
+  @Field({ nullable: true })
+  lng?: string
 }

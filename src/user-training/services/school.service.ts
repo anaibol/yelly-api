@@ -7,7 +7,7 @@ import { CreateSchoolInput } from '../dto/create-school.input'
 export class SchoolService {
   constructor(private prismaService: PrismaService) {}
 
-  async create(name, googlePlaceId) {
+  async create(name, googlePlaceId, lat?, lng?, cityId?) {
     const schoolExist = await this.findByGooglePlaceId(googlePlaceId)
 
     if (schoolExist) return schoolExist
@@ -18,6 +18,10 @@ export class SchoolService {
         id: this.prismaService.mapStringIdToBuffer(uuid),
         name,
         googlePlaceId,
+        lat,
+        lng,
+        cityId,
+        isValid: true,
       },
     })
   }

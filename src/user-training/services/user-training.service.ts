@@ -6,7 +6,7 @@ import { PrismaService } from 'src/core/services/prisma.service'
 export class UserTrainingService {
   constructor(private prismaService: PrismaService) {}
 
-  create(userId: Buffer, trainingId: Buffer, cityId: Buffer, schoolId: Buffer, dateBegin: Date) {
+  create(userId: Buffer, trainingId: Buffer, cityId: Buffer, schoolId: Buffer) {
     const uuid = randomUUID()
 
     return this.prismaService.userTraining.create({
@@ -16,7 +16,6 @@ export class UserTrainingService {
         trainingId: trainingId,
         cityId: cityId,
         schoolId: schoolId,
-        dateBegin: dateBegin,
         createdAt: new Date(),
       },
     })

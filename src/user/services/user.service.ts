@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { School, Training, User, UserTraining } from '@prisma/client'
 import axios from 'axios'
 import * as bcrypt from 'bcrypt'
@@ -8,6 +8,7 @@ import { AlgoliaService } from 'src/core/services/algolia.service'
 import { EmailService } from 'src/core/services/email.service'
 import { PrismaService } from 'src/core/services/prisma.service'
 import { SendbirdService } from 'src/core/services/sendbird.service'
+import { City } from 'src/user-training/models/city.model'
 import { CityService } from 'src/user-training/services/city.service'
 import { SchoolService } from 'src/user-training/services/school.service'
 import { TrainingService } from 'src/user-training/services/training.service'
@@ -26,8 +27,6 @@ export class UserService {
     private algoliaService: AlgoliaService,
     private cityService: CityService,
     private schoolService: SchoolService,
-    private trainingService: TrainingService,
-    private userTrainingService: UserTrainingService,
     private sendbirdService: SendbirdService
   ) {}
 
@@ -316,12 +315,24 @@ export class UserService {
     return user
   }
 
-  async create(createUserData: UserCreateInput) {
+  async create(createUserData: SignUpInput, schoolData, cityData?) {
     const saltOrRounds = 10
     const password = createUserData.password
     const hash = await bcrypt.hash(password, saltOrRounds)
 
     const user = await this.prismaService.user.create({
+      include: {
+        userTraining: {
+          include: {
+            school: {
+              include: {
+                city: true,
+              },
+            },
+            training: true,
+          },
+        },
+      },
       data: {
         id: this.prismaService.mapStringIdToBuffer(randomUUID()),
         firstName: createUserData.firstName,
@@ -337,6 +348,53 @@ export class UserService {
         createdAt: new Date(),
         isFilled: true,
         isActived: true,
+        userTraining: {
+          create: {
+            id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+            school: {
+              connectOrCreate: {
+                where: {
+                  googlePlaceId: schoolData.googlePlaceId,
+                },
+                create: {
+                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                  name: schoolData.name,
+                  googlePlaceId: schoolData.googlePlaceId,
+                  isValid: true,
+                  lat: schoolData.lat,
+                  lng: schoolData.lng,
+                  city: {
+                    connectOrCreate: {
+                      where: {
+                        googlePlaceId: cityData.googlePlaceId,
+                      },
+                      create: {
+                        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                        name: cityData.name,
+                        googlePlaceId: cityData.googlePlaceId,
+                        lat: cityData.lat,
+                        lng: cityData.lng,
+                        isValid: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            training: {
+              connectOrCreate: {
+                where: {
+                  name: createUserData.trainingName,
+                },
+                create: {
+                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                  name: createUserData.trainingName,
+                },
+              },
+            },
+            createdAt: new Date(),
+          },
+        },
       },
     })
 
@@ -389,14 +447,8 @@ export class UserService {
     return true
   }
 
-  async syncUsersIndexWithAlgolia(user: User, userTraining: UserTraining, training: Training, school: School) {
+  async syncUsersIndexWithAlgolia(user) {
     const usersIndex = this.algoliaService.initIndex('USERS')
-
-    const countryOfTheSchool = await this.prismaService.country.findFirst({
-      where: {
-        id: school.countryId,
-      },
-    })
 
     const newUserAlgoliaObject: UserIndexAlgoliaInterface = {
       lastName: user.lastName,
@@ -405,20 +457,20 @@ export class UserService {
       hasPicture: user.pictureId != null,
       id: this.prismaService.mapBufferIdToString(user.id),
       lastTraining: {
-        id: this.prismaService.mapBufferIdToString(userTraining.id),
+        id: this.prismaService.mapBufferIdToString(user.userTraining.id),
         training: {
-          id: this.prismaService.mapBufferIdToString(training.id),
-          name: training.name,
+          id: this.prismaService.mapBufferIdToString(user.userTraining.training.id),
+          name: user.userTraining.training.name,
         },
         school: {
-          id: this.prismaService.mapBufferIdToString(school.id),
-          name: school.name,
-          countryName: countryOfTheSchool.name,
-          postalCode: school.postalCode,
-          googlePlaceId: school.googlePlaceId,
+          id: this.prismaService.mapBufferIdToString(user.userTraining.school.id),
+          name: user.userTraining.school.name,
+          countryName: '',
+          postalCode: user.userTraining.school.postalCode,
+          googlePlaceId: user.userTraining.school.googlePlaceId,
           _geoloc: {
-            lat: school.lat,
-            lng: school.lng,
+            lat: user.userTraining.school.lat,
+            lng: user.userTraining.school.lng,
           },
         },
       },
@@ -432,48 +484,42 @@ export class UserService {
   }
 
   async signUp(signUpData: SignUpInput) {
-    /*
-    const [city, school, training, user] = await Promise.all([
-      this.cityService.create(signUpData.userTraining.city),
-      this.schoolService.create(signUpData.userTraining.school),
-      this.trainingService.create(signUpData.userTraining.training),
-      this.create(signUpData.user),
-    ])
-  
-    const userTraining = await this.userTrainingService.create(
-      user.id,
-      training.id,
-      city.id,
-      school.id,
-      signUpData.userTraining.dateBegin
-    )
-    */
+    const schoolExist = await this.schoolService.findByGooglePlaceId(signUpData.schoolGooglePlaceId)
+    let user
+    if (!schoolExist) {
+      const googlePlaceDetail = await this.getGooglePlaceById(signUpData.schoolGooglePlaceId)
 
-    const googlePlaceDetail = await this.getGooglePlaceById(signUpData.userTraining.schoolGooglePlaceId)
+      const school = {
+        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+        name: googlePlaceDetail.name,
+        googlePlaceId: googlePlaceDetail.place_id,
+        lat: googlePlaceDetail.geometry.location.lat.toString(),
+        lng: googlePlaceDetail.geometry.location.lng.toString(),
+      }
 
-    const locality = googlePlaceDetail.address_components.find((component) => component.types.includes('locality'))
+      const locality = googlePlaceDetail.address_components.find((component) => component.types.includes('locality'))
 
-    const googleCity = await this.getGoogleCityByName(locality.long_name)
-    const cityGooggleplaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
-    const [training, school, city, user] = await Promise.all([
-      this.trainingService.create(signUpData.userTraining.training),
-      this.schoolService.create(googlePlaceDetail.name, googlePlaceDetail.place_id),
-      this.cityService.create(cityGooggleplaceDetail.name, cityGooggleplaceDetail.place_id),
-      this.create(signUpData.user),
-    ])
+      if (!locality) throw new NotFoundException('city not found in goorgle api')
 
-    const userTraining = await this.userTrainingService.create(
-      user.id,
-      training.id,
-      city.id,
-      school.id,
-      signUpData.userTraining.dateBegin
-    )
+      const googleCity = await this.getGoogleCityByName(locality.long_name)
+      const cityGooggleplaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
+      const city = {
+        name: cityGooggleplaceDetail.name,
+        googlePlaceId: cityGooggleplaceDetail.place_id,
+        lat: cityGooggleplaceDetail.geometry.location.lat.toString(),
+        lng: cityGooggleplaceDetail.geometry.location.lng.toString(),
+      }
 
-    this.syncUsersIndexWithAlgolia(user, userTraining, training, school)
+      user = await this.create(signUpData, school, city)
+    } else {
+      const city = await this.cityService.findById(schoolExist.cityId)
+      user = await this.create(signUpData, schoolExist, city)
+    }
+
+    this.syncUsersIndexWithAlgolia(user)
     this.sendbirdService.createUser(user)
 
-    return true
+    return user
   }
 
   formatUser(user) {
@@ -523,7 +569,8 @@ export class UserService {
         '&key=' +
         this.googleApiKey
     )
-    if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined') return null
+    if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined')
+      throw new NotFoundException('googlePlaceId not valid')
 
     return response.data.result as google.maps.places.PlaceResult
   }
@@ -537,6 +584,7 @@ export class UserService {
         key: this.googleApiKey,
       },
     })
+    if (!data) throw new NotFoundException('city not found in goorgle api')
     return data.predictions as google.maps.places.AutocompletePrediction[]
   }
 }
