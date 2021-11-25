@@ -3,6 +3,7 @@ import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql'
 import { AuthGuard } from 'src/auth/guards/auth.guard'
 import { PostService } from 'src/post/services/post.service'
 import { CreatePostInput } from '../dto/create-post.input'
+import { DeletePostInput } from '../dto/delete-post.input'
 import { GetPostsArgs } from '../dto/get-post.args'
 import { PaginatedPosts } from '../models/paginated-posts.model'
 import { Post } from '../models/post.model'
@@ -34,5 +35,11 @@ export class PostResolver {
   @Mutation((returns) => Boolean)
   async trackPostViews(@Args({ name: 'postsIds', type: () => [String] }) postsIds: string[]) {
     return this.postService.trackPostViews(postsIds)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async deletePost(@Args('input') deletePostData: DeletePostInput, @Context() context) {
+    return this.postService.delete(deletePostData, context.req.username)
   }
 }
