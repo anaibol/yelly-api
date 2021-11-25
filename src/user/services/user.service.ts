@@ -259,6 +259,7 @@ export class UserService {
                 firstName: true,
                 lastName: true,
                 pictureId: true,
+                id: true,
               },
             },
             text: true,
@@ -475,6 +476,16 @@ export class UserService {
       ? user.followers.map((userFollower) => ({
           ...userFollower,
           id: this.prismaService.mapBufferIdToString(userFollower.id),
+        }))
+      : []
+
+    formattedUser.posts = user.posts
+      ? user.posts.map((post) => ({
+          ...post,
+          author: {
+            ...post.author,
+            id: this.prismaService.mapBufferIdToString(post.author.id),
+          },
         }))
       : []
 
