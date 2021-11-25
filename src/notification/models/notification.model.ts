@@ -6,10 +6,10 @@ export class Notification {
   @Field()
   id: string
 
-  @Field((type) => User)
+  @Field(() => User)
   userSource: User
 
-  @Field((type) => User)
+  @Field(() => User)
   user: User
 
   @Field()

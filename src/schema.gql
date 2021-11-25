@@ -80,6 +80,11 @@ type Notification {
   userSource: User!
 }
 
+type PaginatedNotifications {
+  items: [Notification!]!
+  nextCursor: String!
+}
+
 type PaginatedPosts {
   items: [Post!]!
   nextCursor: String!
@@ -97,6 +102,7 @@ type Post {
 type Query {
   liveTag: LiveTagAuthUser!
   me: User!
+  notifications(after: String, limit: Int = 10): PaginatedNotifications!
   postsFeed(after: String, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   user(id: String!): User!
   users(after: String, limit: Int = 10): [User!]!
@@ -152,7 +158,6 @@ type User {
   isFilled: Boolean
   lastName: String!
   locale: String
-  notifications: [Notification!]!
   pictureId: String
   posts: [Post!]
   sendbirdAccessToken: String

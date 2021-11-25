@@ -70,16 +70,16 @@ model GroupMembers {
 
 model Notification {
   id           Bytes               @id @db.Binary(16)
-  userSourceid Bytes               @map("user_source_id") @db.Binary(16)
-  userTargetid Bytes?              @map("user_target_id") @db.Binary(16)
+  userSourceId Bytes               @map("user_source_id") @db.Binary(16)
+  userTargetId Bytes?              @map("user_target_id") @db.Binary(16)
   action       NotificationAction?
   isSeen       Boolean             @map("is_seen")
-  createdAt    DateTime            @map("created_at") @db.DateTime(0)
+  createdAt    DateTime            @unique @map("created_at") @db.DateTime(0)
   itemId       String?             @map("item_id") @db.VarChar(255)
-  userSource   User                @relation("userSource", fields: [userSourceid], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA95DC9185")
-  user         User?               @relation(fields: [userTargetid], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA156E8682")
-  @@index([userTargetid], map: "IDX_BF5476CA156E8682")
-  @@index([userSourceid], map: "IDX_BF5476CA95DC9185")
+  userSource   User                @relation("userSource", fields: [userSourceId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA95DC9185")
+  user         User?               @relation(fields: [userTargetId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA156E8682")
+  @@index([userTargetId], map: "IDX_BF5476CA156E8682")
+  @@index([userSourceId], map: "IDX_BF5476CA95DC9185")
   @@map("notification")
 }
 
