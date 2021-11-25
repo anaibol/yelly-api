@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
 import { PrismaService } from 'src/core/services/prisma.service'
 import { CreatePostInput } from '../dto/create-post.input'
@@ -177,6 +177,8 @@ export class PostService {
         id: true,
       },
     })
+
+    if (!authUserId) return new UnauthorizedException()
 
     const deleted = await this.prismaService.post.deleteMany({
       where: {
