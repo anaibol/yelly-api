@@ -181,9 +181,7 @@ export class PostService {
     const deleted = await this.prismaService.post.deleteMany({
       where: {
         id,
-        ...(authUserId && {
-          authorId: authUserId,
-        }),
+        authorId: authUserId,
       },
     })
 
