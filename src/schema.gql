@@ -44,6 +44,10 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+input DeletePostInput {
+  id: String!
+}
+
 input ForgotPasswordInput {
   email: String!
 }
@@ -63,6 +67,7 @@ type Mutation {
   createLiveTag(input: CreateLiveTagInput!): Tag!
   createPost(input: CreatePostInput!): Post!
   deleteAuthUser: Boolean!
+  deletePost(input: DeletePostInput!): Boolean!
   forgotPassword(input: ForgotPasswordInput!): User!
   signUp(input: SignUpInput!): User!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!

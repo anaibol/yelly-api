@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
 import { PrismaService } from 'src/core/services/prisma.service'
 import { CreatePostInput } from '../dto/create-post.input'
+import { DeletePostInput } from '../dto/delete-post.input'
 import { TagService } from './tag.service'
 
 @Injectable()
@@ -163,5 +164,29 @@ export class PostService {
     this.tagService.syncTagIndexWithAlgolia(tagText, mappedPost)
 
     return mappedPost
+  }
+
+  async delete(createPostInput: DeletePostInput, email: string) {
+    const { id } = createPostInput
+
+    const { id: authUserId } = await this.prismaService.user.findUnique({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    if (!authUserId) return new UnauthorizedException()
+
+    const deleted = await this.prismaService.post.deleteMany({
+      where: {
+        id,
+        authorId: authUserId,
+      },
+    })
+
+    return deleted.count > 0
   }
 }
