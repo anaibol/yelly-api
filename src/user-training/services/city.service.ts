@@ -37,6 +37,9 @@ export class CityService {
       where: {
         id: id,
       },
+      include: {
+        country: true,
+      },
     })
   }
 }

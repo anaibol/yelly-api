@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { randomUUID } from 'crypto'
 import { PrismaService } from 'src/core/services/prisma.service'
-import { CreateSchoolInput } from '../dto/create-school.input'
 
 @Injectable()
 export class SchoolService {
@@ -30,6 +29,13 @@ export class SchoolService {
     return await this.prismaService.school.findFirst({
       where: {
         googlePlaceId: googlePlaceId,
+      },
+      include: {
+        city: {
+          include: {
+            country: true,
+          },
+        },
       },
     })
   }

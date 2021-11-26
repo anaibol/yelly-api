@@ -1,5 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
-import { School, Training, User, UserTraining } from '@prisma/client'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import axios from 'axios'
 import * as bcrypt from 'bcrypt'
 import { randomBytes, randomUUID } from 'crypto'
@@ -8,12 +7,8 @@ import { AlgoliaService } from 'src/core/services/algolia.service'
 import { EmailService } from 'src/core/services/email.service'
 import { PrismaService } from 'src/core/services/prisma.service'
 import { SendbirdService } from 'src/core/services/sendbird.service'
-import { City } from 'src/user-training/models/city.model'
 import { CityService } from 'src/user-training/services/city.service'
 import { SchoolService } from 'src/user-training/services/school.service'
-import { TrainingService } from 'src/user-training/services/training.service'
-import { UserTrainingService } from 'src/user-training/services/user-training.service'
-import { UserCreateInput } from '../dto/create-user.input'
 import { SignUpInput } from '../dto/sign-up.input'
 import { NotFoundUserException } from '../exceptions/not-found-user.exception'
 import { UserIndexAlgoliaInterface } from '../interfaces/user-index-algolia.interface'
@@ -315,7 +310,7 @@ export class UserService {
     return user
   }
 
-  async create(createUserData: SignUpInput, schoolData, cityData?) {
+  async create(createUserData: SignUpInput, schoolData) {
     const saltOrRounds = 10
     const password = createUserData.password
     const hash = await bcrypt.hash(password, saltOrRounds)
@@ -326,7 +321,11 @@ export class UserService {
           include: {
             school: {
               include: {
-                city: true,
+                city: {
+                  include: {
+                    country: true,
+                  },
+                },
               },
             },
             training: true,
@@ -366,15 +365,26 @@ export class UserService {
                   city: {
                     connectOrCreate: {
                       where: {
-                        googlePlaceId: cityData.googlePlaceId,
+                        googlePlaceId: schoolData.city.googlePlaceId,
                       },
                       create: {
                         id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                        name: cityData.name,
-                        googlePlaceId: cityData.googlePlaceId,
-                        lat: cityData.lat,
-                        lng: cityData.lng,
+                        name: schoolData.city.name,
+                        googlePlaceId: schoolData.city.googlePlaceId,
+                        lat: schoolData.city.lat,
+                        lng: schoolData.city.lng,
                         isValid: true,
+                        country: {
+                          connectOrCreate: {
+                            where: {
+                              name: schoolData.city.country.name,
+                            },
+                            create: {
+                              id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                              name: schoolData.city.country.name,
+                            },
+                          },
+                        },
                       },
                     },
                   },
@@ -397,7 +407,6 @@ export class UserService {
         },
       },
     })
-
     return user
   }
 
@@ -451,31 +460,39 @@ export class UserService {
     const usersIndex = this.algoliaService.initIndex('USERS')
 
     const newUserAlgoliaObject: UserIndexAlgoliaInterface = {
+      id: this.prismaService.mapBufferIdToString(user.id),
       lastName: user.lastName,
       firstName: user.firstName,
       birthdateTimestamp: Date.parse(user.birthdate.toString()),
       hasPicture: user.pictureId != null,
-      id: this.prismaService.mapBufferIdToString(user.id),
-      lastTraining: {
-        id: this.prismaService.mapBufferIdToString(user.userTraining.id),
-        training: {
-          id: this.prismaService.mapBufferIdToString(user.userTraining.training.id),
-          name: user.userTraining.training.name,
-        },
-        school: {
-          id: this.prismaService.mapBufferIdToString(user.userTraining.school.id),
-          name: user.userTraining.school.name,
-          countryName: '',
-          postalCode: user.userTraining.school.postalCode,
-          googlePlaceId: user.userTraining.school.googlePlaceId,
-          _geoloc: {
-            lat: user.userTraining.school.lat,
-            lng: user.userTraining.school.lng,
+      training: {
+        id: this.prismaService.mapBufferIdToString(user.userTraining.training.id),
+        name: user.userTraining.training.name,
+      },
+      school: {
+        id: this.prismaService.mapBufferIdToString(user.userTraining.school.id),
+        name: user.userTraining.school.name,
+        postalCode: user.userTraining.school.postalCode,
+        googlePlaceId: user.userTraining.school.googlePlaceId,
+        city: {
+          id: this.prismaService.mapBufferIdToString(user.userTraining.school.city.id),
+          name: user.userTraining.school.city.name,
+          googlePlaceId: user.userTraining.school.city.googlePlaceId,
+          country: {
+            id: this.prismaService.mapBufferIdToString(user.userTraining.school.city.country.id),
+            name: user.userTraining.school.city.country.name,
           },
+          _geoloc: {
+            lat: user.userTraining.school.city.lat,
+            lng: user.userTraining.school.city.lng,
+          },
+        },
+        _geoloc: {
+          lat: user.userTraining.school.lat,
+          lng: user.userTraining.school.lng,
         },
       },
     }
-
     return this.algoliaService.saveObject(
       usersIndex,
       newUserAlgoliaObject,
@@ -483,43 +500,115 @@ export class UserService {
     )
   }
 
-  async signUp(signUpData: SignUpInput) {
-    const schoolExist = await this.schoolService.findByGooglePlaceId(signUpData.schoolGooglePlaceId)
-    let user
-    if (!schoolExist) {
-      const googlePlaceDetail = await this.getGooglePlaceById(signUpData.schoolGooglePlaceId)
+  async getSchool(schoolGooglePlaceId: string) {
+    const school = await this.schoolService.findByGooglePlaceId(schoolGooglePlaceId)
 
-      const school = {
-        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-        name: googlePlaceDetail.name,
-        googlePlaceId: googlePlaceDetail.place_id,
-        lat: googlePlaceDetail.geometry.location.lat.toString(),
-        lng: googlePlaceDetail.geometry.location.lng.toString(),
-      }
+    if (school) return school
 
-      const locality = googlePlaceDetail.address_components.find((component) => component.types.includes('locality'))
+    const googlePlaceDetail = await this.getGooglePlaceById(schoolGooglePlaceId)
 
-      if (!locality) throw new NotFoundException('city not found in goorgle api')
+    const locality = googlePlaceDetail.address_components.find((component) => component.types.includes('locality'))
+    const postal_town = googlePlaceDetail.address_components.find((component) =>
+      component.types.includes('postal_town')
+    )
 
-      const googleCity = await this.getGoogleCityByName(locality.long_name)
-      const cityGooggleplaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
-      const city = {
+    if (!locality && !postal_town) throw new NotFoundException('city not found in goorgle api')
+
+    const { long_name: cityName } = locality || postal_town
+
+    const googleCity = await this.getGoogleCityByName(cityName)
+    const cityGooggleplaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
+
+    return {
+      id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+      name: googlePlaceDetail.name,
+      googlePlaceId: googlePlaceDetail.place_id,
+      lat: googlePlaceDetail.geometry.location.lat.toString(),
+      lng: googlePlaceDetail.geometry.location.lng.toString(),
+      city: {
         name: cityGooggleplaceDetail.name,
         googlePlaceId: cityGooggleplaceDetail.place_id,
         lat: cityGooggleplaceDetail.geometry.location.lat.toString(),
         lng: cityGooggleplaceDetail.geometry.location.lng.toString(),
-      }
-
-      user = await this.create(signUpData, school, city)
-    } else {
-      const city = await this.cityService.findById(schoolExist.cityId)
-      user = await this.create(signUpData, schoolExist, city)
+        country: {
+          name: cityGooggleplaceDetail.address_components.find((component) => component.types.includes('country'))
+            .long_name,
+        },
+      },
     }
+  }
+
+  async signUp(signUpData: SignUpInput) {
+    const userExists = await this.prismaService.user.findUnique({
+      where: {
+        email: signUpData.email,
+      },
+    })
+
+    if (userExists) throw new ForbiddenException('Email exists')
+
+    const school = await this.getSchool(signUpData.schoolGooglePlaceId)
+
+    const user = await this.create(signUpData, school)
 
     this.syncUsersIndexWithAlgolia(user)
-    this.sendbirdService.createUser(user)
+    const { access_token: sendbirdAccessToken } = await this.sendbirdService.createUser(user)
 
-    return user
+    const updatedUser = await this.prismaService.user.update({
+      where: {
+        id: user.id,
+      },
+      include: {
+        userTraining: {
+          include: {
+            school: {
+              include: {
+                city: {
+                  include: {
+                    country: true,
+                  },
+                },
+              },
+            },
+            training: true,
+          },
+        },
+      },
+      data: {
+        sendbirdAccessToken,
+      },
+    })
+
+    return {
+      ...updatedUser,
+      id: this.prismaService.mapBufferIdToString(updatedUser.id),
+    }
+  }
+
+  async getGooglePlaceById(googlePlaceId: string) {
+    const response = await axios.get(
+      'https://maps.googleapis.com/maps/api/place/details/json?language=fr&place_id=' +
+        googlePlaceId +
+        '&key=' +
+        this.googleApiKey
+    )
+    if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined')
+      throw new NotFoundException('googlePlaceId not valid')
+
+    return response.data.result as google.maps.places.PlaceResult
+  }
+
+  async getGoogleCityByName(cityName: string) {
+    const { data } = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
+      params: {
+        types: '(cities)',
+        language: 'fr',
+        input: cityName,
+        key: this.googleApiKey,
+      },
+    })
+    if (!data) throw new NotFoundException('city not found in goorgle api')
+    return data.predictions as google.maps.places.AutocompletePrediction[]
   }
 
   formatUser(user) {
@@ -560,31 +649,5 @@ export class UserService {
       : []
 
     return formattedUser
-  }
-
-  async getGooglePlaceById(googlePlaceId: string) {
-    const response = await axios.get(
-      'https://maps.googleapis.com/maps/api/place/details/json?language=fr&place_id=' +
-        googlePlaceId +
-        '&key=' +
-        this.googleApiKey
-    )
-    if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined')
-      throw new NotFoundException('googlePlaceId not valid')
-
-    return response.data.result as google.maps.places.PlaceResult
-  }
-
-  async getGoogleCityByName(cityName: string) {
-    const { data } = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
-      params: {
-        types: '(cities)',
-        language: 'fr',
-        input: cityName,
-        key: this.googleApiKey,
-      },
-    })
-    if (!data) throw new NotFoundException('city not found in goorgle api')
-    return data.predictions as google.maps.places.AutocompletePrediction[]
   }
 }

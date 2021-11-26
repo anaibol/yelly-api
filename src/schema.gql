@@ -3,10 +3,16 @@
 # ------------------------------------------------------
 
 type City {
+  country: Country
   googlePlaceId: String
   id: String!
   lat: String
   lng: String
+  name: String!
+}
+
+type Country {
+  id: String!
   name: String!
 }
 
@@ -109,8 +115,11 @@ type Query {
 }
 
 type School {
+  city: City
   googlePlaceId: String
   id: String!
+  lat: String
+  lng: String
   name: String!
 }
 
@@ -175,9 +184,7 @@ type User {
 }
 
 type UserTraining {
-  city: City
   createdAt: DateTime!
-  dateBegin: DateTime!
   id: String!
   school: School
   training: Training

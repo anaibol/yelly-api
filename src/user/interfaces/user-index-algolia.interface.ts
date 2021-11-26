@@ -1,25 +1,34 @@
 export interface UserIndexAlgoliaInterface {
+  id: string
   lastName: string
   firstName: string
   birthdateTimestamp: number
   hasPicture: boolean
-  id: string
-  lastTraining: {
+  training: {
     id: string
-    training: {
+    name: string
+  }
+  school: {
+    id: string
+    name: string
+    postalCode: string
+    googlePlaceId: string
+    city: {
       id: string
       name: string
-    }
-    school: {
-      id: string
-      name: string
-      countryName: string
-      postalCode: string
       googlePlaceId: string
-      _geoloc: {
-        lat: string
-        lng: string
+      country?: {
+        id: string
+        name: string
       }
+      _geoloc: {
+        lat: number
+        lng: number
+      }
+    }
+    _geoloc: {
+      lat: number
+      lng: number
     }
   }
 }

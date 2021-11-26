@@ -26,7 +26,7 @@ model City {
 
 model Country {
   id     Bytes    @id @db.Binary(16)
-  name   String   @db.VarChar(255)
+  name   String   @unique @db.VarChar(255)
   city   City[]
   school School[]
   @@map("country")
@@ -124,10 +124,10 @@ model User {
   updatedAt                    DateTime?                @map("updated_at") @db.DateTime(0)
   isActived                    Boolean                  @map("is_actived")
   isFilled                     Boolean                  @map("is_filled")
-  androidPushnotificationtoken String?                  @map("android_push_notification_token") @db.VarChar(255)
-  sendbirdAccesstoken          String?                  @map("sendbird_access_token") @db.VarChar(255)
+  androidPushnotificationToken String?                  @map("android_push_notification_token") @db.VarChar(255)
+  sendbirdAccessToken          String?                  @map("sendbird_access_token") @db.VarChar(255)
   expoPushNotificationToken    String?                  @map("expo_push_notification_token") @db.VarChar(255)
-  iosPushnotificationtoken     String?                  @map("ios_push_notification_token") @db.VarChar(255)
+  iosPushnotificationToken     String?                  @map("ios_push_notification_token") @db.VarChar(255)
   about                        String?                  @db.VarChar(255)
   locale                       String?                  @db.VarChar(255)
   group                        Group[]

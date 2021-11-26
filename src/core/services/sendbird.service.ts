@@ -18,7 +18,7 @@ export class SendbirdService {
 
   async createUser(user) {
     const profileUrl = user.pictureId ? 'http://yelly.imgix.net/' + user.pictureId + '?format=auto' : ''
-    return await this.client.post('/v3/users', {
+    const response = await this.client.post('/v3/users', {
       user_id: this.prismaService.mapBufferIdToString(user.id),
       nickname: user.firstName,
       profile_url: profileUrl,
@@ -29,5 +29,7 @@ export class SendbirdService {
         birthdate: user.birthdate,
       },
     })
+
+    return response.data
   }
 }

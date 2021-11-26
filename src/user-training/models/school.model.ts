@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql'
+import { City } from './city.model'
 
 @ObjectType()
 export class School {
@@ -10,4 +11,13 @@ export class School {
 
   @Field({ nullable: true })
   googlePlaceId: string
+
+  @Field({ nullable: true })
+  lat?: string
+
+  @Field({ nullable: true })
+  lng?: string
+
+  @Field({ nullable: true })
+  city: City
 }
