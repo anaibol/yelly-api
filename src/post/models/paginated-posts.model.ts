@@ -6,6 +6,6 @@ export class PaginatedPosts {
   @Field()
   nextCursor: string
 
-  @Field((type) => [Post])
+  @Field(() => [Post])
   items: Post[]
 }

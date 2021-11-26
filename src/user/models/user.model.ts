@@ -1,5 +1,4 @@
 import { Field, ObjectType } from '@nestjs/graphql'
-import { Training } from 'src/user-training/models/training.model'
 import { UserTraining } from 'src/user-training/models/userTraining.model'
 import { Post } from '../../post/models/post.model'
 
@@ -54,7 +53,7 @@ export class User {
   followingCount
 
   @Field(() => [User], { nullable: true })
-  followings: User
+  follows: User
 
   @Field(() => [User], { nullable: true })
   followers: User
