@@ -85,8 +85,8 @@ export class PostService {
         return {
           ...tag,
           author: {
+            ...tag.author,
             id: this.prismaService.mapBufferIdToString(tag.author.id),
-            ...tag,
           },
         }
       }),
