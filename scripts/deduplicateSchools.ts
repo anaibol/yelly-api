@@ -7,7 +7,7 @@ async function main() {
     by: ['googlePlaceId'],
     where: {
       NOT: {
-        googlePlaceId: '',
+        googlePlaceId: null,
       },
     },
     _count: {

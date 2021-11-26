@@ -1,8 +1,4 @@
--- DropForeignKey
-ALTER TABLE `user_training` DROP FOREIGN KEY `FK_359F6E8F8BAC62AF`;
 
 -- AlterTable
 ALTER TABLE `user_training` MODIFY `city_id` BINARY(16) NULL;
 
--- AddForeignKey
-ALTER TABLE `user_training` ADD CONSTRAINT `FK_359F6E8F8BAC62AF` FOREIGN KEY (`city_id`) REFERENCES `city`(`id`) ON DELETE SET NULL ON UPDATE RESTRICT;
