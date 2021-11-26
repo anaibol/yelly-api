@@ -1,12 +1,34 @@
 import { Field, InputType } from '@nestjs/graphql'
-import { CreateUserTrainingInput } from 'src/user-training/dto/create-user-training.input'
-import { UserCreateInput } from './create-user.input'
 
 @InputType()
 export class SignUpInput {
   @Field()
-  user: UserCreateInput
+  firstName: string
 
   @Field()
-  userTraining: CreateUserTrainingInput
+  lastName: string
+
+  @Field()
+  email: string
+
+  @Field()
+  password: string
+
+  @Field()
+  birthdate: Date
+
+  @Field()
+  pictureId?: string
+
+  @Field()
+  instagram?: string
+
+  @Field()
+  snapchat: string
+
+  @Field()
+  trainingName: string
+
+  @Field()
+  schoolGooglePlaceId: string
 }

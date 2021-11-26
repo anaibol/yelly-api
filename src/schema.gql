@@ -3,7 +3,15 @@
 # ------------------------------------------------------
 
 type City {
+  country: Country
   googlePlaceId: String
+  id: String!
+  lat: String
+  lng: String
+  name: String!
+}
+
+type Country {
   id: String!
   name: String!
 }
@@ -30,13 +38,6 @@ input CreateSchoolInput {
   googlePlaceId: String!
   name: String!
   postalCode: String!
-}
-
-input CreateUserTrainingInput {
-  city: CreateCityInput!
-  dateBegin: DateTime!
-  school: CreateSchoolInput!
-  training: String!
 }
 
 """
@@ -114,14 +115,25 @@ type Query {
 }
 
 type School {
+  city: City
   googlePlaceId: String
   id: String!
+  lat: String
+  lng: String
   name: String!
 }
 
 input SignUpInput {
-  user: UserCreateInput!
-  userTraining: CreateUserTrainingInput!
+  birthdate: DateTime!
+  email: String!
+  firstName: String!
+  instagram: String!
+  lastName: String!
+  password: String!
+  pictureId: String!
+  schoolGooglePlaceId: String!
+  snapchat: String!
+  trainingName: String!
 }
 
 type Tag {
@@ -171,21 +183,8 @@ type User {
   userTraining: UserTraining!
 }
 
-input UserCreateInput {
-  birthdate: DateTime!
-  email: String!
-  firstName: String!
-  instagram: String!
-  lastName: String!
-  password: String!
-  pictureId: String!
-  snapchat: String!
-}
-
 type UserTraining {
-  city: City
   createdAt: DateTime!
-  dateBegin: DateTime!
   id: String!
   school: School
   training: Training

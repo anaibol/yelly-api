@@ -41,13 +41,29 @@ export class UserTrainingResolver {
     let cityId = null
     if (updateUserTrainingInput.city) {
       const city = await this.cityService.findByGooglePlaceId(updateUserTrainingInput.city.googlePlaceId)
-      cityId = !city ? (await this.cityService.create(updateUserTrainingInput.city)).id : city.id
+      cityId = !city
+        ? (
+            await this.cityService.create(
+              updateUserTrainingInput.city.name,
+              updateUserTrainingInput.city.googlePlaceId,
+              updateUserTrainingInput.city.geolocation.lat,
+              updateUserTrainingInput.city.geolocation.lng
+            )
+          ).id
+        : city.id
     }
 
     let schoolId = null
     if (updateUserTrainingInput.school) {
       const school = await this.schoolService.findByGooglePlaceId(updateUserTrainingInput.school.googlePlaceId)
-      schoolId = !school ? (await this.schoolService.create(updateUserTrainingInput.school)).id : school.id
+      schoolId = !school
+        ? (
+            await this.schoolService.create(
+              updateUserTrainingInput.school.name,
+              updateUserTrainingInput.school.googlePlaceId
+            )
+          ).id
+        : school.id
     }
 
     const dateBegin = updateUserTrainingInput.dateBegin ? updateUserTrainingInput.dateBegin : null
