@@ -14,7 +14,6 @@ export class NotificationService {
     const notifications = await this.prismaService.notification.findMany({
       where: {
         userTargetId,
-        isSeen: false,
       },
       ...(currentCursor && {
         cursor: {
@@ -24,10 +23,14 @@ export class NotificationService {
       }),
       select: {
         id: true,
+        action: true,
         createdAt: true,
+        isSeen: true,
         userSource: {
           select: {
             id: true,
+            firstName: true,
+            pictureId: true,
           },
         },
       },
@@ -39,7 +42,14 @@ export class NotificationService {
 
     const cursor = notifications.length === limit && notifications[limit - 1].createdAt
 
-    const mappedNotifications = notifications.map(this.formatNotification)
+    const mappedNotifications = notifications.map((notification) => ({
+      ...notification,
+      id: this.prismaService.mapBufferIdToString(notification.id),
+      userSource: {
+        ...notification.userSource,
+        id: this.prismaService.mapBufferIdToString(notification.userSource.id),
+      },
+    }))
 
     return { notifications: mappedNotifications, cursor }
   }
@@ -51,16 +61,5 @@ export class NotificationService {
         isSeen: false,
       },
     })
-  }
-
-  formatNotification(notification) {
-    return {
-      ...notification,
-      id: this.prismaService.mapBufferIdToString(notification.id),
-      userSource: {
-        ...notification.userSource,
-        id: this.prismaService.mapBufferIdToString(notification.userSource.id),
-      },
-    }
   }
 }
