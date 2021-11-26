@@ -26,13 +26,13 @@ export class PostResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation((returns) => Post)
+  @Mutation(() => Post)
   async createPost(@Args('input') createPostData: CreatePostInput, @Context() context) {
     return this.postService.create(createPostData, context.req.username)
   }
 
   @UseGuards(AuthGuard)
-  @Mutation((returns) => Boolean)
+  @Mutation(() => Boolean)
   async trackPostViews(@Args({ name: 'postsIds', type: () => [String] }) postsIds: string[]) {
     return this.postService.trackPostViews(postsIds)
   }

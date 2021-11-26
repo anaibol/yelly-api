@@ -235,11 +235,6 @@ export class UserService {
             followers: true,
           },
         },
-        following: {
-          select: {
-            id: true,
-          },
-        },
         posts: {
           orderBy: {
             createdAt: 'desc',

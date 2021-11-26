@@ -75,6 +75,21 @@ type Mutation {
   updateAuthUserTraining(id: String!, input: UpdateUserTrainingInput!): UserTraining!
 }
 
+type Notification {
+  action: String!
+  createdAt: DateTime!
+  id: String!
+  isSeen: Boolean!
+  itemId: String
+  user: User!
+  userSource: User!
+}
+
+type PaginatedNotifications {
+  items: [Notification!]!
+  nextCursor: String!
+}
+
 type PaginatedPosts {
   items: [Post!]!
   nextCursor: String!
@@ -92,6 +107,7 @@ type Post {
 type Query {
   liveTag: LiveTagAuthUser!
   me: User!
+  notifications(after: String, limit: Int = 10): PaginatedNotifications!
   postsFeed(after: String, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   user(id: String!): User!
   users(after: String, limit: Int = 10): [User!]!

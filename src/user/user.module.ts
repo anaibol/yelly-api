@@ -14,11 +14,11 @@ import { UserTrainingService } from 'src/user-training/services/user-training.se
   providers: [
     UserService,
     UserResolver,
-    NotificationService,
     CityService,
     SchoolService,
     TrainingService,
     UserTrainingService,
+    NotificationService,
   ],
   exports: [UserService],
 })
