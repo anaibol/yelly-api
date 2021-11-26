@@ -141,7 +141,7 @@ model User {
   userTraining                 UserTraining?
   followers                    User[]                   @relation("followship")
   following                    User[]                   @relation("followship")
-  likes                        Post[]                   @relation("posts_like")
+  postReactions                PostReaction[]
   @@map("user")
 }
 
@@ -205,7 +205,7 @@ model Post {
   authorId   Bytes    @map("author_id") @db.Binary(16)
   author     User     @relation(fields: [authorId], references: [id])
   tags       Tag[]
-  likedBy    User[]   @relation("posts_like")
+  reactions  PostReaction[]
   viewsCount Int      @default(0)
   @@index([authorId], map: "post_author_id_fkey")
   @@map("post")
@@ -225,4 +225,15 @@ enum NotificationAction {
   seen
   add
   groupMembershipRequest
+}
+
+model PostReaction {
+  id        String   @id @default(uuid())
+  text      String   @db.Text
+  createdAt DateTime @unique @default(now())
+  reaction  String
+  author    User     @relation(fields: [authorId], references: [id])
+  post      Post?    @relation(fields: [postId], references: [id])
+  postId    String?
+  authorId  Bytes    @db.Binary(16)
 }
