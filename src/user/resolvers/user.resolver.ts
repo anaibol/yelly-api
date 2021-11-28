@@ -66,7 +66,7 @@ export class UserResolver {
   }
 
   @ResolveField()
-  async follows(@Parent() user: User, @Args() PaginationArgs: PaginationArgs) {
-    return this.userService.getUserFollows(user.id, PaginationArgs.after, PaginationArgs.limit)
+  async followees(@Parent() user: User, @Args() PaginationArgs: PaginationArgs) {
+    return this.userService.getUserFollowees(user.id, PaginationArgs.after, PaginationArgs.limit)
   }
 }

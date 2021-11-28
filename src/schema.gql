@@ -165,10 +165,10 @@ type User {
   about: String
   birthdate: DateTime
   firstName: String!
+  followees(after: String, limit: Int = 10): [User!]
+  followeesCount: Float
   followers(after: String, limit: Int = 10): [User!]
   followersCount: Float
-  followingCount: Float
-  follows(after: String, limit: Int = 10): [User!]
   id: String!
   instagram: String
   isFilled: Boolean

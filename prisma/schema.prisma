@@ -146,21 +146,21 @@ model User {
   postComments                 PostComment[]
   tags                         Tag[]
   userTraining                 UserTraining?
-  follows                      Followship[]             @relation("follows")
-  followers                    Followship[]             @relation("follower")
+  followers                    Followship[]             @relation("followers")
+  followees                    Followship[]             @relation("followees")
   postReactions                PostReaction[]
 
   @@map("user")
 }
 
 model Followship {
-  follower   User     @relation("follower", fields: [followerId], references: [id])
+  follower   User     @relation("followers", fields: [followerId], references: [id])
   followerId Bytes    @db.Binary(16)
-  follows    User     @relation("follows", fields: [followsId], references: [id])
-  followsId  Bytes    @db.Binary(16)
+  followee   User     @relation("followees", fields: [followeeId], references: [id])
+  followeeId Bytes    @db.Binary(16)
   createdAt  DateTime @unique @default(now())
 
-  @@id([followerId, followsId])
+  @@id([followerId, followeeId])
 }
 
 model UserTraining {
@@ -228,7 +228,8 @@ model Post {
   author     User           @relation(fields: [authorId], references: [id])
   tags       Tag[]
   reactions  PostReaction[]
-  viewsCount Int      @default(0)
+  viewsCount Int            @default(0)
+
   @@index([authorId], map: "post_author_id_fkey")
   @@map("post")
 }

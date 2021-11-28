@@ -50,10 +50,10 @@ export class User {
   followersCount
 
   @Field(() => Number, { nullable: true })
-  followingCount
+  followeesCount
 
   @Field(() => [User], { nullable: true })
-  follows: User
+  followees: User
 
   @Field(() => [User], { nullable: true })
   followers: User
