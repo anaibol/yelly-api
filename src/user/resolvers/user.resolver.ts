@@ -4,11 +4,23 @@ import { AuthGuard } from 'src/auth/guards/auth.guard'
 import { PrismaService } from 'src/core/services/prisma.service'
 import { NotificationService } from 'src/notification/services/notification.service'
 import { GetUsersArgs } from '../dto/get-users.input'
+import { PaginationArgs } from '../../common/dto/pagination.args'
 import { ForgotPasswordInput } from '../dto/forgot-password.input'
 import { ToggleFollowInput } from '../dto/toggle-follow.input'
 import { User } from '../models/user.model'
 import { UserService } from '../services/user.service'
 import { SignUpInput } from '../dto/sign-up.input'
+
+type Follower = {
+  id: string
+  firstName: string
+  pictureId: string
+  userTraining: {
+    school: {
+      name: string
+    }
+  }
+}
 
 @Resolver(() => User)
 export class UserResolver {
@@ -29,12 +41,6 @@ export class UserResolver {
         this.prismaService.mapStringIdToBuffer(user.id)
       ),
     }
-  }
-
-  @Query(() => [User], { name: 'users' })
-  @UseGuards(AuthGuard)
-  find(@Args() getUsersArgs: GetUsersArgs) {
-    return this.userService.find(0, getUsersArgs.limit)
   }
 
   @Query(() => User, { name: 'user' })
@@ -66,12 +72,12 @@ export class UserResolver {
   }
 
   @ResolveField()
-  async followers(@Parent() user: User) {
-    return this.userService.getUserFollowers(user.id)
+  async followers(@Parent() user: User, @Args() PaginationArgs: PaginationArgs) {
+    return this.userService.getUserFollowers(user.id, PaginationArgs.after, PaginationArgs.limit)
   }
 
   @ResolveField()
-  async followings(@Parent() user: User) {
-    return this.userService.getUserFollowings(user.id)
+  async followees(@Parent() user: User, @Args() PaginationArgs: PaginationArgs) {
+    return this.userService.getUserFollowees(user.id, PaginationArgs.after, PaginationArgs.limit)
   }
 }

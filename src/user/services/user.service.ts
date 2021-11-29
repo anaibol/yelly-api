@@ -45,28 +45,6 @@ export class UserService {
     return post != null
   }
 
-  async find(offset = 0, limit = DEFAULT_LIMIT) {
-    const users = await this.prismaService.user.findMany({
-      include: {
-        posts: true,
-        userTraining: {
-          include: {
-            city: true,
-            training: true,
-            school: true,
-          },
-        },
-      },
-      orderBy: {
-        firstName: 'asc',
-      },
-      take: limit,
-      skip: offset,
-    })
-
-    return this.formatUser(users)
-  }
-
   async findOne(id) {
     const bufferId = this.prismaService.mapStringIdToBuffer(id)
 
@@ -84,7 +62,7 @@ export class UserService {
         instagram: true,
         _count: {
           select: {
-            following: true,
+            followees: true,
             followers: true,
           },
         },
@@ -142,18 +120,29 @@ export class UserService {
     return this.formatUser(user)
   }
 
-  async getUserFollowers(id) {
+  async getUserFollowers(id, currentCursor, limit = DEFAULT_LIMIT) {
     const bufferId = this.prismaService.mapStringIdToBuffer(id)
 
-    const { followers } = await this.prismaService.user.findUnique({
+    const followers = await this.prismaService.followship.findMany({
       where: {
-        id: bufferId,
+        followeeId: bufferId,
+        ...(currentCursor && {
+          cursor: {
+            createdAt: new Date(+currentCursor).toISOString(),
+          },
+          skip: 1, // Skip the cursor
+        }),
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
       select: {
-        followers: {
+        follower: {
           select: {
             id: true,
             firstName: true,
+            pictureId: true,
             userTraining: {
               select: {
                 school: {
@@ -168,28 +157,35 @@ export class UserService {
       },
     })
 
-    return followers.map((otherUserFollowers) => {
-      const id = this.prismaService.mapBufferIdToString(otherUserFollowers.id)
-
-      return {
-        ...otherUserFollowers,
-        id,
-      }
-    })
+    return followers.map(({ follower: { id, ...folower } }) => ({
+      ...folower,
+      id: this.prismaService.mapBufferIdToString(id),
+    }))
   }
 
-  async getUserFollowings(id) {
+  async getUserFollowees(id, currentCursor, limit = DEFAULT_LIMIT) {
     const bufferId = this.prismaService.mapStringIdToBuffer(id)
 
-    const otherUser = await this.prismaService.user.findUnique({
+    const followees = await this.prismaService.followship.findMany({
       where: {
-        id: bufferId,
+        followerId: bufferId,
+        ...(currentCursor && {
+          cursor: {
+            createdAt: new Date(+currentCursor).toISOString(),
+          },
+          skip: 1, // Skip the cursor
+        }),
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
       select: {
-        following: {
+        followee: {
           select: {
-            firstName: true,
             id: true,
+            firstName: true,
+            pictureId: true,
             userTraining: {
               select: {
                 school: {
@@ -204,14 +200,10 @@ export class UserService {
       },
     })
 
-    return otherUser.following.map((otherUserFollowings) => {
-      const id = this.prismaService.mapBufferIdToString(otherUserFollowings.id)
-
-      return {
-        ...otherUserFollowings,
-        id,
-      }
-    })
+    return followees.map(({ followee: { id, ...followee } }) => ({
+      ...followee,
+      id: this.prismaService.mapBufferIdToString(id),
+    }))
   }
 
   async findByEmail(email: string) {
@@ -229,7 +221,7 @@ export class UserService {
         instagram: true,
         _count: {
           select: {
-            following: true,
+            followees: true,
             followers: true,
           },
         },
@@ -437,21 +429,23 @@ export class UserService {
       },
     })
 
-    await this.prismaService.user.update({
-      data: {
-        following: {
-          [value ? 'connect' : 'disconnect']: {
-            id: this.prismaService.mapStringIdToBuffer(otherUserId),
+    if (value) {
+      await this.prismaService.followship.create({
+        data: {
+          followerId: authUserId,
+          followeeId: this.prismaService.mapStringIdToBuffer(otherUserId),
+        },
+      })
+    } else {
+      await this.prismaService.followship.delete({
+        where: {
+          followerId_followeeId: {
+            followerId: authUserId,
+            followeeId: this.prismaService.mapStringIdToBuffer(otherUserId),
           },
         },
-      },
-      where: {
-        id: authUserId,
-      },
-      include: {
-        following: true,
-      },
-    })
+      })
+    }
 
     return true
   }
@@ -621,13 +615,13 @@ export class UserService {
     formattedUser.userTraining.city.id = this.prismaService.mapBufferIdToString(user.userTraining.city.id)
     formattedUser.userTraining.school.id = this.prismaService.mapBufferIdToString(user.userTraining.school.id)
     formattedUser.userTraining.training.id = this.prismaService.mapBufferIdToString(user.userTraining.training.id)
-    formattedUser.followingCount = user._count.following
+    formattedUser.followeesCount = user._count.followees
     formattedUser.followersCount = user._count.followers
 
-    formattedUser.following = user.following
-      ? user.following.map((userFollowing) => ({
-          ...userFollowing,
-          id: this.prismaService.mapBufferIdToString(userFollowing.id),
+    formattedUser.followees = user.followees
+      ? user.followees.map((followee) => ({
+          ...followee,
+          id: this.prismaService.mapBufferIdToString(followee.id),
         }))
       : []
 
