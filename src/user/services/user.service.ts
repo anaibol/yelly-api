@@ -94,16 +94,16 @@ export class UserService {
           select: {
             id: true,
             dateBegin: true,
-            city: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
             school: {
               select: {
                 id: true,
                 name: true,
+                city: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
             training: {
@@ -254,16 +254,16 @@ export class UserService {
           select: {
             id: true,
             dateBegin: true,
-            city: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
             school: {
               select: {
                 id: true,
                 name: true,
+                city: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
             training: {
