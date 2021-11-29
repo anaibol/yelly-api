@@ -10,6 +10,7 @@ import { SendbirdService } from 'src/core/services/sendbird.service'
 import { CityService } from 'src/user-training/services/city.service'
 import { SchoolService } from 'src/user-training/services/school.service'
 import { SignUpInput } from '../dto/sign-up.input'
+import { UpdateUserInput } from '../dto/update-user.input'
 import { NotFoundUserException } from '../exceptions/not-found-user.exception'
 import { UserIndexAlgoliaInterface } from '../interfaces/user-index-algolia.interface'
 
@@ -579,6 +580,28 @@ export class UserService {
     }
   }
 
+  async updateMe(updateUserData: UpdateUserInput, email: string): Promise<boolean> {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email,
+      },
+    })
+
+    if (!user) throw new ForbiddenException('User do not exists')
+
+    const updatedUser = await this.prismaService.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        ...user,
+        ...updateUserData,
+      },
+    })
+
+    return !!updatedUser.id
+  }
+
   async getGooglePlaceById(googlePlaceId: string) {
     const response = await axios.get(
       'https://maps.googleapis.com/maps/api/place/details/json?language=fr&place_id=' +
@@ -609,7 +632,7 @@ export class UserService {
     const formattedUser = {
       ...user,
     }
-
+    console.log('formattedUser:', formattedUser)
     formattedUser.id = this.prismaService.mapBufferIdToString(user.id)
     formattedUser.userTraining.id = this.prismaService.mapBufferIdToString(user.userTraining.id)
     formattedUser.userTraining.school.id = this.prismaService.mapBufferIdToString(user.userTraining.school.id)
