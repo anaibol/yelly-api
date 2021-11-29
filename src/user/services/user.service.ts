@@ -186,10 +186,8 @@ export class UserService {
         id: bufferId,
       },
       select: {
-        following: {
+        followers: {
           select: {
-            firstName: true,
-            id: true,
             userTraining: {
               select: {
                 school: {
@@ -223,13 +221,14 @@ export class UserService {
         id: true,
         firstName: true,
         lastName: true,
+        email: true,
+        password: true,
         pictureId: true,
         birthdate: true,
         about: true,
         instagram: true,
         _count: {
           select: {
-            following: true,
             followers: true,
           },
         },
@@ -313,7 +312,7 @@ export class UserService {
   async create(createUserData: SignUpInput, schoolData) {
     const saltOrRounds = 10
     const password = createUserData.password
-    const hash = await bcrypt.hash(password, saltOrRounds)
+    const hash = await bcrypt.hashSync(password, saltOrRounds)
 
     const user = await this.prismaService.user.create({
       include: {
@@ -439,7 +438,7 @@ export class UserService {
 
     await this.prismaService.user.update({
       data: {
-        following: {
+        followers: {
           [value ? 'connect' : 'disconnect']: {
             id: this.prismaService.mapStringIdToBuffer(otherUserId),
           },
@@ -449,7 +448,7 @@ export class UserService {
         id: authUserId,
       },
       include: {
-        following: true,
+        followees: true,
       },
     })
 
@@ -618,7 +617,7 @@ export class UserService {
 
     formattedUser.id = this.prismaService.mapBufferIdToString(user.id)
     formattedUser.userTraining.id = this.prismaService.mapBufferIdToString(user.userTraining.id)
-    formattedUser.userTraining.city.id = this.prismaService.mapBufferIdToString(user.userTraining.city.id)
+    //formattedUser.userTraining.city.id = this.prismaService.mapBufferIdToString(user.userTraining.city.id)
     formattedUser.userTraining.school.id = this.prismaService.mapBufferIdToString(user.userTraining.school.id)
     formattedUser.userTraining.training.id = this.prismaService.mapBufferIdToString(user.userTraining.training.id)
     formattedUser.followingCount = user._count.following

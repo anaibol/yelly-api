@@ -8,6 +8,7 @@ import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
 import { UserTrainingModule } from './user-training/user-training.module'
 import { NotificationModule } from './notification/notification.module'
+import { AppController } from 'app.controller'
 
 @Module({
   imports: [
@@ -23,5 +24,6 @@ import { NotificationModule } from './notification/notification.module'
     UserTrainingModule,
     NotificationModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}

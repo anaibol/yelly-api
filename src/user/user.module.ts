@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { UserService } from './services/user.service'
 import { UserResolver } from './resolvers/user.resolver'
 import { CoreModule } from 'src/core/core.module'
@@ -10,7 +10,7 @@ import { TrainingService } from 'src/user-training/services/training.service'
 import { UserTrainingService } from 'src/user-training/services/user-training.service'
 
 @Module({
-  imports: [CoreModule, AuthModule],
+  imports: [CoreModule, forwardRef(() => AuthModule)],
   providers: [
     UserService,
     UserResolver,

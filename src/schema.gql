@@ -70,7 +70,8 @@ type Mutation {
   deleteAuthUser: Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   forgotPassword(input: ForgotPasswordInput!): User!
-  signUp(input: SignUpInput!): User!
+  signIn(input: SignInInput!): Token!
+  signUp(input: SignUpInput!): Token!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
   trackPostViews(postsIds: [String!]!): Boolean!
   updateAuthUserTraining(id: String!, input: UpdateUserTrainingInput!): UserTraining!
@@ -123,6 +124,11 @@ type School {
   name: String!
 }
 
+input SignInInput {
+  email: String!
+  password: String!
+}
+
 input SignUpInput {
   birthdate: DateTime!
   email: String!
@@ -148,6 +154,10 @@ type Tag {
 input ToggleFollowInput {
   otherUserId: String!
   value: Boolean!
+}
+
+type Token {
+  accessToken: String!
 }
 
 type Training {

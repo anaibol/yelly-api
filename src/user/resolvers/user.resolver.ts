@@ -1,7 +1,6 @@
-import { UseGuards } from '@nestjs/common'
+import { Request, UseGuards } from '@nestjs/common'
 import { Args, Context, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
 import { AuthGuard } from 'src/auth/guards/auth.guard'
-import { PrismaService } from 'src/core/services/prisma.service'
 import { NotificationService } from 'src/notification/services/notification.service'
 import { GetUsersArgs } from '../dto/get-users.input'
 import { ForgotPasswordInput } from '../dto/forgot-password.input'
@@ -9,26 +8,34 @@ import { ToggleFollowInput } from '../dto/toggle-follow.input'
 import { User } from '../models/user.model'
 import { UserService } from '../services/user.service'
 import { SignUpInput } from '../dto/sign-up.input'
+import { CurrentUser, JwtAuthGuard } from 'src/auth/jwt-auth.guard'
+import { AuthService } from 'src/auth/auth.service'
+import { Token } from '../models/token.model'
+import { JwtService } from '@nestjs/jwt'
+import { SignInInput } from '../dto/sign-in.input'
+import { LocalAuthGuard } from 'src/auth/local-auth.guard'
 
 @Resolver(() => User)
 export class UserResolver {
   constructor(
     private userService: UserService,
     private notificationService: NotificationService,
-    private prismaService: PrismaService
+    private jwtService: JwtService,
+    private authService: AuthService
   ) {}
 
-  @Query(() => User)
-  @UseGuards(AuthGuard)
-  async me(@Context() context) {
-    const user = await this.userService.findByEmail(context.req.username)
+  @Mutation(() => Token)
+  async signIn(@Args('input') signInInput: SignInInput) {
+    const valid = await this.authService.validateUser(signInInput.email, signInInput.password)
+    console.log(valid)
 
-    return {
-      ...user,
-      unreadNotificationsCount: await this.notificationService.countUnreadNotifications(
-        this.prismaService.mapStringIdToBuffer(user.id)
-      ),
-    }
+    return this.authService.login(signInInput)
+  }
+
+  @Query(() => User)
+  @UseGuards(JwtAuthGuard)
+  async me(@CurrentUser() user: User) {
+    return this.userService.findOne(user.id)
   }
 
   @Query(() => [User], { name: 'users' })
@@ -48,9 +55,14 @@ export class UserResolver {
     return this.userService.requestResetPassword(forgotPasswordInput.email)
   }
 
-  @Mutation(() => User)
-  signUp(@Args('input') signUpData: SignUpInput) {
-    return this.userService.signUp(signUpData)
+  @Mutation(() => Token)
+  async signUp(@Args('input') signUpData: SignUpInput) {
+    const user = await this.userService.signUp(signUpData)
+    const payload = { email: user.email, id: user.id }
+
+    return {
+      accessToken: this.jwtService.sign(payload),
+    }
   }
 
   @UseGuards(AuthGuard)
