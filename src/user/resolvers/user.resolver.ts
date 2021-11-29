@@ -1,8 +1,5 @@
-import { Request, UseGuards } from '@nestjs/common'
-import { Args, Context, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
-import { AuthGuard } from 'src/auth/guards/auth.guard'
-import { NotificationService } from 'src/notification/services/notification.service'
-import { GetUsersArgs } from '../dto/get-users.input'
+import { UnauthorizedException, UseGuards } from '@nestjs/common'
+import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
 import { PaginationArgs } from '../../common/dto/pagination.args'
 import { ForgotPasswordInput } from '../dto/forgot-password.input'
 import { ToggleFollowInput } from '../dto/toggle-follow.input'
@@ -12,9 +9,7 @@ import { SignUpInput } from '../dto/sign-up.input'
 import { CurrentUser, JwtAuthGuard } from 'src/auth/jwt-auth.guard'
 import { AuthService } from 'src/auth/auth.service'
 import { Token } from '../models/token.model'
-import { JwtService } from '@nestjs/jwt'
 import { SignInInput } from '../dto/sign-in.input'
-import { LocalAuthGuard } from 'src/auth/local-auth.guard'
 
 type Follower = {
   id: string
@@ -29,29 +24,27 @@ type Follower = {
 
 @Resolver(() => User)
 export class UserResolver {
-  constructor(
-    private userService: UserService,
-    private notificationService: NotificationService,
-    private jwtService: JwtService,
-    private authService: AuthService
-  ) {}
+  constructor(private userService: UserService, private authService: AuthService) {}
 
   @Mutation(() => Token)
   async signIn(@Args('input') signInInput: SignInInput) {
-    const valid = await this.authService.validateUser(signInInput.email, signInInput.password)
-    console.log(valid)
+    const user = await this.authService.validateUser(signInInput.email, signInInput.password)
 
-    return this.authService.login(signInInput)
+    if (!user) {
+      throw new UnauthorizedException()
+    }
+
+    return this.authService.login(user)
   }
 
   @Query(() => User)
   @UseGuards(JwtAuthGuard)
-  async me(@CurrentUser() user: User) {
-    return this.userService.findOne(user.id)
+  async me(@CurrentUser() user) {
+    return this.userService.findByEmail(user.username)
   }
 
   @Query(() => User, { name: 'user' })
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   findOne(@Args('id') id: string) {
     return this.userService.findOne(id)
   }
@@ -64,23 +57,19 @@ export class UserResolver {
   @Mutation(() => Token)
   async signUp(@Args('input') signUpData: SignUpInput) {
     const user = await this.userService.signUp(signUpData)
-    const payload = { email: user.email, id: user.id }
-
-    return {
-      accessToken: this.jwtService.sign(payload),
-    }
+    return this.authService.login(user)
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => Boolean)
-  async deleteAuthUser(@Context() context) {
-    return this.userService.deleteByEmail(context.req.username)
+  async deleteAuthUser(@CurrentUser() user) {
+    return this.userService.deleteByEmail(user.username)
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => Boolean)
-  toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @Context() context) {
-    return this.userService.toggleFollow(context.req.username, toggleFollowInput.otherUserId, toggleFollowInput.value)
+  toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @CurrentUser() user) {
+    return this.userService.toggleFollow(user.username, toggleFollowInput.otherUserId, toggleFollowInput.value)
   }
 
   @ResolveField()

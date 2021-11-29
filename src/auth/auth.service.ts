@@ -9,8 +9,6 @@ export class AuthService {
   constructor(private usersService: UserService, private jwtService: JwtService) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
-    console.log(email)
-
     const user = await this.usersService.findByEmail(email)
 
     if (user && (await this.checkPassword(pass, user.password))) {
@@ -21,7 +19,7 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { email: user.email, id: user.id }
+    const payload = { username: user.email }
 
     const token: Token = {
       accessToken: this.jwtService.sign(payload),

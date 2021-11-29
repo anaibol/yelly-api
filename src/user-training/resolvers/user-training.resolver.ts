@@ -2,6 +2,7 @@ import { UseGuards } from '@nestjs/common'
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql'
 import { NotFoundError } from 'rxjs'
 import { AuthGuard } from 'src/auth/guards/auth.guard'
+import { CurrentUser, JwtAuthGuard } from 'src/auth/jwt-auth.guard'
 import { UserService } from 'src/user/services/user.service'
 import { UpdateUserTrainingInput } from '../dto/update-user-training.input'
 import { UserTraining } from '../models/userTraining.model'
@@ -20,14 +21,14 @@ export class UserTrainingResolver {
     private schoolService: SchoolService
   ) {}
 
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => UserTraining)
   async updateAuthUserTraining(
     @Args('id') id: string,
     @Args('input') updateUserTrainingInput: UpdateUserTrainingInput,
-    @Context() context
+    @CurrentUser() currentUser
   ) {
-    const user = await this.userService.findByEmail(context.req.username)
+    const user = await this.userService.findByEmail(currentUser.username)
 
     const found = await user.userTraining.find((element) => element.id == id)
     if (!found) throw new NotFoundError("it's not your resource")
