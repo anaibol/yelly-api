@@ -17,7 +17,7 @@ model City {
   lng           String?        @db.VarChar(255)
   isValid       Boolean?       @map("is_valid")
   country       Country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_2D5B0234F92F3E70")
-  userTraining  UserTraining[]
+  userTraining  UserTraining?
   schools       School[]
 
   @@index([countryId], map: "IDX_2D5B0234F92F3E70")
@@ -103,6 +103,7 @@ model School {
   userTraining  UserTraining[]
 
   @@index([countryId], map: "IDX_F99EDABBF92F3E70")
+  @@index([cityId], map: "school_city_id_fkey")
   @@map("school")
 }
 
