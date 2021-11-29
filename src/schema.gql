@@ -112,7 +112,6 @@ type Query {
   notifications(after: String, limit: Int = 10): PaginatedNotifications!
   postsFeed(after: String, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   user(id: String!): User!
-  users(after: String, limit: Int = 10): [User!]!
 }
 
 type School {
@@ -176,10 +175,10 @@ type User {
   about: String
   birthdate: DateTime
   firstName: String!
-  followers: [User!]
-  followersCount: Float
-  followingCount: Float
-  followings: [User!]
+  followees(after: String, limit: Int = 10): [User!]
+  followeesCount: Int
+  followers(after: String, limit: Int = 10): [User!]
+  followersCount: Int
   id: String!
   instagram: String
   isFilled: Boolean
@@ -189,7 +188,7 @@ type User {
   posts: [Post!]
   sendbirdAccessToken: String
   snapchat: String
-  unreadNotificationsCount: Float!
+  unreadNotificationsCount: Float
   userTraining: UserTraining!
 }
 

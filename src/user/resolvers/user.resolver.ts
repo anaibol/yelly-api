@@ -3,6 +3,7 @@ import { Args, Context, Mutation, Query, Resolver, ResolveField, Parent } from '
 import { AuthGuard } from 'src/auth/guards/auth.guard'
 import { NotificationService } from 'src/notification/services/notification.service'
 import { GetUsersArgs } from '../dto/get-users.input'
+import { PaginationArgs } from '../../common/dto/pagination.args'
 import { ForgotPasswordInput } from '../dto/forgot-password.input'
 import { ToggleFollowInput } from '../dto/toggle-follow.input'
 import { User } from '../models/user.model'
@@ -14,6 +15,17 @@ import { Token } from '../models/token.model'
 import { JwtService } from '@nestjs/jwt'
 import { SignInInput } from '../dto/sign-in.input'
 import { LocalAuthGuard } from 'src/auth/local-auth.guard'
+
+type Follower = {
+  id: string
+  firstName: string
+  pictureId: string
+  userTraining: {
+    school: {
+      name: string
+    }
+  }
+}
 
 @Resolver(() => User)
 export class UserResolver {
@@ -36,12 +48,6 @@ export class UserResolver {
   @UseGuards(JwtAuthGuard)
   async me(@CurrentUser() user: User) {
     return this.userService.findOne(user.id)
-  }
-
-  @Query(() => [User], { name: 'users' })
-  @UseGuards(AuthGuard)
-  find(@Args() getUsersArgs: GetUsersArgs) {
-    return this.userService.find(0, getUsersArgs.limit)
   }
 
   @Query(() => User, { name: 'user' })
@@ -78,12 +84,12 @@ export class UserResolver {
   }
 
   @ResolveField()
-  async followers(@Parent() user: User) {
-    return this.userService.getUserFollowers(user.id)
+  async followers(@Parent() user: User, @Args() PaginationArgs: PaginationArgs) {
+    return this.userService.getUserFollowers(user.id, PaginationArgs.after, PaginationArgs.limit)
   }
 
   @ResolveField()
-  async followings(@Parent() user: User) {
-    return this.userService.getUserFollowings(user.id)
+  async followees(@Parent() user: User, @Args() PaginationArgs: PaginationArgs) {
+    return this.userService.getUserFollowees(user.id, PaginationArgs.after, PaginationArgs.limit)
   }
 }

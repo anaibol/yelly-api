@@ -30,6 +30,10 @@ export class PostService {
         },
         skip: 1, // Skip the cursor
       }),
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
       select: {
         id: true,
         createdAt: true,
@@ -61,10 +65,6 @@ export class PostService {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
     })
 
     const mappedPosts = this.mapAuthorBufferIdToUUID(posts)
