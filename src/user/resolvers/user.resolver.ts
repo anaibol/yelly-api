@@ -11,17 +11,6 @@ import { User } from '../models/user.model'
 import { UserService } from '../services/user.service'
 import { SignUpInput } from '../dto/sign-up.input'
 
-type Follower = {
-  id: string
-  firstName: string
-  pictureId: string
-  userTraining: {
-    school: {
-      name: string
-    }
-  }
-}
-
 @Resolver(() => User)
 export class UserResolver {
   constructor(
