@@ -142,6 +142,7 @@ export class UserService {
           select: {
             id: true,
             firstName: true,
+            pictureId: true,
             userTraining: {
               select: {
                 school: {
@@ -184,6 +185,7 @@ export class UserService {
           select: {
             id: true,
             firstName: true,
+            pictureId: true,
             userTraining: {
               select: {
                 school: {

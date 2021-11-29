@@ -166,9 +166,9 @@ type User {
   birthdate: DateTime
   firstName: String!
   followees(after: String, limit: Int = 10): [User!]
-  followeesCount: Float
+  followeesCount: Int
   followers(after: String, limit: Int = 10): [User!]
-  followersCount: Float
+  followersCount: Int
   id: String!
   instagram: String
   isFilled: Boolean
@@ -178,7 +178,7 @@ type User {
   posts: [Post!]
   sendbirdAccessToken: String
   snapchat: String
-  unreadNotificationsCount: Float!
+  unreadNotificationsCount: Float
   userTraining: UserTraining!
 }
 
