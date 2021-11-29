@@ -497,7 +497,6 @@ export class UserService {
 
   async getSchool(schoolGooglePlaceId: string) {
     const school = await this.schoolService.findByGooglePlaceId(schoolGooglePlaceId)
-
     if (school) return school
 
     const googlePlaceDetail = await this.getGooglePlaceById(schoolGooglePlaceId)
@@ -513,7 +512,6 @@ export class UserService {
 
     const googleCity = await this.getGoogleCityByName(cityName)
     const cityGooggleplaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
-
     return {
       id: this.prismaService.mapStringIdToBuffer(randomUUID()),
       name: googlePlaceDetail.name,
@@ -589,13 +587,71 @@ export class UserService {
 
     if (!user) throw new ForbiddenException('User do not exists')
 
+    const schoolData = await this.getSchool(updateUserData.schoolGooglePlaceId)
+
     const updatedUser = await this.prismaService.user.update({
       where: {
         id: user.id,
       },
       data: {
         ...user,
-        ...updateUserData,
+        userTraining: {
+          update: {
+            school: {
+              connectOrCreate: {
+                where: {
+                  googlePlaceId: schoolData.googlePlaceId,
+                },
+                create: {
+                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                  name: schoolData.name,
+                  googlePlaceId: schoolData.googlePlaceId,
+                  isValid: true,
+                  lat: schoolData.lat,
+                  lng: schoolData.lng,
+                  city: {
+                    connectOrCreate: {
+                      where: {
+                        googlePlaceId: schoolData.city.googlePlaceId,
+                      },
+                      create: {
+                        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                        name: schoolData.city.name,
+                        googlePlaceId: schoolData.city.googlePlaceId,
+                        lat: schoolData.city.lat,
+                        lng: schoolData.city.lng,
+                        isValid: true,
+                        country: {
+                          connectOrCreate: {
+                            where: {
+                              name: schoolData.city.country.name,
+                            },
+                            create: {
+                              id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                              name: schoolData.city.country.name,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            training: {
+              connectOrCreate: {
+                where: {
+                  name: updateUserData.trainingName,
+                },
+                create: {
+                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                  name: updateUserData.trainingName,
+                },
+              },
+            },
+            createdAt: new Date(),
+          },
+        },
       },
     })
 
@@ -632,7 +688,7 @@ export class UserService {
     const formattedUser = {
       ...user,
     }
-    console.log('formattedUser:', formattedUser)
+
     formattedUser.id = this.prismaService.mapBufferIdToString(user.id)
     formattedUser.userTraining.id = this.prismaService.mapBufferIdToString(user.userTraining.id)
     formattedUser.userTraining.school.id = this.prismaService.mapBufferIdToString(user.userTraining.school.id)
