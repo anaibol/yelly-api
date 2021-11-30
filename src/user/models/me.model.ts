@@ -9,7 +9,7 @@ export class Me {
   id: string
 
   @Field()
-  firstName?: string
+  email: string
 
   @Field()
   lastName?: string
