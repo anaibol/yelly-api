@@ -46,7 +46,7 @@ model Group {
   ownerId                Bytes?                   @map("owner_id") @db.Binary(16)
   name                   String                   @db.VarChar(255)
   description            String?                  @db.VarChar(255)
-  createdAt              DateTime                 @map("created_at") @db.DateTime(0)
+  createdAt              DateTime                 @map("created_at") @db.DateTime(0) @default(now())
   updatedAt              DateTime?                @map("updated_at") @db.DateTime(0)
   user                   User?                    @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_6DC044C57E3C61F9")
   groupMembers           GroupMembers[]
@@ -61,7 +61,7 @@ model GroupMembers {
   groupInfoId Bytes     @map("group_info_id") @db.Binary(16)
   userId      Bytes     @map("user_id") @db.Binary(16)
   role        String?   @db.VarChar(255)
-  createdAt   DateTime  @map("created_at") @db.DateTime(0)
+  createdAt   DateTime  @map("created_at") @db.DateTime(0) @default(now())
   updatedAt   DateTime? @map("updated_at") @db.DateTime(0)
   banned      Boolean?
   group       Group     @relation(fields: [groupInfoId], references: [id], onUpdate: Restrict, map: "FK_C3A086F3DB8B95F4")
@@ -78,7 +78,7 @@ model Notification {
   userTargetId Bytes?              @map("user_target_id") @db.Binary(16)
   action       NotificationAction?
   isSeen       Boolean             @map("is_seen")
-  createdAt    DateTime            @unique @map("created_at") @db.DateTime(0)
+  createdAt    DateTime            @unique @map("created_at") @db.DateTime(0) @default(now())
   itemId       String?             @map("item_id") @db.VarChar(255)
   userSource   User                @relation("userSource", fields: [userSourceId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA95DC9185")
   user         User?               @relation(fields: [userTargetId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA156E8682")
@@ -128,7 +128,7 @@ model User {
   instagram                    String?                  @db.VarChar(100)
   resetToken                   String?                  @map("reset_token") @db.VarChar(255)
   isVerified                   Boolean                  @map("is_verified")
-  createdAt                    DateTime                 @map("created_at") @db.DateTime(0)
+  createdAt                    DateTime                 @map("created_at") @db.DateTime(0) @default(now())
   updatedAt                    DateTime?                @map("updated_at") @db.DateTime(0)
   isActived                    Boolean                  @map("is_actived")
   isFilled                     Boolean                  @map("is_filled")
@@ -172,7 +172,7 @@ model UserTraining {
   cityId     Bytes?    @map("city_id") @db.Binary(16)
   dateBegin  DateTime? @map("date_begin") @db.Date
   dateEnd    DateTime? @map("date_end") @db.Date
-  createdAt  DateTime  @map("created_at") @db.DateTime(0)
+  createdAt  DateTime  @map("created_at") @db.DateTime(0) @default(now())
   updatedAt  DateTime? @map("updated_at") @db.DateTime(0)
   city       City?     @relation(fields: [cityId], references: [id], onUpdate: Restrict, map: "FK_359F6E8F8BAC62AF")
   school     School    @relation(fields: [schoolId], references: [id], onUpdate: Restrict, map: "FK_359F6E8FC32A47EE")
@@ -198,7 +198,7 @@ model GroupMembershipRequest {
   userId      Bytes     @map("user_id") @db.Binary(16)
   groupInfoId Bytes     @map("group_info_id") @db.Binary(16)
   status      String    @db.VarChar(255)
-  createdAt   DateTime  @map("created_at") @db.DateTime(0)
+  createdAt   DateTime  @map("created_at") @db.DateTime(0) @default(now())
   updatedAt   DateTime? @map("updated_at") @db.DateTime(0)
   group       Group     @relation(fields: [groupInfoId], references: [id], onUpdate: Restrict, map: "FK_9D8B2166DB8B95F4")
   user        User      @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "FK_9D8B2166A76ED395")

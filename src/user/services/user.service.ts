@@ -13,6 +13,9 @@ import { UpdateUserInput } from '../dto/update-user.input'
 import { NotFoundUserException } from '../exceptions/not-found-user.exception'
 import { UserIndexAlgoliaInterface } from '../interfaces/user-index-algolia.interface'
 
+const cleanUndefinedFromObj = (obj) =>
+  Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
+
 @Injectable()
 export class UserService {
   googleApiKey = process.env.GOOGLE_API_KEY
@@ -333,7 +336,6 @@ export class UserService {
         instagram: createUserData.instagram,
         roles: '[]',
         isVerified: true,
-        createdAt: new Date(),
         isFilled: true,
         isActived: true,
         userTraining: {
@@ -391,7 +393,6 @@ export class UserService {
                 },
               },
             },
-            createdAt: new Date(),
           },
         },
       },
@@ -590,7 +591,17 @@ export class UserService {
         id: user.id,
       },
       data: {
-        ...user,
+        ...cleanUndefinedFromObj({
+          firstName: updateUserData.firstName,
+          lastName: updateUserData.lastName,
+          email: updateUserData.email,
+          password: updateUserData.password,
+          birthdate: updateUserData.birthdate,
+          instagram: updateUserData.instagram,
+          snapchat: updateUserData.snapchat,
+          pictureId: updateUserData.pictureId,
+          expoPushNotificationToken: updateUserData.expoPushNotificationToken,
+        }),
         userTraining: {
           update: {
             school: {
@@ -645,7 +656,6 @@ export class UserService {
                 },
               },
             },
-            createdAt: new Date(),
           },
         },
       },
@@ -663,7 +673,6 @@ export class UserService {
     )
     if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined')
       throw new NotFoundException('googlePlaceId not valid')
-
     return response.data.result as google.maps.places.PlaceResult
   }
 
