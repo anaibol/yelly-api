@@ -8,6 +8,7 @@ import { PaginationArgs } from '../../common/dto/pagination.args'
 import { ForgotPasswordInput } from '../dto/forgot-password.input'
 import { ToggleFollowInput } from '../dto/toggle-follow.input'
 import { User } from '../models/user.model'
+import { Me } from '../models/me.model'
 import { UserService } from '../services/user.service'
 import { SignUpInput } from '../dto/sign-up.input'
 
@@ -19,7 +20,7 @@ export class UserResolver {
     private prismaService: PrismaService
   ) {}
 
-  @Query(() => User)
+  @Query(() => Me)
   @UseGuards(AuthGuard)
   async me(@Context() context) {
     const user = await this.userService.findByEmail(context.req.username)
