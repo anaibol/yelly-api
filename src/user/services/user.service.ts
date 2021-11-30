@@ -7,7 +7,6 @@ import { AlgoliaService } from 'src/core/services/algolia.service'
 import { EmailService } from 'src/core/services/email.service'
 import { PrismaService } from 'src/core/services/prisma.service'
 import { SendbirdService } from 'src/core/services/sendbird.service'
-import { CityService } from 'src/user-training/services/city.service'
 import { SchoolService } from 'src/user-training/services/school.service'
 import { SignUpInput } from '../dto/sign-up.input'
 import { NotFoundUserException } from '../exceptions/not-found-user.exception'
@@ -20,7 +19,6 @@ export class UserService {
     private prismaService: PrismaService,
     private emailService: EmailService,
     private algoliaService: AlgoliaService,
-    private cityService: CityService,
     private schoolService: SchoolService,
     private sendbirdService: SendbirdService
   ) {}
@@ -93,7 +91,6 @@ export class UserService {
         userTraining: {
           select: {
             id: true,
-            dateBegin: true,
             school: {
               select: {
                 id: true,
@@ -253,7 +250,6 @@ export class UserService {
         userTraining: {
           select: {
             id: true,
-            dateBegin: true,
             school: {
               select: {
                 id: true,
@@ -611,10 +607,29 @@ export class UserService {
     }
 
     formattedUser.id = this.prismaService.mapBufferIdToString(user.id)
-    formattedUser.userTraining.id = this.prismaService.mapBufferIdToString(user.userTraining.id)
-    formattedUser.userTraining.school.id = this.prismaService.mapBufferIdToString(user.userTraining.school.id)
-    formattedUser.userTraining.school.city.id = this.prismaService.mapBufferIdToString(user.userTraining.school.city.id)
-    formattedUser.userTraining.training.id = this.prismaService.mapBufferIdToString(user.userTraining.training.id)
+
+    if (formattedUser?.userTraining?.id) {
+      formattedUser.userTraining.id = this.prismaService.mapBufferIdToString(user.userTraining.id)
+    }
+
+    if (formattedUser?.userTraining?.school?.id) {
+      formattedUser.userTraining.school.id = this.prismaService.mapBufferIdToString(
+        formattedUser.userTraining.school.id
+      )
+    }
+
+    if (formattedUser?.userTraining?.school?.city?.id) {
+      formattedUser.userTraining.school.city.id = this.prismaService.mapBufferIdToString(
+        formattedUser.userTraining.school.city.id
+      )
+    }
+
+    if (formattedUser?.userTraining?.training?.id) {
+      formattedUser.userTraining.training.id = this.prismaService.mapBufferIdToString(
+        formattedUser.userTraining.training.id
+      )
+    }
+
     formattedUser.followeesCount = user._count.followees
     formattedUser.followersCount = user._count.followers
 
@@ -626,9 +641,9 @@ export class UserService {
       : []
 
     formattedUser.followers = user.followers
-      ? user.followers.map((userFollower) => ({
-          ...userFollower,
-          id: this.prismaService.mapBufferIdToString(userFollower.id),
+      ? user.followers.map((follower) => ({
+          ...follower,
+          id: this.prismaService.mapBufferIdToString(follower.id),
         }))
       : []
 
