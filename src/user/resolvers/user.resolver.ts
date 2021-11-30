@@ -11,6 +11,7 @@ import { User } from '../models/user.model'
 import { Me } from '../models/me.model'
 import { UserService } from '../services/user.service'
 import { SignUpInput } from '../dto/sign-up.input'
+import { UpdateUserInput } from '../dto/update-user.input'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -47,6 +48,12 @@ export class UserResolver {
   @Mutation(() => User)
   signUp(@Args('input') signUpData: SignUpInput) {
     return this.userService.signUp(signUpData)
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  updateMe(@Args('input') updateUserData: UpdateUserInput, @Context() context) {
+    return this.userService.updateMe(updateUserData, context.req.username)
   }
 
   @UseGuards(AuthGuard)

@@ -74,6 +74,7 @@ type Mutation {
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
   trackPostViews(postsIds: [String!]!): Boolean!
   updateAuthUserTraining(id: String!, input: UpdateUserTrainingInput!): UserTraining!
+  updateMe(input: UpdateUserInput!): Boolean!
 }
 
 type Notification {
@@ -152,6 +153,19 @@ input ToggleFollowInput {
 type Training {
   id: String!
   name: String!
+}
+
+input UpdateUserInput {
+  birthdate: DateTime
+  email: String
+  firstName: String
+  instagram: String
+  lastName: String
+  password: String
+  pictureId: String
+  schoolGooglePlaceId: String
+  snapchat: String
+  trainingName: String
 }
 
 input UpdateUserTrainingInput {

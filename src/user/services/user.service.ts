@@ -9,6 +9,7 @@ import { PrismaService } from 'src/core/services/prisma.service'
 import { SendbirdService } from 'src/core/services/sendbird.service'
 import { SchoolService } from 'src/user-training/services/school.service'
 import { SignUpInput } from '../dto/sign-up.input'
+import { UpdateUserInput } from '../dto/update-user.input'
 import { NotFoundUserException } from '../exceptions/not-found-user.exception'
 import { UserIndexAlgoliaInterface } from '../interfaces/user-index-algolia.interface'
 
@@ -492,7 +493,6 @@ export class UserService {
 
   async getSchool(schoolGooglePlaceId: string) {
     const school = await this.schoolService.findByGooglePlaceId(schoolGooglePlaceId)
-
     if (school) return school
 
     const googlePlaceDetail = await this.getGooglePlaceById(schoolGooglePlaceId)
@@ -508,7 +508,6 @@ export class UserService {
 
     const googleCity = await this.getGoogleCityByName(cityName)
     const cityGooggleplaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
-
     return {
       id: this.prismaService.mapStringIdToBuffer(randomUUID()),
       name: googlePlaceDetail.name,
@@ -573,6 +572,86 @@ export class UserService {
       ...updatedUser,
       id: this.prismaService.mapBufferIdToString(updatedUser.id),
     }
+  }
+
+  async updateMe(updateUserData: UpdateUserInput, email: string): Promise<boolean> {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email,
+      },
+    })
+
+    if (!user) throw new ForbiddenException('User do not exists')
+
+    const schoolData = await this.getSchool(updateUserData.schoolGooglePlaceId)
+
+    const updatedUser = await this.prismaService.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        ...user,
+        userTraining: {
+          update: {
+            school: {
+              connectOrCreate: {
+                where: {
+                  googlePlaceId: schoolData.googlePlaceId,
+                },
+                create: {
+                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                  name: schoolData.name,
+                  googlePlaceId: schoolData.googlePlaceId,
+                  isValid: true,
+                  lat: schoolData.lat,
+                  lng: schoolData.lng,
+                  city: {
+                    connectOrCreate: {
+                      where: {
+                        googlePlaceId: schoolData.city.googlePlaceId,
+                      },
+                      create: {
+                        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                        name: schoolData.city.name,
+                        googlePlaceId: schoolData.city.googlePlaceId,
+                        lat: schoolData.city.lat,
+                        lng: schoolData.city.lng,
+                        isValid: true,
+                        country: {
+                          connectOrCreate: {
+                            where: {
+                              name: schoolData.city.country.name,
+                            },
+                            create: {
+                              id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                              name: schoolData.city.country.name,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            training: {
+              connectOrCreate: {
+                where: {
+                  name: updateUserData.trainingName,
+                },
+                create: {
+                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                  name: updateUserData.trainingName,
+                },
+              },
+            },
+            createdAt: new Date(),
+          },
+        },
+      },
+    })
+
+    return !!updatedUser.id
   }
 
   async getGooglePlaceById(googlePlaceId: string) {
