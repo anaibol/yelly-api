@@ -1,6 +1,6 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql'
-import { AuthGuard } from 'src/auth/guards/auth.guard'
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
+import { CurrentUser, JwtAuthGuard } from 'src/auth/jwt-auth.guard'
 import { PostService } from 'src/post/services/post.service'
 import { CreatePostInput } from '../dto/create-post.input'
 import { DeletePostInput } from '../dto/delete-post.input'
@@ -12,7 +12,7 @@ import { Post } from '../models/post.model'
 export class PostResolver {
   constructor(private postService: PostService) {}
 
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Query(() => PaginatedPosts, { name: 'postsFeed' })
   async getPostsFeed(@Args() GetPostsArgs?: GetPostsArgs) {
     const { posts, cursor } = await this.postService.find(
@@ -25,21 +25,21 @@ export class PostResolver {
     return { items: posts, nextCursor: cursor }
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => Post)
-  async createPost(@Args('input') createPostData: CreatePostInput, @Context() context) {
-    return this.postService.create(createPostData, context.req.username)
+  async createPost(@Args('input') createPostData: CreatePostInput, @CurrentUser() currentUser) {
+    return this.postService.create(createPostData, currentUser.username)
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => Boolean)
   async trackPostViews(@Args({ name: 'postsIds', type: () => [String] }) postsIds: string[]) {
     return this.postService.trackPostViews(postsIds)
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => Boolean)
-  async deletePost(@Args('input') deletePostData: DeletePostInput, @Context() context) {
-    return this.postService.delete(deletePostData, context.req.username)
+  async deletePost(@Args('input') deletePostData: DeletePostInput, @CurrentUser() currentUser) {
+    return this.postService.delete(deletePostData, currentUser.username)
   }
 }

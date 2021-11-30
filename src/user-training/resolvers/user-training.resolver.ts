@@ -1,7 +1,6 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql'
+import { Args, Mutation, Resolver } from '@nestjs/graphql'
 import { NotFoundError } from 'rxjs'
-import { AuthGuard } from 'src/auth/guards/auth.guard'
 import { CurrentUser, JwtAuthGuard } from 'src/auth/jwt-auth.guard'
 import { UserService } from 'src/user/services/user.service'
 import { UpdateUserTrainingInput } from '../dto/update-user-training.input'

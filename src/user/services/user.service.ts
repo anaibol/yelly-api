@@ -508,7 +508,7 @@ export class UserService {
       component.types.includes('postal_town')
     )
 
-    if (!locality && !postal_town) throw new NotFoundException('city not found in goorgle api')
+    if (!locality && !postal_town) throw new NotFoundException('city not found in google api')
 
     const { long_name: cityName } = locality || postal_town
 
@@ -516,7 +516,6 @@ export class UserService {
     const cityGooggleplaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
 
     return {
-      id: this.prismaService.mapStringIdToBuffer(randomUUID()),
       name: googlePlaceDetail.name,
       googlePlaceId: googlePlaceDetail.place_id,
       lat: googlePlaceDetail.geometry.location.lat.toString(),
