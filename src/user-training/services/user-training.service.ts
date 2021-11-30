@@ -16,7 +16,6 @@ export class UserTrainingService {
         trainingId: trainingId,
         cityId: cityId,
         schoolId: schoolId,
-        createdAt: new Date(),
       },
     })
   }
