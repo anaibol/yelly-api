@@ -29,8 +29,8 @@ export class Me {
   @Field({ nullable: true })
   instagram?: string
 
-  @Field({ defaultValue: 0, nullable: true })
-  unreadNotificationsCount?: number
+  @Field({ defaultValue: 0 })
+  unreadNotificationsCount: number
 
   @Field({ nullable: true })
   isFilled?: boolean
@@ -50,15 +50,15 @@ export class Me {
   @Field(() => [Post], { nullable: true })
   posts?: Post[]
 
-  @Field(() => Int, { nullable: true })
-  followersCount?: number
+  @Field(() => Int)
+  followersCount: number
 
-  @Field(() => Int, { nullable: true })
-  followeesCount?: number
+  @Field(() => Int)
+  followeesCount: number
 
-  @Field(() => [User], { nullable: true })
-  followees?: User
+  @Field(() => [User])
+  followees: User
 
-  @Field(() => [User], { nullable: true })
-  followers?: User
+  @Field(() => [User])
+  followers: User
 }

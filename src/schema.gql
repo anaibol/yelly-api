@@ -64,6 +64,28 @@ type LiveTagAuthUser {
   text: String!
 }
 
+type Me {
+  about: String
+  birthdate: DateTime
+  email: String!
+  firstName: String!
+  followees: [User!]!
+  followeesCount: Int!
+  followers: [User!]!
+  followersCount: Int!
+  id: String!
+  instagram: String
+  isFilled: Boolean
+  lastName: String!
+  locale: String
+  pictureId: String
+  posts: [Post!]
+  sendbirdAccessToken: String
+  snapchat: String
+  unreadNotificationsCount: Float!
+  userTraining: UserTraining!
+}
+
 type Mutation {
   createLiveTag(input: CreateLiveTagInput!): Tag!
   createPost(input: CreatePostInput!): Post!
@@ -108,7 +130,7 @@ type Post {
 
 type Query {
   liveTag: LiveTagAuthUser!
-  me: User!
+  me: Me!
   notifications(after: String, limit: Int = 10): PaginatedNotifications!
   postsFeed(after: String, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   user(id: String!): User!
@@ -158,6 +180,7 @@ type Training {
 input UpdateUserInput {
   birthdate: DateTime
   email: String
+  expoPushNotificationToken: String
   firstName: String
   instagram: String
   lastName: String
@@ -185,14 +208,11 @@ type User {
   followersCount: Int
   id: String!
   instagram: String
-  isFilled: Boolean
   lastName: String!
   locale: String
   pictureId: String
   posts: [Post!]
-  sendbirdAccessToken: String
   snapchat: String
-  unreadNotificationsCount: Float
   userTraining: UserTraining!
 }
 
