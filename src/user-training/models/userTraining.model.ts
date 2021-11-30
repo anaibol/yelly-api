@@ -7,10 +7,10 @@ export class UserTraining {
   @Field()
   id: string
 
-  @Field()
+  @Field({ nullable: true })
   createdAt?: Date
 
-  @Field()
+  @Field({ nullable: true })
   updatedAt?: Date
 
   @Field(() => Training, { nullable: true })

@@ -189,9 +189,9 @@ type User {
 }
 
 type UserTraining {
-  createdAt: DateTime!
+  createdAt: DateTime
   id: String!
   school: School
   training: Training
-  updatedAt: DateTime!
+  updatedAt: DateTime
 }
