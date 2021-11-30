@@ -12,6 +12,9 @@ export class Me {
   email: string
 
   @Field()
+  firstName?: string
+
+  @Field()
   lastName?: string
 
   @Field(() => Date, { nullable: true })
