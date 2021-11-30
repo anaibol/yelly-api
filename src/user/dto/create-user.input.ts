@@ -1,5 +1,4 @@
 import { Field, InputType } from '@nestjs/graphql'
-import { CreateUserTrainingInput } from 'src/user-training/dto/create-user-training.input'
 
 @InputType()
 export class UserCreateInput {

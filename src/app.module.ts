@@ -6,7 +6,6 @@ import { PostModule } from './post/post.module'
 import { CoreModule } from './core/core.module'
 import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
-import { UserTrainingModule } from './user-training/user-training.module'
 import { NotificationModule } from './notification/notification.module'
 
 @Module({
@@ -20,7 +19,6 @@ import { NotificationModule } from './notification/notification.module'
     CoreModule,
     CommonModule,
     AuthModule,
-    UserTrainingModule,
     NotificationModule,
   ],
 })

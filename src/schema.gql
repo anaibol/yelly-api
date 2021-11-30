@@ -16,13 +16,6 @@ type Country {
   name: String!
 }
 
-input CreateCityInput {
-  country: String!
-  geolocation: GeolocationInput!
-  googlePlaceId: String!
-  name: String!
-}
-
 input CreateLiveTagInput {
   text: String!
 }
@@ -30,14 +23,6 @@ input CreateLiveTagInput {
 input CreatePostInput {
   tag: String!
   text: String!
-}
-
-input CreateSchoolInput {
-  country: String!
-  geolocation: GeolocationInput!
-  googlePlaceId: String!
-  name: String!
-  postalCode: String!
 }
 
 """
@@ -51,11 +36,6 @@ input DeletePostInput {
 
 input ForgotPasswordInput {
   email: String!
-}
-
-input GeolocationInput {
-  lat: String!
-  lng: String!
 }
 
 type LiveTagAuthUser {
@@ -95,7 +75,6 @@ type Mutation {
   signUp(input: SignUpInput!): User!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
   trackPostViews(postsIds: [String!]!): Boolean!
-  updateAuthUserTraining(id: String!, input: UpdateUserTrainingInput!): UserTraining!
   updateMe(input: UpdateUserInput!): Boolean!
 }
 
@@ -189,13 +168,6 @@ input UpdateUserInput {
   schoolGooglePlaceId: String
   snapchat: String
   trainingName: String
-}
-
-input UpdateUserTrainingInput {
-  city: CreateCityInput
-  dateBegin: DateTime
-  school: CreateSchoolInput
-  training: String
 }
 
 type User {
