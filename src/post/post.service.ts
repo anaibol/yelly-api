@@ -102,8 +102,6 @@ export class PostService {
     return true
   }
 
-  // TODO: Add return type, is not q expected result
-  // INFO: the usernamen is the email, it's called like this to be consist with the name defined in the JWT
   async create(createPostInput: CreatePostInput, username: string) {
     const { text, tag: tagText } = createPostInput
 

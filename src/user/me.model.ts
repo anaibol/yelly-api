@@ -44,7 +44,7 @@ export class Me {
   @Field({ nullable: true })
   locale?: string
 
-  @Field(() => UserTraining)
+  @Field(() => UserTraining, { nullable: true })
   userTraining?: UserTraining
 
   @Field(() => [Post], { nullable: true })

@@ -119,10 +119,10 @@ model User {
   id                           Bytes                    @id @db.Binary(16)
   firstName                    String                   @map("first_name") @db.VarChar(255)
   lastName                     String                   @map("last_name") @db.VarChar(255)
-  email                        String                   @unique(map: "UNIQ_8D93D649E7927C74") @db.VarChar(180)
+  email                        String                   @unique @db.VarChar(180)
   roles                        String                   @db.LongText
   password                     String                   @db.VarChar(255)
-  birthdate                    DateTime                 @db.Date
+  birthdate                    DateTime?                @db.Date
   pictureId                    String?                  @map("picture_id") @db.VarChar(255)
   snapchat                     String?                  @db.VarChar(100)
   instagram                    String?                  @db.VarChar(100)
@@ -169,7 +169,7 @@ model UserTraining {
   userId     Bytes?    @unique @map("user_id") @db.Binary(16)
   trainingId Bytes     @map("training_id") @db.Binary(16)
   schoolId   Bytes     @map("school_id") @db.Binary(16)
-  cityId     Bytes?    @map("city_id") @db.Binary(16)@unique
+  cityId     Bytes?    @unique @map("city_id") @db.Binary(16)
   dateBegin  DateTime? @map("date_begin") @db.Date
   dateEnd    DateTime? @map("date_end") @db.Date
   createdAt  DateTime  @default(now()) @map("created_at") @db.DateTime(0)

@@ -7,7 +7,8 @@ import { User } from './user.model'
 import { Me } from './me.model'
 import { UserService } from './user.service'
 import { SignUpInput } from './sign-up.input'
-import { CurrentUser, JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { AuthGuard } from '../auth/auth-guard'
+import { CurrentUser } from '../auth/user.decorator'
 import { AuthService } from '../auth/auth.service'
 import { PrismaService } from '../core/prisma.service'
 
@@ -29,18 +30,23 @@ export class UserResolver {
   @Mutation(() => Token)
   async signIn(@Args('input') signInInput: SignInInput) {
     const user = await this.authService.validateUser(signInInput.email, signInInput.password)
+    console.log({ user: 'asd' + user.id + 'asdd' })
 
     if (!user) {
       throw new UnauthorizedException()
     }
 
-    return this.authService.login(user)
+    const accessToken = this.authService.getAccessToken(user.id)
+
+    return {
+      accessToken,
+    }
   }
 
   @Query(() => Me)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   async me(@Context() context) {
-    const user = await this.userService.findByEmail(context.req.username)
+    const user = await this.userService.findOne(context.req.user.id)
 
     return {
       ...user,
@@ -51,13 +57,13 @@ export class UserResolver {
   }
 
   @Query(() => User, { name: 'user' })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   findOne(@Args('id') id: string) {
     return this.userService.findOne(id)
   }
 
   @Mutation(() => String)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   refreshSendbirdAccessToken(@Context() context) {
     return this.userService.refreshSendbirdAccessToken(context.req.username)
   }
@@ -70,23 +76,28 @@ export class UserResolver {
   @Mutation(() => Token)
   async signUp(@Args('input') signUpData: SignUpInput) {
     const user = await this.userService.signUp(signUpData)
-    return this.authService.login(user)
+
+    const accessToken = this.authService.getAccessToken(user.id)
+
+    return {
+      accessToken,
+    }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   updateMe(@Args('input') updateUserData: UpdateUserInput, @Context() context) {
     return this.userService.updateMe(updateUserData, context.req.username)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   async deleteAuthUser(@CurrentUser() user) {
     return this.userService.deleteByEmail(user.username)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @CurrentUser() user) {
     return this.userService.toggleFollow(user.username, toggleFollowInput.otherUserId, toggleFollowInput.value)

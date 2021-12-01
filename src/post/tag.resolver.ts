@@ -1,6 +1,7 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
-import { CurrentUser, JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { AuthGuard } from '../auth/auth-guard'
+import { CurrentUser } from '../auth/user.decorator'
 import { UserService } from '../user/user.service'
 import { CreateLiveTagInput } from './create-live-tag.input'
 import { LiveTagAuthUser } from './live-tag-auth-user.model'
@@ -11,7 +12,7 @@ import { TagService } from './tag.service'
 export class TagResolver {
   constructor(private tagService: TagService, private userService: UserService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Query(() => LiveTagAuthUser, { name: 'liveTag' })
   async getLiveTag(@CurrentUser() currentUser) {
     const liveTag = await this.tagService.getLiveTag()
@@ -21,7 +22,7 @@ export class TagResolver {
     return { ...liveTag, authUserPosted }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Mutation(() => Tag)
   async createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() currentUser) {
     const liveTag = await this.tagService.createLiveTag(createLiveTag.text, currentUser.username)

@@ -13,6 +13,7 @@ import { NotificationModule } from './notification/notification.module'
     GraphQLModule.forRoot({
       autoSchemaFile: join(process.cwd(), '../schema.gql'),
       sortSchema: true,
+      context: ({ req, res }): any => ({ req, res }),
     }),
     UserModule,
     PostModule,

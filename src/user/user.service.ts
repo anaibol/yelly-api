@@ -47,8 +47,25 @@ export class UserService {
     return post != null
   }
 
-  async findOne(id) {
-    const bufferId = this.prismaService.mapStringIdToBuffer(id)
+  async findByEmail(email: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+        password: true,
+      },
+    })
+
+    return {
+      ...user,
+      id: this.prismaService.mapBufferIdToString(user.id),
+    }
+  }
+
+  async findOne(userId) {
+    const bufferId = this.prismaService.mapStringIdToBuffer(userId)
 
     const user = await this.prismaService.user.findUnique({
       where: {
@@ -207,10 +224,10 @@ export class UserService {
     }))
   }
 
-  async findByEmail(email: string) {
+  async findMe(userId: string) {
     const user = await this.prismaService.user.findUnique({
       where: {
-        email: email,
+        id: this.prismaService.mapStringIdToBuffer(userId),
       },
       select: {
         id: true,
@@ -286,7 +303,7 @@ export class UserService {
   }
 
   async requestResetPassword(email: string) {
-    const user = await this.findByEmail(email)
+    await this.findByEmail(email)
 
     const resetToken = this.generateResetToken()
 
@@ -301,7 +318,7 @@ export class UserService {
 
     this.emailService.sendForgottenPasswordEmail(email, resetToken)
 
-    return user
+    return true
   }
 
   async create(createUserData: SignUpInput) {
@@ -309,26 +326,23 @@ export class UserService {
     const password = createUserData.password
     const hash = await bcrypt.hash(password, saltOrRounds)
 
-    const user = await this.prismaService.user.create({
+    return this.prismaService.user.create({
       data: {
         id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+        email: createUserData.email,
         firstName: '',
         lastName: '',
-        email: '',
         password: hash,
-        birthdate: '',
         roles: '[]',
         isVerified: true,
         isFilled: true,
         isActived: true,
       },
     })
-    return user
   }
 
-  async refreshSendbirdAccessToken(email: string) {
-    const user = await this.findByEmail(email)
-    return this.sendbirdService.getAccessToken(user.id)
+  async refreshSendbirdAccessToken(userId: string) {
+    return this.sendbirdService.getAccessToken(userId)
   }
 
   private generateResetToken() {
@@ -463,6 +477,7 @@ export class UserService {
   }
 
   async signUp(signUpData: SignUpInput) {
+    console.log(signUpData)
     const userExists = await this.prismaService.user.findUnique({
       where: {
         email: signUpData.email,
@@ -475,7 +490,7 @@ export class UserService {
 
     const user = await this.create(signUpData)
 
-    this.syncUsersIndexWithAlgolia(user)
+    // this.syncUsersIndexWithAlgolia(user)
     const { access_token: sendbirdAccessToken } = await this.sendbirdService.createUser(user)
 
     const updatedUser = await this.prismaService.user.update({

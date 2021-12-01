@@ -5,7 +5,16 @@ import { PrismaService } from './prisma.service'
 import { SendbirdService } from './sendbird.service'
 
 @Module({
-  providers: [PrismaService, AlgoliaService, EmailService, SendbirdService],
+  providers: [
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
+    PrismaService,
+    AlgoliaService,
+    EmailService,
+    SendbirdService,
+  ],
   exports: [PrismaService, AlgoliaService, EmailService, SendbirdService],
 })
 export class CoreModule {}

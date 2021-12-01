@@ -4,13 +4,13 @@ import { Args, Query, Resolver } from '@nestjs/graphql'
 import { PaginatedNotifications } from './paginated-notifications.model'
 import { NotificationService } from './notification.service'
 import { PaginationArgs } from '../common/pagination.args'
-import { CurrentUser, JwtAuthGuard } from '../auth/jwt-auth.guard'
-
+import { AuthGuard } from '../auth/auth-guard'
+import { CurrentUser } from '../auth/user.decorator'
 @Resolver()
 export class NotificationResolver {
   constructor(private notificationService: NotificationService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Query(() => PaginatedNotifications, { name: 'notifications' })
   async getNotifications(@Args() PaginationArgs: PaginationArgs, @CurrentUser() currentUser) {
     const { notifications, cursor } = await this.notificationService.find(
