@@ -1,9 +1,5 @@
-import { UseGuards } from '@nestjs/common'
-import { Args, Context, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
-import { AuthGuard } from 'src/auth/guards/auth.guard'
-import { PrismaService } from 'src/core/services/prisma.service'
-import { NotificationService } from 'src/notification/services/notification.service'
-import { GetUsersArgs } from '../dto/get-users.input'
+import { UnauthorizedException, UseGuards } from '@nestjs/common'
+import { Args, Mutation, Query, Resolver, ResolveField, Parent, Context } from '@nestjs/graphql'
 import { PaginationArgs } from '../../common/dto/pagination.args'
 import { ForgotPasswordInput } from '../dto/forgot-password.input'
 import { ToggleFollowInput } from '../dto/toggle-follow.input'
@@ -11,18 +7,38 @@ import { User } from '../models/user.model'
 import { Me } from '../models/me.model'
 import { UserService } from '../services/user.service'
 import { SignUpInput } from '../dto/sign-up.input'
+import { CurrentUser, JwtAuthGuard } from 'src/auth/jwt-auth.guard'
+import { AuthService } from 'src/auth/auth.service'
+import { PrismaService } from '../../core/services/prisma.service'
+
+import { NotificationService } from 'src/notification/services/notification.service'
+import { Token } from '../models/token.model'
+import { SignInInput } from '../dto/sign-in.input'
+
 import { UpdateUserInput } from '../dto/update-user.input'
 
 @Resolver(() => User)
 export class UserResolver {
   constructor(
+    private prismaService: PrismaService,
     private userService: UserService,
-    private notificationService: NotificationService,
-    private prismaService: PrismaService
+    private authService: AuthService,
+    private notificationService: NotificationService
   ) {}
 
+  @Mutation(() => Token)
+  async signIn(@Args('input') signInInput: SignInInput) {
+    const user = await this.authService.validateUser(signInInput.email, signInInput.password)
+
+    if (!user) {
+      throw new UnauthorizedException()
+    }
+
+    return this.authService.login(user)
+  }
+
   @Query(() => Me)
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   async me(@Context() context) {
     const user = await this.userService.findByEmail(context.req.username)
 
@@ -35,13 +51,13 @@ export class UserResolver {
   }
 
   @Query(() => User, { name: 'user' })
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   findOne(@Args('id') id: string) {
     return this.userService.findOne(id)
   }
 
   @Mutation(() => String)
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   refreshSendbirdAccessToken(@Context() context) {
     return this.userService.refreshSendbirdAccessToken(context.req.username)
   }
@@ -51,27 +67,29 @@ export class UserResolver {
     return this.userService.requestResetPassword(forgotPasswordInput.email)
   }
 
-  @Mutation(() => User)
-  signUp(@Args('input') signUpData: SignUpInput) {
-    return this.userService.signUp(signUpData)
+  @Mutation(() => Token)
+  async signUp(@Args('input') signUpData: SignUpInput) {
+    const user = await this.userService.signUp(signUpData)
+    return this.authService.login(user)
   }
 
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => Boolean)
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   updateMe(@Args('input') updateUserData: UpdateUserInput, @Context() context) {
     return this.userService.updateMe(updateUserData, context.req.username)
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => Boolean)
-  async deleteAuthUser(@Context() context) {
-    return this.userService.deleteByEmail(context.req.username)
+  async deleteAuthUser(@CurrentUser() user) {
+    return this.userService.deleteByEmail(user.username)
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => Boolean)
-  toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @Context() context) {
-    return this.userService.toggleFollow(context.req.username, toggleFollowInput.otherUserId, toggleFollowInput.value)
+  toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @CurrentUser() user) {
+    return this.userService.toggleFollow(user.username, toggleFollowInput.otherUserId, toggleFollowInput.value)
   }
 
   @ResolveField()

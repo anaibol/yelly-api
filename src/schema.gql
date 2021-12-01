@@ -125,6 +125,11 @@ type School {
   name: String!
 }
 
+input SignInInput {
+  email: String!
+  password: String!
+}
+
 input SignUpInput {
   birthdate: DateTime!
   email: String!
@@ -150,6 +155,10 @@ type Tag {
 input ToggleFollowInput {
   otherUserId: String!
   value: Boolean!
+}
+
+type Token {
+  accessToken: String!
 }
 
 type Training {

@@ -17,6 +17,8 @@ export class AuthGuard implements CanActivate {
 
       request.username = jwtPayload.username
 
+      request.tokenVersion = 1
+
       return true
     } catch (err) {
       throw new UnauthorizedException()
