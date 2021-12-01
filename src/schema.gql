@@ -158,6 +158,7 @@ type Training {
 }
 
 input UpdateUserInput {
+  about: String
   birthdate: DateTime
   email: String
   expoPushNotificationToken: String

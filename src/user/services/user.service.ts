@@ -303,28 +303,12 @@ export class UserService {
     return user
   }
 
-  async create(createUserData: SignUpInput, schoolData) {
+  async create(createUserData: SignUpInput) {
     const saltOrRounds = 10
     const password = createUserData.password
     const hash = await bcrypt.hash(password, saltOrRounds)
 
     const user = await this.prismaService.user.create({
-      include: {
-        userTraining: {
-          include: {
-            school: {
-              include: {
-                city: {
-                  include: {
-                    country: true,
-                  },
-                },
-              },
-            },
-            training: true,
-          },
-        },
-      },
       data: {
         id: this.prismaService.mapStringIdToBuffer(randomUUID()),
         firstName: createUserData.firstName,
@@ -339,63 +323,6 @@ export class UserService {
         isVerified: true,
         isFilled: true,
         isActived: true,
-        userTraining: {
-          create: {
-            id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-            school: {
-              connectOrCreate: {
-                where: {
-                  googlePlaceId: schoolData.googlePlaceId,
-                },
-                create: {
-                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                  name: schoolData.name,
-                  googlePlaceId: schoolData.googlePlaceId,
-                  isValid: true,
-                  lat: schoolData.lat,
-                  lng: schoolData.lng,
-                  city: {
-                    connectOrCreate: {
-                      where: {
-                        googlePlaceId: schoolData.city.googlePlaceId,
-                      },
-                      create: {
-                        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                        name: schoolData.city.name,
-                        googlePlaceId: schoolData.city.googlePlaceId,
-                        lat: schoolData.city.lat,
-                        lng: schoolData.city.lng,
-                        isValid: true,
-                        country: {
-                          connectOrCreate: {
-                            where: {
-                              name: schoolData.city.country.name,
-                            },
-                            create: {
-                              id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                              name: schoolData.city.country.name,
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            training: {
-              connectOrCreate: {
-                where: {
-                  name: createUserData.trainingName,
-                },
-                create: {
-                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                  name: createUserData.trainingName,
-                },
-              },
-            },
-          },
-        },
       },
     })
     return user
@@ -463,33 +390,37 @@ export class UserService {
       firstName: user.firstName,
       birthdateTimestamp: Date.parse(user.birthdate.toString()),
       hasPicture: user.pictureId != null,
-      training: {
-        id: this.prismaService.mapBufferIdToString(user.userTraining.training.id),
-        name: user.userTraining.training.name,
-      },
-      school: {
-        id: this.prismaService.mapBufferIdToString(user.userTraining.school.id),
-        name: user.userTraining.school.name,
-        postalCode: user.userTraining.school.postalCode,
-        googlePlaceId: user.userTraining.school.googlePlaceId,
-        city: {
-          id: this.prismaService.mapBufferIdToString(user.userTraining.school.city.id),
-          name: user.userTraining.school.city.name,
-          googlePlaceId: user.userTraining.school.city.googlePlaceId,
-          country: {
-            id: this.prismaService.mapBufferIdToString(user.userTraining.school.city.country.id),
-            name: user.userTraining.school.city.country.name,
+      ...(user.userTraining && {
+        training: {
+          id: this.prismaService.mapBufferIdToString(user.userTraining.training.id),
+          name: user.userTraining.training.name,
+        },
+      }),
+      ...(user.userTraining && {
+        school: {
+          id: this.prismaService.mapBufferIdToString(user.userTraining.school.id),
+          name: user.userTraining.school.name,
+          postalCode: user.userTraining.school.postalCode,
+          googlePlaceId: user.userTraining.school.googlePlaceId,
+          city: {
+            id: this.prismaService.mapBufferIdToString(user.userTraining.school.city.id),
+            name: user.userTraining.school.city.name,
+            googlePlaceId: user.userTraining.school.city.googlePlaceId,
+            country: {
+              id: this.prismaService.mapBufferIdToString(user.userTraining.school.city.country.id),
+              name: user.userTraining.school.city.country.name,
+            },
+            _geoloc: {
+              lat: user.userTraining.school.city.lat,
+              lng: user.userTraining.school.city.lng,
+            },
           },
           _geoloc: {
-            lat: user.userTraining.school.city.lat,
-            lng: user.userTraining.school.city.lng,
+            lat: user.userTraining.school.lat,
+            lng: user.userTraining.school.lng,
           },
         },
-        _geoloc: {
-          lat: user.userTraining.school.lat,
-          lng: user.userTraining.school.lng,
-        },
-      },
+      }),
     }
     return this.algoliaService.saveObject(
       usersIndex,
@@ -543,9 +474,9 @@ export class UserService {
 
     if (userExists) throw new ForbiddenException('Email exists')
 
-    const school = await this.getSchool(signUpData.schoolGooglePlaceId)
+    //const school = await this.getSchool(signUpData.schoolGooglePlaceId)
 
-    const user = await this.create(signUpData, school)
+    const user = await this.create(signUpData)
 
     this.syncUsersIndexWithAlgolia(user)
     const { access_token: sendbirdAccessToken } = await this.sendbirdService.createUser(user)
@@ -581,7 +512,9 @@ export class UserService {
     }
   }
 
-  async updateMe(updateUserData: UpdateUserInput, email: string): Promise<boolean> {
+  async updateMe(updateUserData: UpdateUserInput): Promise<boolean> {
+    const email = 't5@t.com'
+    console.log('email:', email)
     const user = await this.prismaService.user.findUnique({
       where: {
         email,
@@ -608,40 +541,42 @@ export class UserService {
           pictureId: updateUserData.pictureId,
           expoPushNotificationToken: updateUserData.expoPushNotificationToken,
         }),
-        userTraining: {
-          update: {
-            school: {
-              connectOrCreate: {
-                where: {
-                  googlePlaceId: schoolData.googlePlaceId,
-                },
-                create: {
-                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                  name: schoolData.name,
-                  googlePlaceId: schoolData.googlePlaceId,
-                  isValid: true,
-                  lat: schoolData.lat,
-                  lng: schoolData.lng,
-                  city: {
-                    connectOrCreate: {
-                      where: {
-                        googlePlaceId: schoolData.city.googlePlaceId,
-                      },
-                      create: {
-                        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                        name: schoolData.city.name,
-                        googlePlaceId: schoolData.city.googlePlaceId,
-                        lat: schoolData.city.lat,
-                        lng: schoolData.city.lng,
-                        isValid: true,
-                        country: {
-                          connectOrCreate: {
-                            where: {
-                              name: schoolData.city.country.name,
-                            },
-                            create: {
-                              id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                              name: schoolData.city.country.name,
+        ...(updateUserData.trainingName && {
+          userTraining: {
+            update: {
+              school: {
+                connectOrCreate: {
+                  where: {
+                    googlePlaceId: schoolData.googlePlaceId,
+                  },
+                  create: {
+                    id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                    name: schoolData.name,
+                    googlePlaceId: schoolData.googlePlaceId,
+                    isValid: true,
+                    lat: schoolData.lat,
+                    lng: schoolData.lng,
+                    city: {
+                      connectOrCreate: {
+                        where: {
+                          googlePlaceId: schoolData.city.googlePlaceId,
+                        },
+                        create: {
+                          id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                          name: schoolData.city.name,
+                          googlePlaceId: schoolData.city.googlePlaceId,
+                          lat: schoolData.city.lat,
+                          lng: schoolData.city.lng,
+                          isValid: true,
+                          country: {
+                            connectOrCreate: {
+                              where: {
+                                name: schoolData.city.country.name,
+                              },
+                              create: {
+                                id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                                name: schoolData.city.country.name,
+                              },
                             },
                           },
                         },
@@ -650,20 +585,20 @@ export class UserService {
                   },
                 },
               },
-            },
-            training: {
-              connectOrCreate: {
-                where: {
-                  name: updateUserData.trainingName,
-                },
-                create: {
-                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                  name: updateUserData.trainingName,
+              training: {
+                connectOrCreate: {
+                  where: {
+                    name: updateUserData.trainingName,
+                  },
+                  create: {
+                    id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                    name: updateUserData.trainingName,
+                  },
                 },
               },
             },
           },
-        },
+        }),
       },
     })
 

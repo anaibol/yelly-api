@@ -34,4 +34,7 @@ export class UpdateUserInput {
 
   @Field(() => String, { nullable: true })
   schoolGooglePlaceId: string
+
+  @Field(() => String, { nullable: true })
+  about: string
 }
