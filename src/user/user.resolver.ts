@@ -30,7 +30,6 @@ export class UserResolver {
   @Mutation(() => Token)
   async signIn(@Args('input') signInInput: SignInInput) {
     const user = await this.authService.validateUser(signInInput.email, signInInput.password)
-    console.log({ user: 'asd' + user.id + 'asdd' })
 
     if (!user) {
       throw new UnauthorizedException()

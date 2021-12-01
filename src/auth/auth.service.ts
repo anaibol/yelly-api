@@ -19,7 +19,6 @@ export class AuthService {
   }
 
   async getAccessToken(userId: string): Promise<string> {
-    console.log({ userId })
     const payload = { sub: userId, role: 'user' }
 
     return this.jwtService.sign(payload)

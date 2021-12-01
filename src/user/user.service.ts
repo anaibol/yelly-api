@@ -477,7 +477,6 @@ export class UserService {
   }
 
   async signUp(signUpData: SignUpInput) {
-    console.log(signUpData)
     const userExists = await this.prismaService.user.findUnique({
       where: {
         email: signUpData.email,
