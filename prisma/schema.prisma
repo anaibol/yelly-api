@@ -169,7 +169,7 @@ model UserTraining {
   userId     Bytes?    @unique @map("user_id") @db.Binary(16)
   trainingId Bytes     @map("training_id") @db.Binary(16)
   schoolId   Bytes     @map("school_id") @db.Binary(16)
-  cityId     Bytes?    @unique @map("city_id") @db.Binary(16)
+  cityId     Bytes?    @map("city_id") @db.Binary(16)@unique
   dateBegin  DateTime? @map("date_begin") @db.Date
   dateEnd    DateTime? @map("date_end") @db.Date
   createdAt  DateTime  @default(now()) @map("created_at") @db.DateTime(0)

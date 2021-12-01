@@ -311,14 +311,11 @@ export class UserService {
     const user = await this.prismaService.user.create({
       data: {
         id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-        firstName: createUserData.firstName,
-        lastName: createUserData.lastName,
-        email: createUserData.email,
+        firstName: '',
+        lastName: '',
+        email: '',
         password: hash,
-        birthdate: new Date(createUserData.birthdate),
-        pictureId: createUserData.pictureId,
-        snapchat: createUserData.snapchat,
-        instagram: createUserData.instagram,
+        birthdate: '',
         roles: '[]',
         isVerified: true,
         isFilled: true,
@@ -512,9 +509,7 @@ export class UserService {
     }
   }
 
-  async updateMe(updateUserData: UpdateUserInput): Promise<boolean> {
-    const email = 't5@t.com'
-    console.log('email:', email)
+  async updateMe(updateUserData: UpdateUserInput, email: string): Promise<boolean> {
     const user = await this.prismaService.user.findUnique({
       where: {
         email,
