@@ -1,5 +1,5 @@
 import { ArgsType } from '@nestjs/graphql'
-import { PaginationArgs } from 'src/common/dto/pagination.args'
+import { PaginationArgs } from '../common/pagination.args'
 
 @ArgsType()
 export class GetUsersArgs extends PaginationArgs {}

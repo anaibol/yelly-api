@@ -1,10 +1,10 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Query, Resolver } from '@nestjs/graphql'
-// import { MarkAsReadInput } from '../dto/mark-as-read.input'
-import { PaginatedNotifications } from '../models/paginated-notifications.model'
-import { NotificationService } from '../services/notification.service'
-import { PaginationArgs } from '../../common/dto/pagination.args'
-import { CurrentUser, JwtAuthGuard } from 'src/auth/jwt-auth.guard'
+// import { MarkAsReadInput } from '../mark-as-read.input'
+import { PaginatedNotifications } from './paginated-notifications.model'
+import { NotificationService } from './notification.service'
+import { PaginationArgs } from '../common/pagination.args'
+import { CurrentUser, JwtAuthGuard } from '../auth/jwt-auth.guard'
 
 @Resolver()
 export class NotificationResolver {

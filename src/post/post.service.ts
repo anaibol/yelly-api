@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
-import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
-import { PrismaService } from 'src/core/services/prisma.service'
-import { CreatePostInput } from '../dto/create-post.input'
-import { DeletePostInput } from '../dto/delete-post.input'
+import { DEFAULT_LIMIT } from '../common/pagination.constant'
+import { PrismaService } from '../core/prisma.service'
+import { CreatePostInput } from './create-post.input'
+import { DeletePostInput } from './delete-post.input'
 import { TagService } from './tag.service'
 
 @Injectable()

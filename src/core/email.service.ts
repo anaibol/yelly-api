@@ -1,6 +1,6 @@
 import * as mailchimp from '@mailchimp/mailchimp_transactional'
 import { Injectable } from '@nestjs/common'
-import { EMAIL_SUBJECT, EMAIL_TEMPLATE, EMAIL_VARIABLES_KEY, FROM_EMAIL } from '../constants/email.constants'
+import { EMAIL_SUBJECT, EMAIL_TEMPLATE, EMAIL_VARIABLES_KEY, FROM_EMAIL } from './email.constants'
 
 @Injectable()
 export class EmailService {

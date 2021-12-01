@@ -1,11 +1,11 @@
 import { forwardRef, Module } from '@nestjs/common'
 import { JwtModule } from '@nestjs/jwt'
-import { AuthGuard } from './guards/auth.guard'
+import { AuthGuard } from './auth.guard'
 import { AuthService } from './auth.service'
-import { UserModule } from 'src/user/user.module'
+import { UserModule } from '../user/user.module'
 import { PassportModule } from '@nestjs/passport'
 import { LocalStrategy } from './local.strategy'
-import { jwtConstants } from 'src/common/constants/jwt.constants'
+import { jwtConstants } from '../common/jwt.constants'
 import { JwtStrategy } from './jwt.strategy'
 
 @Module({

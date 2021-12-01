@@ -1,9 +1,9 @@
 import { Field, ObjectType } from '@nestjs/graphql'
-import { User } from '../../user/models/user.model'
-import { Post } from './post.model'
+import { User } from '../user/user.model'
+import { Tag } from './tag.model'
 
 @ObjectType()
-export class Tag {
+export class Post {
   @Field()
   id: string
 
@@ -14,11 +14,11 @@ export class Tag {
   createdAt: string
 
   @Field()
-  isLive: boolean
+  viewsCount: number
+
+  @Field(() => [Tag])
+  tags: Tag[]
 
   @Field(() => User)
   author: User
-
-  @Field(() => [Post])
-  posts: Post[]
 }

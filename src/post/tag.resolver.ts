@@ -1,11 +1,11 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
-import { CurrentUser, JwtAuthGuard } from 'src/auth/jwt-auth.guard'
-import { UserService } from 'src/user/services/user.service'
-import { CreateLiveTagInput } from '../dto/create-live-tag.input'
-import { LiveTagAuthUser } from '../models/live-tag-auth-user.model'
-import { Tag } from '../models/tag.model'
-import { TagService } from '../services/tag.service'
+import { CurrentUser, JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { UserService } from '../user/user.service'
+import { CreateLiveTagInput } from './create-live-tag.input'
+import { LiveTagAuthUser } from './live-tag-auth-user.model'
+import { Tag } from './tag.model'
+import { TagService } from './tag.service'
 
 @Resolver()
 export class TagResolver {

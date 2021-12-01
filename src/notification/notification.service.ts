@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../../core/services/prisma.service'
-import { DEFAULT_LIMIT } from '../../common/constants/pagination.constant'
+import { PrismaService } from '../core/prisma.service'
+import { DEFAULT_LIMIT } from '../common/pagination.constant'
 
 @Injectable()
 export class NotificationService {

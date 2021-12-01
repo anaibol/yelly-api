@@ -1,12 +1,12 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
-import { CurrentUser, JwtAuthGuard } from 'src/auth/jwt-auth.guard'
-import { PostService } from 'src/post/services/post.service'
-import { CreatePostInput } from '../dto/create-post.input'
-import { DeletePostInput } from '../dto/delete-post.input'
-import { GetPostsArgs } from '../dto/get-post.args'
-import { PaginatedPosts } from '../models/paginated-posts.model'
-import { Post } from '../models/post.model'
+import { CurrentUser, JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { PostService } from '../post/post.service'
+import { CreatePostInput } from './create-post.input'
+import { DeletePostInput } from './delete-post.input'
+import { GetPostsArgs } from './get-post.args'
+import { PaginatedPosts } from './paginated-posts.model'
+import { Post } from './post.model'
 
 @Resolver()
 export class PostResolver {

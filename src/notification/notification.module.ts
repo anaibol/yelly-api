@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common'
-import { AuthModule } from 'src/auth/auth.module'
-import { CoreModule } from 'src/core/core.module'
-import { UserModule } from 'src/user/user.module'
-import { NotificationResolver } from './resolvers/notification.resolver'
-
-import { NotificationService } from './services/notification.service'
+import { AuthModule } from '../auth/auth.module'
+import { CoreModule } from '../core/core.module'
+import { UserModule } from '../user/user.module'
+import { NotificationResolver } from './notification.resolver'
+import { NotificationService } from './notification.service'
 
 @Module({
   imports: [CoreModule, AuthModule, UserModule],

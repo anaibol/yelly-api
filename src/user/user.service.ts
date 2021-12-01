@@ -2,16 +2,16 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import axios from 'axios'
 import * as bcrypt from 'bcrypt'
 import { randomBytes, randomUUID } from 'crypto'
-import { DEFAULT_LIMIT } from 'src/common/constants/pagination.constant'
-import { AlgoliaService } from 'src/core/services/algolia.service'
-import { EmailService } from 'src/core/services/email.service'
-import { PrismaService } from 'src/core/services/prisma.service'
-import { SendbirdService } from 'src/core/services/sendbird.service'
-import { SchoolService } from 'src/user-training/services/school.service'
-import { SignUpInput } from '../dto/sign-up.input'
-import { UpdateUserInput } from '../dto/update-user.input'
-import { NotFoundUserException } from '../exceptions/not-found-user.exception'
-import { UserIndexAlgoliaInterface } from '../interfaces/user-index-algolia.interface'
+import { DEFAULT_LIMIT } from '../common/pagination.constant'
+import { AlgoliaService } from '../core/algolia.service'
+import { EmailService } from '../core/email.service'
+import { PrismaService } from '../core/prisma.service'
+import { SendbirdService } from '../core/sendbird.service'
+import { SchoolService } from '../user-training/school.service'
+import { SignUpInput } from './sign-up.input'
+import { UpdateUserInput } from './update-user.input'
+import { NotFoundUserException } from './not-found-user.exception'
+import { UserIndexAlgoliaInterface } from './user-index-algolia.interface'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
@@ -217,7 +217,6 @@ export class UserService {
         email: true,
         firstName: true,
         lastName: true,
-        email: true,
         password: true,
         pictureId: true,
         birthdate: true,

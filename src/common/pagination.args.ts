@@ -1,5 +1,5 @@
 import { ArgsType, Field, Int } from '@nestjs/graphql'
-import { DEFAULT_LIMIT } from '../constants/pagination.constant'
+import { DEFAULT_LIMIT } from './pagination.constant'
 
 @ArgsType()
 export class PaginationArgs {
