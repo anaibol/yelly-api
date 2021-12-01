@@ -7,7 +7,6 @@ import { CoreModule } from './core/core.module'
 import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
 import { NotificationModule } from './notification/notification.module'
-import { AppController } from 'app.controller'
 
 @Module({
   imports: [
@@ -22,6 +21,5 @@ import { AppController } from 'app.controller'
     AuthModule,
     NotificationModule,
   ],
-  controllers: [AppController],
 })
 export class AppModule {}
