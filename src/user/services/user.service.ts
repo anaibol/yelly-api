@@ -463,6 +463,7 @@ export class UserService {
 
     const newUserAlgoliaObject: UserIndexAlgoliaInterface = {
       id: this.prismaService.mapBufferIdToString(user.id),
+      objectID: this.prismaService.mapBufferIdToString(user.id),
       lastName: user.lastName,
       firstName: user.firstName,
       birthdateTimestamp: Date.parse(user.birthdate.toString()),
