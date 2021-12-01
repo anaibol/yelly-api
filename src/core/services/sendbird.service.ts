@@ -32,4 +32,9 @@ export class SendbirdService {
 
     return response.data
   }
+
+  async getAccessToken(userId: string) {
+    const response = await this.client.put(`/v3/users/${userId}`, { issue_access_token: true })
+    return response.data.access_token
+  }
 }

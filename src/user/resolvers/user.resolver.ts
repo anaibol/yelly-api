@@ -40,6 +40,12 @@ export class UserResolver {
     return this.userService.findOne(id)
   }
 
+  @Mutation(() => String)
+  @UseGuards(AuthGuard)
+  refreshSendbirdAccessToken(@Context() context) {
+    return this.userService.refreshSendbirdAccessToken(context.req.username)
+  }
+
   @Mutation(() => User)
   forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput) {
     return this.userService.requestResetPassword(forgotPasswordInput.email)

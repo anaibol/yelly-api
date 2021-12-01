@@ -72,6 +72,7 @@ type Mutation {
   deleteAuthUser: Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   forgotPassword(input: ForgotPasswordInput!): User!
+  refreshSendbirdAccessToken: String!
   signUp(input: SignUpInput!): User!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
   trackPostViews(postsIds: [String!]!): Boolean!

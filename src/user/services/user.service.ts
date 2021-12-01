@@ -401,6 +401,11 @@ export class UserService {
     return user
   }
 
+  async refreshSendbirdAccessToken(email: string) {
+    const user = await this.findByEmail(email)
+    return this.sendbirdService.getAccessToken(user.id)
+  }
+
   private generateResetToken() {
     return randomBytes(5).toString('hex')
   }
