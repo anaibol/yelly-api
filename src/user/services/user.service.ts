@@ -104,6 +104,12 @@ export class UserService {
               select: {
                 id: true,
                 name: true,
+                city: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
             training: {
@@ -614,6 +620,8 @@ export class UserService {
     formattedUser.id = this.prismaService.mapBufferIdToString(user.id)
     formattedUser.userTraining.id = this.prismaService.mapBufferIdToString(user.userTraining.id)
     formattedUser.userTraining.school.id = this.prismaService.mapBufferIdToString(user.userTraining.school.id)
+    formattedUser.userTraining.school.city.id = this.prismaService.mapBufferIdToString(user.userTraining.school.city.id)
+
     formattedUser.userTraining.training.id = this.prismaService.mapBufferIdToString(user.userTraining.training.id)
     formattedUser.followeesCount = user._count.followees
     formattedUser.followersCount = user._count.followers
