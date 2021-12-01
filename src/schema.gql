@@ -16,13 +16,6 @@ type Country {
   name: String!
 }
 
-input CreateCityInput {
-  country: String!
-  geolocation: GeolocationInput!
-  googlePlaceId: String!
-  name: String!
-}
-
 input CreateLiveTagInput {
   text: String!
 }
@@ -30,14 +23,6 @@ input CreateLiveTagInput {
 input CreatePostInput {
   tag: String!
   text: String!
-}
-
-input CreateSchoolInput {
-  country: String!
-  geolocation: GeolocationInput!
-  googlePlaceId: String!
-  name: String!
-  postalCode: String!
 }
 
 """
@@ -53,15 +38,32 @@ input ForgotPasswordInput {
   email: String!
 }
 
-input GeolocationInput {
-  lat: String!
-  lng: String!
-}
-
 type LiveTagAuthUser {
   authUserPosted: Boolean!
   id: String!
   text: String!
+}
+
+type Me {
+  about: String
+  birthdate: DateTime
+  email: String!
+  firstName: String!
+  followees: [User!]!
+  followeesCount: Int!
+  followers: [User!]!
+  followersCount: Int!
+  id: String!
+  instagram: String
+  isFilled: Boolean
+  lastName: String!
+  locale: String
+  pictureId: String
+  posts: [Post!]
+  sendbirdAccessToken: String
+  snapchat: String
+  unreadNotificationsCount: Float!
+  userTraining: UserTraining!
 }
 
 type Mutation {
@@ -70,11 +72,11 @@ type Mutation {
   deleteAuthUser: Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   forgotPassword(input: ForgotPasswordInput!): User!
-  signIn(input: SignInInput!): Token!
-  signUp(input: SignUpInput!): Token!
+  refreshSendbirdAccessToken: String!
+  signUp(input: SignUpInput!): User!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
   trackPostViews(postsIds: [String!]!): Boolean!
-  updateAuthUserTraining(id: String!, input: UpdateUserTrainingInput!): UserTraining!
+  updateMe(input: UpdateUserInput!): Boolean!
 }
 
 type Notification {
@@ -108,7 +110,7 @@ type Post {
 
 type Query {
   liveTag: LiveTagAuthUser!
-  me: User!
+  me: Me!
   notifications(after: String, limit: Int = 10): PaginatedNotifications!
   postsFeed(after: String, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   user(id: String!): User!
@@ -164,11 +166,19 @@ type Training {
   name: String!
 }
 
-input UpdateUserTrainingInput {
-  city: CreateCityInput
-  dateBegin: DateTime
-  school: CreateSchoolInput
-  training: String
+input UpdateUserInput {
+  about: String
+  birthdate: DateTime
+  email: String
+  expoPushNotificationToken: String
+  firstName: String
+  instagram: String
+  lastName: String
+  password: String
+  pictureId: String
+  schoolGooglePlaceId: String
+  snapchat: String
+  trainingName: String
 }
 
 type User {
@@ -181,21 +191,18 @@ type User {
   followersCount: Int
   id: String!
   instagram: String
-  isFilled: Boolean
   lastName: String!
   locale: String
   pictureId: String
   posts: [Post!]
-  sendbirdAccessToken: String
   snapchat: String
-  unreadNotificationsCount: Float
   userTraining: UserTraining!
 }
 
 type UserTraining {
-  createdAt: DateTime!
+  createdAt: DateTime
   id: String!
   school: School
   training: Training
-  updatedAt: DateTime!
+  updatedAt: DateTime
 }

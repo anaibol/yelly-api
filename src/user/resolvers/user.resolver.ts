@@ -1,30 +1,30 @@
 import { UnauthorizedException, UseGuards } from '@nestjs/common'
-import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
+import { Args, Mutation, Query, Resolver, ResolveField, Parent, Context } from '@nestjs/graphql'
 import { PaginationArgs } from '../../common/dto/pagination.args'
 import { ForgotPasswordInput } from '../dto/forgot-password.input'
 import { ToggleFollowInput } from '../dto/toggle-follow.input'
 import { User } from '../models/user.model'
+import { Me } from '../models/me.model'
 import { UserService } from '../services/user.service'
 import { SignUpInput } from '../dto/sign-up.input'
 import { CurrentUser, JwtAuthGuard } from 'src/auth/jwt-auth.guard'
 import { AuthService } from 'src/auth/auth.service'
+import { PrismaService } from '../../core/services/prisma.service'
+
+import { NotificationService } from 'src/notification/services/notification.service'
 import { Token } from '../models/token.model'
 import { SignInInput } from '../dto/sign-in.input'
 
-type Follower = {
-  id: string
-  firstName: string
-  pictureId: string
-  userTraining: {
-    school: {
-      name: string
-    }
-  }
-}
+import { UpdateUserInput } from '../dto/update-user.input'
 
 @Resolver(() => User)
 export class UserResolver {
-  constructor(private userService: UserService, private authService: AuthService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private userService: UserService,
+    private authService: AuthService,
+    private notificationService: NotificationService
+  ) {}
 
   @Mutation(() => Token)
   async signIn(@Args('input') signInInput: SignInInput) {
@@ -37,16 +37,29 @@ export class UserResolver {
     return this.authService.login(user)
   }
 
-  @Query(() => User)
+  @Query(() => Me)
   @UseGuards(JwtAuthGuard)
-  async me(@CurrentUser() user) {
-    return this.userService.findByEmail(user.username)
+  async me(@Context() context) {
+    const user = await this.userService.findByEmail(context.req.username)
+
+    return {
+      ...user,
+      unreadNotificationsCount: await this.notificationService.countUnreadNotifications(
+        this.prismaService.mapStringIdToBuffer(user.id)
+      ),
+    }
   }
 
   @Query(() => User, { name: 'user' })
   @UseGuards(JwtAuthGuard)
   findOne(@Args('id') id: string) {
     return this.userService.findOne(id)
+  }
+
+  @Mutation(() => String)
+  @UseGuards(JwtAuthGuard)
+  refreshSendbirdAccessToken(@Context() context) {
+    return this.userService.refreshSendbirdAccessToken(context.req.username)
   }
 
   @Mutation(() => User)
@@ -58,6 +71,13 @@ export class UserResolver {
   async signUp(@Args('input') signUpData: SignUpInput) {
     const user = await this.userService.signUp(signUpData)
     return this.authService.login(user)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => Boolean)
+  @UseGuards(JwtAuthGuard)
+  updateMe(@Args('input') updateUserData: UpdateUserInput, @Context() context) {
+    return this.userService.updateMe(updateUserData, context.req.username)
   }
 
   @UseGuards(JwtAuthGuard)

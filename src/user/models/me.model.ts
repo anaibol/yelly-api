@@ -1,11 +1,15 @@
 import { Int, Field, ObjectType } from '@nestjs/graphql'
 import { UserTraining } from 'src/user-training/models/userTraining.model'
 import { Post } from '../../post/models/post.model'
+import { User } from './user.model'
 
 @ObjectType()
-export class User {
+export class Me {
   @Field()
   id: string
+
+  @Field()
+  email: string
 
   @Field()
   firstName?: string
@@ -25,6 +29,15 @@ export class User {
   @Field({ nullable: true })
   instagram?: string
 
+  @Field({ defaultValue: 0 })
+  unreadNotificationsCount: number
+
+  @Field({ nullable: true })
+  isFilled?: boolean
+
+  @Field({ nullable: true })
+  sendbirdAccessToken?: string
+
   @Field({ nullable: true })
   about?: string
 
@@ -37,15 +50,15 @@ export class User {
   @Field(() => [Post], { nullable: true })
   posts?: Post[]
 
-  @Field(() => Int, { nullable: true })
-  followersCount?: number
+  @Field(() => Int)
+  followersCount: number
 
-  @Field(() => Int, { nullable: true })
-  followeesCount?: number
+  @Field(() => Int)
+  followeesCount: number
 
-  @Field(() => [User], { nullable: true })
-  followees?: User
+  @Field(() => [User])
+  followees: User
 
-  @Field(() => [User], { nullable: true })
-  followers?: User
+  @Field(() => [User])
+  followers: User
 }

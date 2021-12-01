@@ -7,15 +7,15 @@ export class UserTraining {
   @Field()
   id: string
 
-  @Field()
-  createdAt: Date
+  @Field({ nullable: true })
+  createdAt?: Date
 
-  @Field()
-  updatedAt: Date
+  @Field({ nullable: true })
+  updatedAt?: Date
 
-  @Field((type) => Training, { nullable: true })
+  @Field(() => Training, { nullable: true })
   training?: Training
 
-  @Field((type) => School, { nullable: true })
+  @Field(() => School, { nullable: true })
   school?: School
 }
