@@ -102,7 +102,7 @@ export class UserResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @CurrentUser() user) {
-    return this.userService.toggleFollow(user.username, toggleFollowInput.otherUserId, toggleFollowInput.value)
+    return this.userService.toggleFollow(user.id, toggleFollowInput.otherUserId, toggleFollowInput.value)
   }
 
   @ResolveField()
@@ -113,5 +113,11 @@ export class UserResolver {
   @ResolveField()
   async followees(@Parent() user: User, @Args() PaginationArgs: PaginationArgs) {
     return this.userService.getUserFollowees(user.id, PaginationArgs.after, PaginationArgs.limit)
+  }
+
+  @UseGuards(AuthGuard)
+  @ResolveField()
+  async isFollowingAuthUser(@Parent() user: User, @CurrentUser() currentUser) {
+    return this.userService.isFollowingAuthUser(user.id, currentUser.id)
   }
 }

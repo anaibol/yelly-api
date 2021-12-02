@@ -225,6 +225,27 @@ export class UserService {
     }))
   }
 
+  async isFollowingAuthUser(id, meUserId: string) {
+    const otherUserID = this.prismaService.mapStringIdToBuffer(id)
+
+    const result = await this.prismaService.followship.findFirst({
+      where: {
+        followerId: otherUserID,
+        AND: [
+          {
+            followeeId: this.prismaService.mapStringIdToBuffer(meUserId),
+          },
+          {},
+        ],
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    return !!result
+  }
+
   async findMe(userId: string) {
     const user = await this.prismaService.user.findUnique({
       where: {
@@ -363,10 +384,10 @@ export class UserService {
     }
   }
 
-  async toggleFollow(authUserEmail: string, otherUserId: string, value: boolean) {
+  async toggleFollow(id: string, otherUserId: string, value: boolean) {
     const { id: authUserId } = await this.prismaService.user.findUnique({
       where: {
-        email: authUserEmail,
+        id: this.prismaService.mapStringIdToBuffer(id),
       },
       select: {
         id: true,

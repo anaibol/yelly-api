@@ -48,4 +48,7 @@ export class User {
 
   @Field(() => [User], { nullable: true })
   followers?: User
+
+  @Field(() => Boolean, { nullable: true })
+  isFollowingAuthUser?: boolean
 }
