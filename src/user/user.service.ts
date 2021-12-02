@@ -529,15 +529,72 @@ export class UserService {
       where: {
         id: this.prismaService.mapStringIdToBuffer(id),
       },
+      select: {
+        userTraining: true,
+      },
     })
 
-    if (!user) throw new ForbiddenException('User do not exists')
+    const schoolData = updateUserData.schoolGooglePlaceId && (await this.getSchool(updateUserData.schoolGooglePlaceId))
 
-    const schoolData = await this.getSchool(updateUserData.schoolGooglePlaceId)
+    const userTraining = {
+      id: user.userTraining ? user.userTraining.id : this.prismaService.mapStringIdToBuffer(randomUUID()),
+      school: {
+        connectOrCreate: {
+          where: {
+            googlePlaceId: schoolData.googlePlaceId,
+          },
+          create: {
+            id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+            name: schoolData.name,
+            googlePlaceId: schoolData.googlePlaceId,
+            isValid: true,
+            lat: schoolData.lat,
+            lng: schoolData.lng,
+            city: {
+              connectOrCreate: {
+                where: {
+                  googlePlaceId: schoolData.city.googlePlaceId,
+                },
+                create: {
+                  id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                  name: schoolData.city.name,
+                  googlePlaceId: schoolData.city.googlePlaceId,
+                  lat: schoolData.city.lat,
+                  lng: schoolData.city.lng,
+                  isValid: true,
+                  country: {
+                    connectOrCreate: {
+                      where: {
+                        name: schoolData.city.country.name,
+                      },
+                      create: {
+                        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                        name: schoolData.city.country.name,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      training: {
+        connectOrCreate: {
+          where: {
+            name: updateUserData.trainingName,
+          },
+          create: {
+            id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+            name: updateUserData.trainingName,
+          },
+        },
+      },
+    }
 
     const updatedUser = await this.prismaService.user.update({
       where: {
-        id: user.id,
+        id: this.prismaService.mapStringIdToBuffer(id),
       },
       data: {
         ...cleanUndefinedFromObj({
@@ -553,59 +610,9 @@ export class UserService {
         }),
         ...(updateUserData.trainingName && {
           userTraining: {
-            update: {
-              school: {
-                connectOrCreate: {
-                  where: {
-                    googlePlaceId: schoolData.googlePlaceId,
-                  },
-                  create: {
-                    id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                    name: schoolData.name,
-                    googlePlaceId: schoolData.googlePlaceId,
-                    isValid: true,
-                    lat: schoolData.lat,
-                    lng: schoolData.lng,
-                    city: {
-                      connectOrCreate: {
-                        where: {
-                          googlePlaceId: schoolData.city.googlePlaceId,
-                        },
-                        create: {
-                          id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                          name: schoolData.city.name,
-                          googlePlaceId: schoolData.city.googlePlaceId,
-                          lat: schoolData.city.lat,
-                          lng: schoolData.city.lng,
-                          isValid: true,
-                          country: {
-                            connectOrCreate: {
-                              where: {
-                                name: schoolData.city.country.name,
-                              },
-                              create: {
-                                id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                                name: schoolData.city.country.name,
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              training: {
-                connectOrCreate: {
-                  where: {
-                    name: updateUserData.trainingName,
-                  },
-                  create: {
-                    id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-                    name: updateUserData.trainingName,
-                  },
-                },
-              },
+            upsert: {
+              create: userTraining,
+              update: userTraining,
             },
           },
         }),
