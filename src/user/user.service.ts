@@ -73,6 +73,7 @@ export class UserService {
       },
       select: {
         id: true,
+        email: true,
         firstName: true,
         lastName: true,
         pictureId: true,

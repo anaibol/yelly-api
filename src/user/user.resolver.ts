@@ -14,6 +14,7 @@ import { PrismaService } from '../core/prisma.service'
 
 import { NotificationService } from '../notification/notification.service'
 import { Token } from './token.model'
+import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { SignInInput } from './sign-in.input'
 
 import { UpdateUserInput } from './update-user.input'
@@ -61,10 +62,12 @@ export class UserResolver {
     return this.userService.findOne(id)
   }
 
-  @Mutation(() => String)
+  @Mutation(() => SendbirdAccessToken)
   @UseGuards(AuthGuard)
-  refreshSendbirdAccessToken(@Context() context) {
-    return this.userService.refreshSendbirdAccessToken(context.req.username)
+  async refreshSendbirdAccessToken(@Context() context) {
+    const sendbirdAccessToken = await this.userService.refreshSendbirdAccessToken(context.req.username)
+
+    return { sendbirdAccessToken }
   }
 
   @Mutation(() => User)
