@@ -59,17 +59,45 @@ export class TagService {
       select: {
         id: true,
         text: true,
+        posts: {
+          select: {
+            createdAt: true,
+            author: {
+              select: {
+                id: true,
+                pictureId: true,
+                firstName: true,
+              },
+            },
+          },
+          take: 5,
+          distinct: 'authorId',
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+        _count: {
+          select: {
+            posts: true,
+          },
+        },
       },
       where: {
         isLive: true,
       },
     })
 
+    const lastUsers = this.mapAuthorBufferIdToUUID(liveTag.posts)
+
     if (liveTag == null) {
       throw new NotFoundLiveTagException()
     }
 
-    return liveTag
+    return {
+      ...liveTag,
+      ...lastUsers,
+      postCount: liveTag._count.posts,
+    }
   }
 
   async createLiveTag(text: string, email: string) {
