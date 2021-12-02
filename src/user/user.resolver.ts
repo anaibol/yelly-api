@@ -87,7 +87,7 @@ export class UserResolver {
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
   updateMe(@Args('input') updateUserData: UpdateUserInput, @Context() context) {
-    return this.userService.updateMe(updateUserData, context.req.username)
+    return this.userService.updateMe(updateUserData, context.req.user.id)
   }
 
   @UseGuards(AuthGuard)

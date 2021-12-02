@@ -523,10 +523,10 @@ export class UserService {
     }
   }
 
-  async updateMe(updateUserData: UpdateUserInput, email: string): Promise<boolean> {
+  async updateMe(updateUserData: UpdateUserInput, id: string): Promise<boolean> {
     const user = await this.prismaService.user.findUnique({
       where: {
-        email,
+        id: this.prismaService.mapStringIdToBuffer(id),
       },
     })
 
