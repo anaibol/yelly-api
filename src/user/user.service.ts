@@ -536,7 +536,7 @@ export class UserService {
 
     const schoolData = updateUserData.schoolGooglePlaceId && (await this.getSchool(updateUserData.schoolGooglePlaceId))
 
-    const userTraining = {
+    const userTraining = schoolData && {
       id: user.userTraining ? user.userTraining.id : this.prismaService.mapStringIdToBuffer(randomUUID()),
       school: {
         connectOrCreate: {
