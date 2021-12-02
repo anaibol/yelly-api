@@ -45,8 +45,8 @@ export class UserResolver {
 
   @Query(() => Me)
   @UseGuards(AuthGuard)
-  async me(@Context() context) {
-    const user = await this.userService.findOne(context.req.user.id)
+  async me(@CurrentUser() authUser) {
+    const user = await this.userService.findOne(authUser.id)
 
     return {
       ...user,
@@ -64,8 +64,8 @@ export class UserResolver {
 
   @Mutation(() => SendbirdAccessToken)
   @UseGuards(AuthGuard)
-  async refreshSendbirdAccessToken(@Context() context) {
-    const sendbirdAccessToken = await this.userService.refreshSendbirdAccessToken(context.req.username)
+  async refreshSendbirdAccessToken(@CurrentUser() authUser) {
+    const sendbirdAccessToken = await this.userService.refreshSendbirdAccessToken(authUser.id)
 
     return { sendbirdAccessToken }
   }
@@ -89,8 +89,8 @@ export class UserResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
-  updateMe(@Args('input') updateUserData: UpdateUserInput, @Context() context) {
-    return this.userService.updateMe(updateUserData, context.req.user.id)
+  updateMe(@Args('input') updateUserData: UpdateUserInput, @CurrentUser() authUser) {
+    return this.userService.updateMe(updateUserData, authUser.id)
   }
 
   @UseGuards(AuthGuard)
@@ -101,8 +101,8 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @CurrentUser() user) {
-    return this.userService.toggleFollow(user.id, toggleFollowInput.otherUserId, toggleFollowInput.value)
+  toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @CurrentUser() authUser) {
+    return this.userService.toggleFollow(authUser.id, toggleFollowInput.otherUserId, toggleFollowInput.value)
   }
 
   @ResolveField()
@@ -117,7 +117,7 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async isFollowingAuthUser(@Parent() user: User, @CurrentUser() currentUser) {
-    return this.userService.isFollowingAuthUser(user.id, currentUser.id)
+  async isFollowingAuthUser(@Parent() user: User, @CurrentUser() authUser) {
+    return this.userService.isFollowingAuthUser(user.id, authUser.id)
   }
 }

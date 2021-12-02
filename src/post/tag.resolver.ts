@@ -14,18 +14,18 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => LiveTagAuthUser, { name: 'liveTag' })
-  async getLiveTag(@CurrentUser() currentUser) {
+  async getLiveTag(@CurrentUser() user) {
     const liveTag = await this.tagService.getLiveTag()
 
-    const authUserPosted = await this.userService.hasUserPostedOnTag(currentUser.username, liveTag.text)
+    const authUserPosted = await this.userService.hasUserPostedOnTag(user.id, liveTag.text)
 
     return { ...liveTag, authUserPosted }
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Tag)
-  async createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() currentUser) {
-    const liveTag = await this.tagService.createLiveTag(createLiveTag.text, currentUser.username)
+  async createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() authUser) {
+    const liveTag = await this.tagService.createLiveTag(createLiveTag.text, authUser.id)
 
     return liveTag
   }

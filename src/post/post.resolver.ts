@@ -28,8 +28,8 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Post)
-  async createPost(@Args('input') createPostData: CreatePostInput, @CurrentUser() currentUser) {
-    return this.postService.create(createPostData, currentUser.username)
+  async createPost(@Args('input') createPostData: CreatePostInput, @CurrentUser() authUser) {
+    return this.postService.create(createPostData, authUser.id)
   }
 
   @UseGuards(AuthGuard)
@@ -40,7 +40,7 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async deletePost(@Args('input') deletePostData: DeletePostInput, @CurrentUser() currentUser) {
-    return this.postService.delete(deletePostData, currentUser.username)
+  async deletePost(@Args('input') deletePostData: DeletePostInput, @CurrentUser() authUser) {
+    return this.postService.delete(deletePostData, authUser.id)
   }
 }
