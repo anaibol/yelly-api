@@ -92,7 +92,10 @@ function getSchoolAndTraining(userTraining) {
       id: uuidStringify(school.city.id),
       name: school.city.name,
       googlePlaceId: school.city.googlePlaceId,
-
+      country: {
+        id: school.city.country.id,
+        name: school.city.country.name,
+      },
       _geoloc: {
         lat: parseInt(school.city.lat),
         lng: parseInt(school.city.lng),
