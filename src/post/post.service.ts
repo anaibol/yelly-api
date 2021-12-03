@@ -102,7 +102,7 @@ export class PostService {
     return true
   }
 
-  async create(createPostInput: CreatePostInput, username: string) {
+  async create(createPostInput: CreatePostInput, authUserId: string) {
     const { text, tag: tagText } = createPostInput
 
     const newPostPrismaData = {
@@ -124,7 +124,7 @@ export class PostService {
         text,
         author: {
           connect: {
-            email: username,
+            id: authUserId,
           },
         },
         tags: {
@@ -137,7 +137,7 @@ export class PostService {
                 text: tagText,
                 author: {
                   connect: {
-                    email: username,
+                    email: authUserId,
                   },
                 },
               },
@@ -146,16 +146,9 @@ export class PostService {
         },
       },
     }
-    let post
 
-    // INFO: try a create post twice because of added createdAt as unique to solve cursor pagination logic.
-    try {
-      post = await this.prismaService.post.create(newPostPrismaData)
-    } catch (e) {
-      post = await this.prismaService.post.create(newPostPrismaData)
-    }
+    const post = await this.prismaService.post.create(newPostPrismaData)
 
-    // INFO: generate an array to reuse the same mapFunction
     const posts = [post]
     const mappedPost = this.mapAuthorBufferIdToUUID(posts)[0]
 

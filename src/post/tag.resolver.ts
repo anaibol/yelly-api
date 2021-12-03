@@ -17,6 +17,8 @@ export class TagResolver {
   async getLiveTag(@CurrentUser() user) {
     const liveTag = await this.tagService.getLiveTag()
 
+    if (!liveTag) return
+
     const authUserPosted = await this.userService.hasUserPostedOnTag(user.id, liveTag.text)
 
     return { ...liveTag, authUserPosted }

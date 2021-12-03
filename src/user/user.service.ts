@@ -363,11 +363,11 @@ export class UserService {
     return randomBytes(5).toString('hex')
   }
 
-  async deleteByEmail(email: string) {
+  async deleteById(userId: string) {
     try {
       await this.prismaService.user.delete({
         where: {
-          email: email,
+          id: this.prismaService.mapStringIdToBuffer(userId),
         },
       })
       return true
@@ -665,10 +665,14 @@ export class UserService {
       ...user,
     }
 
-    formattedUser.id = this.prismaService.mapBufferIdToString(user.id)
+    if (!user) return
+
+    if (formattedUser?.id) {
+      formattedUser.id = this.prismaService.mapBufferIdToString(formattedUser.id)
+    }
 
     if (formattedUser?.userTraining?.id) {
-      formattedUser.userTraining.id = this.prismaService.mapBufferIdToString(user.userTraining.id)
+      formattedUser.userTraining.id = this.prismaService.mapBufferIdToString(formattedUser.userTraining.id)
     }
 
     if (formattedUser?.userTraining?.school?.id) {

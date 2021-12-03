@@ -56,6 +56,9 @@ export class TagService {
 
   async getLiveTag() {
     const liveTag = await this.prismaService.tag.findFirst({
+      where: {
+        isLive: true,
+      },
       select: {
         id: true,
         text: true,
@@ -81,9 +84,6 @@ export class TagService {
             posts: true,
           },
         },
-      },
-      where: {
-        isLive: true,
       },
     })
 

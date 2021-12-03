@@ -1,5 +1,5 @@
 import { UnauthorizedException, UseGuards } from '@nestjs/common'
-import { Args, Mutation, Query, Resolver, ResolveField, Parent, Context } from '@nestjs/graphql'
+import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
 import { PaginationArgs } from '../common/pagination.args'
 import { ForgotPasswordInput } from './forgot-password.input'
 import { ToggleFollowInput } from './toggle-follow.input'
@@ -48,6 +48,8 @@ export class UserResolver {
   async me(@CurrentUser() authUser) {
     const user = await this.userService.findOne(authUser.id)
 
+    if (!user) return new UnauthorizedException()
+
     return {
       ...user,
       unreadNotificationsCount: await this.notificationService.countUnreadNotifications(
@@ -95,8 +97,8 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async deleteAuthUser(@CurrentUser() user) {
-    return this.userService.deleteByEmail(user.username)
+  async deleteAuthUser(@CurrentUser() authUser) {
+    return this.userService.deleteById(authUser.id)
   }
 
   @UseGuards(AuthGuard)
