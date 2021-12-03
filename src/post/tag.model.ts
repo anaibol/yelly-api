@@ -4,21 +4,21 @@ import { Post } from './post.model'
 
 @ObjectType()
 export class Tag {
-  @Field()
+  @Field({ nullable: true })
   id: string
 
   @Field()
   text: string
 
-  @Field()
+  @Field({ nullable: true })
   createdAt: string
 
   @Field()
   isLive: boolean
 
-  @Field(() => User)
+  @Field(() => User, { nullable: true })
   author: User
 
-  @Field(() => [Post])
+  @Field(() => [Post], { nullable: true })
   posts: Post[]
 }

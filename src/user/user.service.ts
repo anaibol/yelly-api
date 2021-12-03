@@ -298,6 +298,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundUserException()
     }
+
     return this.formatUser(user)
   }
 
@@ -430,7 +431,7 @@ export class UserService {
       },
     }
 
-    return this.algoliaService.saveObject(
+    return this.algoliaService.partialUpdateObject(
       usersIndex,
       newUserAlgoliaObject,
       this.prismaService.mapBufferIdToString(user.id)
@@ -482,11 +483,8 @@ export class UserService {
 
     if (userExists) throw new ForbiddenException('Email exists')
 
-    //const school = await this.getSchool(signUpData.schoolGooglePlaceId)
-
     const user = await this.create(signUpData)
 
-    // this.syncUsersIndexWithAlgolia(user)
     const { access_token: sendbirdAccessToken } = await this.sendbirdService.createUser(user)
 
     await this.prismaService.user.update({
@@ -580,6 +578,8 @@ export class UserService {
       },
     })
 
+    this.syncUsersIndexWithAlgolia(updatedUser)
+
     return !!updatedUser.id
   }
 
@@ -609,30 +609,22 @@ export class UserService {
   }
 
   formatUser(user) {
-    const formattedUser = {
-      ...user,
+    const formattedUser = user
+
+    if (user?.id) {
+      formattedUser.id = this.prismaService.mapBufferIdToString(user.id)
     }
 
-    if (!user) return
-
-    if (formattedUser?.id) {
-      formattedUser.id = this.prismaService.mapBufferIdToString(formattedUser.id)
+    if (user?.school?.id) {
+      formattedUser.school.id = this.prismaService.mapBufferIdToString(user.school.id)
     }
 
-    if (formattedUser?.id) {
-      formattedUser.id = this.prismaService.mapBufferIdToString(formattedUser.id)
+    if (user?.school?.city?.id) {
+      formattedUser.school.city.id = this.prismaService.mapBufferIdToString(user.school.city.id)
     }
 
-    if (formattedUser?.school?.id) {
-      formattedUser.school.id = this.prismaService.mapBufferIdToString(formattedUser.school.id)
-    }
-
-    if (formattedUser?.school?.city?.id) {
-      formattedUser.school.city.id = this.prismaService.mapBufferIdToString(formattedUser.school.city.id)
-    }
-
-    if (formattedUser?.training?.id) {
-      formattedUser.training.id = this.prismaService.mapBufferIdToString(formattedUser.training.id)
+    if (user?.training?.id) {
+      formattedUser.training.id = this.prismaService.mapBufferIdToString(user.training.id)
     }
 
     formattedUser.followeesCount = user._count.followees

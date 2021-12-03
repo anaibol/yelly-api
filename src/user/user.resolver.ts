@@ -36,7 +36,7 @@ export class UserResolver {
       throw new UnauthorizedException()
     }
 
-    const accessToken = this.authService.getAccessToken(user.id)
+    const accessToken = await this.authService.getAccessToken(this.prismaService.mapBufferIdToString(user.id))
 
     return {
       accessToken,
@@ -46,7 +46,7 @@ export class UserResolver {
   @Query(() => Me)
   @UseGuards(AuthGuard)
   async me(@CurrentUser() authUser) {
-    const user = await this.userService.findOne(authUser.id)
+    const user = await this.userService.findMe(authUser.id)
 
     if (!user) return new UnauthorizedException()
 
