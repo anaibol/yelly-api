@@ -80,8 +80,8 @@ async function main() {
                 name: googlePlaceCity.name,
                 googlePlaceId: googlePlaceCity.place_id,
                 isValid: true,
-                lat: googlePlaceCity.geometry.location.lat.toString(),
-                lng: googlePlaceCity.geometry.location.lng.toString(),
+                lat: googlePlaceCity.geometry.location.lat(),
+                lng: googlePlaceCity.geometry.location.lng(),
                 countryId: countryId,
               },
             })

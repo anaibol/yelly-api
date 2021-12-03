@@ -4,7 +4,7 @@ import { UserResolver } from './user.resolver'
 import { CoreModule } from '../core/core.module'
 import { AuthModule } from '../auth/auth.module'
 import { NotificationService } from '../notification/notification.service'
-import { SchoolService } from '../user-training/school.service'
+import { SchoolService } from './school.service'
 
 @Module({
   imports: [CoreModule, forwardRef(() => AuthModule)],

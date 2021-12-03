@@ -1,6 +1,7 @@
 import { Int, Field, ObjectType } from '@nestjs/graphql'
-import { UserTraining } from '../user-training/userTraining.model'
 import { Post } from '../post/post.model'
+import { School } from './school.model'
+import { Training } from './training.model'
 
 @ObjectType()
 export class User {
@@ -31,8 +32,11 @@ export class User {
   @Field({ nullable: true })
   locale?: string
 
-  @Field(() => UserTraining)
-  userTraining?: UserTraining
+  @Field(() => Training, { nullable: true })
+  training?: Training
+
+  @Field(() => School, { nullable: true })
+  school?: School
 
   @Field(() => [Post], { nullable: true })
   posts?: Post[]
