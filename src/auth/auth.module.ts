@@ -6,9 +6,11 @@ import { AuthService } from './auth.service'
 import { jwtConstants } from './constants'
 import { JwtStrategy } from './strategies/jwt.strategy'
 import { LocalStrategy } from './strategies/local.strategy'
+import { CoreModule } from '../core/core.module'
 
 @Module({
   imports: [
+    CoreModule,
     forwardRef(() => UserModule),
     PassportModule,
     JwtModule.register({

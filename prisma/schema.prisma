@@ -10,13 +10,13 @@ datasource db {
 
 model City {
   id            Bytes         @id @db.Binary(16)
-  countryId     Bytes?        @map("country_id") @db.Binary(16)
+  countryId     Bytes         @map("country_id") @db.Binary(16)
   name          String        @db.VarChar(255)
   googlePlaceId String?       @unique @map("google_place_id") @db.VarChar(255)
   lat           Float?
   lng           Float?
   isValid       Boolean?      @map("is_valid")
-  country       Country?      @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_2D5B0234F92F3E70")
+  country       Country       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_2D5B0234F92F3E70")
   userTraining  UserTraining?
   schools       School[]
 
@@ -89,23 +89,25 @@ model Notification {
 }
 
 model School {
-  id            Bytes    @id @db.Binary(16)
-  countryId     Bytes?   @map("country_id") @db.Binary(16)
-  name          String   @db.VarChar(255)
-  postalCode    String?  @map("postal_code") @db.VarChar(255)
-  googlePlaceId String?  @unique @map("google_place_id") @db.VarChar(255)
+  id            Bytes          @id @db.Binary(16)
+  name          String         @db.VarChar(255)
+  postalCode    String?        @map("postal_code") @db.VarChar(255)
+  googlePlaceId String?        @unique @map("google_place_id") @db.VarChar(255)
   lat           Float?
   lng           Float?
-  isValid       Boolean? @map("is_valid")
-  cityId        Bytes?   @map("city_id") @db.Binary(16)
-  city          City?    @relation(fields: [cityId], references: [id])
-  country       Country? @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_F99EDABBF92F3E70")
+  isValid       Boolean?       @map("is_valid")
+  cityId        Bytes          @map("city_id") @db.Binary(16)
+  city          City           @relation(fields: [cityId], references: [id])
+  User          User[]
+  UserTraining  UserTraining[]
+  // REMOVE
+  country       Country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_F99EDABBF92F3E70")
+  // REMOVE
+  countryId     Bytes?         @map("country_id") @db.Binary(16)
 
   @@index([countryId], map: "IDX_F99EDABBF92F3E70")
   @@index([cityId], map: "school_city_id_fkey")
   @@map("school")
-  User         User[]
-  UserTraining UserTraining[]
 }
 
 model Training {
@@ -113,8 +115,8 @@ model Training {
   name         String         @unique @db.VarChar(255)
   userTraining UserTraining[]
 
-  @@map("training")
   User User[]
+  @@map("training")
 }
 
 model User {
@@ -157,10 +159,10 @@ model User {
   followees                    Followship[]             @relation("followees")
   postReactions                PostReaction[]
 
-  trainingId Bytes?     @map("training_id") @db.Binary(16)
-  schoolId   Bytes?     @map("school_id") @db.Binary(16)
-  school     School?    @relation(fields: [schoolId], references: [id])
-  training   Training?  @relation(fields: [trainingId], references: [id])
+  trainingId Bytes?    @map("training_id") @db.Binary(16)
+  schoolId   Bytes?    @map("school_id") @db.Binary(16)
+  school     School?   @relation(fields: [schoolId], references: [id])
+  training   Training? @relation(fields: [trainingId], references: [id])
 
   @@index([trainingId], map: "IDX_359F6E8FBEFD98D1")
   @@index([schoolId], map: "IDX_359F6E8FC32A47EE")
