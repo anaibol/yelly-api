@@ -100,7 +100,7 @@ export class TagService {
     }
   }
 
-  async createLiveTag(text: string, email: string) {
+  async createLiveTag(text: string, authUserId: string) {
     await this.prismaService.tag.updateMany({
       where: {
         isLive: true,
@@ -119,7 +119,7 @@ export class TagService {
         isLive: true,
         author: {
           connect: {
-            email,
+            id: this.prismaService.mapStringIdToBuffer(authUserId),
           },
         },
       },
