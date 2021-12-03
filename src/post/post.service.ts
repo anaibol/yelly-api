@@ -124,7 +124,7 @@ export class PostService {
         text,
         author: {
           connect: {
-            id: authUserId,
+            id: this.prismaService.mapStringIdToBuffer(authUserId),
           },
         },
         tags: {
@@ -137,7 +137,7 @@ export class PostService {
                 text: tagText,
                 author: {
                   connect: {
-                    email: authUserId,
+                    id: this.prismaService.mapStringIdToBuffer(authUserId),
                   },
                 },
               },
