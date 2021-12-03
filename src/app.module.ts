@@ -6,24 +6,21 @@ import { PostModule } from './post/post.module'
 import { CoreModule } from './core/core.module'
 import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
-import { UserTrainingModule } from './user-training/user-training.module'
 import { NotificationModule } from './notification/notification.module'
-import { AppController } from 'app.controller'
 
 @Module({
   imports: [
     GraphQLModule.forRoot({
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile: join(process.cwd(), '../schema.gql'),
       sortSchema: true,
+      context: ({ req, res }): any => ({ req, res }),
     }),
     UserModule,
     PostModule,
     CoreModule,
     CommonModule,
     AuthModule,
-    UserTrainingModule,
     NotificationModule,
   ],
-  controllers: [AppController],
 })
 export class AppModule {}

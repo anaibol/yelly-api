@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common'
-import { AuthModule } from 'src/auth/auth.module'
-import { CoreModule } from 'src/core/core.module'
-import { UserModule } from 'src/user/user.module'
-import { PostResolver } from './resolvers/post.resolver'
-import { TagResolver } from './resolvers/tag.resolver'
-import { PostService } from './services/post.service'
-import { TagService } from './services/tag.service'
+import { AuthModule } from '../auth/auth.module'
+import { CoreModule } from '../core/core.module'
+import { UserModule } from '../user/user.module'
+import { PostResolver } from './post.resolver'
+import { TagResolver } from './tag.resolver'
+import { PostService } from './post.service'
+import { TagService } from './tag.service'
 
 @Module({
   imports: [CoreModule, AuthModule, UserModule],
