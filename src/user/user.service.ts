@@ -92,22 +92,25 @@ export class UserService {
           },
           take: 10,
           select: {
-            createdAt: true,
             id: true,
-            tags: {
-              select: {
-                text: true,
-                isLive: true,
-              },
-            },
+            createdAt: true,
+            viewsCount: true,
+            text: true,
             author: {
               select: {
+                id: true,
                 firstName: true,
                 lastName: true,
                 pictureId: true,
               },
             },
-            text: true,
+            tags: {
+              select: {
+                id: true,
+                text: true,
+                isLive: true,
+              },
+            },
           },
         },
         userTraining: {
@@ -265,23 +268,25 @@ export class UserService {
           },
           take: 10,
           select: {
-            createdAt: true,
             id: true,
+            createdAt: true,
+            viewsCount: true,
+            text: true,
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                pictureId: true,
+              },
+            },
             tags: {
               select: {
+                id: true,
                 text: true,
                 isLive: true,
               },
             },
-            author: {
-              select: {
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-                id: true,
-              },
-            },
-            text: true,
           },
         },
         userTraining: {
