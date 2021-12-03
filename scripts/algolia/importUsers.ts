@@ -1,7 +1,5 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
-import { skip } from 'rxjs'
-import { UserIndexAlgoliaInterface } from 'src/user/interfaces/user-index-algolia.interface'
 import { stringify as uuidStringify } from 'uuid'
 
 async function main() {
