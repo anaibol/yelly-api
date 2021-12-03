@@ -13,8 +13,8 @@ model City {
   countryId     Bytes?        @map("country_id") @db.Binary(16)
   name          String        @db.VarChar(255)
   googlePlaceId String?       @unique @map("google_place_id") @db.VarChar(255)
-  lat           String?       @db.VarChar(255)
-  lng           String?       @db.VarChar(255)
+  lat           Float?
+  lng           Float?
   isValid       Boolean?      @map("is_valid")
   country       Country?      @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_2D5B0234F92F3E70")
   userTraining  UserTraining?
@@ -89,22 +89,23 @@ model Notification {
 }
 
 model School {
-  id            Bytes          @id @db.Binary(16)
-  countryId     Bytes?         @map("country_id") @db.Binary(16)
-  name          String         @db.VarChar(255)
-  postalCode    String?        @map("postal_code") @db.VarChar(255)
-  googlePlaceId String?        @unique @map("google_place_id") @db.VarChar(255)
-  lat           String?        @db.VarChar(255)
-  lng           String?        @db.VarChar(255)
-  isValid       Boolean?       @map("is_valid")
-  cityId        Bytes?         @map("city_id") @db.Binary(16)
-  city          City?          @relation(fields: [cityId], references: [id])
-  country       Country?       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_F99EDABBF92F3E70")
-  userTraining  UserTraining[]
+  id            Bytes    @id @db.Binary(16)
+  countryId     Bytes?   @map("country_id") @db.Binary(16)
+  name          String   @db.VarChar(255)
+  postalCode    String?  @map("postal_code") @db.VarChar(255)
+  googlePlaceId String?  @unique @map("google_place_id") @db.VarChar(255)
+  lat           Float?
+  lng           Float?
+  isValid       Boolean? @map("is_valid")
+  cityId        Bytes?   @map("city_id") @db.Binary(16)
+  city          City?    @relation(fields: [cityId], references: [id])
+  country       Country? @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_F99EDABBF92F3E70")
 
   @@index([countryId], map: "IDX_F99EDABBF92F3E70")
   @@index([cityId], map: "school_city_id_fkey")
   @@map("school")
+  User         User[]
+  UserTraining UserTraining[]
 }
 
 model Training {
@@ -113,6 +114,7 @@ model Training {
   userTraining UserTraining[]
 
   @@map("training")
+  User User[]
 }
 
 model User {
@@ -138,19 +140,30 @@ model User {
   iosPushnotificationToken     String?                  @map("ios_push_notification_token") @db.VarChar(255)
   about                        String?                  @db.VarChar(255)
   locale                       String?                  @db.VarChar(255)
+  // REMOVE
   group                        Group[]
+  // REMOVE
   groupMembers                 GroupMembers[]
+  // REMOVE
   groupMembershipRequest       GroupMembershipRequest[]
   notification                 Notification[]           @relation("userSource")
   notifications                Notification[]
   posts                        Post[]
   postComments                 PostComment[]
   tags                         Tag[]
+  // REMOVE
   userTraining                 UserTraining?
   followers                    Followship[]             @relation("followers")
   followees                    Followship[]             @relation("followees")
   postReactions                PostReaction[]
 
+  trainingId Bytes?     @map("training_id") @db.Binary(16)
+  schoolId   Bytes?     @map("school_id") @db.Binary(16)
+  school     School?    @relation(fields: [schoolId], references: [id])
+  training   Training?  @relation(fields: [trainingId], references: [id])
+
+  @@index([trainingId], map: "IDX_359F6E8FBEFD98D1")
+  @@index([schoolId], map: "IDX_359F6E8FC32A47EE")
   @@map("user")
 }
 
@@ -164,6 +177,7 @@ model Followship {
   @@id([followerId, followeeId])
 }
 
+// REMOVE
 model UserTraining {
   id         Bytes     @id @db.Binary(16)
   userId     Bytes?    @unique @map("user_id") @db.Binary(16)
@@ -186,6 +200,7 @@ model UserTraining {
   @@map("user_training")
 }
 
+// REMOVE
 model WaitingList {
   id    Bytes  @id @db.Binary(16)
   email String @db.VarChar(255)
@@ -193,6 +208,7 @@ model WaitingList {
   @@map("waiting_list")
 }
 
+// REMOVE
 model GroupMembershipRequest {
   id          Bytes     @id @db.Binary(16)
   userId      Bytes     @map("user_id") @db.Binary(16)
