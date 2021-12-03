@@ -1,27 +1,15 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
+import { skip } from 'rxjs'
 import { UserIndexAlgoliaInterface } from 'src/user/interfaces/user-index-algolia.interface'
 import { stringify as uuidStringify } from 'uuid'
 
-/**
- * TODO :
- *  1 - add country in city
- *  2 - pagination
- */
 async function main() {
   const prisma = new PrismaClient()
 
-  const countUser = await prisma.user.count({
-    where: {
-      NOT: {
-        userTraining: null,
-      },
-    },
-  })
-
-  let paginate = true
+  let hasUsers = true
   let skip = 0
-  while (paginate) {
+  while (hasUsers) {
     const users = await prisma.user.findMany({
       where: {
         NOT: {
@@ -47,67 +35,74 @@ async function main() {
       take: 500,
       skip: skip,
     })
+    if (users.length == 0) {
+      hasUsers = false
+      console.log('finish')
+      return
+    }
+    skip += 500
 
     const algoliaClient = await algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_API_KEY)
-
     const userIndex = await algoliaClient.initIndex('dev_USERS')
+    console.log('insert ' + skip)
+    const algoliaUsers = []
+    users
+      .filter(
+        (user) =>
+          user.userTraining &&
+          user.userTraining.school &&
+          user.userTraining.school.city &&
+          user.userTraining.school.city.country
+      )
+      .forEach((user) => {
+        const { school, training } = user.userTraining
 
-    const algoliaUsers: UserIndexAlgoliaInterface[] = users.map((user) => {
-      const schoolAndTraining = getSchoolAndTraining(user.userTraining)
-
-      return {
-        id: uuidStringify(user.id),
-        objectID: uuidStringify(user.id),
-        lastName: user.lastName,
-        firstName: user.firstName,
-        birthdateTimestamp: Date.parse(user.birthdate.toString()),
-        hasPicture: user.pictureId != null,
-        school: schoolAndTraining.algoliaSchool,
-        training: schoolAndTraining.algoliaTraining,
-      }
-    })
+        algoliaUsers.push({
+          id: uuidStringify(Buffer.from(user.id)),
+          objectID: uuidStringify(Buffer.from(user.id)),
+          lastName: user.lastName,
+          firstName: user.firstName,
+          birthdateTimestamp: Date.parse(user.birthdate.toString()),
+          hasPicture: user.pictureId != null,
+          school: formatSchool(school),
+          training: formatTraining(training),
+        })
+      })
 
     userIndex.partialUpdateObjects(algoliaUsers, { createIfNotExists: true })
-
-    if (skip > countUser) paginate = false
-    skip += 500
   }
 }
 
-function getSchoolAndTraining(userTraining) {
-  if (!userTraining) return
-
-  const { training, school } = userTraining
-
-  const algoliaTraining = training && {
-    id: training.id,
-    name: training.name,
-  }
-  const algoliaSchool = school && {
-    id: school.id,
+function formatSchool(school) {
+  return {
+    id: uuidStringify(Buffer.from(school.id)),
     name: school.name,
     postalCode: school.postalCode,
     googlePlaceId: school.googlePlaceId,
     city: {
-      id: uuidStringify(school.city.id),
+      id: uuidStringify(Buffer.from(school.city.id)),
       name: school.city.name,
       googlePlaceId: school.city.googlePlaceId,
       country: {
-        id: school.city.country.id,
+        id: uuidStringify(Buffer.from(school.city.country.id)),
         name: school.city.country.name,
       },
       _geoloc: {
-        lat: parseInt(school.city.lat),
-        lng: parseInt(school.city.lng),
+        lat: parseFloat(school.city.lat),
+        lng: parseFloat(school.city.lng),
       },
     },
     _geoloc: {
-      lat: parseInt(school.lat),
-      lng: parseInt(school.lng),
+      lat: parseFloat(school.lat),
+      lng: parseFloat(school.lng),
     },
   }
-
-  return { algoliaSchool, algoliaTraining }
 }
 
+function formatTraining(training) {
+  return {
+    id: uuidStringify(Buffer.from(training.id)),
+    name: training.name,
+  }
+}
 main()

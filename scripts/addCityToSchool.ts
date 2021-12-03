@@ -14,7 +14,7 @@ async function main() {
         googlePlaceId: null,
       },
       cityId: null,
-      isValid: false,
+      isValid: true,
     },
     select: {
       id: true,
