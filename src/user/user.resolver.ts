@@ -30,13 +30,13 @@ export class UserResolver {
 
   @Mutation(() => Token)
   async signIn(@Args('input') signInInput: SignInInput) {
-    const user = await this.authService.validateUser(signInInput.email, signInInput.password)
+    const userId = await this.authService.validateUser(signInInput.email, signInInput.password)
 
-    if (!user) {
+    if (!userId) {
       throw new UnauthorizedException()
     }
 
-    const accessToken = await this.authService.getAccessToken(this.prismaService.mapBufferIdToString(user.id))
+    const accessToken = await this.authService.getAccessToken(this.prismaService.mapBufferIdToString(userId))
 
     return {
       accessToken,
