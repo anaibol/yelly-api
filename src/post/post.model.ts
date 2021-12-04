@@ -35,8 +35,8 @@ export class Post {
   author: User
 
   @Field(() => [PostReaction])
-  postReactions: PostReaction[]
+  reactions: PostReaction[]
 
   @Field(() => Number)
-  totalPostReactionsCount: number
+  totalReactionsCount: number
 }
