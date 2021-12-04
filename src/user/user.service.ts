@@ -27,14 +27,14 @@ export class UserService {
     private sendbirdService: SendbirdService
   ) {}
 
-  async hasUserPostedOnTag(email, tagText) {
+  async hasUserPostedOnTag(userId, tagText) {
     const post = await this.prismaService.post.findFirst({
       select: {
         id: true,
       },
       where: {
         author: {
-          email: email,
+          id: userId,
         },
         tags: {
           some: {
@@ -321,26 +321,6 @@ export class UserService {
     return true
   }
 
-  async create(createUserData: SignUpInput) {
-    const saltOrRounds = 10
-    const password = createUserData.password
-    const hash = await bcrypt.hash(password, saltOrRounds)
-
-    return this.prismaService.user.create({
-      data: {
-        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-        email: createUserData.email,
-        firstName: '',
-        lastName: '',
-        password: hash,
-        roles: '[]',
-        isVerified: true,
-        isFilled: true,
-        isActived: true,
-      },
-    })
-  }
-
   async refreshSendbirdAccessToken(userId: string) {
     return this.sendbirdService.getAccessToken(userId)
   }
@@ -475,15 +455,32 @@ export class UserService {
   }
 
   async signUp(signUpData: SignUpInput) {
+    const { email, password } = signUpData
+
     const userExists = await this.prismaService.user.findUnique({
       where: {
-        email: signUpData.email,
+        email,
       },
     })
 
     if (userExists) throw new ForbiddenException('Email exists')
 
-    const user = await this.create(signUpData)
+    const saltOrRounds = 10
+    const hash = await bcrypt.hash(password, saltOrRounds)
+
+    const user = await this.prismaService.user.create({
+      data: {
+        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+        email: email,
+        firstName: '',
+        lastName: '',
+        password: hash,
+        roles: '[]',
+        isVerified: true,
+        isFilled: true,
+        isActived: true,
+      },
+    })
 
     const { access_token: sendbirdAccessToken } = await this.sendbirdService.createUser(user)
 

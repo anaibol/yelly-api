@@ -157,24 +157,15 @@ export class PostService {
     return mappedPost
   }
 
-  async delete(createPostInput: DeletePostInput, email: string) {
+  async delete(createPostInput: DeletePostInput, authUserId: string) {
     const { id } = createPostInput
-
-    const { id: authUserId } = await this.prismaService.user.findUnique({
-      where: {
-        email,
-      },
-      select: {
-        id: true,
-      },
-    })
 
     if (!authUserId) return new UnauthorizedException()
 
     const deleted = await this.prismaService.post.deleteMany({
       where: {
         id,
-        authorId: authUserId,
+        authorId: this.prismaService.mapStringIdToBuffer(authUserId),
       },
     })
 
