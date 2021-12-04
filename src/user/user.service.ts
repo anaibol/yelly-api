@@ -34,7 +34,7 @@ export class UserService {
       },
       where: {
         author: {
-          id: userId,
+          id: this.prismaService.mapStringIdToBuffer(userId),
         },
         tags: {
           some: {

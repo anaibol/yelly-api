@@ -14,12 +14,12 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => LiveTagAuthUser, { name: 'liveTag' })
-  async getLiveTag(@CurrentUser() user) {
+  async getLiveTag(@CurrentUser() authUser) {
     const liveTag = await this.tagService.getLiveTag()
 
     if (!liveTag) return
 
-    const authUserPosted = await this.userService.hasUserPostedOnTag(user.id, liveTag.text)
+    const authUserPosted = await this.userService.hasUserPostedOnTag(authUser.id, liveTag.text)
 
     return { ...liveTag, authUserPosted }
   }
