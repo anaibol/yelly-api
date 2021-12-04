@@ -26,9 +26,7 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Tag)
-  async createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() authUser) {
-    const liveTag = await this.tagService.createLiveTag(createLiveTag.text, authUser.id)
-
-    return liveTag
+  createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() authUser) {
+    return this.tagService.createLiveTag(createLiveTag.text, authUser.id)
   }
 }

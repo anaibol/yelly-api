@@ -33,7 +33,7 @@ export class PostService {
           authorId: this.prismaService.mapBufferIdToString(reaction.authorId),
         }
       }),
-      totalReactions: post._count.reactions,
+      totalPostReactionsCount: post._count.reactions,
     }))
   }
 

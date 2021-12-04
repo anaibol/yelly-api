@@ -3,7 +3,7 @@ import { User } from '../user/user.model'
 import { Tag } from './tag.model'
 
 @ObjectType()
-class Reaction {
+class PostReaction {
   @Field()
   text: string
 
@@ -34,9 +34,9 @@ export class Post {
   @Field(() => User)
   author: User
 
-  @Field(() => [Reaction])
-  reactions: Reaction[]
+  @Field(() => [PostReaction])
+  postReactions: PostReaction[]
 
   @Field(() => Number)
-  totalReactions: number
+  totalPostReactionsCount: number
 }
