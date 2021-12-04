@@ -27,7 +27,7 @@ export class PostService {
           },
         }
       }),
-      reactions: post.reactions.map((reaction) => {
+      postReactions: post.reactions.map((reaction) => {
         return {
           ...reaction,
           authorId: this.prismaService.mapBufferIdToString(reaction.authorId),
