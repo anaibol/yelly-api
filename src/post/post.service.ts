@@ -27,13 +27,13 @@ export class PostService {
           },
         }
       }),
-      postReactions: post.reactions.map((reaction) => {
+      reactions: post.reactions.map((reaction) => {
         return {
           ...reaction,
           authorId: this.prismaService.mapBufferIdToString(reaction.authorId),
         }
       }),
-      totalPostReactionsCount: post._count.reactions,
+      totalReactionsCount: post._count.reactions,
     }))
   }
 
