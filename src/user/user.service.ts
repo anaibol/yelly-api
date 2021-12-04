@@ -111,6 +111,17 @@ export class UserService {
                 isLive: true,
               },
             },
+            reactions: {
+              select: {
+                id: true,
+                text: true,
+              },
+            },
+            _count: {
+              select: {
+                reactions: true,
+              },
+            },
           },
         },
         school: {
@@ -270,6 +281,17 @@ export class UserService {
                 id: true,
                 text: true,
                 isLive: true,
+              },
+            },
+            reactions: {
+              select: {
+                id: true,
+                text: true,
+              },
+            },
+            _count: {
+              select: {
+                reactions: true,
               },
             },
           },
@@ -648,6 +670,13 @@ export class UserService {
             ...post.author,
             id: this.prismaService.mapBufferIdToString(post.author.id),
           },
+          reactions: post.reactions.map((reaction) => {
+            return {
+              ...reaction,
+              authorId: this.prismaService.mapBufferIdToString(reaction.authorId),
+            }
+          }),
+          totalReactionsCount: post._count.reactions,
         }))
       : []
 
