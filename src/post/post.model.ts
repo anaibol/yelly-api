@@ -3,6 +3,18 @@ import { User } from '../user/user.model'
 import { Tag } from './tag.model'
 
 @ObjectType()
+class Reaction {
+  @Field()
+  text: string
+
+  @Field()
+  reaction: string
+
+  @Field()
+  authorId: string
+}
+
+@ObjectType()
 export class Post {
   @Field()
   id: string
@@ -21,4 +33,10 @@ export class Post {
 
   @Field(() => User)
   author: User
+
+  @Field(() => [Reaction])
+  reactions: Reaction[]
+
+  @Field(() => Number)
+  totalReactions: number
 }

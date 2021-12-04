@@ -277,6 +277,8 @@ model PostReaction {
   reaction  String
   author    User     @relation(fields: [authorId], references: [id])
   post      Post?    @relation(fields: [postId], references: [id])
-  postId    String?
+  postId    String
   authorId  Bytes    @db.Binary(16)
+
+  @@unique([authorId, postId], map: "author_post_id_fkey")
 }
