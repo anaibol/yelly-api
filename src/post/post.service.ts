@@ -11,8 +11,8 @@ import { TagService } from './tag.service'
 export class PostService {
   constructor(private prismaService: PrismaService, private tagService: TagService) {}
 
-  mapAuthorBufferIdToUUID(posts) {
-    return posts.map((post) => ({
+  mapAuthorBufferIdToUUID(post) {
+    return {
       ...post,
       author: {
         ...post.author,
@@ -34,7 +34,7 @@ export class PostService {
         }
       }),
       totalReactionsCount: post?._count.reactions,
-    }))
+    }
   }
 
   async trackPostViews(postsIds: string[]) {
@@ -117,7 +117,8 @@ export class PostService {
       },
     })
 
-    const mappedPosts = this.mapAuthorBufferIdToUUID(posts)
+    const mappedPosts = posts.map(this.mapAuthorBufferIdToUUID)
+
     const cursor = posts.length === limit ? posts[limit - 1].createdAt : ''
 
     return { posts: mappedPosts, cursor }
@@ -126,28 +127,12 @@ export class PostService {
   async create(createPostInput: CreatePostInput, authUserId: string) {
     const { text, tag: tagText } = createPostInput
 
-    const newPostPrismaData = {
-      select: {
-        id: true,
-        text: true,
-        createdAt: true,
-        author: true,
-        tags: {
-          select: {
-            id: true,
-            text: true,
-            createdAt: true,
-            author: true,
-          },
-        },
-      },
+    const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
+
+    const post = await this.prismaService.post.create({
       data: {
         text,
-        author: {
-          connect: {
-            id: this.prismaService.mapStringIdToBuffer(authUserId),
-          },
-        },
+        authorId,
         tags: {
           connectOrCreate: [
             {
@@ -166,26 +151,21 @@ export class PostService {
           ],
         },
       },
-    }
+    })
 
-    const post = await this.prismaService.post.create(newPostPrismaData)
-
-    const posts = [post]
-    const mappedPost = this.mapAuthorBufferIdToUUID(posts)[0]
+    const mappedPost = this.mapAuthorBufferIdToUUID(post)
 
     this.tagService.syncTagIndexWithAlgolia(tagText, mappedPost)
 
-    return mappedPost
+    return true
   }
 
   async delete(createPostInput: DeletePostInput, authUserId: string) {
-    const { id } = createPostInput
-
     if (!authUserId) return new UnauthorizedException()
 
     const deleted = await this.prismaService.post.deleteMany({
       where: {
-        id,
+        id: createPostInput.id,
         authorId: this.prismaService.mapStringIdToBuffer(authUserId),
       },
     })
