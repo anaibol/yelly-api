@@ -157,7 +157,7 @@ export class PostService {
       },
     })
 
-    this.tagService.syncTagIndexWithAlgolia(tagText)
+    // this.tagService.syncTagIndexWithAlgolia(tagText)
 
     return true
   }
