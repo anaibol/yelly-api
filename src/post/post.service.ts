@@ -18,7 +18,7 @@ export class PostService {
         ...post.author,
         id: this.prismaService.mapBufferIdToString(post.author.id),
       },
-      tags: post.tags.map((tag) => {
+      tags: post.tags?.map((tag) => {
         return {
           ...tag,
           author: {
@@ -27,13 +27,13 @@ export class PostService {
           },
         }
       }),
-      reactions: post.reactions.map((reaction) => {
+      reactions: post.reactions?.map((reaction) => {
         return {
           ...reaction,
           authorId: this.prismaService.mapBufferIdToString(reaction.authorId),
         }
       }),
-      totalReactionsCount: post._count.reactions,
+      totalReactionsCount: post?._count.reactions,
     }))
   }
 
