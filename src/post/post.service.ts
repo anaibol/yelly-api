@@ -179,12 +179,11 @@ export class PostService {
     createOrUpdatePostReactionInput: CreateOrUpdatePostReactionInput,
     authUserId: string
   ) {
-    const { text, postId } = createOrUpdatePostReactionInput
+    const { reaction, postId } = createOrUpdatePostReactionInput
     const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
 
     const reactionData = {
-      text,
-      reaction: text,
+      reaction,
       authorId,
       postId,
     }
