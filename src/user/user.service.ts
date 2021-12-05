@@ -114,8 +114,11 @@ export class UserService {
             reactions: {
               select: {
                 id: true,
-                text: true,
+                reaction: true,
+                authorId: true,
               },
+              distinct: 'reaction',
+              take: 3,
             },
             _count: {
               select: {
@@ -286,8 +289,11 @@ export class UserService {
             reactions: {
               select: {
                 id: true,
-                text: true,
+                reaction: true,
+                authorId: true,
               },
+              distinct: 'reaction',
+              take: 3,
             },
             _count: {
               select: {

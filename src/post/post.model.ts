@@ -5,7 +5,7 @@ import { Tag } from './tag.model'
 @ObjectType()
 class PostReaction {
   @Field()
-  text: string
+  id: string
 
   @Field()
   reaction: string

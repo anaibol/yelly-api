@@ -272,7 +272,6 @@ enum NotificationAction {
 
 model PostReaction {
   id        String   @id @default(uuid())
-  text      String   @db.Text
   createdAt DateTime @unique @default(now())
   reaction  String
   author    User     @relation(fields: [authorId], references: [id])

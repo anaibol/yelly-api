@@ -82,11 +82,11 @@ export class PostService {
         text: true,
         reactions: {
           select: {
-            text: true,
+            id: true,
             reaction: true,
             authorId: true,
           },
-          distinct: ['reaction'],
+          distinct: 'reaction',
           take: 3,
         },
         author: {
