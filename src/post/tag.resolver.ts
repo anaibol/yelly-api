@@ -13,7 +13,7 @@ export class TagResolver {
   constructor(private tagService: TagService, private userService: UserService) {}
 
   @UseGuards(AuthGuard)
-  @Query(() => LiveTagAuthUser, { name: 'liveTag' })
+  @Query(() => LiveTagAuthUser, { name: 'liveTag', nullable: true })
   async getLiveTag(@CurrentUser() authUser) {
     const liveTag = await this.tagService.getLiveTag()
 

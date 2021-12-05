@@ -36,6 +36,7 @@ export class TagService {
       },
     })
     // INFO: Map data to fit Tag index algolia interface
+
     const lastUsers = this.mapAuthorBufferIdToUUID(tag.posts)
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       id: tag.id,
@@ -87,11 +88,9 @@ export class TagService {
       },
     })
 
-    const lastUsers = this.mapAuthorBufferIdToUUID(liveTag.posts)
+    if (!liveTag) return null
 
-    if (liveTag == null) {
-      throw new NotFoundLiveTagException()
-    }
+    const lastUsers = this.mapAuthorBufferIdToUUID(liveTag.posts)
 
     return {
       ...liveTag,
