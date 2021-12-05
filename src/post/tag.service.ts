@@ -7,7 +7,7 @@ import { TagIndexAlgoliaInterface } from './tag-index-algolia.interface'
 @Injectable()
 export class TagService {
   constructor(private prismaService: PrismaService, private algoliaService: AlgoliaService) {}
-  async syncTagIndexWithAlgolia(tagText: string, post) {
+  async syncTagIndexWithAlgolia(tagText: string) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
 
     const tag = await this.prismaService.tag.findFirst({
@@ -47,9 +47,9 @@ export class TagService {
         value: 1,
       },
       createdAtTimestamp: Date.parse(tag.createdAt.toString()),
-      updatedAtTimestamp: Date.parse(post.createdAt.toString()),
+      // updatedAtTimestamp: Date.parse(post.createdAt.toString()),
       createdAt: tag.createdAt,
-      updatedAt: post.createdAt,
+      // updatedAt: post.createdAt,
     }
 
     return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tagText)

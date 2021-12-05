@@ -4,7 +4,7 @@ export interface TagIndexAlgoliaInterface {
   lastUsers: { id: string; pictureId: string; firstName: string }[]
   postCount: number | object
   createdAtTimestamp: number
-  updatedAtTimestamp: number
+  // updatedAtTimestamp: number
   createdAt: Date
-  updatedAt: Date
+  // updatedAt: Date
 }

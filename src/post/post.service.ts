@@ -117,7 +117,7 @@ export class PostService {
       },
     })
 
-    const mappedPosts = posts.map(this.mapAuthorBufferIdToUUID)
+    const mappedPosts = posts.map((post) => this.mapAuthorBufferIdToUUID(post))
 
     const cursor = posts.length === limit ? posts[limit - 1].createdAt : ''
 
@@ -129,7 +129,7 @@ export class PostService {
 
     const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
 
-    const post = await this.prismaService.post.create({
+    await this.prismaService.post.create({
       data: {
         text,
         author: {
@@ -157,9 +157,7 @@ export class PostService {
       },
     })
 
-    const mappedPost = this.mapAuthorBufferIdToUUID(post)
-
-    this.tagService.syncTagIndexWithAlgolia(tagText, mappedPost)
+    this.tagService.syncTagIndexWithAlgolia(tagText)
 
     return true
   }
