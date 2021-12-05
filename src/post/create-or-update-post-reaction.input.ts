@@ -6,8 +6,5 @@ export class CreateOrUpdatePostReactionInput {
   postId: string
 
   @Field()
-  text: string
-
-  @Field()
   reaction: string
 }
