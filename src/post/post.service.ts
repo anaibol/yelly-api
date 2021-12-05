@@ -132,7 +132,11 @@ export class PostService {
     const post = await this.prismaService.post.create({
       data: {
         text,
-        authorId,
+        author: {
+          connect: {
+            id: authorId,
+          },
+        },
         tags: {
           connectOrCreate: [
             {
@@ -143,7 +147,7 @@ export class PostService {
                 text: tagText,
                 author: {
                   connect: {
-                    id: this.prismaService.mapStringIdToBuffer(authUserId),
+                    id: authorId,
                   },
                 },
               },

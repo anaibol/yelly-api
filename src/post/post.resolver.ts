@@ -29,7 +29,7 @@ export class PostResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => Post)
+  @Mutation(() => Boolean)
   async createPost(@Args('input') createPostData: CreatePostInput, @CurrentUser() authUser) {
     return this.postService.create(createPostData, authUser.id)
   }
