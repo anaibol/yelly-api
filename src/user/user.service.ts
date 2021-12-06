@@ -595,7 +595,13 @@ export class UserService {
           },
         }),
       },
-      include: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        isFilled: true,
+        pictureId: true,
+        birthdate: true,
         training: true,
         school: {
           include: {
