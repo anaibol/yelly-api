@@ -11,8 +11,9 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.prismaService.user.findUnique({ where: { email }, select: { password: true, id: true } })
 
-    const hash = user.password.replace('$2y$', '$2b$')
+    if (!user) return null
 
+    const hash = user.password.replace('$2y$', '$2b$')
     if (!(await bcrypt.compare(password, hash))) return null
 
     return user.id
