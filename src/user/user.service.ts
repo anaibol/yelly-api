@@ -514,20 +514,8 @@ export class UserService {
       },
     })
 
-    const { access_token: sendbirdAccessToken } = await this.sendbirdService.createUser(user)
-
-    await this.prismaService.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        sendbirdAccessToken,
-      },
-    })
-
     return {
       id: this.prismaService.mapBufferIdToString(user.id),
-      sendbirdAccessToken,
     }
   }
 
@@ -621,7 +609,10 @@ export class UserService {
       },
     })
 
-    this.syncUsersIndexWithAlgolia(updatedUser)
+    if (updatedUser.isFilled) {
+      this.sendbirdService.createUser(updatedUser)
+      this.syncUsersIndexWithAlgolia(updatedUser)
+    }
 
     return !!updatedUser.id
   }
