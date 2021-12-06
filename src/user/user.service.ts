@@ -465,21 +465,24 @@ export class UserService {
     if (!locality && !postal_town) throw new NotFoundException('city not found in google api')
 
     const { long_name: cityName } = locality || postal_town
-
     const googleCity = await this.getGoogleCityByName(cityName)
-    const cityGooggleplaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
+    const cityGooglePlaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
+
+    const { lat, lng } = googlePlaceDetail.geometry.location
+    const { lat: cityLat, lng: cityLng } = cityGooglePlaceDetail.geometry.location
+
     return {
       name: googlePlaceDetail.name,
       googlePlaceId: googlePlaceDetail.place_id,
-      lat: googlePlaceDetail.geometry.location.lat(),
-      lng: googlePlaceDetail.geometry.location.lng(),
+      lat: typeof lat === 'function' ? lat() : lat,
+      lng: typeof lng === 'function' ? lng() : lng,
       city: {
-        name: cityGooggleplaceDetail.name,
-        googlePlaceId: cityGooggleplaceDetail.place_id,
-        lat: cityGooggleplaceDetail.geometry.location.lat(),
-        lng: cityGooggleplaceDetail.geometry.location.lng(),
+        name: cityGooglePlaceDetail.name,
+        googlePlaceId: cityGooglePlaceDetail.place_id,
+        lat: typeof cityLat === 'function' ? cityLat() : cityLat,
+        lng: typeof cityLng === 'function' ? cityLng() : cityLng,
         country: {
-          name: cityGooggleplaceDetail.address_components.find((component) => component.types.includes('country'))
+          name: cityGooglePlaceDetail.address_components.find((component) => component.types.includes('country'))
             .long_name,
         },
       },
@@ -632,6 +635,7 @@ export class UserService {
     )
     if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined')
       throw new NotFoundException('googlePlaceId not valid')
+
     return response.data.result as google.maps.places.PlaceResult
   }
 
