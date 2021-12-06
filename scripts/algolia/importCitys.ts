@@ -34,8 +34,8 @@ async function main() {
         },
         googlePlaceId: city.googlePlaceId,
         _geoloc: {
-          lat: parseFloat(city.lat),
-          lng: parseFloat(city.lng),
+          lat: city.lat,
+          lng: city.lng,
         },
         objectID: uuidStringify(Buffer.from(city.id)),
       }

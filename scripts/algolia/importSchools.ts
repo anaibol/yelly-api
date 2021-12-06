@@ -27,8 +27,8 @@ async function main() {
         name: school.name,
         googlePlaceId: school.googlePlaceId,
         _geoloc: {
-          lat: parseFloat(school.lat),
-          lng: parseFloat(school.lng),
+          lat: school.lat,
+          lng: school.lng,
         },
         objectID: uuidStringify(Buffer.from(school.id)),
       }
