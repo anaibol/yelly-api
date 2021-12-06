@@ -1,5 +1,6 @@
 export interface UserIndexAlgoliaInterface {
   id: string
+  objectID: string
   lastName: string
   firstName: string
   birthdateTimestamp: number
