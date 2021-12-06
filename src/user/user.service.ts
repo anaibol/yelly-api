@@ -254,6 +254,7 @@ export class UserService {
         pictureId: true,
         birthdate: true,
         about: true,
+        isFilled: true,
         instagram: true,
         _count: {
           select: {
@@ -364,6 +365,8 @@ export class UserService {
           id: this.prismaService.mapStringIdToBuffer(userId),
         },
       })
+
+      this.sendbirdService.deleteUser(userId)
       return true
     } catch {
       throw new NotFoundUserException()
@@ -409,7 +412,7 @@ export class UserService {
       objectID: this.prismaService.mapBufferIdToString(user.id),
       lastName: user.lastName,
       firstName: user.firstName,
-      birthdateTimestamp: Date.parse(user.birthdate.toString()),
+      birthdateTimestamp: user.birthdate ? Date.parse(user.birthdate.toString()) : null,
       hasPicture: user.pictureId != null,
       training: {
         id: this.prismaService.mapBufferIdToString(user.training.id),
@@ -506,7 +509,7 @@ export class UserService {
         password: hash,
         roles: '[]',
         isVerified: true,
-        isFilled: true,
+        isFilled: false,
         isActived: true,
       },
     })
@@ -545,6 +548,8 @@ export class UserService {
           instagram: updateUserData.instagram,
           snapchat: updateUserData.snapchat,
           pictureId: updateUserData.pictureId,
+          about: updateUserData.about,
+          isFilled: updateUserData.isFilled,
           expoPushNotificationToken: updateUserData.expoPushNotificationToken,
         }),
         ...(updateUserData.trainingName && {
@@ -601,6 +606,18 @@ export class UserService {
             },
           },
         }),
+      },
+      include: {
+        training: true,
+        school: {
+          include: {
+            city: {
+              include: {
+                country: true,
+              },
+            },
+          },
+        },
       },
     })
 
