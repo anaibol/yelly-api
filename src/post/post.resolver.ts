@@ -4,6 +4,8 @@ import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { PostService } from '../post/post.service'
 import { CreatePostInput } from './create-post.input'
+import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
+import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { GetPostsArgs } from './get-post.args'
 import { PaginatedPosts } from './paginated-posts.model'
@@ -27,7 +29,7 @@ export class PostResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => Post)
+  @Mutation(() => Boolean)
   async createPost(@Args('input') createPostData: CreatePostInput, @CurrentUser() authUser) {
     return this.postService.create(createPostData, authUser.id)
   }
@@ -42,5 +44,20 @@ export class PostResolver {
   @Mutation(() => Boolean)
   async deletePost(@Args('input') deletePostData: DeletePostInput, @CurrentUser() authUser) {
     return this.postService.delete(deletePostData, authUser.id)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async deletePostReaction(@Args('input') deletePostReactionData: DeletePostReactionInput, @CurrentUser() authUser) {
+    return this.postService.deletePostReaction(deletePostReactionData, authUser.id)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async createOrUpdatePostReaction(
+    @Args('input') createPostReactionData: CreateOrUpdatePostReactionInput,
+    @CurrentUser() authUser
+  ) {
+    return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser.id)
   }
 }

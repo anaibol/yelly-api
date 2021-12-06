@@ -30,13 +30,13 @@ export class UserResolver {
 
   @Mutation(() => Token)
   async signIn(@Args('input') signInInput: SignInInput) {
-    const user = await this.authService.validateUser(signInInput.email, signInInput.password)
+    const userId = await this.authService.validateUser(signInInput.email, signInInput.password)
 
-    if (!user) {
+    if (!userId) {
       throw new UnauthorizedException()
     }
 
-    const accessToken = this.authService.getAccessToken(user.id)
+    const accessToken = await this.authService.getAccessToken(this.prismaService.mapBufferIdToString(userId))
 
     return {
       accessToken,
@@ -46,7 +46,7 @@ export class UserResolver {
   @Query(() => Me)
   @UseGuards(AuthGuard)
   async me(@CurrentUser() authUser) {
-    const user = await this.userService.findOne(authUser.id)
+    const user = await this.userService.findMe(authUser.id)
 
     if (!user) return new UnauthorizedException()
 

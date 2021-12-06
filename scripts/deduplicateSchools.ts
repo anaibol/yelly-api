@@ -28,12 +28,12 @@ async function main() {
         googlePlaceId: groupSchool.googlePlaceId,
       },
       include: {
-        userTraining: {
-          select: {
-            id: true,
-            createdAt: true,
-          },
-        },
+        // userTraining: {
+        //   select: {
+        //     id: true,
+        //     createdAt: true,
+        //   },
+        // },
       },
     })
     const schoolName = schools[0].name

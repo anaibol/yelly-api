@@ -6,14 +6,10 @@ import { DEFAULT_LIMIT } from '../common/pagination.constant'
 export class NotificationService {
   constructor(private prismaService: PrismaService) {}
 
-  async find(userEmail: string, currentCursor, limit = DEFAULT_LIMIT) {
-    const { id: userTargetId } = await this.prismaService.user.findUnique({
-      where: { email: userEmail },
-      select: { id: true },
-    })
+  async find(userId: string, currentCursor, limit = DEFAULT_LIMIT) {
     const notifications = await this.prismaService.notification.findMany({
       where: {
-        userTargetId,
+        userTargetId: this.prismaService.mapStringIdToBuffer(userId),
       },
       ...(currentCursor && {
         cursor: {

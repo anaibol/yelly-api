@@ -7,7 +7,7 @@ import { TagIndexAlgoliaInterface } from './tag-index-algolia.interface'
 @Injectable()
 export class TagService {
   constructor(private prismaService: PrismaService, private algoliaService: AlgoliaService) {}
-  async syncTagIndexWithAlgolia(tagText: string, post) {
+  async syncTagIndexWithAlgolia(tagText: string) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
 
     const tag = await this.prismaService.tag.findFirst({
@@ -36,6 +36,7 @@ export class TagService {
       },
     })
     // INFO: Map data to fit Tag index algolia interface
+
     const lastUsers = this.mapAuthorBufferIdToUUID(tag.posts)
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       id: tag.id,
@@ -46,9 +47,9 @@ export class TagService {
         value: 1,
       },
       createdAtTimestamp: Date.parse(tag.createdAt.toString()),
-      updatedAtTimestamp: Date.parse(post.createdAt.toString()),
+      // updatedAtTimestamp: Date.parse(post.createdAt.toString()),
       createdAt: tag.createdAt,
-      updatedAt: post.createdAt,
+      // updatedAt: post.createdAt,
     }
 
     return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tagText)
@@ -87,11 +88,9 @@ export class TagService {
       },
     })
 
-    const lastUsers = this.mapAuthorBufferIdToUUID(liveTag.posts)
+    if (!liveTag) return null
 
-    if (liveTag == null) {
-      throw new NotFoundLiveTagException()
-    }
+    const lastUsers = this.mapAuthorBufferIdToUUID(liveTag.posts)
 
     return {
       ...liveTag,
