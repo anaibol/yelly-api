@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
 import axios from 'axios'
 import * as bcrypt from 'bcrypt'
 import { randomBytes, randomUUID } from 'crypto'
@@ -522,12 +522,19 @@ export class UserService {
     }
   }
 
-  async updateMe(updateUserData: UpdateUserInput, id: string): Promise<boolean> {
-    const schoolData = updateUserData.schoolGooglePlaceId && (await this.getSchool(updateUserData.schoolGooglePlaceId))
+  async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<boolean> {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: this.prismaService.mapStringIdToBuffer(userId) },
+    })
 
+    if (!user) {
+      throw new UnauthorizedException()
+    }
+
+    const schoolData = updateUserData.schoolGooglePlaceId && (await this.getSchool(updateUserData.schoolGooglePlaceId))
     const updatedUser = await this.prismaService.user.update({
       where: {
-        id: this.prismaService.mapStringIdToBuffer(id),
+        id: this.prismaService.mapStringIdToBuffer(userId),
       },
       data: {
         ...cleanUndefinedFromObj({
@@ -623,7 +630,7 @@ export class UserService {
       this.syncUsersIndexWithAlgolia(updatedUser)
     }
 
-    return !!updatedUser.id
+    return true
   }
 
   async getGooglePlaceById(googlePlaceId: string) {
