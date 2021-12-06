@@ -37,4 +37,9 @@ export class SendbirdService {
     const response = await this.client.put(`/v3/users/${userId}`, { issue_access_token: true })
     return response.data.access_token
   }
+
+  async deleteUser(userId: string): Promise<boolean> {
+    await this.client.delete(`/v3/users/${userId}`)
+    return true
+  }
 }

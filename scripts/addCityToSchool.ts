@@ -10,11 +10,9 @@ async function main() {
 
   const allSchools = await prisma.school.findMany({
     where: {
-      NOT: [
-        {
-          googlePlaceId: '',
-        },
-      ],
+      NOT: {
+        googlePlaceId: null,
+      },
       cityId: null,
       isValid: true,
     },
@@ -23,11 +21,12 @@ async function main() {
       name: true,
       googlePlaceId: true,
     },
-    take: 1000,
+    take: 150,
   })
 
   //console.log(allSchools)
   allSchools.map(async ({ id, googlePlaceId }) => {
+    console.log(googlePlaceId)
     await prisma.school.update({
       where: {
         id,
@@ -36,21 +35,23 @@ async function main() {
         isValid: false,
       },
     })
+
     const googlePlaceCityName = await getCityNameWithCountry(googlePlaceId)
 
-    console.log(googlePlaceId + ' ' + googlePlaceCityName)
     if (googlePlaceCityName) {
-      const predictions = await getGoogleCityByName(googlePlaceCityName)
+      const googleCity = await getGoogleCityByName(googlePlaceCityName)
 
-      if (predictions[0]) {
-        const googlePlaceCity = await getGooglePlaceDetails(predictions[0].place_id)
-
+      if (googleCity) {
+        const googlePlaceCity = await getGooglePlaceDetails(googleCity.place_id)
+        //console.log({ googlePlaceCity })
         if (googlePlaceCity) {
           let cityExist = await prisma.city.findFirst({
             where: {
               googlePlaceId: googlePlaceCity.place_id,
             },
           })
+
+          //console.log({ cityExist })
 
           if (!cityExist) {
             const address_components = googlePlaceCity.address_components
@@ -87,7 +88,6 @@ async function main() {
             })
           }
 
-          console.log(googlePlaceId + ' ' + cityExist.name)
           await prisma.school.update({
             where: {
               id,
@@ -98,8 +98,8 @@ async function main() {
             },
           })
         }
-      }
-    }
+      } else console.log('not predictions ' + googlePlaceId + ' ' + googlePlaceCityName)
+    } else console.log('city name not found ' + googlePlaceId)
   })
 }
 
@@ -113,12 +113,11 @@ async function getCityNameWithCountry(googlePlaceId: string): Promise<string> {
   )
 
   if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined') return null
-  const { address_components: addressComponents } = response.data.result.address_components
+  const { address_components: addressComponents } = response.data.result
 
-  const locality = addressComponents.find((component) => component.types.includes('locality'))
-  const postal_town = addressComponents.find((component) => component.types.includes('postal_town'))
+  const cityName = getCityName(addressComponents)
 
-  return locality || postal_town
+  return cityName + getCountryName(addressComponents)
 }
 
 async function getGooglePlaceDetails(googlePlaceId: string) {
@@ -129,16 +128,75 @@ async function getGooglePlaceDetails(googlePlaceId: string) {
   return response.data.result as google.maps.places.PlaceResult | null
 }
 
-async function getGoogleCityByName(cityName: string) {
-  const { data } = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
+async function getGoogleCityByName(cityName: string): Promise<google.maps.GeocoderResult> {
+  const { data } = await axios.get<google.maps.GeocoderResponse>('https://maps.googleapis.com/maps/api/geocode/json', {
     params: {
-      types: '(cities)',
       language: 'fr',
-      input: cityName,
+      address: cityName,
       key: key,
     },
   })
-  return data.predictions as google.maps.places.AutocompletePrediction[]
+
+  return data.results[0]
+}
+
+type AddressComponents = {
+  country: string
+  locality: string
+  postal_town: string
+  administrative_area_level_3: string
+  administrative_area_level_2: string
+  administrative_area_level_1: string
+}
+
+function getAddressComponents(addressComponents: google.maps.GeocoderAddressComponent[]): AddressComponents {
+  const country = addressComponents.find((component) => component.types.includes('country'))
+  const locality = addressComponents.find((component) => component.types.includes('locality'))
+  const postal_town = addressComponents.find((component) => component.types.includes('postal_town'))
+
+  const administrative_area_level_3 = addressComponents.find((component) =>
+    component.types.includes('administrative_area_level_3')
+  )
+
+  const administrative_area_level_2 = addressComponents.find((component) =>
+    component.types.includes('administrative_area_level_2')
+  )
+  const administrative_area_level_1 = addressComponents.find((component) =>
+    component.types.includes('administrative_area_level_1')
+  )
+
+  return {
+    country: country?.long_name,
+    locality: locality?.long_name,
+    postal_town: postal_town?.long_name,
+    administrative_area_level_3: administrative_area_level_3?.long_name,
+    administrative_area_level_2: administrative_area_level_2?.long_name,
+    administrative_area_level_1: administrative_area_level_1?.long_name,
+  }
+}
+
+function getCityName(addressComponents: google.maps.GeocoderAddressComponent[]): string {
+  const {
+    locality,
+    postal_town,
+    administrative_area_level_3,
+    administrative_area_level_2,
+    administrative_area_level_1,
+  } = getAddressComponents(addressComponents)
+
+  const administrativeArea = administrative_area_level_3 || administrative_area_level_2 || administrative_area_level_1
+
+  if (locality) return locality + ' ' + administrativeArea
+
+  if (postal_town) return postal_town + ' ' + administrativeArea
+
+  return administrativeArea
+}
+
+function getCountryName(addressComponents: google.maps.GeocoderAddressComponent[]): string {
+  const { country } = getAddressComponents(addressComponents)
+
+  return country
 }
 
 main()
