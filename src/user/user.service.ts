@@ -118,7 +118,7 @@ export class UserService {
                 authorId: true,
               },
               distinct: 'reaction',
-              take: 3,
+              take: 2,
             },
             _count: {
               select: {
@@ -293,7 +293,7 @@ export class UserService {
                 authorId: true,
               },
               distinct: 'reaction',
-              take: 3,
+              take: 2,
             },
             _count: {
               select: {

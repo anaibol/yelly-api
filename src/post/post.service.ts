@@ -87,7 +87,7 @@ export class PostService {
             authorId: true,
           },
           distinct: 'reaction',
-          take: 3,
+          take: 2,
         },
         author: {
           select: {
