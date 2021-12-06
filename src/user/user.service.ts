@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import axios from 'axios'
 import * as bcrypt from 'bcrypt'
 import { randomBytes, randomUUID } from 'crypto'
@@ -528,7 +528,7 @@ export class UserService {
     })
 
     if (!user) {
-      throw new UnauthorizedException()
+      throw new NotFoundException()
     }
 
     const schoolData = updateUserData.schoolGooglePlaceId && (await this.getSchool(updateUserData.schoolGooglePlaceId))
