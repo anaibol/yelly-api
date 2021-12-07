@@ -38,6 +38,6 @@ export class UpdateUserInput {
   @Field(() => String, { nullable: true })
   about: string
 
-  @Field({ defaultValue: false })
-  isFilled: boolean
+  @Field(() => Boolean, { nullable: true })
+  isFilled?: boolean
 }

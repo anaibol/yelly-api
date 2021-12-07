@@ -2,6 +2,26 @@ import { Injectable } from '@nestjs/common'
 import axios, { Axios } from 'axios'
 import { PrismaService } from './prisma.service'
 
+type SendbirdUser = {
+  user_id: string
+  nickname: string
+  profile_url: string
+  issue_access_token: true
+  metadata: {
+    firstName: string
+    lastName: string
+    birthdate: Date
+  }
+}
+
+type IncomingUser = {
+  id: Buffer
+  firstName: string
+  lastName: string
+  pictureId: string
+  birthdate: Date
+}
+
 @Injectable()
 export class SendbirdService {
   client: Axios
@@ -16,9 +36,10 @@ export class SendbirdService {
     })
   }
 
-  async createUser(user) {
+  async createUser(user: IncomingUser) {
     const profileUrl = user.pictureId ? 'http://yelly.imgix.net/' + user.pictureId + '?format=auto' : ''
-    const response = await this.client.post('/v3/users', {
+
+    const sendbirdUser: SendbirdUser = {
       user_id: this.prismaService.mapBufferIdToString(user.id),
       nickname: user.firstName,
       profile_url: profileUrl,
@@ -28,7 +49,9 @@ export class SendbirdService {
         lastName: user.lastName,
         birthdate: user.birthdate,
       },
-    })
+    }
+    console.log({ sendbirdUser })
+    const response = await this.client.post('/v3/users', sendbirdUser)
 
     return response.data
   }

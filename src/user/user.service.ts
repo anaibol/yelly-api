@@ -404,7 +404,50 @@ export class UserService {
     return true
   }
 
-  async syncUsersIndexWithAlgolia(user) {
+  async syncUsersIndexWithAlgolia(userId: Buffer) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        isFilled: true,
+        pictureId: true,
+        birthdate: true,
+        training: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        school: {
+          select: {
+            id: true,
+            name: true,
+            postalCode: true,
+            googlePlaceId: true,
+            lat: true,
+            lng: true,
+            city: {
+              select: {
+                id: true,
+                name: true,
+                googlePlaceId: true,
+                lat: true,
+                lng: true,
+                country: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
     const usersIndex = this.algoliaService.initIndex('USERS')
 
     const newUserAlgoliaObject: UserIndexAlgoliaInterface = {
@@ -496,6 +539,9 @@ export class UserService {
       where: {
         email,
       },
+      select: {
+        id: true,
+      },
     })
 
     if (userExists) throw new ForbiddenException('Email exists')
@@ -525,6 +571,10 @@ export class UserService {
   async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<boolean> {
     const user = await this.prismaService.user.findUnique({
       where: { id: this.prismaService.mapStringIdToBuffer(userId) },
+      select: {
+        id: true,
+        isFilled: true,
+      },
     })
 
     if (!user) {
@@ -532,9 +582,14 @@ export class UserService {
     }
 
     const schoolData = updateUserData.schoolGooglePlaceId && (await this.getSchool(updateUserData.schoolGooglePlaceId))
+
     const updatedUser = await this.prismaService.user.update({
       where: {
         id: this.prismaService.mapStringIdToBuffer(userId),
+      },
+      select: {
+        id: true,
+        isFilled: true,
       },
       data: {
         ...cleanUndefinedFromObj({
@@ -605,32 +660,27 @@ export class UserService {
           },
         }),
       },
+    })
+
+    if (updatedUser.isFilled) this.syncUsersIndexWithAlgolia(user.id)
+    if (!user.isFilled && updatedUser.isFilled) this.createSendbirdUser(user.id)
+
+    return true
+  }
+
+  async createSendbirdUser(userId: Buffer) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
       select: {
         id: true,
         firstName: true,
         lastName: true,
-        isFilled: true,
         pictureId: true,
         birthdate: true,
-        training: true,
-        school: {
-          include: {
-            city: {
-              include: {
-                country: true,
-              },
-            },
-          },
-        },
       },
     })
 
-    if (updatedUser.isFilled) {
-      this.sendbirdService.createUser(updatedUser)
-      this.syncUsersIndexWithAlgolia(updatedUser)
-    }
-
-    return true
+    this.sendbirdService.createUser(user)
   }
 
   async getGooglePlaceById(googlePlaceId: string) {

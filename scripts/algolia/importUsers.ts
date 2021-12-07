@@ -1,6 +1,7 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 import { stringify as uuidStringify } from 'uuid'
+import { UserIndexAlgoliaInterface } from '../../src/user/user-index-algolia.interface'
 
 async function main() {
   const prisma = new PrismaClient()
@@ -43,7 +44,7 @@ async function main() {
     const algoliaClient = await algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_API_KEY)
     const userIndex = await algoliaClient.initIndex('dev_USERS')
     console.log('insert ' + skip)
-    const algoliaUsers = []
+    const algoliaUsers: UserIndexAlgoliaInterface[] = []
     users
       .filter(
         (user) =>
