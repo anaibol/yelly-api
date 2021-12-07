@@ -82,15 +82,10 @@ export class UserResolver {
   @Mutation(() => Token)
   async resetPassword(@Args('input') resetPasswordInput: ResetPasswordInput) {
     const user = await this.userService.resetPassword(resetPasswordInput.password, resetPasswordInput.resetToken)
-    if (user) {
-      const accessToken = this.authService.getAccessToken(user.id)
-      return {
-        accessToken,
-      }
-    }
 
+    const accessToken = this.authService.getAccessToken(user.id)
     return {
-      accessToken: '',
+      accessToken,
     }
   }
 
