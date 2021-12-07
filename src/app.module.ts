@@ -20,7 +20,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
       //   path: join(process.cwd(), 'src/graphql.ts'),
       //   outputAs: 'class',
       // },
-      debug: true,
+      debug: process.env.NODE_ENV !== 'production',
       autoSchemaFile: join(process.cwd(), '../schema.gql'),
       sortSchema: true,
       context: ({ req, res }): any => ({ req, res }),
