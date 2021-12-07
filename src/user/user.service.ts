@@ -12,6 +12,7 @@ import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { UserIndexAlgoliaInterface } from './user-index-algolia.interface'
+import { userInfo } from 'os'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
@@ -350,12 +351,46 @@ export class UserService {
     return true
   }
 
+  async resetPassword(password: string, resetToken: string) {
+    const user = await this.prismaService.user.findFirst({
+      where: {
+        resetToken,
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    if (!user) throw new NotFoundUserException()
+
+    const saltOrRounds = 10
+    const hash = await bcrypt.hash(password, saltOrRounds)
+
+    const userUpdated = await this.prismaService.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        password: hash,
+        resetToken: null,
+      },
+    })
+
+    if (!userUpdated) throw new NotFoundUserException()
+
+    const formattedUser = {
+      ...user,
+      id: this.prismaService.mapBufferIdToString(user.id),
+    }
+    return formattedUser
+  }
+
   async refreshSendbirdAccessToken(userId: string) {
     return this.sendbirdService.getAccessToken(userId)
   }
 
   private generateResetToken() {
-    return randomBytes(5).toString('hex')
+    return randomBytes(25).toString('hex')
   }
 
   async deleteById(userId: string) {
