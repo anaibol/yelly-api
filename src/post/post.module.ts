@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { CacheModule, Module } from '@nestjs/common'
 import { AuthModule } from '../auth/auth.module'
 import { CoreModule } from '../core/core.module'
 import { UserModule } from '../user/user.module'
@@ -8,7 +8,7 @@ import { PostService } from './post.service'
 import { TagService } from './tag.service'
 
 @Module({
-  imports: [CoreModule, AuthModule, UserModule],
+  imports: [CacheModule.register(), CoreModule, AuthModule, UserModule],
   providers: [PostService, PostResolver, TagService, TagResolver],
   exports: [PostService],
 })
