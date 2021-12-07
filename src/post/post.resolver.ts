@@ -53,7 +53,7 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Post)
-  async deletePost(@Args('input') deletePostData: DeletePostInput, @CurrentUser() authUser: : AuthUser) {
+  async deletePost(@Args('input') deletePostData: DeletePostInput, @CurrentUser() authUser: AuthUser) {
     return this.postService.delete(deletePostData, authUser.id)
   }
 

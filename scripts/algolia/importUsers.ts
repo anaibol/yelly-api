@@ -1,7 +1,6 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 import { UserIndexAlgoliaInterface } from '../../src/user/user-index-algolia.interface'
-
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 
 async function main() {
