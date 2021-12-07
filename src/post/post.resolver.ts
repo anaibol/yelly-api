@@ -3,6 +3,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { PostService } from '../post/post.service'
+import { AuthUser } from '../auth/auth.service'
 import { CreatePostInput } from './create-post.input'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
@@ -40,7 +41,7 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Post)
-  async createPost(@Args('input') createPostData: CreatePostInput, @CurrentUser() authUser) {
+  async createPost(@Args('input') createPostData: CreatePostInput, @CurrentUser() authUser: AuthUser) {
     return this.postService.create(createPostData, authUser.id)
   }
 
@@ -52,13 +53,16 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Post)
-  async deletePost(@Args('input') deletePostData: DeletePostInput, @CurrentUser() authUser) {
+  async deletePost(@Args('input') deletePostData: DeletePostInput, @CurrentUser() authUser: : AuthUser) {
     return this.postService.delete(deletePostData, authUser.id)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async deletePostReaction(@Args('input') deletePostReactionData: DeletePostReactionInput, @CurrentUser() authUser) {
+  async deletePostReaction(
+    @Args('input') deletePostReactionData: DeletePostReactionInput,
+    @CurrentUser() authUser: AuthUser
+  ) {
     return this.postService.deletePostReaction(deletePostReactionData, authUser.id)
   }
 

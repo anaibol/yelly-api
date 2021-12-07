@@ -4,11 +4,13 @@ import { PrismaService } from '../core/prisma.service'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 
+export type AuthUser = { id: string } | null
+
 @Injectable()
 export class AuthService {
   constructor(private prismaService: PrismaService, private readonly jwtService: JwtService) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<AuthUser> {
     if (process.env.ADMIN_MODE === 'true' && process.env.NODE_ENV === 'production' && !email.endsWith('@yelly.app'))
       return null
 
@@ -19,7 +21,7 @@ export class AuthService {
     const hash = user.password.replace('$2y$', '$2b$')
     if (!(await bcrypt.compare(password, hash))) return null
 
-    return user.id
+    return { id: this.prismaService.mapBufferIdToString(user.id) }
   }
 
   async getAccessToken(userId: string): Promise<string> {
