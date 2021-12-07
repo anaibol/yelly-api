@@ -13,7 +13,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
   imports: [
     CacheModule.register(),
     GraphQLModule.forRoot({
-      playground: true,
+      // playground: true,
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       // typePaths: ['./**/*.gql'],
       // definitions: {
