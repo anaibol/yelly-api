@@ -6,12 +6,15 @@ import { parse as uuidParse, stringify as uuidStringify } from 'uuid'
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     super({
-      log: [
-        { emit: 'event', level: 'query' },
-        { emit: 'stdout', level: 'info' },
-        { emit: 'stdout', level: 'warn' },
-        { emit: 'stdout', level: 'error' },
-      ],
+      log:
+        process.env.NODE_ENV !== 'production'
+          ? [
+              { emit: 'event', level: 'query' },
+              { emit: 'stdout', level: 'info' },
+              { emit: 'stdout', level: 'warn' },
+              { emit: 'stdout', level: 'error' },
+            ]
+          : [],
     })
   }
 
@@ -19,28 +22,30 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await this.$connect()
 
-    this.$use(async (params, next) => {
-      const before = Date.now()
+    if (process.env.NODE_ENV !== 'production') {
+      this.$use(async (params, next) => {
+        const before = Date.now()
 
-      const result = await next(params)
+        const result = await next(params)
 
-      const after = Date.now()
+        const after = Date.now()
 
-      console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
+        console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
 
-      return result
-    })
+        return result
+      })
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    this.$on('query', async (e) => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      console.log('Query: ' + e.query)
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      console.log('Duration: ' + e.duration + 'ms')
-    })
+      this.$on('query', async (e) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        console.log('Query: ' + e.query)
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        console.log('Duration: ' + e.duration + 'ms')
+      })
+    }
   }
 
   async enableShutdownHooks(app: INestApplication) {

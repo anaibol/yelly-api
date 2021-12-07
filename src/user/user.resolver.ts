@@ -79,6 +79,14 @@ export class UserResolver {
 
   @Mutation(() => Token)
   async signUp(@Args('input') signUpData: SignUpInput) {
+    if (
+      process.env.ADMIN_MODE === 'true' &&
+      process.env.NODE_ENV === 'production' &&
+      !signUpData.email.endsWith('@yelly.app')
+    ) {
+      throw new UnauthorizedException()
+    }
+
     const user = await this.userService.signUp(signUpData)
 
     const accessToken = this.authService.getAccessToken(user.id)

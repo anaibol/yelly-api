@@ -9,6 +9,9 @@ export class AuthService {
   constructor(private prismaService: PrismaService, private readonly jwtService: JwtService) {}
 
   async validateUser(email: string, password: string): Promise<any> {
+    if (process.env.ADMIN_MODE === 'true' && process.env.NODE_ENV === 'production' && !email.endsWith('@yelly.app'))
+      return null
+
     const user = await this.prismaService.user.findUnique({ where: { email }, select: { password: true, id: true } })
 
     if (!user) return null
