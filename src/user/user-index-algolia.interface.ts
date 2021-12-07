@@ -1,8 +1,9 @@
 export interface UserIndexAlgoliaInterface {
   id: string
   objectID: string
-  lastName: string
   firstName: string
+  lastName: string
+  pictureId: string
   birthdateTimestamp: number
   hasPicture: boolean
   training: {

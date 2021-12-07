@@ -1,4 +1,5 @@
 import { UserIndexAlgoliaInterface } from 'src/user/user-index-algolia.interface'
+import { stringify as uuidStringify } from 'uuid'
 
 export const algoliaUserSelect = {
   id: true,
@@ -40,29 +41,32 @@ export const algoliaUserSelect = {
   },
 }
 
+const bufferIdToString = (buffer: Buffer) => uuidStringify(Buffer.from(buffer))
+
 export function mapAlgoliaUser(user): UserIndexAlgoliaInterface {
   return {
-    id: this.prismaService.mapBufferIdToString(user.id),
-    objectID: this.prismaService.mapBufferIdToString(user.id),
-    lastName: user.lastName,
+    id: bufferIdToString(user.id),
+    objectID: bufferIdToString(user.id),
     firstName: user.firstName,
+    lastName: user.lastName,
+    pictureId: user.pictureId,
     birthdateTimestamp: user.birthdate ? Date.parse(user.birthdate.toString()) : null,
     hasPicture: user.pictureId != null,
     training: {
-      id: this.prismaService.mapBufferIdToString(user.training.id),
+      id: bufferIdToString(user.training.id),
       name: user.training.name,
     },
     school: {
-      id: this.prismaService.mapBufferIdToString(user.school.id),
+      id: bufferIdToString(user.school.id),
       name: user.school.name,
       postalCode: user.school.postalCode,
       googlePlaceId: user.school.googlePlaceId,
       city: {
-        id: this.prismaService.mapBufferIdToString(user.school.city.id),
+        id: bufferIdToString(user.school.city.id),
         name: user.school.city.name,
         googlePlaceId: user.school.city.googlePlaceId,
         country: {
-          id: this.prismaService.mapBufferIdToString(user.school.city.country.id),
+          id: bufferIdToString(user.school.city.country.id),
           name: user.school.city.country.name,
         },
         _geoloc: {

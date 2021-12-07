@@ -1,9 +1,7 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
-import { stringify as uuidStringify } from 'uuid'
 import { UserIndexAlgoliaInterface } from '../../src/user/user-index-algolia.interface'
-
-import { algoliaUserSelect } from '../../src/utils/algolia'
+import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 
 async function main() {
   const prisma = new PrismaClient()
@@ -34,41 +32,7 @@ async function main() {
     const userIndex = await algoliaClient.initIndex('dev_USERS')
     console.log('insert ' + skip)
 
-    const algoliaUsers: UserIndexAlgoliaInterface[] = users.map((user) => ({
-      id: uuidStringify(Buffer.from(user.id)),
-      objectID: uuidStringify(Buffer.from(user.id)),
-      lastName: user.lastName,
-      firstName: user.firstName,
-      birthdateTimestamp: user.birthdate ? Date.parse(user.birthdate.toString()) : null,
-      hasPicture: user.pictureId != null,
-      training: {
-        id: uuidStringify(Buffer.from(user.training.id)),
-        name: user.training.name,
-      },
-      school: {
-        id: uuidStringify(Buffer.from(user.school.id)),
-        name: user.school.name,
-        postalCode: user.school.postalCode,
-        googlePlaceId: user.school.googlePlaceId,
-        city: {
-          id: uuidStringify(Buffer.from(user.school.city.id)),
-          name: user.school.city.name,
-          googlePlaceId: user.school.city.googlePlaceId,
-          country: {
-            id: uuidStringify(Buffer.from(user.school.city.country.id)),
-            name: user.school.city.country.name,
-          },
-          _geoloc: {
-            lat: user.school.city.lat,
-            lng: user.school.city.lng,
-          },
-        },
-        _geoloc: {
-          lat: user.school.lat,
-          lng: user.school.lng,
-        },
-      },
-    }))
+    const algoliaUsers: UserIndexAlgoliaInterface[] = users.map((user) => mapAlgoliaUser(user))
 
     userIndex.partialUpdateObjects(algoliaUsers, { createIfNotExists: true })
   }
