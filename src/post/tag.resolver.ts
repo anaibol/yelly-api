@@ -7,6 +7,7 @@ import { CreateLiveTagInput } from './create-live-tag.input'
 import { LiveTagAuthUser } from './live-tag-auth-user.model'
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
+import { AuthUser } from '../auth/auth.service'
 
 @Resolver()
 export class TagResolver {
@@ -14,7 +15,7 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => LiveTagAuthUser, { name: 'liveTag', nullable: true })
-  async getLiveTag(@CurrentUser() authUser) {
+  async getLiveTag(@CurrentUser() authUser: AuthUser) {
     const liveTag = await this.tagService.getLiveTag()
 
     if (!liveTag) return
@@ -26,7 +27,7 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Tag)
-  createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() authUser) {
+  createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() authUser: AuthUser) {
     return this.tagService.createLiveTag(createLiveTag.text, authUser.id)
   }
 }

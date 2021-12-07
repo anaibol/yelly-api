@@ -9,9 +9,8 @@ import { UserService } from './user.service'
 import { SignUpInput } from './sign-up.input'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
-import { AuthService } from '../auth/auth.service'
+import { AuthService, AuthUser } from '../auth/auth.service'
 import { PrismaService } from '../core/prisma.service'
-
 import { NotificationService } from '../notification/notification.service'
 import { Token } from './token.model'
 import { SendbirdAccessToken } from './sendbirdAccessToken'
@@ -30,13 +29,13 @@ export class UserResolver {
 
   @Mutation(() => Token)
   async signIn(@Args('input') signInInput: SignInInput) {
-    const userId = await this.authService.validateUser(signInInput.email, signInInput.password)
+    const user = await this.authService.validateUser(signInInput.email, signInInput.password)
 
-    if (!userId) {
+    if (!user) {
       throw new UnauthorizedException()
     }
 
-    const accessToken = await this.authService.getAccessToken(this.prismaService.mapBufferIdToString(userId))
+    const accessToken = await this.authService.getAccessToken(user.id)
 
     return {
       accessToken,
@@ -45,7 +44,7 @@ export class UserResolver {
 
   @Query(() => Me)
   @UseGuards(AuthGuard)
-  async me(@CurrentUser() authUser) {
+  async me(@CurrentUser() authUser: AuthUser) {
     const user = await this.userService.findMe(authUser.id)
 
     if (!user) return new UnauthorizedException()
@@ -66,7 +65,7 @@ export class UserResolver {
 
   @Mutation(() => SendbirdAccessToken)
   @UseGuards(AuthGuard)
-  async refreshSendbirdAccessToken(@CurrentUser() authUser) {
+  async refreshSendbirdAccessToken(@CurrentUser() authUser: AuthUser) {
     const sendbirdAccessToken = await this.userService.refreshSendbirdAccessToken(authUser.id)
 
     return { sendbirdAccessToken }
@@ -99,19 +98,19 @@ export class UserResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
-  updateMe(@Args('input') updateUserData: UpdateUserInput, @CurrentUser() authUser) {
+  updateMe(@Args('input') updateUserData: UpdateUserInput, @CurrentUser() authUser: AuthUser) {
     return this.userService.updateMe(updateUserData, authUser.id)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async deleteAuthUser(@CurrentUser() authUser) {
+  async deleteAuthUser(@CurrentUser() authUser: AuthUser) {
     return this.userService.deleteById(authUser.id)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @CurrentUser() authUser) {
+  toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @CurrentUser() authUser: AuthUser) {
     return this.userService.toggleFollow(authUser.id, toggleFollowInput.otherUserId, toggleFollowInput.value)
   }
 
@@ -127,7 +126,7 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async isFollowingAuthUser(@Parent() user: User, @CurrentUser() authUser) {
+  async isFollowingAuthUser(@Parent() user: User, @CurrentUser() authUser: AuthUser) {
     return this.userService.isFollowingAuthUser(user.id, authUser.id)
   }
 }
