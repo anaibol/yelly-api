@@ -11,6 +11,7 @@ import { DeletePostInput } from './delete-post.input'
 import { GetPostsArgs } from './get-post.args'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Cache } from 'cache-manager'
+import { Post } from './post.model'
 
 @Resolver()
 export class PostResolver {
@@ -39,7 +40,7 @@ export class PostResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
+  @Mutation(() => Post)
   async createPost(@Args('input') createPostData: CreatePostInput, @CurrentUser() authUser: AuthUser) {
     return this.postService.create(createPostData, authUser.id)
   }

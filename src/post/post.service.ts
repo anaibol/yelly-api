@@ -126,10 +126,12 @@ export class PostService {
 
   async create(createPostInput: CreatePostInput, authUserId: string) {
     const { text, tag: tagText } = createPostInput
-
     const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
 
-    await this.prismaService.post.create({
+    return this.prismaService.post.create({
+      select: {
+        id: true,
+      },
       data: {
         text,
         author: {
@@ -158,8 +160,6 @@ export class PostService {
     })
 
     // this.tagService.syncTagIndexWithAlgolia(tagText)
-
-    return true
   }
 
   async delete(createPostInput: DeletePostInput, authUserId: string) {
