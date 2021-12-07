@@ -164,15 +164,16 @@ export class PostService {
 
   async delete(createPostInput: DeletePostInput, authUserId: string) {
     if (!authUserId) return new UnauthorizedException()
+    const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
 
-    const deleted = await this.prismaService.post.deleteMany({
+    return this.prismaService.post.delete({
+      select: {
+        id: true,
+      },
       where: {
-        id: createPostInput.id,
-        authorId: this.prismaService.mapStringIdToBuffer(authUserId),
+        authorId_id: { id: createPostInput.id, authorId },
       },
     })
-
-    return deleted.count > 0
   }
 
   async createOrUpdatePostReaction(
