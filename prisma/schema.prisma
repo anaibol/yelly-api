@@ -249,6 +249,7 @@ model Post {
   reactions  PostReaction[]
   viewsCount Int            @default(0)
 
+  @@unique([authorId, id], map: "author_post_id_fkey")
   @@index([authorId], map: "post_author_id_fkey")
   @@map("post")
 }
