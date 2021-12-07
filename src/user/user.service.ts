@@ -12,6 +12,7 @@ import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { UserIndexAlgoliaInterface } from './user-index-algolia.interface'
+import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
@@ -407,84 +408,12 @@ export class UserService {
   async syncUsersIndexWithAlgolia(userId: Buffer) {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        isFilled: true,
-        pictureId: true,
-        birthdate: true,
-        training: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        school: {
-          select: {
-            id: true,
-            name: true,
-            postalCode: true,
-            googlePlaceId: true,
-            lat: true,
-            lng: true,
-            city: {
-              select: {
-                id: true,
-                name: true,
-                googlePlaceId: true,
-                lat: true,
-                lng: true,
-                country: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      select: algoliaUserSelect,
     })
 
     const usersIndex = this.algoliaService.initIndex('USERS')
 
-    const newUserAlgoliaObject: UserIndexAlgoliaInterface = {
-      id: this.prismaService.mapBufferIdToString(user.id),
-      objectID: this.prismaService.mapBufferIdToString(user.id),
-      lastName: user.lastName,
-      firstName: user.firstName,
-      birthdateTimestamp: user.birthdate ? Date.parse(user.birthdate.toString()) : null,
-      hasPicture: user.pictureId != null,
-      training: {
-        id: this.prismaService.mapBufferIdToString(user.training.id),
-        name: user.training.name,
-      },
-      school: {
-        id: this.prismaService.mapBufferIdToString(user.school.id),
-        name: user.school.name,
-        postalCode: user.school.postalCode,
-        googlePlaceId: user.school.googlePlaceId,
-        city: {
-          id: this.prismaService.mapBufferIdToString(user.school.city.id),
-          name: user.school.city.name,
-          googlePlaceId: user.school.city.googlePlaceId,
-          country: {
-            id: this.prismaService.mapBufferIdToString(user.school.city.country.id),
-            name: user.school.city.country.name,
-          },
-          _geoloc: {
-            lat: user.school.city.lat,
-            lng: user.school.city.lng,
-          },
-        },
-        _geoloc: {
-          lat: user.school.lat,
-          lng: user.school.lng,
-        },
-      },
-    }
+    const newUserAlgoliaObject = mapAlgoliaUser(user)
 
     return this.algoliaService.partialUpdateObject(
       usersIndex,
