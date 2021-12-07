@@ -29,6 +29,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       return null
     }
 
-    return id
+    return { id }
   }
 }
