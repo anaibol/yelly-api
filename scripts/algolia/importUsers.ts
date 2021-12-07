@@ -1,6 +1,5 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
-import { UserIndexAlgoliaInterface } from '../../src/user/user-index-algolia.interface'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 
 async function main() {
@@ -32,7 +31,7 @@ async function main() {
     const userIndex = await algoliaClient.initIndex('dev_USERS')
     console.log('insert ' + skip)
 
-    const algoliaUsers: UserIndexAlgoliaInterface[] = users.map((user) => mapAlgoliaUser(user))
+    const algoliaUsers = users.map((user) => mapAlgoliaUser(user))
 
     userIndex.partialUpdateObjects(algoliaUsers, { createIfNotExists: true })
   }

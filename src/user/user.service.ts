@@ -11,7 +11,6 @@ import { SchoolService } from './school.service'
 import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
-import { UserIndexAlgoliaInterface } from './user-index-algolia.interface'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 
 const cleanUndefinedFromObj = (obj) =>
