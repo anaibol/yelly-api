@@ -17,6 +17,7 @@ import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { SignInInput } from './sign-in.input'
 
 import { UpdateUserInput } from './update-user.input'
+import { ResetPasswordInput } from './reset-password-.input'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -71,9 +72,20 @@ export class UserResolver {
     return { sendbirdAccessToken }
   }
 
-  @Mutation(() => User)
-  forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput) {
-    return this.userService.requestResetPassword(forgotPasswordInput.email)
+  @Mutation(() => Boolean)
+  async forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput) {
+    await this.userService.requestResetPassword(forgotPasswordInput.email)
+    return true
+  }
+
+  @Mutation(() => Token)
+  async resetPassword(@Args('input') resetPasswordInput: ResetPasswordInput) {
+    const user = await this.userService.resetPassword(resetPasswordInput.password, resetPasswordInput.resetToken)
+
+    const accessToken = this.authService.getAccessToken(user.id)
+    return {
+      accessToken,
+    }
   }
 
   @Mutation(() => Token)
