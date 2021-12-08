@@ -229,12 +229,12 @@ export class UserService {
     }))
   }
 
-  async isFollowingAuthUser(id, meUserId: string) {
+  async isFollowingAuthUser(id, authUserId: string) {
     const result = await this.prismaService.followship.findUnique({
       where: {
         followerId_followeeId: {
           followerId: this.prismaService.mapStringIdToBuffer(id),
-          followeeId: this.prismaService.mapStringIdToBuffer(meUserId),
+          followeeId: this.prismaService.mapStringIdToBuffer(authUserId),
         },
       },
     })
@@ -408,21 +408,12 @@ export class UserService {
     }
   }
 
-  async toggleFollow(id: string, otherUserId: string, value: boolean) {
-    const { id: authUserId } = await this.prismaService.user.findUnique({
-      where: {
-        id: this.prismaService.mapStringIdToBuffer(id),
-      },
-      select: {
-        id: true,
-      },
-    })
-
+  async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
     if (value) {
       await this.prismaService.followship.create({
         data: {
-          followerId: this.prismaService.mapStringIdToBuffer(otherUserId),
-          followeeId: authUserId,
+          followerId: authUserId,
+          followeeId: this.prismaService.mapStringIdToBuffer(otherUserId),
         },
       })
     } else {
