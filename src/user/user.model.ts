@@ -17,10 +17,10 @@ export class User {
   @Field()
   id: string
 
-  @Field()
+  @Field({ nullable: true })
   firstName?: string
 
-  @Field()
+  @Field({ nullable: true })
   lastName?: string
 
   @Field(() => Date, { nullable: true })

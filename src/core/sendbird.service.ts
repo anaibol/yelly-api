@@ -36,12 +36,12 @@ export class SendbirdService {
     })
   }
 
-  async createUser(user: IncomingUser) {
-    const profileUrl = user.pictureId ? 'http://yelly.imgix.net/' + user.pictureId + '?format=auto' : ''
+  async createUser(user: IncomingUser): Promise<string> {
+    const profileUrl = user.pictureId && 'http://yelly.imgix.net/' + user.pictureId + '?format=auto'
 
     const sendbirdUser: SendbirdUser = {
       user_id: this.prismaService.mapBufferIdToString(user.id),
-      nickname: user.firstName,
+      nickname: user.firstName + ' ' + user.lastName,
       profile_url: profileUrl,
       issue_access_token: true,
       metadata: {
@@ -50,10 +50,10 @@ export class SendbirdService {
         birthdate: user.birthdate,
       },
     }
-    console.log({ sendbirdUser })
-    const response = await this.client.post('/v3/users', sendbirdUser)
 
-    return response.data
+    const { data } = await this.client.post('/v3/users', sendbirdUser)
+
+    return data.access_token
   }
 
   async getAccessToken(userId: string) {

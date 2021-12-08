@@ -9,13 +9,13 @@ export class Me {
   @Field()
   id: string
 
-  @Field()
-  email: string
+  @Field({ nullable: true })
+  email?: string
 
-  @Field()
+  @Field({ nullable: true })
   firstName?: string
 
-  @Field()
+  @Field({ nullable: true })
   lastName?: string
 
   @Field(() => Date, { nullable: true })
@@ -54,15 +54,15 @@ export class Me {
   @Field(() => [Post], { nullable: true })
   posts?: Post[]
 
-  @Field(() => Int)
+  @Field(() => Int, { nullable: true })
   followersCount: number
 
-  @Field(() => Int)
+  @Field(() => Int, { nullable: true })
   followeesCount: number
 
-  @Field(() => [User])
+  @Field(() => [User], { nullable: true })
   followees: User
 
-  @Field(() => [User])
+  @Field(() => [User], { nullable: true })
   followers: User
 }

@@ -121,8 +121,8 @@ model Training {
 
 model User {
   id                           Bytes                    @id @db.Binary(16)
-  firstName                    String                   @map("first_name") @db.VarChar(255)
-  lastName                     String                   @map("last_name") @db.VarChar(255)
+  firstName                    String?                  @map("first_name") @db.VarChar(255)
+  lastName                     String?                  @map("last_name") @db.VarChar(255)
   email                        String                   @unique @db.VarChar(180)
   roles                        String                   @db.LongText
   password                     String                   @db.VarChar(255)
@@ -131,11 +131,11 @@ model User {
   snapchat                     String?                  @db.VarChar(100)
   instagram                    String?                  @db.VarChar(100)
   resetToken                   String?                  @map("reset_token") @db.VarChar(255)
-  isVerified                   Boolean                  @map("is_verified")
+  isVerified                   Boolean                  @map("is_verified") @default(true)
   createdAt                    DateTime                 @default(now()) @map("created_at") @db.DateTime(0)
   updatedAt                    DateTime?                @map("updated_at") @db.DateTime(0)
-  isActived                    Boolean                  @map("is_actived")
-  isFilled                     Boolean                  @map("is_filled")
+  isActived                    Boolean                  @map("is_actived") @default(true)
+  isFilled                     Boolean                  @map("is_filled") @default(false)
   androidPushnotificationToken String?                  @map("android_push_notification_token") @db.VarChar(255)
   sendbirdAccessToken          String?                  @map("sendbird_access_token") @db.VarChar(255)
   expoPushNotificationToken    String?                  @map("expo_push_notification_token") @db.VarChar(255)

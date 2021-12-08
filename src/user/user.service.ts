@@ -12,6 +12,7 @@ import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
+import { User } from './user.model'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
@@ -514,14 +515,9 @@ export class UserService {
     const user = await this.prismaService.user.create({
       data: {
         id: this.prismaService.mapStringIdToBuffer(randomUUID()),
-        email: email,
-        firstName: '',
-        lastName: '',
+        email,
         password: hash,
         roles: '[]',
-        isVerified: true,
-        isFilled: false,
-        isActived: true,
       },
     })
 
@@ -530,7 +526,7 @@ export class UserService {
     }
   }
 
-  async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<boolean> {
+  async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<User> {
     const user = await this.prismaService.user.findUnique({
       where: { id: this.prismaService.mapStringIdToBuffer(userId) },
       select: {
@@ -552,6 +548,35 @@ export class UserService {
       select: {
         id: true,
         isFilled: true,
+        ...(updateUserData.isFilled && {
+          email: true,
+          firstName: true,
+          lastName: true,
+          password: true,
+          pictureId: true,
+          birthdate: true,
+          about: true,
+          instagram: true,
+          sendbirdAccessToken: true,
+          school: {
+            select: {
+              id: true,
+              name: true,
+              city: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          training: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        }),
       },
       data: {
         ...cleanUndefinedFromObj({
@@ -625,24 +650,27 @@ export class UserService {
     })
 
     if (updatedUser.isFilled) this.syncUsersIndexWithAlgolia(user.id)
-    if (!user.isFilled && updatedUser.isFilled) this.createSendbirdUser(user.id)
 
-    return true
-  }
+    if (!user.isFilled && updatedUser.isFilled) {
+      try {
+        const sendbirdAccessToken = await this.sendbirdService.createUser(updatedUser)
 
-  async createSendbirdUser(userId: Buffer) {
-    const user = await this.prismaService.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        pictureId: true,
-        birthdate: true,
-      },
-    })
+        await this.prismaService.user.update({
+          where: {
+            id: this.prismaService.mapStringIdToBuffer(userId),
+          },
+          data: {
+            sendbirdAccessToken,
+          },
+        })
 
-    this.sendbirdService.createUser(user)
+        updatedUser.sendbirdAccessToken = sendbirdAccessToken
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    return this.formatUser(updatedUser)
   }
 
   async getGooglePlaceById(googlePlaceId: string) {
@@ -690,8 +718,10 @@ export class UserService {
       formattedUser.training.id = this.prismaService.mapBufferIdToString(user.training.id)
     }
 
-    formattedUser.followeesCount = user._count.followees
-    formattedUser.followersCount = user._count.followers
+    if (user._count) {
+      formattedUser.followeesCount = user._count.followees
+      formattedUser.followersCount = user._count.followers
+    }
 
     formattedUser.followees = user.followees
       ? user.followees.map((followee) => ({
