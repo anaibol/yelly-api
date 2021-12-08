@@ -13,6 +13,7 @@ import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
+import { User as PrismaUser } from '@prisma/client'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
@@ -324,7 +325,6 @@ export class UserService {
         },
       },
     })
-
     if (!user) {
       throw new NotFoundUserException()
     }
@@ -421,8 +421,8 @@ export class UserService {
     if (value) {
       await this.prismaService.followship.create({
         data: {
-          followerId: authUserId,
-          followeeId: this.prismaService.mapStringIdToBuffer(otherUserId),
+          followerId: this.prismaService.mapStringIdToBuffer(otherUserId),
+          followeeId: authUserId,
         },
       })
     } else {
@@ -722,20 +722,6 @@ export class UserService {
       formattedUser.followeesCount = user._count.followees
       formattedUser.followersCount = user._count.followers
     }
-
-    formattedUser.followees = user.followees
-      ? user.followees.map((followee) => ({
-          ...followee,
-          id: this.prismaService.mapBufferIdToString(followee.id),
-        }))
-      : []
-
-    formattedUser.followers = user.followers
-      ? user.followers.map((follower) => ({
-          ...follower,
-          id: this.prismaService.mapBufferIdToString(follower.id),
-        }))
-      : []
 
     formattedUser.posts = user.posts
       ? user.posts.map((post) => ({

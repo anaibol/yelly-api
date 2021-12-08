@@ -12,7 +12,6 @@ import { GetPostsArgs } from './get-post.args'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Cache } from 'cache-manager'
 import { Post } from './post.model'
-
 @Resolver()
 export class PostResolver {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private postService: PostService) {}
