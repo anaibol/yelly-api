@@ -639,8 +639,6 @@ export class UserService {
       },
     })
 
-    if (updatedUser.isFilled) this.syncUsersIndexWithAlgolia(user.id)
-
     if (!user.isFilled && updatedUser.isFilled) {
       try {
         const sendbirdAccessToken = await this.sendbirdService.createUser(updatedUser)
@@ -660,7 +658,7 @@ export class UserService {
       }
     }
 
-    this.syncUsersIndexWithAlgolia(this.prismaService.mapStringIdToBuffer(userId))
+    if (updatedUser.isFilled) this.syncUsersIndexWithAlgolia(user.id)
 
     return this.formatUser(updatedUser)
   }
