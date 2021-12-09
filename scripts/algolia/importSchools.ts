@@ -1,6 +1,5 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
-import { stringify as uuidStringify } from 'uuid'
 
 async function main() {
   const INDEX_NAME = 'dev_SCHOOLS'
@@ -12,6 +11,13 @@ async function main() {
     const schools = await prisma.school.findMany({
       skip: skip,
       take: 500,
+      include: {
+        city: {
+          include: {
+            country: true,
+          },
+        },
+      },
     })
 
     if (schools.length == 0) {
@@ -23,14 +29,27 @@ async function main() {
     console.log('insert ' + skip)
     const algoliaSchools = schools.map((school) => {
       return {
-        id: uuidStringify(Buffer.from(school.id)),
+        id: school.id,
         name: school.name,
         googlePlaceId: school.googlePlaceId,
         _geoloc: {
           lat: school.lat,
           lng: school.lng,
         },
-        objectID: uuidStringify(Buffer.from(school.id)),
+        city: {
+          id: school.city.id,
+          name: school.city.name,
+          _geoloc: {
+            lat: school.city.lat,
+            lng: school.city.lng,
+          },
+          country: {
+            id: school.city.country.id,
+            name: school.city.country.name,
+          },
+        },
+
+        objectID: school.id,
       }
     })
 

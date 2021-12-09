@@ -1,6 +1,5 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
-import { stringify as uuidStringify } from 'uuid'
 
 async function main() {
   const INDEX_NAME = 'dev_TAGS'
@@ -73,7 +72,7 @@ function mapAuthorBufferIdToUUID(posts) {
     const authorWithUUID = {
       ...post.author,
     }
-    authorWithUUID.id = uuidStringify(Buffer.from(post.author.id))
+    authorWithUUID.id = post.author.id
 
     return authorWithUUID
   })

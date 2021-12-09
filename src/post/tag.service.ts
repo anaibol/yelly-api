@@ -118,7 +118,7 @@ export class TagService {
         isLive: true,
         author: {
           connect: {
-            id: this.prismaService.mapStringIdToBuffer(authUserId),
+            id: authUserId,
           },
         },
       },

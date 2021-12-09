@@ -15,7 +15,6 @@ export type UserIndexAlgoliaInterface = {
   school: {
     id: string
     name: string
-    postalCode: string
     googlePlaceId: string
     city: {
       id: string
@@ -54,7 +53,6 @@ export const algoliaUserSelect = {
     select: {
       id: true,
       name: true,
-      postalCode: true,
       googlePlaceId: true,
       lat: true,
       lng: true,
@@ -77,32 +75,29 @@ export const algoliaUserSelect = {
   },
 }
 
-const bufferIdToString = (buffer: Buffer) => uuidStringify(Buffer.from(buffer))
-
 export function mapAlgoliaUser(user): UserIndexAlgoliaInterface {
   return {
-    id: bufferIdToString(user.id),
-    objectID: bufferIdToString(user.id),
+    id: user.id,
+    objectID: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
     pictureId: user.pictureId,
     birthdateTimestamp: user.birthdate ? Date.parse(user.birthdate.toString()) : null,
     hasPicture: user.pictureId != null,
     training: {
-      id: bufferIdToString(user.training.id),
+      id: user.training.id,
       name: user.training.name,
     },
     school: {
-      id: bufferIdToString(user.school.id),
+      id: user.school.id,
       name: user.school.name,
-      postalCode: user.school.postalCode,
       googlePlaceId: user.school.googlePlaceId,
       city: {
-        id: bufferIdToString(user.school.city.id),
+        id: user.school.city.id,
         name: user.school.city.name,
         googlePlaceId: user.school.city.googlePlaceId,
         country: {
-          id: bufferIdToString(user.school.city.country.id),
+          id: user.school.city.country.id,
           name: user.school.city.country.name,
         },
         _geoloc: {

@@ -57,7 +57,7 @@ export class PostService {
           },
         }),
         ...(userId && {
-          authorId: this.prismaService.mapStringIdToBuffer(userId),
+          authorId: userId,
         }),
       },
       ...(currentCursor && {
@@ -126,7 +126,6 @@ export class PostService {
 
   async create(createPostInput: CreatePostInput, authUserId: string) {
     const { text, tag: tagText } = createPostInput
-    const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
 
     return this.prismaService.post.create({
       select: {
@@ -136,7 +135,7 @@ export class PostService {
         text,
         author: {
           connect: {
-            id: authorId,
+            id: authUserId,
           },
         },
         tags: {
@@ -149,7 +148,7 @@ export class PostService {
                 text: tagText,
                 author: {
                   connect: {
-                    id: authorId,
+                    id: authUserId,
                   },
                 },
               },
@@ -164,7 +163,7 @@ export class PostService {
 
   async delete(createPostInput: DeletePostInput, authUserId: string) {
     if (!authUserId) return new UnauthorizedException()
-    const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
+    const authorId = authUserId
 
     return this.prismaService.post.delete({
       select: {
@@ -181,7 +180,7 @@ export class PostService {
     authUserId: string
   ) {
     const { reaction, postId } = createOrUpdatePostReactionInput
-    const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
+    const authorId = authUserId
 
     const reactionData = {
       reaction,
@@ -205,7 +204,7 @@ export class PostService {
 
   async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUserId: string): Promise<boolean> {
     const { postId } = deletePostReactionInput
-    const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
+    const authorId = authUserId
 
     await this.prismaService.postReaction.delete({
       where: {
