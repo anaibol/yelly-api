@@ -409,20 +409,19 @@ export class UserService {
   }
 
   async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
+    const followship = {
+      followerId: this.prismaService.mapStringIdToBuffer(authUserId),
+      followeeId: this.prismaService.mapStringIdToBuffer(otherUserId),
+    }
+
     if (value) {
       await this.prismaService.followship.create({
-        data: {
-          followerId: authUserId,
-          followeeId: this.prismaService.mapStringIdToBuffer(otherUserId),
-        },
+        data: followship,
       })
     } else {
       await this.prismaService.followship.delete({
         where: {
-          followerId_followeeId: {
-            followerId: authUserId,
-            followeeId: this.prismaService.mapStringIdToBuffer(otherUserId),
-          },
+          followerId_followeeId: followship,
         },
       })
     }
