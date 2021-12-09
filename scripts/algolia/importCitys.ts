@@ -9,7 +9,12 @@ async function main() {
   let skip = 0
   while (hasCities) {
     const cities = await prisma.city.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        googlePlaceId: true,
+        lat: true,
+        lng: true,
         country: true,
       },
       skip: skip,
@@ -28,7 +33,7 @@ async function main() {
         id: city.id,
         name: city.name,
         country: {
-          id: city.countryId,
+          id: city.country.id,
           name: city.country.name,
         },
         googlePlaceId: city.googlePlaceId,

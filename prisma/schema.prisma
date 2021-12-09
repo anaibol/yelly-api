@@ -71,8 +71,8 @@ model Training {
 
 model User {
   id                           String                    @id @db.VarChar(36)
-  firstName                    String                   @db.VarChar(255)
-  lastName                     String                   @db.VarChar(255)
+  firstName                    String?                   @db.VarChar(255)
+  lastName                     String?                   @db.VarChar(255)
   email                        String                   @unique @db.VarChar(180)
   roles                        String                   @db.LongText
   password                     String                   @db.VarChar(255)
@@ -81,11 +81,11 @@ model User {
   snapchat                     String?                  @db.VarChar(100)
   instagram                    String?                  @db.VarChar(100)
   resetToken                   String?                  @db.VarChar(255)
-  isVerified                   Boolean                  
+  isVerified                   Boolean                  @default(true)
   createdAt                    DateTime                 @default(now()) @db.DateTime(0)
   updatedAt                    DateTime?                @db.DateTime(0)
-  isActive                   Boolean                  
-  isFilled                     Boolean                  
+  isActive                   Boolean                  @default(true)
+  isFilled                     Boolean                  @default(false)
   androidPushnotificationToken String?                   @db.VarChar(255)
   sendbirdAccessToken          String?                   @db.VarChar(255)
   expoPushNotificationToken    String?                   @db.VarChar(255)
