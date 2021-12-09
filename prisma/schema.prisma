@@ -128,9 +128,6 @@ model Post {
   tags       Tag[]
   reactions  PostReaction[]
   viewsCount Int            @default(0)
-
-
-  @@unique([authorId, id], map: "author_post_id_fkey")
 }
 
 model PostComment {
