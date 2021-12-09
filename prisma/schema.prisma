@@ -15,10 +15,9 @@ model City {
   googlePlaceId String?       @unique @db.VarChar(255)
   lat           Float?
   lng           Float?
-  country       Country       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "FK_2D5B0234F92F3E70")
+  country       Country       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   schools       School[]
 
-  @@index([countryId], map: "IDX_2D5B0234F92F3E70")
   @@map("city")
 }
 
@@ -39,11 +38,9 @@ model Notification {
   isSeen       Boolean             
   createdAt    DateTime            @unique @default(now()) @db.DateTime(0)
   itemId       String?             @db.VarChar(255)
-  userSource   User                @relation("userSource", fields: [userSourceId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA95DC9185")
-  user         User?               @relation(fields: [userTargetId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_BF5476CA156E8682")
+  userSource   User                @relation("userSource", fields: [userSourceId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  user         User?               @relation(fields: [userTargetId], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
-  @@index([userTargetId], map: "IDX_BF5476CA156E8682")
-  @@index([userSourceId], map: "IDX_BF5476CA95DC9185")
   @@map("notification")
 }
 
@@ -57,7 +54,6 @@ model School {
   city          City           @relation(fields: [cityId], references: [id])
   User          User[]
 
-  @@index([cityId], map: "school_city_id_fkey")
   @@map("school")
 }
 
@@ -106,8 +102,6 @@ model User {
   school     School?   @relation(fields: [schoolId], references: [id])
   training   Training? @relation(fields: [trainingId], references: [id])
 
-  @@index([trainingId], map: "IDX_359F6E8FBEFD98D1")
-  @@index([schoolId], map: "IDX_359F6E8FC32A47EE")
   @@map("user")
 }
 
@@ -130,7 +124,6 @@ model Tag {
   author    User     @relation(fields: [authorId], references: [id])
   posts     Post[]
 
-  @@index([authorId], map: "tag_author_id_fkey")
   @@map("tag")
 }
 
@@ -145,7 +138,6 @@ model Post {
   viewsCount Int            @default(0)
 
   @@unique([authorId, id], map: "author_post_id_fkey")
-  @@index([authorId], map: "post_author_id_fkey")
   @@map("post")
 }
 
@@ -156,7 +148,6 @@ model PostComment {
   authorId  String    @db.VarChar(36)
   author    User     @relation(fields: [authorId], references: [id])
 
-  @@index([authorId], map: "post_comment_author_id_fkey")
   @@map("post_comment")
 }
 

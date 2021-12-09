@@ -20,6 +20,10 @@ export class AlgoliaService {
     })
   }
 
+  deleteObject(index: any, objectId: string) {
+    return index.deleteObject(objectId)
+  }
+
   partialUpdateObject(index: any, objectToUpdate: any, objectID: any) {
     return index.partialUpdateObject(
       {

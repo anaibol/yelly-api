@@ -400,6 +400,8 @@ export class UserService {
       })
 
       this.sendbirdService.deleteUser(userId)
+      const usersAlgoliaIndex = this.algoliaService.initIndex('USERS')
+      usersAlgoliaIndex.deleteObject(userId)
       return true
     } catch {
       throw new NotFoundUserException()
