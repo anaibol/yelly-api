@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import axios from 'axios'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
@@ -384,7 +384,21 @@ export class UserService {
   }
 
   async refreshSendbirdAccessToken(userId: string) {
-    return this.sendbirdService.getAccessToken(userId)
+    try {
+      const accessToken = await this.sendbirdService.getAccessToken(userId)
+
+      this.prismaService.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          sendbirdAccessToken: accessToken,
+        },
+      })
+      return accessToken
+    } catch {
+      throw new BadRequestException('Sendbird error')
+    }
   }
 
   private generateResetToken() {
