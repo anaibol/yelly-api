@@ -189,7 +189,7 @@ export class PostService {
       postId,
     }
 
-    await this.prismaService.postReaction.upsert({
+    const updated = await this.prismaService.postReaction.upsert({
       where: {
         authorId_postId: {
           authorId,
@@ -200,7 +200,7 @@ export class PostService {
       update: reactionData,
     })
 
-    return true
+    return !!updated
   }
 
   async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUserId: string): Promise<boolean> {
