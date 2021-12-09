@@ -97,8 +97,8 @@ model User {
   posts                        Post[]
   postComments                 PostComment[]
   tags                         Tag[]
-  followers                    Followship[]             @relation("followers")
-  followees                    Followship[]             @relation("followees")
+  followers                    Followship[]             @relation("followees")
+  followees                    Followship[]             @relation("followers")
   postReactions                PostReaction[]
 
   trainingId String?     @db.VarChar(36)
@@ -112,10 +112,10 @@ model User {
 }
 
 model Followship {
-  follower   User     @relation("followers", fields: [followerId], references: [id])
-  followerId String    @db.VarChar(36)
-  followee   User     @relation("followees", fields: [followeeId], references: [id])
-  followeeId String    @db.VarChar(36)
+  follower   User     @relation("followees", fields: [followeeId], references: [id])
+  followerId Bytes    @db.Binary(16)
+  followee   User     @relation("followers", fields: [followerId], references: [id])
+  followeeId Bytes    @db.Binary(16)
   createdAt  DateTime @unique @default(now())
 
   @@id([followerId, followeeId])
