@@ -7,4 +7,7 @@ export class SignUpInput {
 
   @Field()
   password: string
+
+  @Field()
+  locale: string
 }
