@@ -98,10 +98,6 @@ async function main() {
   })
 }
 
-function mapStringIdToBuffer(id: string): Buffer {
-  return Buffer.from(uuidParse(id))
-}
-
 async function getCityNameWithCountry(googlePlaceId: string): Promise<string> {
   const response = await axios.get(
     'https://maps.googleapis.com/maps/api/place/details/json?language=fr&place_id=' + googlePlaceId + '&key=' + key

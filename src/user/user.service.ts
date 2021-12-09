@@ -66,11 +66,9 @@ export class UserService {
   }
 
   async findOne(userId) {
-    const bufferId = userId
-
     const user = await this.prismaService.user.findUnique({
       where: {
-        id: bufferId,
+        id: userId,
       },
       select: {
         id: true,
@@ -410,8 +408,8 @@ export class UserService {
 
   async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
     const followship = {
-      followerId: this.prismaService.mapStringIdToBuffer(authUserId),
-      followeeId: this.prismaService.mapStringIdToBuffer(otherUserId),
+      followerId: authUserId,
+      followeeId: otherUserId,
     }
 
     if (value) {
@@ -686,22 +684,6 @@ export class UserService {
   formatUser(user) {
     const formattedUser = user
 
-    if (user?.id) {
-      formattedUser.id = this.prismaService.mapBufferIdToString(user.id)
-    }
-
-    if (user?.school?.id) {
-      formattedUser.school.id = this.prismaService.mapBufferIdToString(user.school.id)
-    }
-
-    if (user?.school?.city?.id) {
-      formattedUser.school.city.id = this.prismaService.mapBufferIdToString(user.school.city.id)
-    }
-
-    if (user?.training?.id) {
-      formattedUser.training.id = this.prismaService.mapBufferIdToString(user.training.id)
-    }
-
     if (user._count) {
       formattedUser.followeesCount = user._count.followees
       formattedUser.followersCount = user._count.followers
@@ -710,16 +692,6 @@ export class UserService {
     formattedUser.posts = user.posts
       ? user.posts.map((post) => ({
           ...post,
-          author: {
-            ...post.author,
-            id: this.prismaService.mapBufferIdToString(post.author.id),
-          },
-          reactions: post.reactions.map((reaction) => {
-            return {
-              ...reaction,
-              authorId: this.prismaService.mapBufferIdToString(reaction.authorId),
-            }
-          }),
           totalReactionsCount: post._count.reactions,
         }))
       : []

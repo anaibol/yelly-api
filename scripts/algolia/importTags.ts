@@ -45,7 +45,7 @@ async function main() {
     const algoliaTags = tags.map((tag) => {
       const lastPost = tag.posts[0]
 
-      const lastUsers = mapAuthorBufferIdToUUID(tag.posts)
+      const lastUsers = tag.posts.map((post) => post.author)
       return {
         id: tag.id,
         objectID: tag.id,
@@ -65,17 +65,6 @@ async function main() {
     const userIndex = await algoliaClient.initIndex(INDEX_NAME)
     userIndex.partialUpdateObjects(algoliaTags, { createIfNotExists: true })
   }
-}
-
-function mapAuthorBufferIdToUUID(posts) {
-  return posts.map((post) => {
-    const authorWithUUID = {
-      ...post.author,
-    }
-    authorWithUUID.id = post.author.id
-
-    return authorWithUUID
-  })
 }
 
 main()

@@ -11,32 +11,6 @@ import { TagService } from './tag.service'
 export class PostService {
   constructor(private prismaService: PrismaService, private tagService: TagService) {}
 
-  mapAuthorBufferIdToUUID(post) {
-    return {
-      ...post,
-      author: {
-        ...post.author,
-        id: this.prismaService.mapBufferIdToString(post.author.id),
-      },
-      tags: post.tags?.map((tag) => {
-        return {
-          ...tag,
-          author: {
-            ...tag.author,
-            id: this.prismaService.mapBufferIdToString(tag.author.id),
-          },
-        }
-      }),
-      reactions: post.reactions?.map((reaction) => {
-        return {
-          ...reaction,
-          authorId: this.prismaService.mapBufferIdToString(reaction.authorId),
-        }
-      }),
-      totalReactionsCount: post?._count.reactions,
-    }
-  }
-
   async trackPostViews(postsIds: string[]) {
     await this.prismaService.post.updateMany({
       where: { id: { in: postsIds } },
@@ -117,7 +91,10 @@ export class PostService {
       },
     })
 
-    const mappedPosts = posts.map((post) => this.mapAuthorBufferIdToUUID(post))
+    const mappedPosts = posts.map((post) => ({
+      ...post,
+      totalReactionsCount: post?._count.reactions,
+    }))
 
     const cursor = posts.length === limit ? posts[limit - 1].createdAt : ''
 
