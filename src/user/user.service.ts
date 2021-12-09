@@ -170,6 +170,7 @@ export class UserService {
           select: {
             id: true,
             firstName: true,
+            lastName: true,
             pictureId: true,
             school: {
               select: {
@@ -207,6 +208,7 @@ export class UserService {
           select: {
             id: true,
             firstName: true,
+            lastName: true,
             pictureId: true,
             school: {
               select: {
@@ -480,7 +482,7 @@ export class UserService {
   }
 
   async signUp(signUpData: SignUpInput) {
-    const { email, password } = signUpData
+    const { email, password, locale } = signUpData
 
     const userExists = await this.prismaService.user.findUnique({
       where: {
@@ -501,6 +503,7 @@ export class UserService {
         id: randomUUID(),
         email,
         password: hash,
+        locale,
         roles: '[]',
       },
     })
