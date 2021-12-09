@@ -308,6 +308,7 @@ export class UserService {
           select: {
             id: true,
             name: true,
+            googlePlaceId: true,
             city: {
               select: {
                 id: true,
@@ -658,6 +659,8 @@ export class UserService {
         console.log(error)
       }
     }
+
+    this.syncUsersIndexWithAlgolia(this.prismaService.mapStringIdToBuffer(userId))
 
     return this.formatUser(updatedUser)
   }
