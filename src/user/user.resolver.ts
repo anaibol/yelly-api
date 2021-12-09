@@ -10,7 +10,6 @@ import { AuthUser } from '../auth/auth.service'
 
 @Resolver(() => User)
 export class UserResolver {
-
   constructor(private userService: UserService) {}
 
   @Query(() => User, { name: 'user' })

@@ -232,7 +232,7 @@ export class UserService {
       where: {
         followerId_followeeId: {
           followerId: id,
-          followeeId: meUserId,
+          followeeId: authUserId,
         },
       },
     })
@@ -405,7 +405,6 @@ export class UserService {
       throw new NotFoundUserException()
     }
   }
-
 
   async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
     if (value) {
