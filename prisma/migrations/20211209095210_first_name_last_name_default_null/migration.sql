@@ -1,6 +1,0 @@
--- AlterTable
-ALTER TABLE `user` MODIFY `firstName` VARCHAR(255) NULL,
-    MODIFY `lastName` VARCHAR(255) NULL,
-    MODIFY `isVerified` BOOLEAN NOT NULL DEFAULT true,
-    MODIFY `isActive` BOOLEAN NOT NULL DEFAULT true,
-    MODIFY `isFilled` BOOLEAN NOT NULL DEFAULT false;

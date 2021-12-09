@@ -9,107 +9,100 @@ datasource db {
 }
 
 model City {
-  id            String        @id @db.VarChar(36)
-  countryId     String        @db.VarChar(36)
-  name          String        @db.VarChar(255)
-  googlePlaceId String?       @unique @db.VarChar(255)
+  id            String   @id @default(uuid())
+  countryId     String
+  name          String
+  googlePlaceId String?  @unique
   lat           Float?
   lng           Float?
-  country       Country       @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  country       Country  @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   schools       School[]
 
-  @@map("city")
 }
 
 model Country {
-  id     String    @id @db.VarChar(36)
-  name   String   @unique @db.VarChar(255)
-  city   City[]
+  id   String @id @default(uuid())
+  name String @unique
+  city City[]
 
-  @@map("country")
 }
 
-
 model Notification {
-  id           String               @id @db.VarChar(36)
-  userSourceId String               @db.VarChar(36)
-  userTargetId String?              @db.VarChar(36)
+  id           String              @id @default(uuid())
+  userSourceId String
+  userTargetId String?
   action       NotificationAction?
-  isSeen       Boolean             
+  isSeen       Boolean
   createdAt    DateTime            @unique @default(now()) @db.DateTime(0)
-  itemId       String?             @db.VarChar(255)
+  itemId       String?
   userSource   User                @relation("userSource", fields: [userSourceId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   user         User?               @relation(fields: [userTargetId], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
-  @@map("notification")
 }
 
 model School {
-  id            String          @id @db.VarChar(36)
-  name          String         @db.VarChar(255)
-  googlePlaceId String?        @unique  @db.VarChar(255)
+  id            String  @id @default(uuid())
+  name          String
+  googlePlaceId String? @unique
   lat           Float?
   lng           Float?
-  cityId        String          @db.VarChar(36)
-  city          City           @relation(fields: [cityId], references: [id])
+  cityId        String
+  city          City    @relation(fields: [cityId], references: [id])
   User          User[]
 
-  @@map("school")
 }
 
 model Training {
-  id           String          @id @db.VarChar(36)
-  name         String         @unique @db.VarChar(255)
+  id   String @id @default(uuid())
+  name String @unique
 
   User User[]
-  @@map("training")
 }
 
 model User {
-  id                           String                    @id @db.VarChar(36)
-  firstName                    String?                   @db.VarChar(255)
-  lastName                     String?                   @db.VarChar(255)
-  email                        String                   @unique @db.VarChar(180)
-  roles                        String                   @db.LongText
-  password                     String                   @db.VarChar(255)
-  birthdate                    DateTime?                @db.Date
-  pictureId                    String?                  @db.VarChar(255)
-  snapchat                     String?                  @db.VarChar(100)
-  instagram                    String?                  @db.VarChar(100)
-  resetToken                   String?                  @db.VarChar(255)
-  isVerified                   Boolean                  @default(true)
-  createdAt                    DateTime                 @default(now()) @db.DateTime(0)
-  updatedAt                    DateTime?                @db.DateTime(0)
-  isActive                   Boolean                  @default(true)
-  isFilled                     Boolean                  @default(false)
-  androidPushnotificationToken String?                   @db.VarChar(255)
-  sendbirdAccessToken          String?                   @db.VarChar(255)
-  expoPushNotificationToken    String?                   @db.VarChar(255)
-  iosPushnotificationToken     String?                   @db.VarChar(255)
-  about                        String?                  @db.VarChar(255)
-  locale                       String?                  @db.VarChar(255)
-  notification                 Notification[]           @relation("userSource")
+  id                           String         @id @default(uuid())
+  firstName                    String?
+  lastName                     String?
+  email                        String         @unique
+  roles                        String         @db.LongText
+  password                     String
+  birthdate                    DateTime?      @db.Date
+  pictureId                    String?
+  snapchat                     String?
+  instagram                    String?
+  resetToken                   String?
+  isVerified                   Boolean        @default(true)
+  createdAt                    DateTime       @default(now())
+  updatedAt                    DateTime?
+  isActive                     Boolean        @default(true)
+  isFilled                     Boolean        @default(false)
+  androidPushnotificationToken String?
+  sendbirdAccessToken          String?
+  expoPushNotificationToken    String?
+  iosPushnotificationToken     String?
+  about                        String?
+  locale                       String?
+  notification                 Notification[] @relation("userSource")
   notifications                Notification[]
   posts                        Post[]
   postComments                 PostComment[]
   tags                         Tag[]
-  followers                    Followship[]             @relation("followers")
-  followees                    Followship[]             @relation("followees")
+  followers                    Followship[]   @relation("followees")
+  followees                    Followship[]   @relation("followers")
   postReactions                PostReaction[]
 
-  trainingId String?     @db.VarChar(36)
-  schoolId   String?     @db.VarChar(36)
+  trainingId String?
+  schoolId   String?
   school     School?   @relation(fields: [schoolId], references: [id])
   training   Training? @relation(fields: [trainingId], references: [id])
 
-  @@map("user")
 }
 
 model Followship {
-  follower   User     @relation("followers", fields: [followerId], references: [id])
-  followerId String    @db.VarChar(36)
-  followee   User     @relation("followees", fields: [followeeId], references: [id])
-  followeeId String    @db.VarChar(36)
+  follower   User     @relation("followees", fields: [followeeId], references: [id])
+  followerId String
+  followee   User     @relation("followers", fields: [followerId], references: [id])
+  followeeId String
   createdAt  DateTime @unique @default(now())
 
   @@id([followerId, followeeId])
@@ -117,38 +110,37 @@ model Followship {
 
 model Tag {
   id        String   @id @default(uuid())
-  text      String   @unique @db.VarChar(30)
+  text      String   @unique
   createdAt DateTime @default(now())
-  authorId  String     @db.VarChar(36)
+  authorId  String
   isLive    Boolean  @default(false)
   author    User     @relation(fields: [authorId], references: [id])
   posts     Post[]
 
-  @@map("tag")
 }
 
 model Post {
   id         String         @id @default(uuid())
   text       String         @db.Text
   createdAt  DateTime       @unique @default(now())
-  authorId   String          @db.VarChar(36)
+  authorId   String
   author     User           @relation(fields: [authorId], references: [id])
   tags       Tag[]
   reactions  PostReaction[]
   viewsCount Int            @default(0)
 
+
   @@unique([authorId, id], map: "author_post_id_fkey")
-  @@map("post")
 }
 
 model PostComment {
   id        String   @id @default(uuid())
   text      String   @db.Text
   createdAt DateTime @unique @default(now())
-  authorId  String    @db.VarChar(36)
+  authorId  String
   author    User     @relation(fields: [authorId], references: [id])
 
-  @@map("post_comment")
+
 }
 
 enum NotificationAction {
@@ -164,7 +156,7 @@ model PostReaction {
   author    User     @relation(fields: [authorId], references: [id])
   post      Post?    @relation(fields: [postId], references: [id])
   postId    String
-  authorId  String    @db.VarChar(36)
+  authorId  String
 
   @@unique([authorId, postId], map: "author_post_id_fkey")
 }
