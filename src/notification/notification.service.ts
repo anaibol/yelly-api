@@ -9,7 +9,7 @@ export class NotificationService {
   async find(userId: string, currentCursor, limit = DEFAULT_LIMIT) {
     const notifications = await this.prismaService.notification.findMany({
       where: {
-        userTargetId: this.prismaService.mapStringIdToBuffer(userId),
+        userTargetId: userId,
       },
       ...(currentCursor && {
         cursor: {
@@ -37,28 +37,16 @@ export class NotificationService {
     })
 
     const cursor = notifications.length === limit ? notifications[limit - 1].createdAt : ''
-    const mappedNotifications = notifications.map((notification) => this.formatNotification(notification))
 
-    return { notifications: mappedNotifications, cursor }
+    return { notifications, cursor }
   }
 
-  async countUnreadNotifications(userTargetId: Buffer) {
+  async countUnreadNotifications(userTargetId: string) {
     return this.prismaService.notification.count({
       where: {
         userTargetId,
         isSeen: false,
       },
     })
-  }
-
-  formatNotification(notification) {
-    return {
-      ...notification,
-      id: this.prismaService.mapBufferIdToString(notification.id),
-      userSource: {
-        ...notification.userSource,
-        id: this.prismaService.mapBufferIdToString(notification.userSource.id),
-      },
-    }
   }
 }

@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `tag` ADD COLUMN `isLive` BOOLEAN NOT NULL DEFAULT false;

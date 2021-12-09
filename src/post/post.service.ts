@@ -11,32 +11,6 @@ import { TagService } from './tag.service'
 export class PostService {
   constructor(private prismaService: PrismaService, private tagService: TagService) {}
 
-  mapAuthorBufferIdToUUID(post) {
-    return {
-      ...post,
-      author: {
-        ...post.author,
-        id: this.prismaService.mapBufferIdToString(post.author.id),
-      },
-      tags: post.tags?.map((tag) => {
-        return {
-          ...tag,
-          author: {
-            ...tag.author,
-            id: this.prismaService.mapBufferIdToString(tag.author.id),
-          },
-        }
-      }),
-      reactions: post.reactions?.map((reaction) => {
-        return {
-          ...reaction,
-          authorId: this.prismaService.mapBufferIdToString(reaction.authorId),
-        }
-      }),
-      totalReactionsCount: post?._count.reactions,
-    }
-  }
-
   async trackPostViews(postsIds: string[]) {
     await this.prismaService.post.updateMany({
       where: { id: { in: postsIds } },
@@ -57,7 +31,7 @@ export class PostService {
           },
         }),
         ...(userId && {
-          authorId: this.prismaService.mapStringIdToBuffer(userId),
+          authorId: userId,
         }),
       },
       ...(currentCursor && {
@@ -117,7 +91,10 @@ export class PostService {
       },
     })
 
-    const mappedPosts = posts.map((post) => this.mapAuthorBufferIdToUUID(post))
+    const mappedPosts = posts.map((post) => ({
+      ...post,
+      totalReactionsCount: post?._count.reactions,
+    }))
 
     const cursor = posts.length === limit ? posts[limit - 1].createdAt : ''
 
@@ -126,7 +103,6 @@ export class PostService {
 
   async create(createPostInput: CreatePostInput, authUserId: string) {
     const { text, tag: tagText } = createPostInput
-    const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
 
     return this.prismaService.post.create({
       select: {
@@ -136,7 +112,7 @@ export class PostService {
         text,
         author: {
           connect: {
-            id: authorId,
+            id: authUserId,
           },
         },
         tags: {
@@ -149,7 +125,7 @@ export class PostService {
                 text: tagText,
                 author: {
                   connect: {
-                    id: authorId,
+                    id: authUserId,
                   },
                 },
               },
@@ -164,7 +140,7 @@ export class PostService {
 
   async delete(createPostInput: DeletePostInput, authUserId: string) {
     if (!authUserId) return new UnauthorizedException()
-    const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
+    const authorId = authUserId
 
     return this.prismaService.post.delete({
       select: {
@@ -181,7 +157,7 @@ export class PostService {
     authUserId: string
   ) {
     const { reaction, postId } = createOrUpdatePostReactionInput
-    const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
+    const authorId = authUserId
 
     const reactionData = {
       reaction,
@@ -205,7 +181,7 @@ export class PostService {
 
   async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUserId: string): Promise<boolean> {
     const { postId } = deletePostReactionInput
-    const authorId = this.prismaService.mapStringIdToBuffer(authUserId)
+    const authorId = authUserId
 
     await this.prismaService.postReaction.delete({
       where: {

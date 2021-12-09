@@ -35,7 +35,7 @@ export class UserService {
       },
       where: {
         author: {
-          id: this.prismaService.mapStringIdToBuffer(userId),
+          id: userId,
         },
         tags: {
           some: {
@@ -61,16 +61,14 @@ export class UserService {
 
     return {
       ...user,
-      id: this.prismaService.mapBufferIdToString(user.id),
+      id: user.id,
     }
   }
 
   async findOne(userId) {
-    const bufferId = this.prismaService.mapStringIdToBuffer(userId)
-
     const user = await this.prismaService.user.findUnique({
       where: {
-        id: bufferId,
+        id: userId,
       },
       select: {
         id: true,
@@ -155,7 +153,7 @@ export class UserService {
   async getUserFollowers(id, currentCursor, limit = DEFAULT_LIMIT) {
     const followers = await this.prismaService.followship.findMany({
       where: {
-        followeeId: this.prismaService.mapStringIdToBuffer(id),
+        followeeId: id,
         ...(currentCursor && {
           cursor: {
             createdAt: new Date(+currentCursor).toISOString(),
@@ -185,16 +183,14 @@ export class UserService {
 
     return followers.map(({ follower: { id, ...folower } }) => ({
       ...folower,
-      id: this.prismaService.mapBufferIdToString(id),
+      id,
     }))
   }
 
   async getUserFollowees(id, currentCursor, limit = DEFAULT_LIMIT) {
-    const bufferId = this.prismaService.mapStringIdToBuffer(id)
-
     const followees = await this.prismaService.followship.findMany({
       where: {
-        followerId: bufferId,
+        followerId: id,
         ...(currentCursor && {
           cursor: {
             createdAt: new Date(+currentCursor).toISOString(),
@@ -224,7 +220,7 @@ export class UserService {
 
     return followees.map(({ followee: { id, ...followee } }) => ({
       ...followee,
-      id: this.prismaService.mapBufferIdToString(id),
+      id: id,
     }))
   }
 
@@ -232,8 +228,8 @@ export class UserService {
     const result = await this.prismaService.followship.findUnique({
       where: {
         followerId_followeeId: {
-          followerId: this.prismaService.mapStringIdToBuffer(id),
-          followeeId: this.prismaService.mapStringIdToBuffer(authUserId),
+          followerId: id,
+          followeeId: authUserId,
         },
       },
     })
@@ -244,7 +240,7 @@ export class UserService {
   async findMe(userId: string) {
     const user = await this.prismaService.user.findUnique({
       where: {
-        id: this.prismaService.mapStringIdToBuffer(userId),
+        id: userId,
       },
       select: {
         id: true,
@@ -380,7 +376,7 @@ export class UserService {
 
     const formattedUser = {
       ...user,
-      id: this.prismaService.mapBufferIdToString(user.id),
+      id: user.id,
     }
     return formattedUser
   }
@@ -397,11 +393,13 @@ export class UserService {
     try {
       await this.prismaService.user.delete({
         where: {
-          id: this.prismaService.mapStringIdToBuffer(userId),
+          id: userId,
         },
       })
 
       this.sendbirdService.deleteUser(userId)
+      const usersAlgoliaIndex = this.algoliaService.initIndex('USERS')
+      usersAlgoliaIndex.deleteObject(userId)
       return true
     } catch {
       throw new NotFoundUserException()
@@ -410,8 +408,8 @@ export class UserService {
 
   async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
     const followship = {
-      followerId: this.prismaService.mapStringIdToBuffer(authUserId),
-      followeeId: this.prismaService.mapStringIdToBuffer(otherUserId),
+      followerId: authUserId,
+      followeeId: otherUserId,
     }
 
     if (value) {
@@ -429,7 +427,7 @@ export class UserService {
     return true
   }
 
-  async syncUsersIndexWithAlgolia(userId: Buffer) {
+  async syncUsersIndexWithAlgolia(userId: string) {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
       select: algoliaUserSelect,
@@ -439,11 +437,7 @@ export class UserService {
 
     const newUserAlgoliaObject = mapAlgoliaUser(user)
 
-    return this.algoliaService.partialUpdateObject(
-      usersIndex,
-      newUserAlgoliaObject,
-      this.prismaService.mapBufferIdToString(user.id)
-    )
+    return this.algoliaService.partialUpdateObject(usersIndex, newUserAlgoliaObject, user.id)
   }
 
   async getSchool(schoolGooglePlaceId: string) {
@@ -504,7 +498,7 @@ export class UserService {
 
     const user = await this.prismaService.user.create({
       data: {
-        id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+        id: randomUUID(),
         email,
         password: hash,
         roles: '[]',
@@ -512,13 +506,13 @@ export class UserService {
     })
 
     return {
-      id: this.prismaService.mapBufferIdToString(user.id),
+      id: user.id,
     }
   }
 
   async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<User> {
     const user = await this.prismaService.user.findUnique({
-      where: { id: this.prismaService.mapStringIdToBuffer(userId) },
+      where: { id: userId },
       select: {
         id: true,
         isFilled: true,
@@ -533,7 +527,7 @@ export class UserService {
 
     const updatedUser = await this.prismaService.user.update({
       where: {
-        id: this.prismaService.mapStringIdToBuffer(userId),
+        id: userId,
       },
       select: {
         id: true,
@@ -589,10 +583,9 @@ export class UserService {
                 googlePlaceId: schoolData.googlePlaceId,
               },
               create: {
-                id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                id: randomUUID(),
                 name: schoolData.name,
                 googlePlaceId: schoolData.googlePlaceId,
-                isValid: true,
                 lat: schoolData.lat,
                 lng: schoolData.lng,
                 city: {
@@ -601,19 +594,18 @@ export class UserService {
                       googlePlaceId: schoolData.city.googlePlaceId,
                     },
                     create: {
-                      id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                      id: randomUUID(),
                       name: schoolData.city.name,
                       googlePlaceId: schoolData.city.googlePlaceId,
                       lat: schoolData.city.lat,
                       lng: schoolData.city.lng,
-                      isValid: true,
                       country: {
                         connectOrCreate: {
                           where: {
                             name: schoolData.city.country.name,
                           },
                           create: {
-                            id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                            id: randomUUID(),
                             name: schoolData.city.country.name,
                           },
                         },
@@ -630,7 +622,7 @@ export class UserService {
                 name: updateUserData.trainingName,
               },
               create: {
-                id: this.prismaService.mapStringIdToBuffer(randomUUID()),
+                id: randomUUID(),
                 name: updateUserData.trainingName,
               },
             },
@@ -645,7 +637,7 @@ export class UserService {
 
         await this.prismaService.user.update({
           where: {
-            id: this.prismaService.mapStringIdToBuffer(userId),
+            id: userId,
           },
           data: {
             sendbirdAccessToken,
@@ -692,22 +684,6 @@ export class UserService {
   formatUser(user) {
     const formattedUser = user
 
-    if (user?.id) {
-      formattedUser.id = this.prismaService.mapBufferIdToString(user.id)
-    }
-
-    if (user?.school?.id) {
-      formattedUser.school.id = this.prismaService.mapBufferIdToString(user.school.id)
-    }
-
-    if (user?.school?.city?.id) {
-      formattedUser.school.city.id = this.prismaService.mapBufferIdToString(user.school.city.id)
-    }
-
-    if (user?.training?.id) {
-      formattedUser.training.id = this.prismaService.mapBufferIdToString(user.training.id)
-    }
-
     if (user._count) {
       formattedUser.followeesCount = user._count.followees
       formattedUser.followersCount = user._count.followers
@@ -716,16 +692,6 @@ export class UserService {
     formattedUser.posts = user.posts
       ? user.posts.map((post) => ({
           ...post,
-          author: {
-            ...post.author,
-            id: this.prismaService.mapBufferIdToString(post.author.id),
-          },
-          reactions: post.reactions.map((reaction) => {
-            return {
-              ...reaction,
-              authorId: this.prismaService.mapBufferIdToString(reaction.authorId),
-            }
-          }),
           totalReactionsCount: post._count.reactions,
         }))
       : []

@@ -28,16 +28,7 @@ async function main() {
     const trainingName = trainings[0].name
 
     trainings.forEach(async (training) => {
-      await prisma.userTraining.updateMany({
-        where: {
-          trainingId: training.id,
-        },
-        data: {
-          trainingId: trainingId,
-        },
-      })
-
-      await prisma.userTraining.updateMany({
+      await prisma.user.updateMany({
         where: {
           trainingId: training.id,
         },

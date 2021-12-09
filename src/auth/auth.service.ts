@@ -21,7 +21,7 @@ export class AuthService {
     const hash = user.password.replace('$2y$', '$2b$')
     if (!(await bcrypt.compare(password, hash))) return null
 
-    return { id: this.prismaService.mapBufferIdToString(user.id) }
+    return { id: user.id }
   }
 
   async getAccessToken(userId: string): Promise<string> {

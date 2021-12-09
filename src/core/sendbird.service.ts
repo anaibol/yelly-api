@@ -15,7 +15,7 @@ type SendbirdUser = {
 }
 
 type IncomingUser = {
-  id: Buffer
+  id: string
   firstName: string
   lastName: string
   pictureId: string
@@ -40,7 +40,7 @@ export class SendbirdService {
     const profileUrl = user.pictureId && 'http://yelly.imgix.net/' + user.pictureId + '?format=auto'
 
     const sendbirdUser: SendbirdUser = {
-      user_id: this.prismaService.mapBufferIdToString(user.id),
+      user_id: user.id,
       nickname: user.firstName + ' ' + user.lastName,
       profile_url: profileUrl,
       issue_access_token: true,

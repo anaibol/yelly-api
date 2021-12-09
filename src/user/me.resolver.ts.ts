@@ -50,9 +50,7 @@ export class MeResolver {
 
     return {
       ...user,
-      unreadNotificationsCount: await this.notificationService.countUnreadNotifications(
-        this.prismaService.mapStringIdToBuffer(user.id)
-      ),
+      unreadNotificationsCount: await this.notificationService.countUnreadNotifications(user.id),
     }
   }
 

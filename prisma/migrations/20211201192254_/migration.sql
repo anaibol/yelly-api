@@ -1,2 +1,0 @@
--- DropIndex
-DROP INDEX `UNIQ_8D93D649E7927C74` ON `user`;

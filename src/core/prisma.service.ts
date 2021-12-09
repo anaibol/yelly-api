@@ -53,22 +53,4 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       await app.close()
     })
   }
-
-  mapBufferIdToString(id: Buffer): string {
-    let uuid = ''
-    try {
-      uuid = uuidStringify(id)
-    } catch {
-      console.log('uuid : ' + id)
-    }
-    return uuid
-  }
-  mapStringIdToBuffer(id: string): Buffer {
-    try {
-      return Buffer.from(uuidParse(id))
-    } catch (error) {
-      console.log('error : ' + error)
-      console.log({ id })
-    }
-  }
 }

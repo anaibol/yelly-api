@@ -14,7 +14,6 @@ async function main() {
         googlePlaceId: null,
       },
       cityId: null,
-      isValid: true,
     },
     select: {
       id: true,
@@ -31,9 +30,7 @@ async function main() {
       where: {
         id,
       },
-      data: {
-        isValid: false,
-      },
+      data: {},
     })
 
     const googlePlaceCityName = await getCityNameWithCountry(googlePlaceId)
@@ -70,17 +67,16 @@ async function main() {
               })) ||
               (await prisma.country.create({
                 data: {
-                  id: mapStringIdToBuffer(randomUUID()),
+                  id: randomUUID(),
                   name: countryName,
                 },
               }))
 
             cityExist = await prisma.city.create({
               data: {
-                id: mapStringIdToBuffer(randomUUID()),
+                id: randomUUID(),
                 name: googlePlaceCity.name,
                 googlePlaceId: googlePlaceCity.place_id,
-                isValid: true,
                 lat: googlePlaceCity.geometry.location.lat(),
                 lng: googlePlaceCity.geometry.location.lng(),
                 countryId: countryId,
@@ -94,17 +90,12 @@ async function main() {
             },
             data: {
               cityId: cityExist.id,
-              isValid: true,
             },
           })
         }
       } else console.log('not predictions ' + googlePlaceId + ' ' + googlePlaceCityName)
     } else console.log('city name not found ' + googlePlaceId)
   })
-}
-
-function mapStringIdToBuffer(id: string): Buffer {
-  return Buffer.from(uuidParse(id))
 }
 
 async function getCityNameWithCountry(googlePlaceId: string): Promise<string> {

@@ -37,7 +37,7 @@ export class TagService {
     })
     // INFO: Map data to fit Tag index algolia interface
 
-    const lastUsers = this.mapAuthorBufferIdToUUID(tag.posts)
+    const lastUsers = tag.posts.map((post) => post.author)
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       id: tag.id,
       text: tagText,
@@ -90,7 +90,7 @@ export class TagService {
 
     if (!liveTag) return null
 
-    const lastUsers = this.mapAuthorBufferIdToUUID(liveTag.posts)
+    const lastUsers = liveTag.posts.map((post) => post.author)
 
     return {
       ...liveTag,
@@ -118,24 +118,13 @@ export class TagService {
         isLive: true,
         author: {
           connect: {
-            id: this.prismaService.mapStringIdToBuffer(authUserId),
+            id: authUserId,
           },
         },
       },
       update: {
         isLive: true,
       },
-    })
-  }
-
-  mapAuthorBufferIdToUUID(posts) {
-    return posts.map((post) => {
-      const authorWithUUID = {
-        ...post.author,
-      }
-      authorWithUUID.id = this.prismaService.mapBufferIdToString(post.author.id)
-
-      return authorWithUUID
     })
   }
 }
