@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import axios from 'axios'
 import * as bcrypt from 'bcrypt'
-import { randomBytes, randomUUID } from 'crypto'
+import { randomBytes } from 'crypto'
 import { DEFAULT_LIMIT } from '../common/pagination.constant'
 import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
@@ -500,7 +500,6 @@ export class UserService {
 
     const user = await this.prismaService.user.create({
       data: {
-        id: randomUUID(),
         email,
         password: hash,
         locale,
@@ -586,7 +585,6 @@ export class UserService {
                 googlePlaceId: schoolData.googlePlaceId,
               },
               create: {
-                id: randomUUID(),
                 name: schoolData.name,
                 googlePlaceId: schoolData.googlePlaceId,
                 lat: schoolData.lat,
@@ -597,7 +595,6 @@ export class UserService {
                       googlePlaceId: schoolData.city.googlePlaceId,
                     },
                     create: {
-                      id: randomUUID(),
                       name: schoolData.city.name,
                       googlePlaceId: schoolData.city.googlePlaceId,
                       lat: schoolData.city.lat,
@@ -608,7 +605,6 @@ export class UserService {
                             name: schoolData.city.country.name,
                           },
                           create: {
-                            id: randomUUID(),
                             name: schoolData.city.country.name,
                           },
                         },
@@ -625,7 +621,6 @@ export class UserService {
                 name: updateUserData.trainingName,
               },
               create: {
-                id: randomUUID(),
                 name: updateUserData.trainingName,
               },
             },

@@ -1,6 +1,5 @@
 import { INestApplication, Injectable, OnModuleInit } from '@nestjs/common'
 import { PrismaClient } from '@prisma/client'
-import { parse as uuidParse, stringify as uuidStringify } from 'uuid'
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {

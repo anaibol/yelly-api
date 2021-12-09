@@ -1,5 +1,3 @@
-import { stringify as uuidStringify } from 'uuid'
-
 export type UserIndexAlgoliaInterface = {
   id: string
   objectID: string

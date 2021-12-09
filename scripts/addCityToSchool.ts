@@ -1,7 +1,5 @@
 import { PrismaClient } from '.prisma/client'
 import axios from 'axios'
-import { randomUUID } from 'crypto'
-import { parse as uuidParse } from 'uuid'
 
 const key = 'AIzaSyBohCYYvkdmFxcEd4qsqy3CkX-6FVqujPw'
 
@@ -67,14 +65,12 @@ async function main() {
               })) ||
               (await prisma.country.create({
                 data: {
-                  id: randomUUID(),
                   name: countryName,
                 },
               }))
 
             cityExist = await prisma.city.create({
               data: {
-                id: randomUUID(),
                 name: googlePlaceCity.name,
                 googlePlaceId: googlePlaceCity.place_id,
                 lat: googlePlaceCity.geometry.location.lat(),
