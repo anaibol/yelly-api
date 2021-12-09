@@ -18,17 +18,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any): Promise<AuthUser> {
     const id = payload.sub
 
-    const user = await this.prismaService.user.findUnique({
-      where: { id: id },
-      select: { email: true },
-    })
+    // const user = await this.prismaService.user.findUnique({
+    //   where: { id: id },
+    //   select: { email: true },
+    // })
 
-    if (
-      !user ||
-      (process.env.ADMIN_MODE === 'true' && process.env.NODE_ENV === 'production' && !user.email.endsWith('@yelly.app'))
-    ) {
-      return null
-    }
+    // if (
+    //   !user ||
+    //   (process.env.ADMIN_MODE === 'true' && process.env.NODE_ENV === 'production' && !user.email.endsWith('@yelly.app'))
+    // ) {
+    //   return null
+    // }
 
     return { id }
   }

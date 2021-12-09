@@ -139,15 +139,25 @@ export class PostService {
   }
 
   async delete(createPostInput: DeletePostInput, authUserId: string) {
-    if (!authUserId) return new UnauthorizedException()
-    const authorId = authUserId
+    const postId = createPostInput.id
+
+    const post = this.prismaService.post.findUnique({
+      where: {
+        id: postId,
+      },
+      select: {
+        authorId: true,
+      },
+    })
+
+    if (!post || post.authorId !== authUserId) return new UnauthorizedException()
 
     return this.prismaService.post.delete({
       select: {
         id: true,
       },
       where: {
-        authorId_id: { id: createPostInput.id, authorId },
+        id: postId,
       },
     })
   }
