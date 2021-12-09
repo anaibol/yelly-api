@@ -13,7 +13,6 @@ import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
-import { User as PrismaUser } from '@prisma/client'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
