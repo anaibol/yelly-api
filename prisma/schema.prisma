@@ -87,8 +87,8 @@ model User {
   posts                        Post[]
   postComments                 PostComment[]
   tags                         Tag[]
-  followers                    Followship[]   @relation("followees")
-  followees                    Followship[]   @relation("followers")
+  followers                    Followship[]             @relation("followees")
+  followees                    Followship[]             @relation("followers")
   postReactions                PostReaction[]
 
   trainingId String?

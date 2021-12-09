@@ -13,7 +13,6 @@ import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
-import { User as PrismaUser } from '@prisma/client'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
@@ -307,6 +306,7 @@ export class UserService {
           select: {
             id: true,
             name: true,
+            googlePlaceId: true,
             city: {
               select: {
                 id: true,
@@ -409,20 +409,19 @@ export class UserService {
   }
 
   async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
+    const followship = {
+      followerId: this.prismaService.mapStringIdToBuffer(authUserId),
+      followeeId: this.prismaService.mapStringIdToBuffer(otherUserId),
+    }
+
     if (value) {
       await this.prismaService.followship.create({
-        data: {
-          followerId: authUserId,
-          followeeId: otherUserId,
-        },
+        data: followship,
       })
     } else {
       await this.prismaService.followship.delete({
         where: {
-          followerId_followeeId: {
-            followerId: authUserId,
-            followeeId: otherUserId,
-          },
+          followerId_followeeId: followship,
         },
       })
     }
@@ -634,8 +633,6 @@ export class UserService {
       },
     })
 
-    if (updatedUser.isFilled) this.syncUsersIndexWithAlgolia(user.id)
-
     if (!user.isFilled && updatedUser.isFilled) {
       try {
         const sendbirdAccessToken = await this.sendbirdService.createUser(updatedUser)
@@ -654,6 +651,8 @@ export class UserService {
         console.log(error)
       }
     }
+
+    if (updatedUser.isFilled) this.syncUsersIndexWithAlgolia(user.id)
 
     return this.formatUser(updatedUser)
   }
