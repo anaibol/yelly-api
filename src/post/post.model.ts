@@ -1,18 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql'
 import { User } from '../user/user.model'
+import { PostReaction } from './post-reaction.model'
 import { Tag } from './tag.model'
-
-@ObjectType()
-class PostReaction {
-  @Field()
-  id: string
-
-  @Field()
-  reaction: string
-
-  @Field()
-  authorId: string
-}
 
 @ObjectType()
 export class Post {

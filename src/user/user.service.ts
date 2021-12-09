@@ -12,6 +12,8 @@ import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
+import { User } from './user.model'
+import { User as PrismaUser } from '@prisma/client'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
@@ -225,7 +227,7 @@ export class UserService {
     }))
   }
 
-  async isFollowingAuthUser(id, meUserId: string) {
+  async isFollowingAuthUser(id, authUserId: string) {
     const result = await this.prismaService.followship.findUnique({
       where: {
         followerId_followeeId: {
@@ -321,7 +323,6 @@ export class UserService {
         },
       },
     })
-
     if (!user) {
       throw new NotFoundUserException()
     }
@@ -405,16 +406,8 @@ export class UserService {
     }
   }
 
-  async toggleFollow(id: string, otherUserId: string, value: boolean) {
-    const { id: authUserId } = await this.prismaService.user.findUnique({
-      where: {
-        id: id,
-      },
-      select: {
-        id: true,
-      },
-    })
 
+  async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
     if (value) {
       await this.prismaService.followship.create({
         data: {
@@ -508,14 +501,9 @@ export class UserService {
     const user = await this.prismaService.user.create({
       data: {
         id: randomUUID(),
-        email: email,
-        firstName: '',
-        lastName: '',
+        email,
         password: hash,
         roles: '[]',
-        isVerified: true,
-        isFilled: false,
-        isActive: true,
       },
     })
 
@@ -524,7 +512,7 @@ export class UserService {
     }
   }
 
-  async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<boolean> {
+  async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<User> {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
       select: {
@@ -546,6 +534,35 @@ export class UserService {
       select: {
         id: true,
         isFilled: true,
+        ...(updateUserData.isFilled && {
+          email: true,
+          firstName: true,
+          lastName: true,
+          password: true,
+          pictureId: true,
+          birthdate: true,
+          about: true,
+          instagram: true,
+          sendbirdAccessToken: true,
+          school: {
+            select: {
+              id: true,
+              name: true,
+              city: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          training: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        }),
       },
       data: {
         ...cleanUndefinedFromObj({
@@ -617,24 +634,27 @@ export class UserService {
     })
 
     if (updatedUser.isFilled) this.syncUsersIndexWithAlgolia(user.id)
-    if (!user.isFilled && updatedUser.isFilled) user.id
 
-    return true
-  }
+    if (!user.isFilled && updatedUser.isFilled) {
+      try {
+        const sendbirdAccessToken = await this.sendbirdService.createUser(updatedUser)
 
-  async createSendbirdUser(userId: string) {
-    const user = await this.prismaService.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        pictureId: true,
-        birthdate: true,
-      },
-    })
+        await this.prismaService.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            sendbirdAccessToken,
+          },
+        })
 
-    this.sendbirdService.createUser(user)
+        updatedUser.sendbirdAccessToken = sendbirdAccessToken
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    return this.formatUser(updatedUser)
   }
 
   async getGooglePlaceById(googlePlaceId: string) {
@@ -682,22 +702,10 @@ export class UserService {
       formattedUser.training.id = this.prismaService.mapBufferIdToString(user.training.id)
     }
 
-    formattedUser.followeesCount = user._count.followees
-    formattedUser.followersCount = user._count.followers
-
-    formattedUser.followees = user.followees
-      ? user.followees.map((followee) => ({
-          ...followee,
-          id: this.prismaService.mapBufferIdToString(followee.id),
-        }))
-      : []
-
-    formattedUser.followers = user.followers
-      ? user.followers.map((follower) => ({
-          ...follower,
-          id: this.prismaService.mapBufferIdToString(follower.id),
-        }))
-      : []
+    if (user._count) {
+      formattedUser.followeesCount = user._count.followees
+      formattedUser.followersCount = user._count.followers
+    }
 
     formattedUser.posts = user.posts
       ? user.posts.map((post) => ({

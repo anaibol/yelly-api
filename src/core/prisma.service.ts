@@ -64,6 +64,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     return uuid
   }
   mapStringIdToBuffer(id: string): Buffer {
-    return Buffer.from(uuidParse(id))
+    try {
+      return Buffer.from(uuidParse(id))
+    } catch (error) {
+      console.log('error : ' + error)
+      console.log({ id })
+    }
   }
 }
