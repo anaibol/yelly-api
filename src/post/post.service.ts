@@ -104,7 +104,7 @@ export class PostService {
   async create(createPostInput: CreatePostInput, authUserId: string) {
     const { text, tag: tagText } = createPostInput
 
-    return this.prismaService.post.create({
+    const { id } = await this.prismaService.post.create({
       select: {
         id: true,
       },
@@ -135,7 +135,9 @@ export class PostService {
       },
     })
 
-    // this.tagService.syncTagIndexWithAlgolia(tagText)
+    this.tagService.syncTagIndexWithAlgolia(tagText)
+
+    return { id }
   }
 
   async delete(createPostInput: DeletePostInput, authUserId: string): Promise<boolean | UnauthorizedException> {
