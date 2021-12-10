@@ -81,8 +81,8 @@ export class UserService {
         instagram: true,
         _count: {
           select: {
-            followees: true,
-            followers: true,
+            followeesFollowships: true,
+            followersFollowships: true,
           },
         },
         posts: {
@@ -258,8 +258,8 @@ export class UserService {
         instagram: true,
         _count: {
           select: {
-            followees: true,
-            followers: true,
+            followeesFollowships: true,
+            followersFollowships: true,
           },
         },
         posts: {
@@ -698,8 +698,8 @@ export class UserService {
     const formattedUser = user
 
     if (user._count) {
-      formattedUser.followeesCount = user._count.followees
-      formattedUser.followersCount = user._count.followers
+      formattedUser.followeesCount = user._count.followersFollowships
+      formattedUser.followersCount = user._count.followeesFollowships
     }
 
     formattedUser.posts = user.posts
