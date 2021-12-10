@@ -79,6 +79,7 @@ export class UserService {
         birthdate: true,
         about: true,
         instagram: true,
+        snapchat: true,
         _count: {
           select: {
             followeesFollowships: true,
@@ -256,6 +257,7 @@ export class UserService {
         isFilled: true,
         sendbirdAccessToken: true,
         instagram: true,
+        snapchat: true,
         _count: {
           select: {
             followeesFollowships: true,
@@ -558,6 +560,7 @@ export class UserService {
           birthdate: true,
           about: true,
           instagram: true,
+          snapchat: true,
           sendbirdAccessToken: true,
           school: {
             select: {
