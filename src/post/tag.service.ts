@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
-import { NotFoundLiveTagException } from './not-found-live-tag.exception'
 import { TagIndexAlgoliaInterface } from './tag-index-algolia.interface'
 
 @Injectable()
@@ -35,9 +34,9 @@ export class TagService {
         text: tagText,
       },
     })
-    // INFO: Map data to fit Tag index algolia interface
 
     const lastUsers = tag.posts.map((post) => post.author)
+
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       id: tag.id,
       text: tagText,
