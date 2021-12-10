@@ -150,7 +150,9 @@ export class PostService {
       },
     })
 
-    if (!post || post.authorId !== authUserId) return new UnauthorizedException()
+    if (!post || post.authorId !== authUserId) {
+      throw new UnauthorizedException()
+    }
 
     await this.prismaService.post.delete({
       select: {
@@ -160,6 +162,7 @@ export class PostService {
         id: postId,
       },
     })
+
     return true
   }
 
