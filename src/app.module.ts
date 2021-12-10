@@ -8,9 +8,9 @@ import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
 import { NotificationModule } from './notification/notification.module'
 import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
-import { PushNotificationService } from './push-notification/push-notification.service'
-import { PushNotificationController } from './push-notification/push-notification.controller'
-import { PushNotificationModule } from './push-notification/push-notification.module'
+import { PushNotificationService } from './core/push-notification.service'
+import { SendbirdWebhookController } from './sendbird-webhook/sendbird-webhook.controller'
+import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.module'
 
 @Module({
   imports: [
@@ -37,6 +37,6 @@ import { PushNotificationModule } from './push-notification/push-notification.mo
     PushNotificationModule,
   ],
   providers: [PushNotificationService],
-  controllers: [PushNotificationController],
+  controllers: [SendbirdWebhookController],
 })
 export class AppModule {}
