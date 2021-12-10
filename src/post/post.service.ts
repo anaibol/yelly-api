@@ -141,7 +141,7 @@ export class PostService {
   async delete(createPostInput: DeletePostInput, authUserId: string) {
     const postId = createPostInput.id
 
-    const post = this.prismaService.post.findUnique({
+    const post = await this.prismaService.post.findUnique({
       where: {
         id: postId,
       },
