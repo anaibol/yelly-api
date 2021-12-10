@@ -138,7 +138,7 @@ export class PostService {
     // this.tagService.syncTagIndexWithAlgolia(tagText)
   }
 
-  async delete(createPostInput: DeletePostInput, authUserId: string): Promise<boolean> {
+  async delete(createPostInput: DeletePostInput, authUserId: string): Promise<boolean | UnauthorizedException> {
     const postId = createPostInput.id
 
     const post = await this.prismaService.post.findUnique({
@@ -150,10 +150,7 @@ export class PostService {
       },
     })
 
-    if (!post || post.authorId !== authUserId) {
-      new UnauthorizedException()
-      return false
-    }
+    if (!post || post.authorId !== authUserId) return new UnauthorizedException()
 
     await this.prismaService.post.delete({
       select: {
