@@ -254,6 +254,7 @@ export class UserService {
         birthdate: true,
         about: true,
         isFilled: true,
+        sendbirdAccessToken: true,
         instagram: true,
         _count: {
           select: {
