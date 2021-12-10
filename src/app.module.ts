@@ -8,6 +8,9 @@ import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
 import { NotificationModule } from './notification/notification.module'
 import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
+import { PushNotificationService } from './push-notification/push-notification.service'
+import { PushNotificationController } from './push-notification/push-notification.controller'
+import { PushNotificationModule } from './push-notification/push-notification.module'
 
 @Module({
   imports: [
@@ -31,6 +34,9 @@ import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
     CommonModule,
     AuthModule,
     NotificationModule,
+    PushNotificationModule,
   ],
+  providers: [PushNotificationService],
+  controllers: [PushNotificationController],
 })
 export class AppModule {}
