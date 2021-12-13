@@ -27,6 +27,7 @@ export class PostResolver {
     const { posts, cursor } = await this.postService.find(
       GetPostsArgs.tag,
       GetPostsArgs.userId,
+      GetPostsArgs.schoolId,
       GetPostsArgs.after,
       GetPostsArgs.limit
     )
