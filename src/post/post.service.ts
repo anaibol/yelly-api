@@ -35,7 +35,7 @@ export class PostService {
         }),
         ...(schoolId && {
           author: {
-            schoolId: schoolId,
+            schoolId,
           },
         }),
       },
