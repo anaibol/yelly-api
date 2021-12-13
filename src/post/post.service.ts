@@ -20,7 +20,7 @@ export class PostService {
     return true
   }
   // TODO: Add return type, is not q expected result
-  async find(tagText, userId, currentCursor, limit = DEFAULT_LIMIT) {
+  async find(tagText, userId, schoolId: string, currentCursor, limit = DEFAULT_LIMIT) {
     const posts = await this.prismaService.post.findMany({
       where: {
         ...(tagText && {
@@ -32,6 +32,11 @@ export class PostService {
         }),
         ...(userId && {
           authorId: userId,
+        }),
+        ...(schoolId && {
+          author: {
+            schoolId: schoolId,
+          },
         }),
       },
       ...(currentCursor && {

@@ -7,4 +7,6 @@ export class GetPostsArgs extends PaginationArgs {
   tag?: string
   @Field({ nullable: true })
   userId?: string
+  @Field({ nullable: true })
+  schoolId?: string
 }
