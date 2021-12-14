@@ -60,7 +60,7 @@ export class SendbirdService {
     return data.access_token
   }
 
-  async updateUser(user: IncomingUser): Promise<string> {
+  async updateUser(user: Partial<IncomingUser>): Promise<string> {
     const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}/?format=auto`
 
     const metadata = cleanUndefinedFromObj({

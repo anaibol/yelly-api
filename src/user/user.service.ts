@@ -675,8 +675,15 @@ export class UserService {
     }
 
     if (updatedUser.isFilled) {
-      if (updatedUser.firstName || updatedUser.lastName || updatedUser.pictureId) {
-        const sendbirdAccessToken = await this.sendbirdService.updateUser(updatedUser)
+      if (updateUserData.firstName || updateUserData.lastName || updateUserData.pictureId) {
+        const incomingUser = {
+          id: updatedUser.id,
+          firstName: updateUserData.firstName,
+          lastName: updateUserData.lastName,
+        }
+
+        const sendbirdAccessToken = await this.sendbirdService.updateUser(incomingUser)
+
         await this.prismaService.user.update({
           where: {
             id: userId,
