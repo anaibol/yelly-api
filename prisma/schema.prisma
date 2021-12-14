@@ -80,7 +80,7 @@ model User {
   isFilled                     Boolean        @default(false)
   androidPushnotificationToken String?
   sendbirdAccessToken          String?
-  expoPushNotificationToken    String
+  expoPushNotificationToken    String?
   expoPushNotificationTokens   ExpoPushNotificationAccessToken[]
   iosPushnotificationToken     String?
   about                        String?
@@ -168,6 +168,6 @@ model PostReaction {
 model ExpoPushNotificationAccessToken {
   id     String @id @default(uuid())
   userId String
-  token  String
+  token  String @unique
   user   User   @relation(fields: [userId], references: [id])
 }
