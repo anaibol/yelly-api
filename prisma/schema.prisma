@@ -78,7 +78,8 @@ model User {
   isFilled                     Boolean        @default(false)
   androidPushnotificationToken String?
   sendbirdAccessToken          String?
-  expoPushNotificationToken    String?
+  expoPushNotificationToken    String
+  expoPushNotificationTokens   ExpoPushNotificationAccessToken[]
   iosPushnotificationToken     String?
   about                        String?
   locale                       String?
@@ -87,8 +88,8 @@ model User {
   posts                        Post[]
   postComments                 PostComment[]
   tags                         Tag[]
-  followersFollowships                    Followship[]             @relation("followers")
-  followeesFollowships                    Followship[]             @relation("followees")
+  followersFollowships         Followship[]   @relation("followers")
+  followeesFollowships         Followship[]   @relation("followees")
   postReactions                PostReaction[]
 
   trainingId String?
@@ -156,4 +157,11 @@ model PostReaction {
   authorId  String
 
   @@unique([authorId, postId], map: "author_post_id_fkey")
+}
+
+model ExpoPushNotificationAccessToken {
+  id     String @id @default(uuid())
+  userId String
+  token  String
+  user   User   @relation(fields: [userId], references: [id])
 }
