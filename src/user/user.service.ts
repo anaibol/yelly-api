@@ -674,7 +674,30 @@ export class UserService {
       }
     }
 
-    if (updatedUser.isFilled) this.syncUsersIndexWithAlgolia(user.id)
+    if (updatedUser.isFilled) {
+      if (updateUserData.firstName || updateUserData.lastName || updateUserData.pictureId) {
+        const incomingUser = {
+          id: updatedUser.id,
+          firstName: updateUserData.firstName,
+          lastName: updateUserData.lastName,
+        }
+
+        const sendbirdAccessToken = await this.sendbirdService.updateUser(incomingUser)
+
+        await this.prismaService.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            sendbirdAccessToken,
+          },
+        })
+
+        updatedUser.sendbirdAccessToken = sendbirdAccessToken
+      }
+
+      this.syncUsersIndexWithAlgolia(user.id)
+    }
 
     return this.formatUser(updatedUser)
   }
