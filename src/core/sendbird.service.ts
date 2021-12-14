@@ -41,7 +41,7 @@ export class SendbirdService {
   }
 
   async createUser(user: IncomingUser): Promise<string> {
-    const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}?format=auto`
+    const profileUrl = user.avatar2dId && 'http://yelly.imgix.net/' + user.avatar2dId + '?format=auto'
 
     const sendbirdUser: SendbirdUser = {
       user_id: user.id,
