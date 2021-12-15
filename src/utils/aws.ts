@@ -15,11 +15,10 @@ const s3Configuration: S3ClientConfig = {
 }
 const s3 = new S3Client(s3Configuration)
 
-export type IGetUploadPresignedUrl = '/avatar'
+export const getPresignedUploadUrl = async (): Promise<string> => {
+  const key: string = uuidv4()
 
-export const getPresignedUploadUrl = async (folder?: IGetUploadPresignedUrl): Promise<string> => {
-  const id: string = uuidv4()
-  const key: string = folder ? folder + id : id
+  console.log({ key })
 
   const command = new PutObjectCommand({ Bucket: BUCKET, Key: key })
   const options = { expiresIn: 15 * 60 } // expires after 15 minutes
