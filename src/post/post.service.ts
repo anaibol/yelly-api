@@ -54,6 +54,7 @@ export class PostService {
         _count: {
           select: {
             reactions: true,
+            comments: true,
           },
         },
         id: true,
@@ -99,7 +100,8 @@ export class PostService {
 
     const mappedPosts = posts.map((post) => ({
       ...post,
-      totalReactionsCount: post?._count.reactions,
+      totalReactionsCount: post._count.reactions,
+      totalCommentsCount: post._count.comments,
     }))
 
     const cursor = posts.length === limit ? posts[limit - 1].createdAt : ''

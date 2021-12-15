@@ -305,6 +305,7 @@ export class UserService {
             _count: {
               select: {
                 reactions: true,
+                comments: true,
               },
             },
           },
@@ -740,6 +741,7 @@ export class UserService {
       ? user.posts.map((post) => ({
           ...post,
           totalReactionsCount: post._count.reactions,
+          totalCommentsCount: post._count.comments,
         }))
       : []
 

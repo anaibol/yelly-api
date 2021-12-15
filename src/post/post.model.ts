@@ -30,9 +30,9 @@ export class Post {
   @Field(() => Number)
   totalReactionsCount: number
 
-  @Field(() => [PostComment])
+  @Field(() => [PostComment], { nullable: true })
   comments: PostComment[]
 
-  @Field(() => Number)
+  @Field(() => Number, { nullable: true })
   totalCommentsCount: number
 }
