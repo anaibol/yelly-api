@@ -5,6 +5,6 @@ import { getPresignedUrl } from '../utils/aws'
 export class UploadResolver {
   @Mutation(() => String)
   async getS3PresignedUrls() {
-    return getPresignedUrl('/test')
+    return getPresignedUrl('/avatar')
   }
 }

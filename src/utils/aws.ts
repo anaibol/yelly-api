@@ -15,7 +15,7 @@ const s3Configuration: S3ClientConfig = {
 }
 const s3 = new S3Client(s3Configuration)
 
-export type IGetUploadPresignedUrl = '/test' | '/avatar'
+export type IGetUploadPresignedUrl = '/avatar'
 
 export const getPresignedUrl = async (folder?: IGetUploadPresignedUrl): Promise<string> => {
   const id: string = uuidv4()
