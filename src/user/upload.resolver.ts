@@ -1,10 +1,10 @@
 import { Mutation } from '@nestjs/graphql'
 
-import aws from '../utils/aws'
+import { getPresignedUrl } from '../utils/aws'
 
 export class UploadResolver {
   @Mutation(() => String)
   async getS3PresignedUrls() {
-    return aws.getPresignedUrl()
+    return getPresignedUrl('/test')
   }
 }
