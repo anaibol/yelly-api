@@ -3,6 +3,7 @@ import { GraphQLModule } from '@nestjs/graphql'
 import { join } from 'path'
 import { UserModule } from './user/user.module'
 import { PostModule } from './post/post.module'
+import { TagModule } from './tag/tag.module'
 import { CoreModule } from './core/core.module'
 import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
@@ -30,6 +31,7 @@ import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.modu
     }),
     UserModule,
     PostModule,
+    TagModule,
     CoreModule,
     CommonModule,
     AuthModule,

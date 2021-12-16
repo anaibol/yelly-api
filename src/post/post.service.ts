@@ -5,7 +5,7 @@ import { CreatePostInput } from './create-post.input'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
-import { TagService } from './tag.service'
+import { TagService } from 'src/tag/tag.service'
 import { CreateCommentInput } from './create-comment-input'
 
 @Injectable()
