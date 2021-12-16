@@ -131,10 +131,9 @@ model Post {
   tags       Tag[]
   reactions  PostReaction[]
   viewsCount Int            @default(0)
+  comments   PostComment[]
   
-
   @@unique([authorId, id], map: "author_post_id_fkey")
-
 }
 
 model PostComment {
@@ -143,8 +142,8 @@ model PostComment {
   createdAt DateTime @unique @default(now())
   authorId  String
   author    User     @relation(fields: [authorId], references: [id])
-
-
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
 }
 
 enum NotificationAction {

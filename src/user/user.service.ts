@@ -1,5 +1,4 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
-import axios from 'axios'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { DEFAULT_LIMIT } from '../common/pagination.constant'
@@ -306,6 +305,7 @@ export class UserService {
             _count: {
               select: {
                 reactions: true,
+                comments: true,
               },
             },
           },
@@ -464,45 +464,6 @@ export class UserService {
     return this.algoliaService.partialUpdateObject(usersIndex, newUserAlgoliaObject, user.id)
   }
 
-  async getSchool(schoolGooglePlaceId: string) {
-    const school = await this.schoolService.findByGooglePlaceId(schoolGooglePlaceId)
-
-    if (school) return school
-
-    const googlePlaceDetail = await this.getGooglePlaceById(schoolGooglePlaceId)
-
-    const locality = googlePlaceDetail.address_components.find((component) => component.types.includes('locality'))
-    const postal_town = googlePlaceDetail.address_components.find((component) =>
-      component.types.includes('postal_town')
-    )
-
-    if (!locality && !postal_town) throw new NotFoundException('city not found in google api')
-
-    const { long_name: cityName } = locality || postal_town
-    const googleCity = await this.getGoogleCityByName(cityName)
-    const cityGooglePlaceDetail = await this.getGooglePlaceById(googleCity[0].place_id)
-
-    const { lat, lng } = googlePlaceDetail.geometry.location
-    const { lat: cityLat, lng: cityLng } = cityGooglePlaceDetail.geometry.location
-
-    return {
-      name: googlePlaceDetail.name,
-      googlePlaceId: googlePlaceDetail.place_id,
-      lat: typeof lat === 'function' ? lat() : lat,
-      lng: typeof lng === 'function' ? lng() : lng,
-      city: {
-        name: cityGooglePlaceDetail.name,
-        googlePlaceId: cityGooglePlaceDetail.place_id,
-        lat: typeof cityLat === 'function' ? cityLat() : cityLat,
-        lng: typeof cityLng === 'function' ? cityLng() : cityLng,
-        country: {
-          name: cityGooglePlaceDetail.address_components.find((component) => component.types.includes('country'))
-            .long_name,
-        },
-      },
-    }
-  }
-
   async signUp(signUpData: SignUpInput) {
     const { email, password, locale } = signUpData
 
@@ -547,7 +508,8 @@ export class UserService {
       throw new NotFoundException()
     }
 
-    const schoolData = updateUserData.schoolGooglePlaceId && (await this.getSchool(updateUserData.schoolGooglePlaceId))
+    const schoolData =
+      updateUserData.schoolGooglePlaceId && (await this.schoolService.getOrCreate(updateUserData.schoolGooglePlaceId))
 
     const updatedUser = await this.prismaService.user.update({
       where: {
@@ -675,35 +637,32 @@ export class UserService {
       }
     }
 
-    if (updatedUser.isFilled) this.syncUsersIndexWithAlgolia(user.id)
+    if (updatedUser.isFilled) {
+      if (updateUserData.firstName || updateUserData.lastName || updateUserData.pictureId) {
+        const incomingUser = {
+          id: updatedUser.id,
+          firstName: updateUserData.firstName,
+          lastName: updateUserData.lastName,
+        }
+
+        const sendbirdAccessToken = await this.sendbirdService.updateUser(incomingUser)
+
+        await this.prismaService.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            sendbirdAccessToken,
+          },
+        })
+
+        updatedUser.sendbirdAccessToken = sendbirdAccessToken
+      }
+
+      this.syncUsersIndexWithAlgolia(user.id)
+    }
 
     return this.formatUser(updatedUser)
-  }
-
-  async getGooglePlaceById(googlePlaceId: string) {
-    const response = await axios.get(
-      'https://maps.googleapis.com/maps/api/place/details/json?language=fr&place_id=' +
-        googlePlaceId +
-        '&key=' +
-        this.googleApiKey
-    )
-    if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined')
-      throw new NotFoundException('googlePlaceId not valid')
-
-    return response.data.result as google.maps.places.PlaceResult
-  }
-
-  async getGoogleCityByName(cityName: string) {
-    const { data } = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
-      params: {
-        types: '(cities)',
-        language: 'fr',
-        input: cityName,
-        key: this.googleApiKey,
-      },
-    })
-    if (!data) throw new NotFoundException('city not found in goorgle api')
-    return data.predictions as google.maps.places.AutocompletePrediction[]
   }
 
   formatUser(user) {
@@ -718,6 +677,7 @@ export class UserService {
       ? user.posts.map((post) => ({
           ...post,
           totalReactionsCount: post._count.reactions,
+          totalCommentsCount: post._count.comments,
         }))
       : []
 

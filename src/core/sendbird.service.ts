@@ -23,6 +23,9 @@ type IncomingUser = {
   birthdate: Date
 }
 
+const cleanUndefinedFromObj = (obj) =>
+  Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
+
 @Injectable()
 export class SendbirdService {
   client: Axios
@@ -53,6 +56,30 @@ export class SendbirdService {
     }
 
     const { data } = await this.client.post('/v3/users', sendbirdUser)
+
+    return data.access_token
+  }
+
+  async updateUser(user: Partial<IncomingUser>): Promise<string> {
+    const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}/?format=auto`
+
+    const metadata = cleanUndefinedFromObj({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      birthdate: user.birthdate,
+    })
+
+    const updatedUserData: Partial<SendbirdUser> = {
+      ...cleanUndefinedFromObj({
+        profile_url: profileUrl,
+        ...(Object.keys(metadata).length && {
+          nickname: `${user.firstName} ${user.lastName}`,
+          metadata,
+        }),
+      }),
+    }
+
+    const { data } = await this.client.put(`/v3/users/${user.id}`, updatedUserData)
 
     return data.access_token
   }

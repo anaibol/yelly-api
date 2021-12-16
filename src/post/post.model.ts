@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql'
 import { User } from '../user/user.model'
+import { PostComment } from './post-comment.model'
 import { PostReaction } from './post-reaction.model'
 import { Tag } from './tag.model'
 
@@ -28,4 +29,10 @@ export class Post {
 
   @Field(() => Number)
   totalReactionsCount: number
+
+  @Field(() => [PostComment], { nullable: true })
+  comments: PostComment[]
+
+  @Field(() => Number, { nullable: true })
+  totalCommentsCount: number
 }

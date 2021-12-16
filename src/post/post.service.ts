@@ -6,6 +6,7 @@ import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reactio
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { TagService } from './tag.service'
+import { CreateCommentInput } from './create-comment-input'
 
 @Injectable()
 export class PostService {
@@ -53,6 +54,7 @@ export class PostService {
         _count: {
           select: {
             reactions: true,
+            comments: true,
           },
         },
         id: true,
@@ -98,7 +100,8 @@ export class PostService {
 
     const mappedPosts = posts.map((post) => ({
       ...post,
-      totalReactionsCount: post?._count.reactions,
+      totalReactionsCount: post._count.reactions,
+      totalCommentsCount: post._count.comments,
     }))
 
     const cursor = posts.length === limit ? posts[limit - 1].createdAt : ''
@@ -106,6 +109,82 @@ export class PostService {
     return { posts: mappedPosts, cursor }
   }
 
+  async getById(postId: string) {
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+      select: {
+        _count: {
+          select: {
+            reactions: true,
+            comments: true,
+          },
+        },
+        id: true,
+        createdAt: true,
+        viewsCount: true,
+        text: true,
+        reactions: {
+          select: {
+            id: true,
+            reaction: true,
+            authorId: true,
+          },
+          distinct: 'reaction',
+          take: 2,
+        },
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            birthdate: true,
+            pictureId: true,
+          },
+        },
+        comments: {
+          select: {
+            text: true,
+            authorId: true,
+            id: true,
+            createdAt: true,
+            author: {
+              select: {
+                id: true,
+                pictureId: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+        tags: {
+          select: {
+            id: true,
+            createdAt: true,
+            text: true,
+            isLive: true,
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                pictureId: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return {
+      ...post,
+      totalReactionsCount: post._count.reactions,
+      totalCommentsCount: post._count.comments,
+    }
+  }
   async create(createPostInput: CreatePostInput, authUserId: string) {
     const { text, tag: tagText } = createPostInput
 
@@ -208,5 +287,19 @@ export class PostService {
     })
 
     return true
+  }
+
+  async createComment(createCommentInput: CreateCommentInput, authUserId: string) {
+    const { postId, text } = createCommentInput
+
+    const updated = await this.prismaService.postComment.create({
+      data: {
+        text,
+        postId,
+        authorId: authUserId,
+      },
+    })
+
+    return !!updated
   }
 }
