@@ -40,7 +40,6 @@ export const algoliaUserSelect = {
   lastName: true,
   isFilled: true,
   pictureId: true,
-  avatar2dId: true,
   birthdate: true,
   training: {
     select: {
