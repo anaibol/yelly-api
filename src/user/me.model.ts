@@ -25,9 +25,6 @@ export class Me {
   pictureId?: string
 
   @Field({ nullable: true })
-  avatar2dId?: string
-
-  @Field({ nullable: true })
   avatar3dId?: string
 
   @Field({ nullable: true })
