@@ -8,10 +8,13 @@ import { CreatePostInput } from './create-post.input'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
-import { GetPostsArgs } from './get-post.args'
+import { GetPostsArgs } from './get-posts.args'
+import { GetPostArgs } from './get-post.args'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Cache } from 'cache-manager'
 import { Post } from './post.model'
+import { CreateCommentInput } from './create-comment-input'
+
 @Resolver()
 export class PostResolver {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private postService: PostService) {}
@@ -27,6 +30,7 @@ export class PostResolver {
     const { posts, cursor } = await this.postService.find(
       GetPostsArgs.tag,
       GetPostsArgs.userId,
+      GetPostsArgs.schoolId,
       GetPostsArgs.after,
       GetPostsArgs.limit
     )
@@ -36,6 +40,12 @@ export class PostResolver {
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
     return response
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => Post, { name: 'getPost' })
+  async getPost(@Args() GetPostArgs?: GetPostArgs) {
+    return this.postService.getById(GetPostArgs.id)
   }
 
   @UseGuards(AuthGuard)
@@ -72,5 +82,11 @@ export class PostResolver {
     @CurrentUser() authUser
   ) {
     return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser.id)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async createPostComment(@Args('input') createPostCommentData: CreateCommentInput, @CurrentUser() authUser) {
+    return this.postService.createComment(createPostCommentData, authUser.id)
   }
 }

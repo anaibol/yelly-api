@@ -68,6 +68,8 @@ model User {
   password                     String
   birthdate                    DateTime?      @db.Date
   pictureId                    String?
+  avatar2dId                   String?
+  avatar3dId                   String?
   snapchat                     String?
   instagram                    String?
   resetToken                   String?
@@ -87,8 +89,8 @@ model User {
   posts                        Post[]
   postComments                 PostComment[]
   tags                         Tag[]
-  followersFollowships                    Followship[]             @relation("followers")
-  followeesFollowships                    Followship[]             @relation("followees")
+  followersFollowships         Followship[]   @relation("followers")
+  followeesFollowships         Followship[]   @relation("followees")
   postReactions                PostReaction[]
 
   trainingId String?
@@ -128,6 +130,9 @@ model Post {
   tags       Tag[]
   reactions  PostReaction[]
   viewsCount Int            @default(0)
+  comments   PostComment[]
+
+  @@unique([authorId, id], map: "author_post_id_fkey")
 }
 
 model PostComment {
@@ -136,8 +141,8 @@ model PostComment {
   createdAt DateTime @unique @default(now())
   authorId  String
   author    User     @relation(fields: [authorId], references: [id])
-
-
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
 }
 
 enum NotificationAction {

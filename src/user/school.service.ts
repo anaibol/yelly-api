@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
 
+import { getCityNameWithCountry, getGoogleCityByName, getGooglePlaceDetails } from '../utils/googlePlaces'
 @Injectable()
 export class SchoolService {
   constructor(private prismaService: PrismaService) {}
 
-  async findByGooglePlaceId(googlePlaceId: string) {
-    return await this.prismaService.school.findFirst({
+  async getOrCreate(googlePlaceId: string) {
+    const school = await this.prismaService.school.findUnique({
       where: {
         googlePlaceId: googlePlaceId,
       },
@@ -18,5 +19,51 @@ export class SchoolService {
         },
       },
     })
+
+    if (school) return school
+
+    const googlePlaceDetail = await getGooglePlaceDetails(googlePlaceId)
+    const cityName = await getCityNameWithCountry(googlePlaceId)
+    const googleCity = await getGoogleCityByName(cityName)
+    const city = await this.getOrCreateCity(googleCity.place_id)
+
+    const { lat, lng } = googlePlaceDetail.geometry.location
+
+    return {
+      name: googlePlaceDetail.name,
+      googlePlaceId: googlePlaceDetail.place_id,
+      lat: typeof lat === 'function' ? lat() : lat,
+      lng: typeof lng === 'function' ? lng() : lng,
+      city,
+    }
+  }
+
+  async getOrCreateCity(googlePlaceId: string) {
+    const city = await this.prismaService.city.findUnique({
+      where: {
+        googlePlaceId,
+      },
+    })
+
+    if (city) {
+      return {
+        googlePlaceId: city.googlePlaceId,
+      }
+    }
+
+    const cityGooglePlaceDetail = await getGooglePlaceDetails(googlePlaceId)
+
+    const { lat: cityLat, lng: cityLng } = cityGooglePlaceDetail.geometry.location
+
+    return {
+      name: cityGooglePlaceDetail.name,
+      googlePlaceId: cityGooglePlaceDetail.place_id,
+      lat: typeof cityLat === 'function' ? cityLat() : cityLat,
+      lng: typeof cityLng === 'function' ? cityLng() : cityLng,
+      country: {
+        name: cityGooglePlaceDetail.address_components.find((component) => component.types.includes('country'))
+          .long_name,
+      },
+    }
   }
 }

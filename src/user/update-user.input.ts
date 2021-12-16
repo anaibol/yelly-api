@@ -30,6 +30,12 @@ export class UpdateUserInput {
   pictureId: string
 
   @Field(() => String, { nullable: true })
+  avatar2dId?: string
+
+  @Field(() => String, { nullable: true })
+  avatar3dId?: string
+
+  @Field(() => String, { nullable: true })
   trainingName: string
 
   @Field(() => String, { nullable: true })
