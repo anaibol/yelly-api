@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql'
 import { User } from '../user/user.model'
-import { Post } from './post.model'
+import { PaginatedPosts } from '../post/paginated-posts.model'
 
 @ObjectType()
 export class Tag {
@@ -19,6 +19,6 @@ export class Tag {
   @Field(() => User, { nullable: true })
   author: User
 
-  @Field(() => [Post], { nullable: true })
-  posts: Post[]
+  @Field(() => PaginatedPosts, { nullable: true })
+  posts: PaginatedPosts
 }
