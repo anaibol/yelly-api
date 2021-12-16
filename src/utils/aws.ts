@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { S3Client, S3ClientConfig, PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
+const isLocalEnvironment = process.env.ENVIRONMENT === 'local'
+
 const REGION = 'eu-west-3'
 const BUCKET = 'yelly-images'
 
@@ -15,13 +17,20 @@ const s3Configuration: S3ClientConfig = {
 }
 const s3 = new S3Client(s3Configuration)
 
-export const getPresignedUploadUrl = async (): Promise<string> => {
-  const key: string = uuidv4()
+export interface IGetPresignedUploadUrlResponse {
+  url: string
+  key: string
+}
 
-  console.log({ key })
+export const getPresignedUploadUrl = async (): Promise<IGetPresignedUploadUrlResponse> => {
+  const prefix = isLocalEnvironment ? 'test/' : ''
+  const key: string = prefix + uuidv4()
 
   const command = new PutObjectCommand({ Bucket: BUCKET, Key: key })
-  const options = { expiresIn: 15 * 60 } // expires after 15 minutes
+  const options = { expiresIn: 30 * 60 } // expires after 30 minutes
 
-  return getSignedUrl(s3, command, options)
+  return {
+    url: await getSignedUrl(s3, command, options),
+    key,
+  }
 }
