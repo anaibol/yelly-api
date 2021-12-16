@@ -156,4 +156,21 @@ export class TagService {
       },
     })
   }
+
+  async deleteById(id: string) {
+    const tag = await this.prismaService.tag.delete({
+      where: {
+        id,
+      },
+      select: {
+        text: true,
+      },
+    })
+
+    if (!tag) return false
+
+    const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
+    this.algoliaService.deleteObject(algoliaTagIndex, tag.text)
+    return true
+  }
 }

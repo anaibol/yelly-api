@@ -7,10 +7,15 @@ import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { TagService } from 'src/tag/tag.service'
 import { CreateCommentInput } from './create-comment-input'
+import { AlgoliaService } from 'src/core/algolia.service'
 
 @Injectable()
 export class PostService {
-  constructor(private prismaService: PrismaService, private tagService: TagService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private tagService: TagService,
+    private algoliaService: AlgoliaService
+  ) {}
 
   async trackPostViews(postsIds: string[]) {
     await this.prismaService.post.updateMany({
@@ -238,14 +243,30 @@ export class PostService {
 
     if (!post || post.authorId !== authUserId) return new UnauthorizedException()
 
-    await this.prismaService.post.delete({
+    const deletedPost = await this.prismaService.post.delete({
       select: {
         id: true,
+        tags: {
+          select: {
+            id: true,
+            isLive: true,
+            posts: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
       },
       where: {
         id: postId,
       },
     })
+
+    deletedPost.tags.forEach(async (tag) => {
+      if (!tag.isLive && tag.posts.length == 1) this.tagService.deleteById(tag.id)
+    })
+
     return true
   }
 
