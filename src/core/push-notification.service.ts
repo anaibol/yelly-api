@@ -63,20 +63,18 @@ export class PushNotificationService {
       return memberID === senderId
     })
 
-    const messages = []
-    receiverUsers.forEach((receiverUser) => {
-      const url = `${process.env.APP_BASE_URL}/chat/user/${stringifyUserChatParams(senderUser)}`
-      receiverUser.expoPushNotificationTokens.forEach((expoPushNotificationToken) => {
-        messages.push({
+    const messages = receiverUsers
+      .map((receiverUser) => {
+        const url = `${process.env.APP_BASE_URL}/chat/user/${stringifyUserChatParams(senderUser)}`
+
+        return receiverUser.expoPushNotificationTokens.map((expoPushNotificationToken) => ({
           to: expoPushNotificationToken.token || '',
           title: sender.nickname,
           body: payload.message,
           data: { userId: sender.user_id, unreadCount: 0, url },
-        })
+        }))
       })
-    })
-
-    console.log(messages)
+      .flat()
 
     await expo.sendNotifications(messages)
 

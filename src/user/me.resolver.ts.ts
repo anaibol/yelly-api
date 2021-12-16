@@ -66,10 +66,10 @@ export class MeResolver {
     return { sendbirdAccessToken }
   }
 
-  @Mutation(() => ExpoPushNotificationsToken)
+  @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
-  async addExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser) {
-    return await this.expoPushNotificationsTokenService.create(authUser.id, token)
+  addExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser) {
+    return this.expoPushNotificationsTokenService.create(authUser.id, token)
   }
 
   @Mutation(() => Boolean)

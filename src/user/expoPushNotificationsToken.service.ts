@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common'
-import { ExpoPushNotificationAccessToken } from '@prisma/client'
 import { PrismaService } from 'src/core/prisma.service'
 
 @Injectable()
 export class ExpoPushNotificationsTokenService {
   constructor(private prismaService: PrismaService) {}
 
-  async create(userId: string, token: string): Promise<ExpoPushNotificationAccessToken> {
-    return await this.prismaService.expoPushNotificationAccessToken.upsert({
+  async create(userId: string, token: string): Promise<boolean> {
+    await this.prismaService.expoPushNotificationAccessToken.upsert({
       where: {
-        token: token,
+        token,
       },
       update: {
         userId,
@@ -18,6 +17,10 @@ export class ExpoPushNotificationsTokenService {
         userId,
         token,
       },
+      select: {
+        id: true,
+      },
     })
+    return true
   }
 }
