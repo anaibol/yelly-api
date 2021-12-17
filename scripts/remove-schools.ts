@@ -7,8 +7,6 @@ async function main() {
     select: {
       id: true,
     },
-    take: 2000,
-    skip: 22000,
   })
 
   schools.forEach(async (school) => {

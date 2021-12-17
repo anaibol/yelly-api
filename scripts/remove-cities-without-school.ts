@@ -6,8 +6,6 @@ async function main() {
     select: {
       id: true,
     },
-    take: 2000,
-    skip: 6000,
   })
 
   cities.forEach(async (city) => {
