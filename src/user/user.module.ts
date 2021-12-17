@@ -7,6 +7,7 @@ import { AuthModule } from '../auth/auth.module'
 import { NotificationService } from '../notification/notification.service'
 import { SchoolService } from './school.service'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
+import { UploadResolver } from './upload.resolver'
 
 @Module({
   imports: [CoreModule, forwardRef(() => AuthModule)],
@@ -14,7 +15,7 @@ import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.
     UserService,
     UserResolver,
     MeResolver,
-    UploadResolver
+    UploadResolver,
     SchoolService,
     NotificationService,
     ExpoPushNotificationsTokenService,
