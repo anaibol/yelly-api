@@ -119,7 +119,7 @@ export class TagService {
       },
     })
 
-    return this.prismaService.tag.upsert({
+    const newTag = await this.prismaService.tag.upsert({
       where: {
         text,
       },
@@ -136,6 +136,17 @@ export class TagService {
         isLive: true,
       },
     })
+
+    await this.prismaService.tag.deleteMany({
+      where: {
+        isLive: false,
+        posts: {
+          none: {},
+        },
+      },
+    })
+
+    return newTag
   }
 
   async findById(getTagArgs: GetTagArgs) {
@@ -155,5 +166,22 @@ export class TagService {
         },
       },
     })
+  }
+
+  async deleteById(id: string) {
+    const tag = await this.prismaService.tag.delete({
+      where: {
+        id,
+      },
+      select: {
+        text: true,
+      },
+    })
+
+    if (!tag) return false
+
+    const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
+    this.algoliaService.deleteObject(algoliaTagIndex, tag.text)
+    return true
   }
 }
