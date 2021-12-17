@@ -28,13 +28,11 @@ async function main() {
 
     console.log('insert ' + skip)
 
-    users.forEach(async (user) => {
-      await prisma.expoPushNotificationAccessToken.create({
-        data: {
-          userId: user.id,
-          token: user.expoPushNotificationToken,
-        },
-      })
+    const userData = users.map((user) => {
+      return { userId: user.id, token: user.expoPushNotificationToken }
+    })
+    await prisma.expoPushNotificationAccessToken.createMany({
+      data: userData,
     })
   }
 }
