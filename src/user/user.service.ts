@@ -257,6 +257,7 @@ export class UserService {
         about: true,
         isFilled: true,
         sendbirdAccessToken: true,
+        expoPushNotificationTokens: true,
         instagram: true,
         snapchat: true,
         _count: {

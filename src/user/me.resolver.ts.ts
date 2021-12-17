@@ -12,10 +12,13 @@ import { PrismaService } from '../core/prisma.service'
 import { NotificationService } from '../notification/notification.service'
 import { Token } from './token.model'
 import { SendbirdAccessToken } from './sendbirdAccessToken'
+import { ExpoPushNotificationsToken } from './expoPushNotificationsToken.model'
+
 import { SignInInput } from './sign-in.input'
 
 import { UpdateUserInput } from './update-user.input'
 import { ResetPasswordInput } from './reset-password-.input'
+import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 
 @Resolver(() => Me)
 export class MeResolver {
@@ -23,7 +26,8 @@ export class MeResolver {
     private prismaService: PrismaService,
     private userService: UserService,
     private authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private expoPushNotificationsTokenService: ExpoPushNotificationsTokenService
   ) {}
 
   @Mutation(() => Token)
@@ -60,6 +64,18 @@ export class MeResolver {
     const sendbirdAccessToken = await this.userService.refreshSendbirdAccessToken(authUser.id)
 
     return { sendbirdAccessToken }
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  addExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser) {
+    return this.expoPushNotificationsTokenService.create(authUser.id, token)
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  deleteExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser) {
+    return this.expoPushNotificationsTokenService.deleteByUserAndToken(authUser.id, token)
   }
 
   @Mutation(() => Boolean)

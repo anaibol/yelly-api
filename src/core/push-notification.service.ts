@@ -20,6 +20,18 @@ export class PushNotificationService {
 
   getUsersByIds(usersId: string[]) {
     return this.prismaService.user.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        pictureId: true,
+        birthdate: true,
+        expoPushNotificationTokens: {
+          select: {
+            token: true,
+          },
+        },
+      },
       where: {
         OR: [
           ...usersId.map((userId) => ({
@@ -51,16 +63,18 @@ export class PushNotificationService {
       return memberID === senderId
     })
 
-    const messages = receiverUsers.map((receiverUser) => {
-      const url = `${process.env.APP_BASE_URL}/chat/user/${stringifyUserChatParams(senderUser)}`
+    const messages = receiverUsers
+      .map((receiverUser) => {
+        const url = `${process.env.APP_BASE_URL}/chat/user/${stringifyUserChatParams(senderUser)}`
 
-      return {
-        to: receiverUser.expoPushNotificationToken || '',
-        title: sender.nickname,
-        body: payload.message,
-        data: { userId: sender.user_id, unreadCount: 0, url },
-      }
-    })
+        return receiverUser.expoPushNotificationTokens.map((expoPushNotificationToken) => ({
+          to: expoPushNotificationToken.token || '',
+          title: sender.nickname,
+          body: payload.message,
+          data: { userId: sender.user_id, unreadCount: 0, url },
+        }))
+      })
+      .flat()
 
     await expo.sendNotifications(messages)
 

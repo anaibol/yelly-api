@@ -6,11 +6,19 @@ import { CoreModule } from '../core/core.module'
 import { AuthModule } from '../auth/auth.module'
 import { NotificationService } from '../notification/notification.service'
 import { SchoolService } from './school.service'
-import { UploadResolver } from './upload.resolver'
+import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 
 @Module({
   imports: [CoreModule, forwardRef(() => AuthModule)],
-  providers: [UserService, UserResolver, MeResolver, UploadResolver, SchoolService, NotificationService],
+  providers: [
+    UserService,
+    UserResolver,
+    MeResolver,
+    UploadResolver
+    SchoolService,
+    NotificationService,
+    ExpoPushNotificationsTokenService,
+  ],
   exports: [UserService],
 })
 export class UserModule {}
