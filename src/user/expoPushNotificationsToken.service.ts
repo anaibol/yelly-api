@@ -6,14 +6,17 @@ export class ExpoPushNotificationsTokenService {
   constructor(private prismaService: PrismaService) {}
 
   async create(userId: string, token: string): Promise<boolean> {
-    await this.prismaService.expoPushNotificationAccessToken.upsert({
+    const tokenExist = await this.prismaService.expoPushNotificationAccessToken.count({
       where: {
+        userId,
         token,
       },
-      update: {
-        userId,
-      },
-      create: {
+    })
+
+    if (tokenExist) return true
+
+    await this.prismaService.expoPushNotificationAccessToken.create({
+      data: {
         userId,
         token,
       },
@@ -21,6 +24,17 @@ export class ExpoPushNotificationsTokenService {
         id: true,
       },
     })
+    return true
+  }
+
+  async deleteByUserAndToken(userId: string, token: string): Promise<boolean> {
+    await this.prismaService.expoPushNotificationAccessToken.deleteMany({
+      where: {
+        userId,
+        token,
+      },
+    })
+
     return true
   }
 }

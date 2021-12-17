@@ -73,6 +73,12 @@ export class MeResolver {
   }
 
   @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  deleteExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser) {
+    return this.expoPushNotificationsTokenService.deleteByUserAndToken(authUser.id, token)
+  }
+
+  @Mutation(() => Boolean)
   async forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput) {
     await this.userService.requestResetPassword(forgotPasswordInput.email)
     return true
