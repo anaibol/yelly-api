@@ -56,6 +56,7 @@ export class SendbirdService {
 
     const { data } = await this.client.post('/v3/users', sendbirdUser)
 
+    await this.welcomeMessage(user.id)
     return data.access_token
   }
 
@@ -88,6 +89,38 @@ export class SendbirdService {
 
   async deleteUser(userId: string): Promise<boolean> {
     await this.client.delete(`/v3/users/${userId}`)
+    return true
+  }
+
+  async welcomeMessage(userId: string) {
+    // TODO: THIS ID SHOULD BE IN A ENV FILE
+    const sammuelId = 'a97e6893-2ac9-4f6f-84d8-0f5d08ef41b5'
+    const userIds = [userId, sammuelId]
+    const channelUrl = `${userId}_${sammuelId}`
+
+    try {
+      const channel = await this.client.post('/v3/group_channels', {
+        user_ids: userIds,
+        channel_url: channelUrl,
+        name: 'welcome chat',
+        custom_type: '1-1',
+        is_distinct: true,
+        inviter_id: sammuelId,
+      })
+
+      if (channel) {
+        await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
+          message_type: 'MESG',
+          user_id: sammuelId,
+          message: `Salut Pierre, 
+          Je m'appelle Samuel et c'est moi qui ai crée Yelly 😄 ! Bienvenue sur l'app !
+          ça m'aiderait de ouf si tu pouvais me donner quelques conseils ou idées pour l'améliorer. Je prends aussi les critiques !
+          Merci !`,
+        })
+      }
+    } catch (error) {
+      console.log('error:', error)
+    }
     return true
   }
 }
