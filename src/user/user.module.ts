@@ -14,6 +14,7 @@ import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.
     UserService,
     UserResolver,
     MeResolver,
+    UploadResolver
     SchoolService,
     NotificationService,
     ExpoPushNotificationsTokenService,

@@ -68,7 +68,6 @@ model User {
   password                     String
   birthdate                    DateTime?      @db.Date
   pictureId                    String?
-  avatar2dId                   String?
   avatar3dId                   String?
   snapchat                     String?
   instagram                    String?

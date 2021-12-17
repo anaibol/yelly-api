@@ -37,6 +37,7 @@ COPY prisma ./prisma/
 
 RUN yarn --frozen-lockfile
 # RUN yarn --frozen-lockfile --production
+RUN npx prisma migrate deploy 
 
 COPY . .
 
