@@ -119,7 +119,7 @@ export class TagService {
       },
     })
 
-    return this.prismaService.tag.upsert({
+    const newTag = await this.prismaService.tag.upsert({
       where: {
         text,
       },
@@ -136,6 +136,17 @@ export class TagService {
         isLive: true,
       },
     })
+
+    await this.prismaService.tag.deleteMany({
+      where: {
+        isLive: false,
+        posts: {
+          none: {},
+        },
+      },
+    })
+
+    return newTag
   }
 
   async findById(getTagArgs: GetTagArgs) {
