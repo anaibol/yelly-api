@@ -68,7 +68,6 @@ model User {
   password                     String
   birthdate                    DateTime?      @db.Date
   pictureId                    String?
-  avatar2dId                   String?
   avatar3dId                   String?
   snapchat                     String?
   instagram                    String?
@@ -81,6 +80,7 @@ model User {
   androidPushnotificationToken String?
   sendbirdAccessToken          String?
   expoPushNotificationToken    String?
+  expoPushNotificationTokens   ExpoPushNotificationAccessToken[]
   iosPushnotificationToken     String?
   about                        String?
   locale                       String?
@@ -131,7 +131,7 @@ model Post {
   reactions  PostReaction[]
   viewsCount Int            @default(0)
   comments   PostComment[]
-
+  
   @@unique([authorId, id], map: "author_post_id_fkey")
 }
 
@@ -161,4 +161,11 @@ model PostReaction {
   authorId  String
 
   @@unique([authorId, postId], map: "author_post_id_fkey")
+}
+
+model ExpoPushNotificationAccessToken {
+  id     String @id @default(uuid())
+  userId String
+  token  String 
+  user   User   @relation(fields: [userId], references: [id])
 }
