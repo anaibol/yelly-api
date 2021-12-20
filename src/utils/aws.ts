@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 
-import { S3Client, S3ClientConfig, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, S3ClientConfig, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const isLocalEnvironment = process.env.ENVIRONMENT === 'local'
@@ -26,7 +26,8 @@ export const getPresignedUploadUrl = async (): Promise<IGetPresignedUploadUrlRes
   const prefix = isLocalEnvironment ? 'test/' : ''
   const key: string = prefix + uuidv4()
 
-  const command = new PutObjectCommand({ Bucket: BUCKET, Key: key })
+  const command = new GetObjectCommand({ Bucket: BUCKET, Key: key })
+
   const options = { expiresIn: 30 * 60 } // expires after 30 minutes
 
   return {

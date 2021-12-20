@@ -6,7 +6,7 @@ import { Upload } from './upload.model'
 @Resolver()
 export class UploadResolver {
   @Query(() => Upload)
-  async getS3PresignedUploadUrl() {
+  getS3PresignedUploadUrl() {
     return getPresignedUploadUrl()
   }
 }
