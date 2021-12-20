@@ -634,9 +634,9 @@ export class UserService {
     }
 
     if (updatedUser.isFilled) {
-      if (updatedUser.firstName || updatedUser.lastName || updatedUser.pictureId) {
-        this.updateSenbirdUser(updatedUser)
-      }
+      // if (updatedUser.firstName || updatedUser.lastName || updatedUser.pictureId) {
+      //   this.updateSenbirdUser(updatedUser)
+      // }
 
       this.syncUsersIndexWithAlgolia(user.id)
     }

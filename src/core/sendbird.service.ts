@@ -23,7 +23,7 @@ type IncomingUser = {
 }
 
 const cleanUndefinedFromObj = (obj) =>
-  Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
+  Object.entries(obj).reduce((a, [k, v]) => (v === undefined || v === null ? a : ((a[k] = v), a)), {})
 
 @Injectable()
 export class SendbirdService {
