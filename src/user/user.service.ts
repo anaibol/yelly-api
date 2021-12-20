@@ -634,32 +634,25 @@ export class UserService {
     }
 
     if (updatedUser.isFilled) {
-      if (updateUserData.firstName || updateUserData.lastName || updateUserData.pictureId) {
-        const incomingUser = {
-          id: updatedUser.id,
-          firstName: updateUserData.firstName,
-          lastName: updateUserData.lastName,
-          pictureId: updateUserData.pictureId,
-        }
-
-        const sendbirdAccessToken = await this.sendbirdService.updateUser(incomingUser)
-
-        await this.prismaService.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            sendbirdAccessToken,
-          },
-        })
-
-        updatedUser.sendbirdAccessToken = sendbirdAccessToken
+      if (updatedUser.firstName || updatedUser.lastName || updatedUser.pictureId) {
+        this.updateSenbirdUser(updatedUser)
       }
 
       this.syncUsersIndexWithAlgolia(user.id)
     }
 
     return this.formatUser(updatedUser)
+  }
+
+  async updateSenbirdUser(user) {
+    if (user.firstName || user.lastName || user.pictureId) {
+      await this.sendbirdService.updateUser({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        pictureId: user.pictureId,
+      })
+    }
   }
 
   formatUser(user) {

@@ -59,7 +59,7 @@ export class SendbirdService {
     return data.access_token
   }
 
-  async updateUser(user: Partial<IncomingUser>): Promise<string> {
+  updateUser(user: Partial<IncomingUser>) {
     const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}/?format=auto`
 
     const metadata = cleanUndefinedFromObj({
@@ -78,9 +78,7 @@ export class SendbirdService {
       }),
     }
 
-    const { data } = await this.client.put(`/v3/users/${user.id}`, updatedUserData)
-
-    return data.access_token
+    return this.client.put(`/v3/users/${user.id}`, updatedUserData)
   }
 
   async getAccessToken(userId: string) {
