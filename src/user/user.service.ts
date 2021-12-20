@@ -639,6 +639,7 @@ export class UserService {
           id: updatedUser.id,
           firstName: updateUserData.firstName,
           lastName: updateUserData.lastName,
+          pictureId: updateUserData.pictureId,
         }
 
         const sendbirdAccessToken = await this.sendbirdService.updateUser(incomingUser)

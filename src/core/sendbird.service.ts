@@ -65,7 +65,7 @@ export class SendbirdService {
     const metadata = cleanUndefinedFromObj({
       firstName: user.firstName,
       lastName: user.lastName,
-      birthdate: user.birthdate,
+      pictureId: user.pictureId,
     })
 
     const updatedUserData: Partial<SendbirdUser> = {
