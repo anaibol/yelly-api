@@ -35,8 +35,8 @@ model Notification {
   isSeen       Boolean
   createdAt    DateTime            @unique @default(now()) @db.DateTime(0)
   itemId       String?
-  userSource   User                @relation("userSource", fields: [userSourceId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  user         User?               @relation(fields: [userTargetId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  userSource   User                @relation("userSource", fields: [userSourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user         User?               @relation(fields: [userTargetId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
 }
 
@@ -60,23 +60,23 @@ model Training {
 }
 
 model User {
-  id                           String         @id @default(uuid())
+  id                           String                            @id @default(uuid())
   firstName                    String?
   lastName                     String?
-  email                        String         @unique
-  roles                        String         @db.LongText
+  email                        String                            @unique
+  roles                        String                            @db.LongText
   password                     String
-  birthdate                    DateTime?      @db.Date
+  birthdate                    DateTime?                         @db.Date
   pictureId                    String?
   avatar3dId                   String?
   snapchat                     String?
   instagram                    String?
   resetToken                   String?
-  isVerified                   Boolean        @default(true)
-  createdAt                    DateTime       @default(now())
+  isVerified                   Boolean                           @default(true)
+  createdAt                    DateTime                          @default(now())
   updatedAt                    DateTime?
-  isActive                     Boolean        @default(true)
-  isFilled                     Boolean        @default(false)
+  isActive                     Boolean                           @default(true)
+  isFilled                     Boolean                           @default(false)
   androidPushnotificationToken String?
   sendbirdAccessToken          String?
   expoPushNotificationToken    String?
@@ -84,13 +84,13 @@ model User {
   iosPushnotificationToken     String?
   about                        String?
   locale                       String?
-  notification                 Notification[] @relation("userSource")
+  notification                 Notification[]                    @relation("userSource")
   notifications                Notification[]
   posts                        Post[]
   postComments                 PostComment[]
   tags                         Tag[]
-  followersFollowships         Followship[]   @relation("followers")
-  followeesFollowships         Followship[]   @relation("followees")
+  followersFollowships         Followship[]                      @relation("followers")
+  followeesFollowships         Followship[]                      @relation("followees")
   postReactions                PostReaction[]
 
   trainingId String?
@@ -101,9 +101,9 @@ model User {
 }
 
 model Followship {
-  follower   User     @relation("followers", fields: [followerId], references: [id])
+  follower   User     @relation("followers", fields: [followerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   followerId String
-  followee   User     @relation("followees", fields: [followeeId], references: [id])
+  followee   User     @relation("followees", fields: [followeeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   followeeId String
   createdAt  DateTime @unique @default(now())
 
@@ -114,9 +114,9 @@ model Tag {
   id        String   @id @default(uuid())
   text      String   @unique
   createdAt DateTime @default(now())
-  authorId  String
+  authorId  String?
   isLive    Boolean  @default(false)
-  author    User     @relation(fields: [authorId], references: [id])
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull, onUpdate: SetNull)
   posts     Post[]
 
 }
@@ -126,12 +126,12 @@ model Post {
   text       String         @db.Text
   createdAt  DateTime       @unique @default(now())
   authorId   String
-  author     User           @relation(fields: [authorId], references: [id])
+  author     User           @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   tags       Tag[]
   reactions  PostReaction[]
   viewsCount Int            @default(0)
   comments   PostComment[]
-  
+
   @@unique([authorId, id], map: "author_post_id_fkey")
 }
 
@@ -140,8 +140,8 @@ model PostComment {
   text      String   @db.Text
   createdAt DateTime @unique @default(now())
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
-  post      Post     @relation(fields: [postId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   postId    String
 }
 
@@ -155,8 +155,8 @@ model PostReaction {
   id        String   @id @default(uuid())
   createdAt DateTime @unique @default(now())
   reaction  String
-  author    User     @relation(fields: [authorId], references: [id])
-  post      Post?    @relation(fields: [postId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   postId    String
   authorId  String
 
@@ -166,6 +166,6 @@ model PostReaction {
 model ExpoPushNotificationAccessToken {
   id     String @id @default(uuid())
   userId String
-  token  String 
-  user   User   @relation(fields: [userId], references: [id])
+  token  String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
