@@ -561,7 +561,6 @@ export class UserService {
           avatar3dId: updateUserData.avatar3dId,
           about: updateUserData.about,
           isFilled: updateUserData.isFilled,
-          expoPushNotificationToken: updateUserData.expoPushNotificationToken,
         }),
         ...(updateUserData.trainingName && {
           school: {
