@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { stringify } from 'qs'
 import { PrismaService } from 'src/core/prisma.service'
 import expo from '../utils/expo'
+import { Expo, ExpoPushMessage } from 'expo-server-sdk'
 
 const stringifyUserChatParams = (userObject) => {
   const { id, firstName, lastName, pictureId, birthdate } = userObject
@@ -72,6 +73,7 @@ export class PushNotificationService {
           title: sender.nickname,
           body: payload.message,
           data: { userId: sender.user_id, unreadCount: 0, url },
+          sound: 'default' as const,
         }))
       })
       .flat()
