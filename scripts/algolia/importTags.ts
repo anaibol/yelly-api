@@ -2,7 +2,7 @@ import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 
 async function main() {
-  const INDEX_NAME = 'dev_TAGS'
+  const INDEX_NAME = 'prod_TAGS'
   const prisma = new PrismaClient()
 
   let hasTags = true
@@ -13,6 +13,11 @@ async function main() {
         id: true,
         text: true,
         createdAt: true,
+        _count: {
+          select: {
+            posts: true,
+          },
+        },
         posts: {
           select: {
             author: {
@@ -51,7 +56,7 @@ async function main() {
         objectID: tag.id,
         text: tag.text,
         lastUsers: [...lastUsers],
-        postCount: tag.posts.length,
+        postCount: tag._count.posts,
         createdAtTimestamp: Date.parse(tag.createdAt.toString()),
         updatedAtTimestamp: Date.parse(lastPost.createdAt.toString()),
         createdAt: tag.createdAt,
