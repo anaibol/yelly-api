@@ -22,6 +22,8 @@ type IncomingUser = {
   birthdate: Date
 }
 
+const SAMUEL_ADMIN_ID = process.env.SAMUEL_ADMIN_ID
+
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined || v === null ? a : ((a[k] = v), a)), {})
 
@@ -56,7 +58,7 @@ export class SendbirdService {
 
     const { data } = await this.client.post('/v3/users', sendbirdUser)
 
-    await this.welcomeMessage(user.id)
+    this.welcomeMessage(user.id, user.firstName)
     return data.access_token
   }
 
@@ -92,11 +94,9 @@ export class SendbirdService {
     return true
   }
 
-  async welcomeMessage(userId: string) {
-    // TODO: THIS ID SHOULD BE IN A ENV FILE
-    const sammuelId = 'a97e6893-2ac9-4f6f-84d8-0f5d08ef41b5'
-    const userIds = [userId, sammuelId]
-    const channelUrl = `${userId}_${sammuelId}`
+  async welcomeMessage(userId: string, userFirstName: string) {
+    const userIds = [userId, SAMUEL_ADMIN_ID]
+    const channelUrl = `${userId}_${SAMUEL_ADMIN_ID}`
 
     try {
       const channel = await this.client.post('/v3/group_channels', {
@@ -105,14 +105,14 @@ export class SendbirdService {
         name: 'welcome chat',
         custom_type: '1-1',
         is_distinct: true,
-        inviter_id: sammuelId,
+        inviter_id: SAMUEL_ADMIN_ID,
       })
 
       if (channel) {
         await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
           message_type: 'MESG',
-          user_id: sammuelId,
-          message: `Salut Pierre, 
+          user_id: SAMUEL_ADMIN_ID,
+          message: `Salut ${userFirstName}, 
           Je m'appelle Samuel et c'est moi qui ai crée Yelly 😄 ! Bienvenue sur l'app !
           ça m'aiderait de ouf si tu pouvais me donner quelques conseils ou idées pour l'améliorer. Je prends aussi les critiques !
           Merci !`,
