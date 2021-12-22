@@ -279,48 +279,6 @@ export class UserService {
             followersFollowships: true,
           },
         },
-        posts: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 10,
-          select: {
-            id: true,
-            createdAt: true,
-            viewsCount: true,
-            text: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-            tags: {
-              select: {
-                id: true,
-                text: true,
-                isLive: true,
-              },
-            },
-            reactions: {
-              select: {
-                id: true,
-                reaction: true,
-                authorId: true,
-              },
-              distinct: 'reaction',
-              take: 2,
-            },
-            _count: {
-              select: {
-                reactions: true,
-                comments: true,
-              },
-            },
-          },
-        },
         school: {
           select: {
             id: true,

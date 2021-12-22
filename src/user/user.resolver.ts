@@ -1,16 +1,27 @@
-import { UseGuards } from '@nestjs/common'
+import { Cache } from 'cache-manager'
+import { CACHE_MANAGER, Inject, UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
-import { PaginationArgs } from '../common/pagination.args'
-import { ToggleFollowInput } from './toggle-follow.input'
+
 import { User } from './user.model'
-import { UserService } from './user.service'
+
+import { PaginationArgs } from '../common/pagination.args'
+import { GetPostsArgs } from '../post/get-posts.args'
+
+import { ToggleFollowInput } from './toggle-follow.input'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
+
+import { UserService } from './user.service'
 import { AuthUser } from '../auth/auth.service'
+import { PostService } from 'src/post/post.service'
 
 @Resolver(() => User)
 export class UserResolver {
-  constructor(private userService: UserService) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private postService: PostService,
+    private userService: UserService
+  ) {}
 
   @Query(() => User, { name: 'user' })
   @UseGuards(AuthGuard)
@@ -38,5 +49,20 @@ export class UserResolver {
   @ResolveField()
   async isFollowingAuthUser(@Parent() user: User, @CurrentUser() authUser: AuthUser) {
     return this.userService.isFollowingAuthUser(user.id, authUser.id)
+  }
+
+  @ResolveField()
+  async posts(@Parent() user: User, @Args() GetPostsArgs?: GetPostsArgs) {
+    const cacheKey = 'userPosts:' + JSON.stringify(GetPostsArgs)
+    const previousResponse = await this.cacheManager.get(cacheKey)
+
+    if (previousResponse) return previousResponse
+
+    const { schoolId, after, limit } = GetPostsArgs
+    const { posts, cursor } = await this.postService.find(null, user.id, schoolId, after, limit)
+    const response = { items: posts, nextCursor: cursor }
+    this.cacheManager.set(cacheKey, response, { ttl: 5 })
+
+    return response
   }
 }

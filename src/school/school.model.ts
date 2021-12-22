@@ -4,7 +4,7 @@ import { PaginatedPosts } from '../post/paginated-posts.model'
 
 @ObjectType()
 export class School {
-  @Field({ nullable: true })
+  @Field()
   id: string
   name?: string
   googlePlaceId?: string
