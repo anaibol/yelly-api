@@ -22,11 +22,6 @@ export class SchoolResolver {
   }
 
   @ResolveField()
-  async totalUsersCount(@Parent() school: School) {
-    return this.prismaService.user.count({ where: { schoolId: school.id } })
-  }
-
-  @ResolveField()
   async posts(@Parent() school: School, @Args() GetPostsArgs?: GetPostsArgs) {
     const cacheKey = 'postsFeed:' + JSON.stringify(GetPostsArgs)
     const previousResponse = await this.cacheManager.get(cacheKey)

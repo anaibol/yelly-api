@@ -7,7 +7,23 @@ export class SchoolService {
   constructor(private prismaService: PrismaService) {}
 
   async getSchool(id: string) {
-    return this.prismaService.school.findUnique({ where: { id } })
+    const school = await this.prismaService.school.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        id: true,
+        _count: {
+          select: {
+            User: true,
+          },
+        },
+      },
+    })
+
+    return {
+      ...school,
+      totalUsersCount: school._count.User,
+    }
   }
 
   async getOrCreate(googlePlaceId: string) {
