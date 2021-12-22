@@ -12,6 +12,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
 import { PushNotificationService } from './core/push-notification.service'
 import { SendbirdWebhookController } from './sendbird-webhook/sendbird-webhook.controller'
 import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.module'
+import { SchoolModule } from './school/school.module'
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.modu
     AuthModule,
     NotificationModule,
     PushNotificationModule,
+    SchoolModule,
   ],
   providers: [PushNotificationService],
   controllers: [SendbirdWebhookController],

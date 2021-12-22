@@ -1,6 +1,6 @@
 import { ID, Field, ObjectType } from '@nestjs/graphql'
 import { Post } from '../post/post.model'
-import { School } from './school.model'
+import { School } from '../school/school.model'
 import { Training } from './training.model'
 
 @ObjectType()

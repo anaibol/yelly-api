@@ -6,7 +6,7 @@ import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { SendbirdService } from '../core/sendbird.service'
-import { SchoolService } from './school.service'
+import { SchoolService } from '../school/school.service'
 import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
@@ -62,6 +62,20 @@ export class UserService {
       ...user,
       id: user.id,
     }
+  }
+
+  async findBySchool(schoolId: string) {
+    return this.prismaService.user.count({
+      where: {
+        schoolId,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        pictureId: true,
+      },
+    })
   }
 
   async findOne(userId) {
