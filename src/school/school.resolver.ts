@@ -4,21 +4,22 @@ import { CACHE_MANAGER, Inject } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { School } from './school.model'
 import { SchoolService } from './school.service'
-import { PrismaService } from 'src/core/prisma.service'
 import { GetPostsArgs } from '../post/get-posts.args'
+import { GetSchoolArgs } from './get-school.args'
 
 @Resolver(School)
 export class SchoolResolver {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private prismaService: PrismaService,
     private postService: PostService,
     private schoolService: SchoolService
   ) {}
 
   @Query(() => School, { nullable: true })
-  async getSchool(@Args({ name: 'schoolId', type: () => String }) schoolId) {
-    return this.schoolService.getSchool(schoolId)
+  async school(@Args() GetSchoolArgs?: GetSchoolArgs) {
+    const { id, googlePlaceId } = GetSchoolArgs
+
+    return this.schoolService.getSchool(id, googlePlaceId)
   }
 
   @ResolveField()

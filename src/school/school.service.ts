@@ -6,9 +6,12 @@ import { getCityNameWithCountry, getGoogleCityByName, getGooglePlaceDetails } fr
 export class SchoolService {
   constructor(private prismaService: PrismaService) {}
 
-  async getSchool(id: string) {
+  async getSchool(id: string, googlePlaceId: string) {
     const school = await this.prismaService.school.findUnique({
-      where: { id },
+      where: {
+        ...(id && { id }),
+        ...(googlePlaceId && { googlePlaceId }),
+      },
       select: {
         name: true,
         id: true,
