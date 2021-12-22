@@ -27,14 +27,8 @@ export class PostResolver {
 
     if (previousResponse) return previousResponse
 
-    const { posts, cursor } = await this.postService.find(
-      GetPostsArgs.tag,
-      GetPostsArgs.userId,
-      GetPostsArgs.schoolId,
-      GetPostsArgs.after,
-      GetPostsArgs.limit
-    )
-
+    const { tag, userId, schoolId, after, limit } = GetPostsArgs
+    const { posts, cursor } = await this.postService.find(tag, userId, schoolId, after, limit)
     const response = { items: posts, nextCursor: cursor }
 
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
