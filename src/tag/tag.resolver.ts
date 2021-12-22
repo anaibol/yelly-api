@@ -52,7 +52,7 @@ export class TagResolver {
 
   @ResolveField()
   async posts(@Parent() tag: Tag, @Args() GetPostsArgs?: GetPostsArgs) {
-    const cacheKey = 'postsFeed:' + JSON.stringify(GetPostsArgs)
+    const cacheKey = 'posts:' + JSON.stringify(GetPostsArgs)
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse

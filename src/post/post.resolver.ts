@@ -20,9 +20,9 @@ export class PostResolver {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private postService: PostService) {}
 
   @UseGuards(AuthGuard)
-  @Query(() => PaginatedPosts, { name: 'postsFeed' })
-  async getPostsFeed(@Args() GetPostsArgs?: GetPostsArgs) {
-    const cacheKey = 'postsFeed:' + JSON.stringify(GetPostsArgs)
+  @Query(() => PaginatedPosts, { name: 'posts' })
+  async getPosts(@Args() GetPostsArgs?: GetPostsArgs) {
+    const cacheKey = 'posts:' + JSON.stringify(GetPostsArgs)
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
