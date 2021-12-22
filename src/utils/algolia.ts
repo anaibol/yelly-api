@@ -4,6 +4,7 @@ export type UserIndexAlgoliaInterface = {
   firstName: string
   lastName: string
   pictureId: string
+  createdAtTimestamp: number
   birthdateTimestamp: number
   hasPicture: boolean
   training: {
@@ -41,6 +42,7 @@ export const algoliaUserSelect = {
   isFilled: true,
   pictureId: true,
   birthdate: true,
+  createdAt: true,
   training: {
     select: {
       id: true,
@@ -81,6 +83,7 @@ export function mapAlgoliaUser(user): UserIndexAlgoliaInterface {
     lastName: user.lastName,
     pictureId: user.pictureId,
     birthdateTimestamp: user.birthdate ? Date.parse(user.birthdate.toString()) : null,
+    createdAtTimestamp: user.createdAt ? Date.parse(user.createdAt.toString()) : null,
     hasPicture: user.pictureId != null,
     training: {
       id: user.training.id,
