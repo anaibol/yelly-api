@@ -23,7 +23,7 @@ export class SchoolResolver {
 
   @ResolveField()
   async posts(@Parent() school: School, @Args() GetPostsArgs?: GetPostsArgs) {
-    const cacheKey = 'schoolPost:' + JSON.stringify(GetPostsArgs)
+    const cacheKey = 'schoolPosts:' + JSON.stringify(GetPostsArgs)
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse

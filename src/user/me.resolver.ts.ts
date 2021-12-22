@@ -146,7 +146,6 @@ export class MeResolver {
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
-    console.log('me.id:', me.id)
     const { schoolId, after, limit } = GetPostsArgs
     const { posts, cursor } = await this.postService.find(null, me.id, schoolId, after, limit)
     const response = { items: posts, nextCursor: cursor }
