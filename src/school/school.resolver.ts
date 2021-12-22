@@ -1,5 +1,4 @@
 import { Resolver, Query, Args, ResolveField, Parent } from '@nestjs/graphql'
-import { PostService } from 'src/post/post.service'
 import { CACHE_MANAGER, Inject } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { School } from './school.model'
