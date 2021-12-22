@@ -20,6 +20,8 @@ export class SchoolService {
       },
     })
 
+    if (!school) return null
+
     return {
       ...school,
       totalUsersCount: school._count.User,
