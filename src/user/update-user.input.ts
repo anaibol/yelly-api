@@ -24,9 +24,6 @@ export class UpdateUserInput {
   snapchat: string
 
   @Field(() => String, { nullable: true })
-  expoPushNotificationToken: string
-
-  @Field(() => String, { nullable: true })
   pictureId: string
 
   @Field(() => String, { nullable: true })

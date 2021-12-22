@@ -170,7 +170,6 @@ input UpdateUserInput {
   about: String
   birthdate: DateTime
   email: String
-  expoPushNotificationToken: String
   firstName: String
   instagram: String
   lastName: String

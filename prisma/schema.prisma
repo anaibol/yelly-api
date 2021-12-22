@@ -79,7 +79,6 @@ model User {
   isFilled                     Boolean                           @default(false)
   androidPushnotificationToken String?
   sendbirdAccessToken          String?
-  expoPushNotificationToken    String?
   expoPushNotificationTokens   ExpoPushNotificationAccessToken[]
   iosPushnotificationToken     String?
   about                        String?
