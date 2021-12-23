@@ -28,6 +28,9 @@ import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.modu
       autoSchemaFile: join(process.cwd(), '../schema.gql'),
       sortSchema: true,
       context: ({ req, res }): any => ({ req, res }),
+      buildSchemaOptions: {
+        numberScalarMode: 'integer',
+      },
     }),
     UserModule,
     PostModule,

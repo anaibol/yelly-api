@@ -8,11 +8,9 @@ import { SignUpInput } from './sign-up.input'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { AuthService, AuthUser } from '../auth/auth.service'
-import { PrismaService } from '../core/prisma.service'
 import { NotificationService } from '../notification/notification.service'
 import { Token } from './token.model'
 import { SendbirdAccessToken } from './sendbirdAccessToken'
-import { ExpoPushNotificationsToken } from './expoPushNotificationsToken.model'
 
 import { SignInInput } from './sign-in.input'
 
@@ -23,7 +21,6 @@ import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.
 @Resolver(() => Me)
 export class MeResolver {
   constructor(
-    private prismaService: PrismaService,
     private userService: UserService,
     private authService: AuthService,
     private notificationService: NotificationService,

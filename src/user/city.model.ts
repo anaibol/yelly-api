@@ -1,23 +1,13 @@
-import { Field, ObjectType } from '@nestjs/graphql'
+import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { Country } from './country.model'
 
 @ObjectType()
 export class City {
-  @Field()
+  @Field(() => ID)
   id: string
-
-  @Field()
   name: string
-
-  @Field({ nullable: true })
-  googlePlaceId: string
-
-  @Field({ nullable: true })
+  googlePlaceId?: string
   lat?: string
-
-  @Field({ nullable: true })
   lng?: string
-
-  @Field({ nullable: true })
-  country: Country
+  country?: Country
 }
