@@ -1,42 +1,21 @@
 import { Injectable } from '@nestjs/common'
-import { stringify } from 'qs'
 import { PrismaService } from 'src/core/prisma.service'
 import expo from '../utils/expo'
-import { Expo, ExpoPushMessage } from 'expo-server-sdk'
-
-const stringifyUserChatParams = (userObject) => {
-  const { id, firstName, lastName, pictureId, birthdate } = userObject
-  return stringify({
-    id,
-    firstName,
-    lastName,
-    pictureId: pictureId || '',
-    birthdate: birthdate || '',
-  })
-}
 
 @Injectable()
 export class PushNotificationService {
   constructor(private prismaService: PrismaService) {}
 
-  getUsersByIds(usersId: string[]) {
-    return this.prismaService.user.findMany({
+  getPushTokensByUsersIds(usersId: string[]) {
+    return this.prismaService.expoPushNotificationAccessToken.findMany({
       select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        pictureId: true,
-        birthdate: true,
-        expoPushNotificationTokens: {
-          select: {
-            token: true,
-          },
-        },
+        token: true,
+        userId: true,
       },
       where: {
         OR: [
           ...usersId.map((userId) => ({
-            id: userId,
+            userId,
           })),
         ],
       },
@@ -50,33 +29,22 @@ export class PushNotificationService {
       }
 
     const { sender, members, payload } = body
-    const users = await this.getUsersByIds(members.map((members) => members.user_id))
+    const pushTokens = await this.getPushTokensByUsersIds(members.map((members) => members.user_id))
 
-    const receiverUsers = users.filter((user) => {
-      const senderId = sender.user_id
-      const memberID = user.id
-      return memberID !== senderId
+    const receiverUsersTokens = pushTokens.filter(({ userId }) => userId !== sender.user_id)
+    const senderUser = pushTokens.find(({ userId }) => userId === sender.user_id)
+
+    const messages = receiverUsersTokens.map((expoPushNotificationToken) => {
+      const url = `${process.env.APP_BASE_URL}/chat/user/${senderUser.userId}`
+
+      return {
+        to: expoPushNotificationToken.token || '',
+        title: sender.nickname,
+        body: payload.message,
+        data: { userId: sender.user_id, unreadCount: 0, url },
+        sound: 'default' as const,
+      }
     })
-
-    const senderUser = users.find((user) => {
-      const senderId = sender.user_id
-      const memberID = user.id
-      return memberID === senderId
-    })
-
-    const messages = receiverUsers
-      .map((receiverUser) => {
-        const url = `${process.env.APP_BASE_URL}/chat/user/${stringifyUserChatParams(senderUser)}`
-
-        return receiverUser.expoPushNotificationTokens.map((expoPushNotificationToken) => ({
-          to: expoPushNotificationToken.token || '',
-          title: sender.nickname,
-          body: payload.message,
-          data: { userId: sender.user_id, unreadCount: 0, url },
-          sound: 'default' as const,
-        }))
-      })
-      .flat()
 
     await expo.sendNotifications(messages)
 
