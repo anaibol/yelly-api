@@ -250,7 +250,6 @@ export class UserService {
         email: true,
         firstName: true,
         lastName: true,
-        password: true,
         pictureId: true,
         avatar3dId: true,
         birthdate: true,
@@ -516,37 +515,34 @@ export class UserService {
       select: {
         id: true,
         isFilled: true,
-        ...(updateUserData.isFilled && {
-          email: true,
-          firstName: true,
-          lastName: true,
-          password: true,
-          pictureId: true,
-          avatar3dId: true,
-          birthdate: true,
-          about: true,
-          instagram: true,
-          snapchat: true,
-          sendbirdAccessToken: true,
-          school: {
-            select: {
-              id: true,
-              name: true,
-              city: {
-                select: {
-                  id: true,
-                  name: true,
-                },
+        // ...(updateUserData.isFilled && {
+        email: true,
+        firstName: true,
+        lastName: true,
+        pictureId: true,
+        avatar3dId: true,
+        birthdate: true,
+        about: true,
+        sendbirdAccessToken: true,
+        school: {
+          select: {
+            id: true,
+            name: true,
+            city: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
-          training: {
-            select: {
-              id: true,
-              name: true,
-            },
+        },
+        training: {
+          select: {
+            id: true,
+            name: true,
           },
-        }),
+        },
+        // }),
       },
       data: {
         ...cleanUndefinedFromObj({
@@ -630,9 +626,7 @@ export class UserService {
       } catch (error) {
         console.log(error)
       }
-    }
-
-    if (updatedUser.isFilled) {
+    } else if (updatedUser.isFilled) {
       if (updatedUser.firstName || updatedUser.lastName || updatedUser.pictureId) {
         this.updateSenbirdUser(updatedUser)
       }

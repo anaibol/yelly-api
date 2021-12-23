@@ -41,7 +41,7 @@ export class SendbirdService {
   }
 
   async createUser(user: IncomingUser): Promise<string> {
-    const profileUrl = user.pictureId && 'http://yelly.imgix.net/' + user.pictureId + '?format=auto'
+    const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}?format=auto`
 
     const sendbirdUser: SendbirdUser = {
       user_id: user.id,
@@ -61,8 +61,15 @@ export class SendbirdService {
     return data.access_token
   }
 
-  updateUser(user: Partial<IncomingUser>) {
-    const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}/?format=auto`
+  async updateUser(user: Partial<IncomingUser>) {
+    const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}?format=auto`
+
+    const updatedUserData: Partial<SendbirdUser> = {
+      nickname: `${user.firstName} ${user.lastName}`,
+      ...cleanUndefinedFromObj({
+        profile_url: profileUrl,
+      }),
+    }
 
     const metadata = cleanUndefinedFromObj({
       firstName: user.firstName,
@@ -70,17 +77,10 @@ export class SendbirdService {
       pictureId: user.pictureId,
     })
 
-    const updatedUserData: Partial<SendbirdUser> = {
-      ...cleanUndefinedFromObj({
-        profile_url: profileUrl,
-        ...(Object.keys(metadata).length && {
-          nickname: `${user.firstName} ${user.lastName}`,
-          metadata,
-        }),
-      }),
-    }
-
-    return this.client.put(`/v3/users/${user.id}`, updatedUserData)
+    await Promise.all([
+      this.client.put(`/v3/users/${user.id}`, updatedUserData),
+      Object.keys(metadata).length && this.client.put(`/v3/users/${user.id}/metadata`, { metadata, upsert: true }),
+    ])
   }
 
   async getAccessToken(userId: string): Promise<string> {
