@@ -24,7 +24,7 @@ import { SignUpInput } from './sign-up.input'
 import { SignInInput } from './sign-in.input'
 import { UpdateUserInput } from './update-user.input'
 import { ResetPasswordInput } from './reset-password.input'
-import { postSelect } from 'src/post/select.constant'
+import { postSelect } from 'src/post/post.constant'
 
 @Resolver(() => Me)
 export class MeResolver {
@@ -175,8 +175,8 @@ export class MeResolver {
 
     const formattedPosts = posts.map((post) => ({
       ...post,
-      totalReactionsCount: post._count?.reactions || 0,
-      totalCommentsCount: post._count?.comments || 0,
+      totalReactionsCount: post._count.reactions,
+      totalCommentsCount: post._count.comments,
     }))
 
     const nextCursor = posts.length === limit ? posts[limit - 1].createdAt : ''

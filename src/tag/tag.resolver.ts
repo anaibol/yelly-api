@@ -16,7 +16,7 @@ import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { GetTagArgs } from './get-tag.args'
 import { PrismaService } from 'src/core/prisma.service'
-import { postSelect } from '../post/select.constant'
+import { postSelect } from '../post/post.constant'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -85,7 +85,7 @@ export class TagResolver {
 
     const formattedPosts = posts.map((post) => ({
       ...post,
-      totalReactionsCount: post?._count.reactions,
+      totalReactionsCount: post._count.reactions,
       totalCommentsCount: post._count.comments,
     }))
 

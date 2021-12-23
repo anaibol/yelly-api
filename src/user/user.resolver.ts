@@ -14,7 +14,7 @@ import { CurrentUser } from '../auth/user.decorator'
 import { UserService } from './user.service'
 import { AuthUser } from '../auth/auth.service'
 import { PrismaService } from 'src/core/prisma.service'
-import { postSelect } from 'src/post/select.constant'
+import { postSelect } from 'src/post/post.constant'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -84,8 +84,8 @@ export class UserResolver {
 
     const formattedPosts = posts.map((post) => ({
       ...post,
-      totalReactionsCount: post._count?.reactions || 0,
-      totalCommentsCount: post._count?.comments || 0,
+      totalReactionsCount: post._count.reactions,
+      totalCommentsCount: post._count.comments,
     }))
 
     const nextCursor = posts.length === limit ? posts[limit - 1].createdAt : ''

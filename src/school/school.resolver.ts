@@ -7,7 +7,7 @@ import { SchoolService } from './school.service'
 import { GetPostsArgs } from '../post/get-posts.args'
 import { GetSchoolArgs } from './get-school.args'
 import { PrismaService } from 'src/core/prisma.service'
-import { postSelect } from '../post/select.constant'
+import { postSelect } from '../post/post.constant'
 
 @Resolver(School)
 export class SchoolResolver {
@@ -49,8 +49,8 @@ export class SchoolResolver {
 
     const formattedPosts = posts.map((post) => ({
       ...post,
-      totalReactionsCount: post._count?.reactions || 0,
-      totalCommentsCount: post._count?.comments || 0,
+      totalReactionsCount: post._count.reactions,
+      totalCommentsCount: post._count.comments,
     }))
 
     const nextCursor = posts.length === limit ? posts[limit - 1].createdAt : ''
