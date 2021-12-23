@@ -10,6 +10,18 @@ export type AuthUser = { id: string } | null
 export class AuthService {
   constructor(private prismaService: PrismaService, private readonly jwtService: JwtService) {}
 
+  async validateFirebaseUser(): Promise<AuthUser> {
+    // decode firebase token
+
+    // check if user exists
+
+    // if user return user
+
+    // else return null
+
+    return null
+  }
+
   async validateUser(email: string, password: string): Promise<AuthUser> {
     if (process.env.ADMIN_MODE === 'true' && process.env.NODE_ENV === 'production' && !email.endsWith('@yelly.app'))
       return null
