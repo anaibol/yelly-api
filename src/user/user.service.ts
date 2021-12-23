@@ -12,6 +12,7 @@ import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
+import { FirebaseSignUpInput } from './dto/firebase-signup.input'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
@@ -492,6 +493,8 @@ export class UserService {
       id: user.id,
     }
   }
+
+  // async firebaseSignUp(firebaseSignUpInput: FirebaseSignUpInput) {}
 
   async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<User> {
     const user = await this.prismaService.user.findUnique({
