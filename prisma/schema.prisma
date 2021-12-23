@@ -63,7 +63,8 @@ model User {
   id                           String                            @id @default(uuid())
   firstName                    String?
   lastName                     String?
-  email                        String                            @unique
+  email                        String?                           @unique
+  phoneNumber                  String?                           @unique
   roles                        String                            @db.LongText
   password                     String
   birthdate                    DateTime?                         @db.Date

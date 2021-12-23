@@ -13,6 +13,9 @@ export class Me {
   email?: string
 
   @Field({ nullable: true })
+  phoneNumber?: string
+
+  @Field({ nullable: true })
   firstName?: string
 
   @Field({ nullable: true })
