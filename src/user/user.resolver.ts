@@ -14,6 +14,7 @@ import { CurrentUser } from '../auth/user.decorator'
 import { UserService } from './user.service'
 import { AuthUser } from '../auth/auth.service'
 import { PrismaService } from 'src/core/prisma.service'
+import { postSelect } from 'src/post/select.constant'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -78,52 +79,7 @@ export class UserResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: {
-        _count: {
-          select: {
-            reactions: true,
-            comments: true,
-          },
-        },
-        id: true,
-        createdAt: true,
-        viewsCount: true,
-        text: true,
-        reactions: {
-          select: {
-            id: true,
-            reaction: true,
-            authorId: true,
-          },
-          distinct: 'reaction',
-          take: 2,
-        },
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            birthdate: true,
-            pictureId: true,
-          },
-        },
-        tags: {
-          select: {
-            id: true,
-            createdAt: true,
-            text: true,
-            isLive: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-          },
-        },
-      },
+      select: postSelect,
     })
 
     const formattedPosts = posts.map((post) => ({

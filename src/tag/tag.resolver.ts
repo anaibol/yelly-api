@@ -16,6 +16,7 @@ import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { GetTagArgs } from './get-tag.args'
 import { PrismaService } from 'src/core/prisma.service'
+import { postSelect } from '../post/select.constant'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -79,58 +80,13 @@ export class TagResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: {
-        _count: {
-          select: {
-            reactions: true,
-            comments: true,
-          },
-        },
-        id: true,
-        createdAt: true,
-        viewsCount: true,
-        text: true,
-        reactions: {
-          select: {
-            id: true,
-            reaction: true,
-            authorId: true,
-          },
-          distinct: 'reaction',
-          take: 2,
-        },
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            birthdate: true,
-            pictureId: true,
-          },
-        },
-        tags: {
-          select: {
-            id: true,
-            createdAt: true,
-            text: true,
-            isLive: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-          },
-        },
-      },
+      select: postSelect,
     })
 
     const formattedPosts = posts.map((post) => ({
       ...post,
-      totalReactionsCount: post._count?.reactions || 0,
-      totalCommentsCount: post._count?.comments || 0,
+      totalReactionsCount: post?._count.reactions,
+      totalCommentsCount: post._count.comments,
     }))
 
     const nextCursor = posts.length === limit ? posts[limit - 1].createdAt : ''

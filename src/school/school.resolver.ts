@@ -7,6 +7,7 @@ import { SchoolService } from './school.service'
 import { GetPostsArgs } from '../post/get-posts.args'
 import { GetSchoolArgs } from './get-school.args'
 import { PrismaService } from 'src/core/prisma.service'
+import { postSelect } from '../post/select.constant'
 
 @Resolver(School)
 export class SchoolResolver {
@@ -43,52 +44,7 @@ export class SchoolResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: {
-        _count: {
-          select: {
-            reactions: true,
-            comments: true,
-          },
-        },
-        id: true,
-        createdAt: true,
-        viewsCount: true,
-        text: true,
-        reactions: {
-          select: {
-            id: true,
-            reaction: true,
-            authorId: true,
-          },
-          distinct: 'reaction',
-          take: 2,
-        },
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            birthdate: true,
-            pictureId: true,
-          },
-        },
-        tags: {
-          select: {
-            id: true,
-            createdAt: true,
-            text: true,
-            isLive: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-          },
-        },
-      },
+      select: postSelect,
     })
 
     const formattedPosts = posts.map((post) => ({
