@@ -6,7 +6,7 @@ import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reactio
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { TagService } from 'src/tag/tag.service'
-import { CreateCommentInput } from './create-comment-input'
+import { CreateCommentInput } from './create-comment.input'
 import { AlgoliaService } from 'src/core/algolia.service'
 
 @Injectable()

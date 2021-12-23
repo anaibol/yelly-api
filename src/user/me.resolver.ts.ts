@@ -15,7 +15,7 @@ import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { SignInInput } from './sign-in.input'
 
 import { UpdateUserInput } from './update-user.input'
-import { ResetPasswordInput } from './reset-password-.input'
+import { ResetPasswordInput } from './reset-password.input'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 
 @Resolver(() => Me)

@@ -13,7 +13,7 @@ import { GetPostArgs } from './get-post.args'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Cache } from 'cache-manager'
 import { Post } from './post.model'
-import { CreateCommentInput } from './create-comment-input'
+import { CreateCommentInput } from './create-comment.input'
 
 @Resolver()
 export class PostResolver {
