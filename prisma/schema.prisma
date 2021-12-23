@@ -54,6 +54,7 @@ model School {
   cityId        String
   city          City    @relation(fields: [cityId], references: [id])
   User          User[]
+  posts         Post[]
 
 }
 
@@ -137,6 +138,8 @@ model Post {
   comments   PostComment[]
 
   @@unique([authorId, id], map: "author_post_id_fkey")
+  School   School? @relation(fields: [schoolId], references: [id])
+  schoolId String?
 }
 
 model PostComment {

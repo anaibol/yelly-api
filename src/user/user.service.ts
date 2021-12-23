@@ -259,6 +259,7 @@ export class UserService {
         },
       },
     })
+
     if (!user) {
       throw new NotFoundUserException()
     }
@@ -570,14 +571,6 @@ export class UserService {
       formattedUser.followeesCount = user._count.followersFollowships
       formattedUser.followersCount = user._count.followeesFollowships
     }
-
-    formattedUser.posts = user.posts
-      ? user.posts.map((post) => ({
-          ...post,
-          totalReactionsCount: post._count.reactions,
-          totalCommentsCount: post._count.comments,
-        }))
-      : []
 
     return formattedUser
   }

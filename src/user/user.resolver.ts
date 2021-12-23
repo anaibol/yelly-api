@@ -13,14 +13,14 @@ import { CurrentUser } from '../auth/user.decorator'
 
 import { UserService } from './user.service'
 import { AuthUser } from '../auth/auth.service'
-import { PostService } from 'src/post/post.service'
+import { PrismaService } from 'src/core/prisma.service'
 
 @Resolver(() => User)
 export class UserResolver {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private postService: PostService,
-    private userService: UserService
+    private userService: UserService,
+    private prismaService: PrismaService
   ) {}
 
   @Query(() => User, { name: 'user' })
@@ -53,14 +53,87 @@ export class UserResolver {
 
   @ResolveField()
   async posts(@Parent() user: User, @Args() GetPostsArgs?: GetPostsArgs) {
-    const cacheKey = 'userPosts:' + JSON.stringify(GetPostsArgs)
+    const cacheKey = 'userPosts:' + JSON.stringify({ GetPostsArgs, user })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
 
     const { schoolId, after, limit } = GetPostsArgs
-    const { posts, cursor } = await this.postService.find(null, user.id, schoolId, after, limit)
-    const response = { items: posts, nextCursor: cursor }
+
+    const posts = await this.prismaService.user.findUnique({ where: { id: user.id } }).posts({
+      where: {
+        ...(schoolId && {
+          author: {
+            schoolId,
+          },
+        }),
+      },
+      ...(after && {
+        cursor: {
+          createdAt: new Date(+after).toISOString(),
+        },
+        skip: 1, // Skip the cursor
+      }),
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
+      select: {
+        _count: {
+          select: {
+            reactions: true,
+            comments: true,
+          },
+        },
+        id: true,
+        createdAt: true,
+        viewsCount: true,
+        text: true,
+        reactions: {
+          select: {
+            id: true,
+            reaction: true,
+            authorId: true,
+          },
+          distinct: 'reaction',
+          take: 2,
+        },
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            birthdate: true,
+            pictureId: true,
+          },
+        },
+        tags: {
+          select: {
+            id: true,
+            createdAt: true,
+            text: true,
+            isLive: true,
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                pictureId: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const formattedPosts = posts.map((post) => ({
+      ...post,
+      totalReactionsCount: post._count?.reactions || 0,
+      totalCommentsCount: post._count?.comments || 0,
+    }))
+
+    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt : ''
+    const response = { items: formattedPosts, nextCursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
     return response

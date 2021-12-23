@@ -30,7 +30,6 @@ export class PostResolver {
     const { tag, userId, schoolId, after, limit } = GetPostsArgs
     const { posts, cursor } = await this.postService.find(tag, userId, schoolId, after, limit)
     const response = { items: posts, nextCursor: cursor }
-
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
     return response
