@@ -12,6 +12,7 @@ import { GetPostsArgs } from '../post/get-posts.args'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 
+import { PrismaService } from '../core/prisma.service'
 import { UserService } from './user.service'
 import { AuthService, AuthUser } from '../auth/auth.service'
 import { NotificationService } from '../notification/notification.service'
@@ -28,6 +29,7 @@ import { ResetPasswordInput } from './reset-password.input'
 export class MeResolver {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private prismaService: PrismaService,
     private postService: PostService,
     private userService: UserService,
     private authService: AuthService,
