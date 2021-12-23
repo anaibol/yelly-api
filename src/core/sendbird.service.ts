@@ -10,7 +10,7 @@ type SendbirdUser = {
   metadata: {
     firstName: string
     lastName: string
-    birthdate: Date
+    pictureId: string
   }
 }
 
@@ -19,7 +19,6 @@ type IncomingUser = {
   firstName: string
   lastName: string
   pictureId: string
-  birthdate: Date
 }
 
 const SAMUEL_ADMIN_ID = process.env.SAMUEL_ADMIN_ID
@@ -52,7 +51,7 @@ export class SendbirdService {
       metadata: {
         firstName: user.firstName,
         lastName: user.lastName,
-        birthdate: user.birthdate,
+        pictureId: user.pictureId,
       },
     }
 
@@ -84,7 +83,7 @@ export class SendbirdService {
     return this.client.put(`/v3/users/${user.id}`, updatedUserData)
   }
 
-  async getAccessToken(userId: string) {
+  async getAccessToken(userId: string): Promise<string> {
     const response = await this.client.put(`/v3/users/${userId}`, { issue_access_token: true })
     return response.data.access_token
   }
