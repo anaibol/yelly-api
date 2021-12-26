@@ -7,7 +7,7 @@ const isLocalEnvironment = process.env.ENVIRONMENT === 'local'
 
 const REGION = 'eu-west-3'
 const BUCKET = 'yelly-images'
-const ENDPOINT = 'yelly-images.s3-accelerate.amazonaws.com'
+const ENDPOINT = 'https://yelly-images.s3-accelerate.amazonaws.com'
 
 const s3Configuration: S3ClientConfig = {
   credentials: {
