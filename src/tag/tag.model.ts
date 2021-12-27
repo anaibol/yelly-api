@@ -7,7 +7,7 @@ export class Tag {
   @Field(() => ID)
   id: string
   text: string
-  createdAt: string
+  createdAt?: string
   isLive: boolean
   author?: User
   posts?: PaginatedPosts
