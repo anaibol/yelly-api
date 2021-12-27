@@ -43,8 +43,8 @@ export class PostResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => Post, { name: 'getPost' })
-  async getPost(@Args() GetPostArgs?: GetPostArgs) {
+  @Query(() => Post)
+  async post(@Args() GetPostArgs?: GetPostArgs) {
     return this.postService.getById(GetPostArgs.id)
   }
 
