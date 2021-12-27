@@ -64,20 +64,6 @@ export class UserService {
     }
   }
 
-  async findBySchool(schoolId: string) {
-    return this.prismaService.user.count({
-      where: {
-        schoolId,
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        pictureId: true,
-      },
-    })
-  }
-
   async findOne(userId) {
     const user = await this.prismaService.user.findUnique({
       where: {

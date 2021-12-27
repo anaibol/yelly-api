@@ -17,7 +17,7 @@ export class SchoolService {
         id: true,
         _count: {
           select: {
-            User: true,
+            user: true,
           },
         },
       },
@@ -27,7 +27,7 @@ export class SchoolService {
 
     return {
       ...school,
-      totalUsersCount: school._count.User,
+      totalUsersCount: school._count.user,
     }
   }
 
