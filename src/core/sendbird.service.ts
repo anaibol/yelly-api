@@ -30,7 +30,7 @@ const cleanUndefinedFromObj = (obj) =>
 export class SendbirdService {
   client: Axios
 
-  constructor(private prismaService: PrismaService) {
+  constructor() {
     this.client = axios.create({
       baseURL: process.env.SENDBIRD_BASE_URL,
       headers: {

@@ -7,7 +7,6 @@ const isLocalEnvironment = process.env.ENVIRONMENT === 'local'
 
 const REGION = 'eu-west-3'
 const BUCKET = 'yelly-images'
-const ENDPOINT = 'https://yelly-images.s3-accelerate.amazonaws.com'
 
 const s3Configuration: S3ClientConfig = {
   credentials: {
@@ -15,7 +14,7 @@ const s3Configuration: S3ClientConfig = {
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
   region: REGION,
-  endpoint: ENDPOINT,
+  useAccelerateEndpoint: true,
 }
 const s3 = new S3Client(s3Configuration)
 

@@ -493,29 +493,13 @@ export class UserService {
   }
 
   async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<User> {
-    const user = await this.prismaService.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        isFilled: true,
-      },
-    })
-
-    if (!user) {
-      throw new NotFoundException()
-    }
-
     const schoolData =
       updateUserData.schoolGooglePlaceId && (await this.schoolService.getOrCreate(updateUserData.schoolGooglePlaceId))
 
     const updatedUser = await this.prismaService.user.update({
-      where: {
-        id: userId,
-      },
       select: {
         id: true,
         isFilled: true,
-        // ...(updateUserData.isFilled && {
         email: true,
         firstName: true,
         lastName: true,
@@ -542,23 +526,23 @@ export class UserService {
             name: true,
           },
         },
-        // }),
+      },
+      where: {
+        id: userId,
       },
       data: {
-        ...cleanUndefinedFromObj({
-          firstName: updateUserData.firstName,
-          lastName: updateUserData.lastName,
-          email: updateUserData.email,
-          password: updateUserData.password,
-          birthdate: updateUserData.birthdate,
-          instagram: updateUserData.instagram,
-          snapchat: updateUserData.snapchat,
-          pictureId: updateUserData.pictureId,
-          avatar3dId: updateUserData.avatar3dId,
-          about: updateUserData.about,
-          isFilled: updateUserData.isFilled,
-        }),
-        ...(updateUserData.trainingName && {
+        firstName: updateUserData.firstName,
+        lastName: updateUserData.lastName,
+        email: updateUserData.email,
+        password: updateUserData.password,
+        birthdate: updateUserData.birthdate,
+        instagram: updateUserData.instagram,
+        snapchat: updateUserData.snapchat,
+        pictureId: updateUserData.pictureId,
+        avatar3dId: updateUserData.avatar3dId,
+        about: updateUserData.about,
+        isFilled: updateUserData.isFilled,
+        ...(schoolData && {
           school: {
             connectOrCreate: {
               where: {
@@ -595,6 +579,8 @@ export class UserService {
               },
             },
           },
+        }),
+        ...(updateUserData.trainingName && {
           training: {
             connectOrCreate: {
               where: {
@@ -609,7 +595,7 @@ export class UserService {
       },
     })
 
-    if (!user.isFilled && updatedUser.isFilled) {
+    if (updateUserData.isFilled) {
       try {
         const sendbirdAccessToken = await this.sendbirdService.createUser(updatedUser)
 
@@ -624,14 +610,12 @@ export class UserService {
 
         updatedUser.sendbirdAccessToken = sendbirdAccessToken
       } catch (error) {
-        console.log(error)
+        // CATCH ERROR SO IT CONTINUES
       }
     } else if (updatedUser.isFilled) {
-      if (updatedUser.firstName || updatedUser.lastName || updatedUser.pictureId) {
-        this.updateSenbirdUser(updatedUser)
-      }
+      this.updateSenbirdUser(updatedUser)
 
-      this.syncUsersIndexWithAlgolia(user.id)
+      this.syncUsersIndexWithAlgolia(userId)
     }
 
     return this.formatUser(updatedUser)
