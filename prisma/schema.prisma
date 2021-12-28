@@ -36,7 +36,7 @@ model Notification {
   postReactionId String?       @unique
   postReaction   PostReaction? @relation(fields: [postReactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   followshipId   String?       @unique
-  newFollower    Followship?   @relation(fields: [followshipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  followship     Followship?   @relation(fields: [followshipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model School {
