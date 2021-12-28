@@ -315,7 +315,7 @@ export class PostService {
       update: reactionData,
     })
 
-    this.notificationService.upsertPostReactionNotification(postReaction.post.authorId, authUserId, postReaction.id)
+    this.notificationService.upsertPostReactionNotification(postReaction.post.authorId, postReaction.id)
 
     return !!postReaction
   }

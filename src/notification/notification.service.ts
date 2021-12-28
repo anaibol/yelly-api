@@ -9,7 +9,7 @@ export class NotificationService {
   async find(userId: string, currentCursor, limit = DEFAULT_LIMIT) {
     const notifications = await this.prismaService.notification.findMany({
       where: {
-        userTargetId: userId,
+        userId: userId,
       },
       ...(currentCursor && {
         cursor: {
@@ -19,20 +19,28 @@ export class NotificationService {
       }),
       select: {
         id: true,
-        type: true,
         createdAt: true,
         isSeen: true,
         postReaction: {
           select: {
             reaction: true,
             postId: true,
+            author: {
+              select: {
+                id: true,
+              },
+            },
           },
         },
-        userSource: {
+        followship: {
           select: {
-            id: true,
-            firstName: true,
-            pictureId: true,
+            follower: {
+              select: {
+                id: true,
+                firstName: true,
+                pictureId: true,
+              },
+            },
           },
         },
       },
@@ -44,31 +52,34 @@ export class NotificationService {
 
     const cursor = notifications.length === limit ? notifications[limit - 1].createdAt : ''
 
-    return { notifications, cursor }
+    const formattedNotifications = notifications.map(({ followship, ...notification }) => ({
+      ...notification,
+      follower: followship.follower,
+    }))
+
+    return { notifications: formattedNotifications, cursor }
   }
 
-  async countUnreadNotifications(userTargetId: string) {
+  async countUnreadNotifications(userId: string) {
     return this.prismaService.notification.count({
       where: {
-        userTargetId,
+        userId,
         isSeen: false,
       },
     })
   }
 
-  async upsertPostReactionNotification(userTargetId: string, userSourceId: string, postReactionId: string) {
+  async upsertPostReactionNotification(userId: string, postReactionId: string) {
     return this.prismaService.notification.upsert({
       where: {
         postReactionId,
       },
       create: {
-        userSourceId,
-        userTargetId,
+        userId,
         postReactionId,
       },
       update: {
-        userSourceId,
-        userTargetId,
+        userId,
         postReactionId,
       },
     })
