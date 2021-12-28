@@ -25,7 +25,7 @@ export class PostService {
 
     return true
   }
-  // TODO: Add return type, is not q expected result
+
   async find(tagText, userId, schoolId: string, currentCursor, limit = DEFAULT_LIMIT) {
     const posts = await this.prismaService.post.findMany({
       where: {
@@ -315,7 +315,7 @@ export class PostService {
       update: reactionData,
     })
 
-    this.notificationService.createPostReactionNotification(postReaction.post.authorId, authUserId, postReaction.id)
+    this.notificationService.upsertPostReactionNotification(postReaction.post.authorId, postReaction.id)
 
     return !!postReaction
   }

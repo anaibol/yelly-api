@@ -6,15 +6,13 @@ import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { SendbirdService } from '../core/sendbird.service'
-import { SchoolService } from './school.service'
+import { SchoolService } from '../school/school.service'
 import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
-
-const cleanUndefinedFromObj = (obj) =>
-  Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
+import { NotificationService } from 'src/notification/notification.service'
 
 @Injectable()
 export class UserService {
@@ -24,7 +22,8 @@ export class UserService {
     private emailService: EmailService,
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
-    private sendbirdService: SendbirdService
+    private sendbirdService: SendbirdService,
+    private notificationService: NotificationService
   ) {}
 
   async hasUserPostedOnTag(userId, tagText) {
@@ -84,47 +83,6 @@ export class UserService {
           select: {
             followeesFollowships: true,
             followersFollowships: true,
-          },
-        },
-        posts: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 10,
-          select: {
-            id: true,
-            createdAt: true,
-            viewsCount: true,
-            text: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-            tags: {
-              select: {
-                id: true,
-                text: true,
-                isLive: true,
-              },
-            },
-            reactions: {
-              select: {
-                id: true,
-                reaction: true,
-                authorId: true,
-              },
-              distinct: 'reaction',
-              take: 2,
-            },
-            _count: {
-              select: {
-                reactions: true,
-              },
-            },
           },
         },
         school: {
@@ -265,48 +223,6 @@ export class UserService {
             followersFollowships: true,
           },
         },
-        posts: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 10,
-          select: {
-            id: true,
-            createdAt: true,
-            viewsCount: true,
-            text: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-            tags: {
-              select: {
-                id: true,
-                text: true,
-                isLive: true,
-              },
-            },
-            reactions: {
-              select: {
-                id: true,
-                reaction: true,
-                authorId: true,
-              },
-              distinct: 'reaction',
-              take: 2,
-            },
-            _count: {
-              select: {
-                reactions: true,
-                comments: true,
-              },
-            },
-          },
-        },
         school: {
           select: {
             id: true,
@@ -328,6 +244,7 @@ export class UserService {
         },
       },
     })
+
     if (!user) {
       throw new NotFoundUserException()
     }
@@ -428,19 +345,21 @@ export class UserService {
   }
 
   async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
-    const followship = {
+    const followshipData = {
       followerId: authUserId,
       followeeId: otherUserId,
     }
 
     if (value) {
-      await this.prismaService.followship.create({
-        data: followship,
+      const followship = await this.prismaService.followship.create({
+        data: followshipData,
       })
+
+      this.notificationService.createFollowshipNotification(otherUserId, followship.id)
     } else {
       await this.prismaService.followship.delete({
         where: {
-          followerId_followeeId: followship,
+          followerId_followeeId: followshipData,
         },
       })
     }
@@ -639,14 +558,6 @@ export class UserService {
       formattedUser.followeesCount = user._count.followersFollowships
       formattedUser.followersCount = user._count.followeesFollowships
     }
-
-    formattedUser.posts = user.posts
-      ? user.posts.map((post) => ({
-          ...post,
-          totalReactionsCount: post._count.reactions,
-          totalCommentsCount: post._count.comments,
-        }))
-      : []
 
     return formattedUser
   }

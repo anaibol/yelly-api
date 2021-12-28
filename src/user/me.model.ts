@@ -1,8 +1,8 @@
 import { ID, Field, ObjectType } from '@nestjs/graphql'
 import { User } from './user.model'
-import { Post } from '../post/post.model'
-import { School } from './school.model'
+import { School } from '../school/school.model'
 import { Training } from './training.model'
+import { PaginatedPosts } from 'src/post/paginated-posts.model'
 
 @ObjectType()
 export class Me {
@@ -22,7 +22,7 @@ export class Me {
   locale?: string
   training?: Training
   school?: School
-  posts?: Post[]
+  posts?: PaginatedPosts
   followersCount?: number
   followeesCount?: number
   followees?: User[]

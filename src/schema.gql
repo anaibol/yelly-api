@@ -123,6 +123,7 @@ type School {
   lat: String
   lng: String
   name: String!
+  posts?: Post[]
 }
 
 input SignInInput {
