@@ -19,9 +19,15 @@ export class NotificationService {
       }),
       select: {
         id: true,
-        action: true,
+        type: true,
         createdAt: true,
         isSeen: true,
+        postReaction: {
+          select: {
+            reaction: true,
+            postId: true,
+          },
+        },
         userSource: {
           select: {
             id: true,
@@ -46,6 +52,32 @@ export class NotificationService {
       where: {
         userTargetId,
         isSeen: false,
+      },
+    })
+  }
+
+  async createPostReactionNotification(userTargetId: string, userSourceId: string, postReactionId: string) {
+    return this.prismaService.notification.upsert({
+      where: {
+        postReactionId,
+      },
+      create: {
+        userSourceId,
+        userTargetId,
+        type: 'postReaction',
+        postReactionId,
+      },
+      update: {},
+    })
+  }
+
+  async updateIsSeenNotification(notificationId: string) {
+    this.prismaService.notification.update({
+      where: {
+        id: notificationId,
+      },
+      data: {
+        isSeen: true,
       },
     })
   }

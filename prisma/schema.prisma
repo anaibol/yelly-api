@@ -27,17 +27,22 @@ model Country {
 
 }
 
-model Notification {
-  id           String              @id @default(uuid())
-  userSourceId String
-  userTargetId String?
-  action       NotificationAction?
-  isSeen       Boolean
-  createdAt    DateTime            @unique @default(now()) @db.DateTime(0)
-  itemId       String?
-  userSource   User                @relation("userSource", fields: [userSourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  user         User?               @relation(fields: [userTargetId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+enum NotificationType {
+  newFollower
+  postReaction
+}
 
+model Notification {
+  id             String            @id @default(uuid())
+  userSourceId   String
+  userTargetId   String?
+  type           NotificationType?
+  isSeen         Boolean           @default(false)
+  createdAt      DateTime          @unique @default(now()) @db.DateTime(0)
+  userSource     User              @relation("userSource", fields: [userSourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user           User?             @relation(fields: [userTargetId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  postReactionId String?           @unique
+  postReaction   PostReaction?     @relation(fields: [postReactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model School {
@@ -144,12 +149,6 @@ model PostComment {
   postId    String
 }
 
-enum NotificationAction {
-  seen
-  add
-  groupMembershipRequest
-}
-
 model PostReaction {
   id        String   @id @default(uuid())
   createdAt DateTime @unique @default(now())
@@ -159,6 +158,9 @@ model PostReaction {
   postId    String
   authorId  String
 
+
+
+  Notification Notification[]
   @@unique([authorId, postId], map: "author_post_id_fkey")
 }
 

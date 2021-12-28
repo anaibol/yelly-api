@@ -6,15 +6,15 @@ import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reactio
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { TagService } from 'src/tag/tag.service'
+import { NotificationService } from 'src/notification/notification.service'
 import { CreateCommentInput } from './create-comment.input'
-import { AlgoliaService } from 'src/core/algolia.service'
 
 @Injectable()
 export class PostService {
   constructor(
     private prismaService: PrismaService,
     private tagService: TagService,
-    private algoliaService: AlgoliaService
+    private notificationService: NotificationService
   ) {}
 
   async trackPostViews(postsIds: string[]) {
@@ -147,6 +147,9 @@ export class PostService {
           },
         },
         comments: {
+          orderBy: {
+            createdAt: 'asc',
+          },
           select: {
             text: true,
             authorId: true,
@@ -160,9 +163,6 @@ export class PostService {
                 lastName: true,
               },
             },
-          },
-          orderBy: {
-            createdAt: 'desc',
           },
         },
         tags: {
@@ -283,18 +283,41 @@ export class PostService {
       postId,
     }
 
-    const updated = await this.prismaService.postReaction.upsert({
+    const postReaction = await this.prismaService.postReaction.upsert({
       where: {
         authorId_postId: {
           authorId,
           postId,
         },
       },
-      create: reactionData,
+      select: {
+        authorId: true,
+        id: true,
+        post: {
+          select: {
+            authorId: true,
+          },
+        },
+      },
+      create: {
+        author: {
+          connect: {
+            id: authUserId,
+          },
+        },
+        reaction,
+        post: {
+          connect: {
+            id: postId,
+          },
+        },
+      },
       update: reactionData,
     })
 
-    return !!updated
+    this.notificationService.createPostReactionNotification(postReaction.post.authorId, authUserId, postReaction.id)
+
+    return !!postReaction
   }
 
   async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUserId: string): Promise<boolean> {
