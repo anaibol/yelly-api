@@ -17,14 +17,12 @@ model City {
   lng           Float?
   country       Country  @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   schools       School[]
-
 }
 
 model Country {
   id   String @id @default(uuid())
   name String @unique
   city City[]
-
 }
 
 model Notification {
@@ -47,7 +45,8 @@ model School {
   lng           Float?
   cityId        String
   city          City    @relation(fields: [cityId], references: [id])
-  User          User[]
+  user          User[]
+  posts         Post[]
 
 }
 
@@ -55,7 +54,7 @@ model Training {
   id   String @id @default(uuid())
   name String @unique
 
-  User User[]
+  user User[]
 }
 
 model User {
@@ -129,6 +128,8 @@ model Post {
   reactions  PostReaction[]
   viewsCount Int            @default(0)
   comments   PostComment[]
+  school     School?        @relation(fields: [schoolId], references: [id])
+  schoolId   String?
 
   @@unique([authorId, id], map: "author_post_id_fkey")
 }
