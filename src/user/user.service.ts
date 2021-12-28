@@ -12,9 +12,7 @@ import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
-
-const cleanUndefinedFromObj = (obj) =>
-  Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
+import { NotificationService } from 'src/notification/notification.service'
 
 @Injectable()
 export class UserService {
@@ -24,7 +22,8 @@ export class UserService {
     private emailService: EmailService,
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
-    private sendbirdService: SendbirdService
+    private sendbirdService: SendbirdService,
+    private notificationService: NotificationService
   ) {}
 
   async hasUserPostedOnTag(userId, tagText) {
@@ -428,19 +427,21 @@ export class UserService {
   }
 
   async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
-    const followship = {
+    const followshipData = {
       followerId: authUserId,
       followeeId: otherUserId,
     }
 
     if (value) {
-      await this.prismaService.followship.create({
-        data: followship,
+      const followship = await this.prismaService.followship.create({
+        data: followshipData,
       })
+
+      this.notificationService.createFollowshipNotification(otherUserId, followship.id)
     } else {
       await this.prismaService.followship.delete({
         where: {
-          followerId_followeeId: followship,
+          followerId_followeeId: followshipData,
         },
       })
     }
