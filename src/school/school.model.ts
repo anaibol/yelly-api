@@ -11,6 +11,6 @@ export class School {
   lat?: string
   lng?: string
   city?: City
-  totalUsersCount: number
+  totalUsersCount?: number
   posts?: PaginatedPosts
 }

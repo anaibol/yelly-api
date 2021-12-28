@@ -22,7 +22,7 @@ export class Me {
   locale?: string
   training?: Training
   school?: School
-  posts?: PaginatedPosts[]
+  posts?: PaginatedPosts
   followersCount?: number
   followeesCount?: number
   followees?: User[]
