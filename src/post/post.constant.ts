@@ -14,7 +14,7 @@ export const postSelect = {
       id: true,
       reaction: true,
       authorId: true,
-      distinct: 'reaction',
+      // distinct: 'reaction',
     },
     take: 2,
   },

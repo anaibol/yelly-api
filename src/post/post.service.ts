@@ -72,7 +72,7 @@ export class PostService {
             reaction: true,
             authorId: true,
           },
-          distinct: 'reaction',
+          // distinct: 'reaction',
           take: 2,
         },
         author: {
@@ -134,7 +134,7 @@ export class PostService {
             reaction: true,
             authorId: true,
           },
-          distinct: 'reaction',
+          // distinct: 'reaction',
           take: 2,
         },
         author: {
