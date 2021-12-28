@@ -147,6 +147,9 @@ export class PostService {
           },
         },
         comments: {
+          orderBy: {
+            createdAt: 'asc',
+          },
           select: {
             text: true,
             authorId: true,
@@ -160,9 +163,6 @@ export class PostService {
                 lastName: true,
               },
             },
-          },
-          orderBy: {
-            createdAt: 'desc',
           },
         },
         tags: {
