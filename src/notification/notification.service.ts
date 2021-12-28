@@ -85,6 +85,15 @@ export class NotificationService {
     })
   }
 
+  async createFollowshipNotification(userId: string, followshipId: string) {
+    return this.prismaService.notification.create({
+      data: {
+        userId,
+        followshipId,
+      },
+    })
+  }
+
   async updateIsSeenNotification(notificationId: string) {
     this.prismaService.notification.update({
       where: {
