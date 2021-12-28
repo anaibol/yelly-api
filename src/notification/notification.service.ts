@@ -56,7 +56,7 @@ export class NotificationService {
     })
   }
 
-  async createPostReactionNotification(userTargetId: string, userSourceId: string, postReactionId: string) {
+  async upsertPostReactionNotification(userTargetId: string, userSourceId: string, postReactionId: string) {
     return this.prismaService.notification.upsert({
       where: {
         postReactionId,
@@ -64,10 +64,13 @@ export class NotificationService {
       create: {
         userSourceId,
         userTargetId,
-        type: 'postReaction',
         postReactionId,
       },
-      update: {},
+      update: {
+        userSourceId,
+        userTargetId,
+        postReactionId,
+      },
     })
   }
 
