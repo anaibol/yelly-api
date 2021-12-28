@@ -7,10 +7,11 @@ import { PostService } from '../post/post.service'
 import { SchoolResolver } from './school.resolver'
 import { SchoolService } from './school.service'
 import { TagService } from 'src/tag/tag.service'
+import { NotificationService } from 'src/notification/notification.service'
 
 @Module({
   imports: [CacheModule.register(), CoreModule, AuthModule, UserModule],
-  providers: [PostService, PostResolver, SchoolResolver, SchoolService, TagService],
+  providers: [PostService, PostResolver, SchoolResolver, SchoolService, TagService, NotificationService],
   exports: [SchoolService],
 })
 export class SchoolModule {}

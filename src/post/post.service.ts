@@ -25,7 +25,7 @@ export class PostService {
 
     return true
   }
-  // TODO: Add return type, is not q expected result
+
   async find(tagText, userId, schoolId: string, currentCursor, limit = DEFAULT_LIMIT) {
     const posts = await this.prismaService.post.findMany({
       where: {
