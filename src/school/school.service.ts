@@ -15,9 +15,17 @@ export class SchoolService {
       select: {
         name: true,
         id: true,
+        users: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            pictureId: true,
+          },
+        },
         _count: {
           select: {
-            user: true,
+            users: true,
           },
         },
       },
@@ -27,7 +35,7 @@ export class SchoolService {
 
     return {
       ...school,
-      totalUsersCount: school._count.user,
+      totalUsersCount: school._count.users,
     }
   }
 
