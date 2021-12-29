@@ -26,11 +26,11 @@ import { SchoolModule } from './school/school.module'
             sendUnexecutableOperationDocuments: true,
           }),
       ].filter((v) => v),
-      // typePaths: ['./**/*.gql'],
-      // definitions: {
-      //   path: join(process.cwd(), 'src/graphql.ts'),
-      //   outputAs: 'class',
-      // },
+      typePaths: ['./**/*.gql'],
+      definitions: {
+        path: join(process.cwd(), 'src/graphql.ts'),
+        outputAs: 'class',
+      },
       debug: process.env.NODE_ENV !== 'production',
       autoSchemaFile: join(process.cwd(), '../schema.gql'),
       sortSchema: true,

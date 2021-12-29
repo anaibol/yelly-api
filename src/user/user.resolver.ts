@@ -15,6 +15,7 @@ import { UserService } from './user.service'
 import { AuthUser } from '../auth/auth.service'
 import { PrismaService } from 'src/core/prisma.service'
 import { PostSelect } from 'src/post/post-select.constant'
+import { PaginatedPosts } from 'src/graphql'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -53,11 +54,11 @@ export class UserResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() user: User, @Args() postsArgs?: PostsArgs) {
+  async posts(@Parent() user: User, @Args() postsArgs?: PostsArgs): Promise<PaginatedPosts> {
     const cacheKey = 'userPosts:' + JSON.stringify({ postsArgs, user })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
-    if (previousResponse) return previousResponse
+    if (previousResponse) return previousResponse as Promise<PaginatedPosts>
 
     const { schoolId, after, limit } = postsArgs
 
