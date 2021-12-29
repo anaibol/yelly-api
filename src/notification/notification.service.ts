@@ -54,7 +54,7 @@ export class NotificationService {
 
     const formattedNotifications = notifications.map(({ followship, ...notification }) => ({
       ...notification,
-      follower: followship.follower,
+      follower: followship?.follower,
     }))
 
     return { notifications: formattedNotifications, cursor }
