@@ -8,7 +8,7 @@ import { CoreModule } from './core/core.module'
 import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
 import { NotificationModule } from './notification/notification.module'
-import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
+import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
 import { PushNotificationService } from './core/push-notification.service'
 import { SendbirdWebhookController } from './sendbird-webhook/sendbird-webhook.controller'
 import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.module'
@@ -19,7 +19,14 @@ import { SchoolModule } from './school/school.module'
     CacheModule.register(),
     GraphQLModule.forRoot({
       playground: false,
-      plugins: [ApolloServerPluginLandingPageLocalDefault()],
+      plugins: [
+        ApolloServerPluginLandingPageLocalDefault(),
+        ApolloServerPluginUsageReporting({
+          sendVariableValues: { all: true },
+          sendHeaders: { all: true },
+          sendUnexecutableOperationDocuments: true,
+        }),
+      ],
       // typePaths: ['./**/*.gql'],
       // definitions: {
       //   path: join(process.cwd(), 'src/graphql.ts'),
