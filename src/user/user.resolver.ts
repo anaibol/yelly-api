@@ -14,7 +14,7 @@ import { CurrentUser } from '../auth/user.decorator'
 import { UserService } from './user.service'
 import { AuthUser } from '../auth/auth.service'
 import { PrismaService } from 'src/core/prisma.service'
-import { postSelect } from 'src/post/post.constant'
+import { PostSelect } from 'src/post/post-select.constant'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -79,7 +79,7 @@ export class UserResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: postSelect,
+      select: PostSelect,
     })
 
     const formattedPosts = posts.map((post) => ({
