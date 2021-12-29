@@ -8,7 +8,7 @@ import { DeletePostInput } from './delete-post.input'
 import { TagService } from 'src/tag/tag.service'
 import { NotificationService } from 'src/notification/notification.service'
 import { CreateCommentInput } from './create-comment.input'
-import { postSelect } from './postSelect.constant'
+import { PostSelect } from './post-select.constant'
 
 @Injectable()
 export class PostService {
@@ -60,7 +60,7 @@ export class PostService {
         createdAt: 'desc',
       },
       take: limit,
-      select: postSelect,
+      select: PostSelect,
     })
 
     const mappedPosts = posts.map((post) => ({
@@ -78,7 +78,7 @@ export class PostService {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
-        ...postSelect,
+        ...PostSelect,
         comments: {
           orderBy: {
             createdAt: 'asc',

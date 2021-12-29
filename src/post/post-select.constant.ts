@@ -1,4 +1,4 @@
-export const postSelect = {
+export const PostSelect = {
   _count: {
     select: {
       reactions: true,

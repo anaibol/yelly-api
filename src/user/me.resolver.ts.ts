@@ -24,7 +24,7 @@ import { SignUpInput } from './sign-up.input'
 import { SignInInput } from './sign-in.input'
 import { UpdateUserInput } from './update-user.input'
 import { ResetPasswordInput } from './reset-password.input'
-import { postSelect } from 'src/post/post.constant'
+import { PostSelect } from 'src/post/post-select.constant'
 
 @Resolver(() => Me)
 export class MeResolver {
@@ -170,7 +170,7 @@ export class MeResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: postSelect,
+      select: PostSelect,
     })
 
     const formattedPosts = posts.map((post) => ({

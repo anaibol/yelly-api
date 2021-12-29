@@ -16,7 +16,7 @@ import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
-import { postSelect } from '../post/postSelect.constant'
+import { PostSelect } from '../post/post-select.constant'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -71,7 +71,7 @@ export class TagResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: postSelect,
+      select: PostSelect,
     })
 
     const formattedPosts = posts.map((post) => ({
