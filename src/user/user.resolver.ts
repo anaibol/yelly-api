@@ -62,13 +62,13 @@ export class UserResolver {
     const { schoolId, after, limit } = PostsArgs
 
     const posts = await this.prismaService.user.findUnique({ where: { id: user.id } }).posts({
-      where: {
-        ...(schoolId && {
+      ...(schoolId && {
+        where: {
           author: {
             schoolId,
           },
-        }),
-      },
+        },
+      }),
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),

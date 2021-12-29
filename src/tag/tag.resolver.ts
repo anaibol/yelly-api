@@ -61,15 +61,15 @@ export class TagResolver {
     const { limit, after } = PostsArgs
 
     const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
-      where: {
-        ...(tag.text && {
+      ...(tag.text && {
+        where: {
           tags: {
             every: {
               text: tag.text,
             },
           },
-        }),
-      },
+        },
+      }),
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),

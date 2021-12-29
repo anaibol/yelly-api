@@ -29,23 +29,27 @@ export class PostService {
 
   async find(tagText, userId, schoolId: string, currentCursor, limit = DEFAULT_LIMIT) {
     const posts = await this.prismaService.post.findMany({
-      where: {
-        ...(tagText && {
+      ...(tagText && {
+        where: {
           tags: {
             every: {
               text: tagText,
             },
           },
-        }),
-        ...(userId && {
+        },
+      }),
+      ...(userId && {
+        where: {
           authorId: userId,
-        }),
-        ...(schoolId && {
+        },
+      }),
+      ...(schoolId && {
+        where: {
           author: {
             schoolId,
           },
-        }),
-      },
+        },
+      }),
       ...(currentCursor && {
         cursor: {
           createdAt: new Date(+currentCursor).toISOString(),
