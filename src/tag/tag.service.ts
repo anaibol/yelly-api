@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
-import { GetTagArgs } from './get-tag.args'
+import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 
 @Injectable()
@@ -149,12 +149,13 @@ export class TagService {
     return newTag
   }
 
-  async findById(getTagArgs: GetTagArgs) {
+  async findById(tagArgs: TagArgs) {
     return this.prismaService.tag.findUnique({
       where: {
-        id: getTagArgs.tagId,
+        id: tagArgs.id,
       },
       select: {
+        id: true,
         text: true,
         createdAt: true,
         author: {

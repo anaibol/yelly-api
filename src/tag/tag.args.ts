@@ -1,7 +1,7 @@
 import { ArgsType, Field } from '@nestjs/graphql'
 
 @ArgsType()
-export class GetTagArgs {
+export class TagArgs {
   @Field({ nullable: true })
-  tagId?: string
+  id?: string
 }

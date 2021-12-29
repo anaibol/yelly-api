@@ -14,7 +14,7 @@ import { PostsArgs } from '../post/posts.args'
 
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
-import { GetTagArgs } from './get-tag.args'
+import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
 import { postSelect } from '../post/post.constant'
 
@@ -47,29 +47,20 @@ export class TagResolver {
 
   @Query(() => Tag)
   @UseGuards(AuthGuard)
-  async tag(@Args() getTagArgs: GetTagArgs) {
-    return this.tagService.findById(getTagArgs)
+  async tag(@Args() tagArgs: TagArgs) {
+    return this.tagService.findById(tagArgs)
   }
 
   @ResolveField()
-  async posts(@Parent() tag: Tag, @Args() PostsArgs?: PostsArgs) {
+  async posts(@Parent() tag: Tag, @Args() postsArgs?: PostsArgs) {
     const cacheKey = 'tagPosts:' + JSON.stringify({ PostsArgs, tag })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
 
-    const { limit, after } = PostsArgs
+    const { limit, after } = postsArgs
 
     const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
-      ...(tag.text && {
-        where: {
-          tags: {
-            every: {
-              text: tag.text,
-            },
-          },
-        },
-      }),
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),

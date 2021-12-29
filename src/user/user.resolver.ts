@@ -37,13 +37,13 @@ export class UserResolver {
   }
 
   @ResolveField()
-  async followers(@Parent() user: User, @Args() PaginationArgs: PaginationArgs) {
-    return this.userService.getUserFollowers(user.id, PaginationArgs.after, PaginationArgs.limit)
+  async followers(@Parent() user: User, @Args() paginationArgs: PaginationArgs) {
+    return this.userService.getUserFollowers(user.id, paginationArgs.after, paginationArgs.limit)
   }
 
   @ResolveField()
-  async followees(@Parent() user: User, @Args() PaginationArgs: PaginationArgs) {
-    return this.userService.getUserFollowees(user.id, PaginationArgs.after, PaginationArgs.limit)
+  async followees(@Parent() user: User, @Args() paginationArgs: PaginationArgs) {
+    return this.userService.getUserFollowees(user.id, paginationArgs.after, paginationArgs.limit)
   }
 
   @UseGuards(AuthGuard)
@@ -53,13 +53,13 @@ export class UserResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() user: User, @Args() PostsArgs?: PostsArgs) {
-    const cacheKey = 'userPosts:' + JSON.stringify({ PostsArgs, user })
+  async posts(@Parent() user: User, @Args() postsArgs?: PostsArgs) {
+    const cacheKey = 'userPosts:' + JSON.stringify({ postsArgs, user })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
 
-    const { schoolId, after, limit } = PostsArgs
+    const { schoolId, after, limit } = postsArgs
 
     const posts = await this.prismaService.user.findUnique({ where: { id: user.id } }).posts({
       ...(schoolId && {

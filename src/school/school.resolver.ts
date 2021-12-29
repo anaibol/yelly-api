@@ -4,7 +4,7 @@ import { Cache } from 'cache-manager'
 import { School } from './school.model'
 import { SchoolService } from './school.service'
 import { PostsArgs } from '../post/posts.args'
-import { GetSchoolArgs } from './get-school.args'
+import { SchoolArgs } from './school.args'
 import { PrismaService } from 'src/core/prisma.service'
 import { postSelect } from '../post/post.constant'
 
@@ -17,20 +17,20 @@ export class SchoolResolver {
   ) {}
 
   @Query(() => School, { nullable: true })
-  async school(@Args() GetSchoolArgs?: GetSchoolArgs) {
-    const { id, googlePlaceId } = GetSchoolArgs
+  async school(@Args() SchoolArgs?: SchoolArgs) {
+    const { id, googlePlaceId } = SchoolArgs
 
     return this.schoolService.getSchool(id, googlePlaceId)
   }
 
   @ResolveField()
-  async posts(@Parent() school: School, @Args() PostsArgs?: PostsArgs) {
-    const cacheKey = 'schoolPosts:' + JSON.stringify(PostsArgs)
+  async posts(@Parent() school: School, @Args() postsArgs?: PostsArgs) {
+    const cacheKey = 'schoolPosts:' + JSON.stringify(postsArgs)
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
 
-    const { after, limit } = PostsArgs
+    const { after, limit } = postsArgs
 
     const posts = await this.prismaService.school.findUnique({ where: { id: school.id } }).posts({
       ...(after && {

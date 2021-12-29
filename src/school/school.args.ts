@@ -1,7 +1,7 @@
 import { ArgsType, Field } from '@nestjs/graphql'
 
 @ArgsType()
-export class GetSchoolArgs {
+export class SchoolArgs {
   @Field({ nullable: true })
   id?: string
   @Field({ nullable: true })
