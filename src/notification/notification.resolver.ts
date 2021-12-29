@@ -22,4 +22,10 @@ export class NotificationResolver {
 
     return { items: notifications, nextCursor: cursor }
   }
+
+  @UseGuards(AuthGuard)
+  @Query(() => Number)
+  async unreadNotificationsCount(@CurrentUser() authUser: AuthUser) {
+    return this.notificationService.getUnreadNotificationsCount(authUser.id)
+  }
 }
