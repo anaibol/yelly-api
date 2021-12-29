@@ -77,7 +77,28 @@ export class PostService {
   async getById(postId: string) {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
-      select: postSelect,
+      select: {
+        ...postSelect,
+        comments: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+          select: {
+            text: true,
+            authorId: true,
+            id: true,
+            createdAt: true,
+            author: {
+              select: {
+                id: true,
+                pictureId: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+      },
     })
 
     return {
