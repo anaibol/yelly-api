@@ -106,6 +106,8 @@ export class UserService {
       },
     })
 
+    if (!user) throw new NotFoundUserException()
+
     return this.formatUser(user)
   }
 

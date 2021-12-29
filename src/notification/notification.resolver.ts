@@ -25,7 +25,7 @@ export class NotificationResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => Number)
-  async unreadNotificationsCount(@CurrentUser() authUser: AuthUser) {
+  unreadNotificationsCount(@CurrentUser() authUser: AuthUser) {
     return this.notificationService.getUnreadNotificationsCount(authUser.id)
   }
 }
