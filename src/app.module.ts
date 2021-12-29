@@ -13,7 +13,6 @@ import { PushNotificationService } from './core/push-notification.service'
 import { SendbirdWebhookController } from './sendbird-webhook/sendbird-webhook.controller'
 import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.module'
 import { SchoolModule } from './school/school.module'
-
 @Module({
   imports: [
     CacheModule.register(),
@@ -21,12 +20,13 @@ import { SchoolModule } from './school/school.module'
       playground: false,
       plugins: [
         ApolloServerPluginLandingPageLocalDefault(),
-        ApolloServerPluginUsageReporting({
-          sendVariableValues: { all: true },
-          sendHeaders: { all: true },
-          sendUnexecutableOperationDocuments: true,
-        }),
-      ],
+        process.env.NODE_ENV !== 'development' &&
+          ApolloServerPluginUsageReporting({
+            sendVariableValues: { all: true },
+            sendHeaders: { all: true },
+            sendUnexecutableOperationDocuments: true,
+          }),
+      ].filter((v) => v),
       // typePaths: ['./**/*.gql'],
       // definitions: {
       //   path: join(process.cwd(), 'src/graphql.ts'),
