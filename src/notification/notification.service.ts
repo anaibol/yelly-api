@@ -28,6 +28,8 @@ export class NotificationService {
             author: {
               select: {
                 id: true,
+                firstName: true,
+                pictureId: true,
               },
             },
           },
