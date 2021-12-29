@@ -9,7 +9,7 @@ export class NotificationService {
   async find(userId: string, currentCursor, limit = DEFAULT_LIMIT) {
     const notifications = await this.prismaService.notification.findMany({
       where: {
-        userId: userId,
+        userId,
       },
       ...(currentCursor && {
         cursor: {

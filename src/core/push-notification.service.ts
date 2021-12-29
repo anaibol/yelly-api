@@ -32,14 +32,21 @@ export class PushNotificationService {
     const pushTokens = await this.getPushTokensByUsersIds(members.map((members) => members.user_id))
 
     const receiverUsersTokens = pushTokens.filter(({ userId }) => userId !== sender.user_id)
-    const senderUser = pushTokens.find(({ userId }) => userId === sender.user_id)
+
+    const senderUser = await this.prismaService.user.findUnique({
+      select: {
+        id: true,
+        firstName: true,
+      },
+      where: { id: sender.user_id },
+    })
 
     const messages = receiverUsersTokens.map((expoPushNotificationToken) => {
-      const url = `${process.env.APP_BASE_URL}/chat/user/${senderUser.userId}`
+      const url = `${process.env.APP_BASE_URL}/chat/user/${senderUser.id}`
 
       return {
-        to: expoPushNotificationToken.token || '',
-        title: sender.nickname,
+        to: expoPushNotificationToken.token,
+        title: senderUser.firstName,
         body: payload.message,
         data: { userId: sender.user_id, unreadCount: 0, url },
         sound: 'default' as const,
