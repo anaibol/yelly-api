@@ -28,6 +28,8 @@ export class NotificationService {
             author: {
               select: {
                 id: true,
+                firstName: true,
+                pictureId: true,
               },
             },
           },
@@ -54,13 +56,13 @@ export class NotificationService {
 
     const formattedNotifications = notifications.map(({ followship, ...notification }) => ({
       ...notification,
-      follower: followship.follower,
+      follower: followship?.follower,
     }))
 
     return { notifications: formattedNotifications, cursor }
   }
 
-  async countUnreadNotifications(userId: string) {
+  async getUnreadNotificationsCount(userId: string) {
     return this.prismaService.notification.count({
       where: {
         userId,

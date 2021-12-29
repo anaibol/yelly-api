@@ -27,7 +27,4 @@ export class Me {
   followeesCount?: number
   followees?: User[]
   followers?: User[]
-
-  @Field({ defaultValue: 0 })
-  unreadNotificationsCount: number
 }
