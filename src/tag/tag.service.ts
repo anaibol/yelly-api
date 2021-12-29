@@ -3,10 +3,15 @@ import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
 import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
+import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Injectable()
 export class TagService {
-  constructor(private prismaService: PrismaService, private algoliaService: AlgoliaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private algoliaService: AlgoliaService,
+    private pushNotificationService: PushNotificationService
+  ) {}
   async syncTagIndexWithAlgolia(tagText: string) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
 
@@ -144,6 +149,8 @@ export class TagService {
         },
       },
     })
+
+    this.pushNotificationService.newLiveTag(newTag)
 
     return newTag
   }

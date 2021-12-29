@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { PostComment, PostReaction } from '@prisma/client'
+import { Tag, PostComment, PostReaction } from '@prisma/client'
 import { PrismaService } from 'src/core/prisma.service'
 import expo from '../utils/expo'
 
@@ -149,5 +149,37 @@ export class PushNotificationService {
     })
 
     await expo.sendNotifications(messages)
+  }
+
+  async newLiveTag(liveTag: Tag) {
+    const allPushTokens = await this.prismaService.expoPushNotificationAccessToken.findMany({
+      select: {
+        token: true,
+        userId: true,
+      },
+    })
+
+    const messages = allPushTokens
+      .filter(({ userId }) => userId === '59893260-5f67-4fb5-8d21-2dd5ed16c844')
+      // REMOVE FILTER FOR PROD
+
+      .map(({ token }) => {
+        return {
+          to: token,
+          title: 'Yelly',
+          body: 'Viens découvrir le nouveau # du jour 👀⚡️',
+          // data: { userId: sender.user_id, unreadCount: 0, url },
+          sound: 'default' as const,
+        }
+      })
+    console.log(messages)
+
+    // const results = await expo.sendNotifications(messages)
+
+    // results.map(({ status }) => {
+    //   if (status === 'rejected') {
+
+    //   }
+    // })
   }
 }
