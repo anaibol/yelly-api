@@ -8,7 +8,7 @@ import { DeletePostInput } from './delete-post.input'
 import { TagService } from 'src/tag/tag.service'
 import { NotificationService } from 'src/notification/notification.service'
 import { CreateCommentInput } from './create-comment.input'
-import { postSelect } from './post.constant'
+import { postSelect } from './postSelect.constant'
 
 @Injectable()
 export class PostService {

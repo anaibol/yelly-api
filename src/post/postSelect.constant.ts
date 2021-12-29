@@ -13,7 +13,11 @@ export const postSelect = {
     select: {
       id: true,
       reaction: true,
-      authorId: true,
+      author: {
+        select: {
+          id: true,
+        },
+      },
     },
     distinct: 'reaction' as const,
     take: 2,

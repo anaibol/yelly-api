@@ -6,7 +6,7 @@ import { SchoolService } from './school.service'
 import { PostsArgs } from '../post/posts.args'
 import { SchoolArgs } from './school.args'
 import { PrismaService } from 'src/core/prisma.service'
-import { postSelect } from '../post/post.constant'
+import { postSelect } from '../post/postSelect.constant'
 
 @Resolver(School)
 export class SchoolResolver {
