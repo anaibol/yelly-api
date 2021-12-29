@@ -10,7 +10,7 @@ import { UserService } from '../user/user.service'
 
 import { CreateLiveTagInput } from '../post/create-live-tag.input'
 import { LiveTagAuthUser } from '../post/live-tag-auth-user.model'
-import { GetPostsArgs } from '../post/get-posts.args'
+import { PostsArgs } from '../post/posts.args'
 
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
@@ -52,13 +52,13 @@ export class TagResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() tag: Tag, @Args() GetPostsArgs?: GetPostsArgs) {
-    const cacheKey = 'tagPosts:' + JSON.stringify({ GetPostsArgs, tag })
+  async posts(@Parent() tag: Tag, @Args() PostsArgs?: PostsArgs) {
+    const cacheKey = 'tagPosts:' + JSON.stringify({ PostsArgs, tag })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
 
-    const { limit, after } = GetPostsArgs
+    const { limit, after } = PostsArgs
 
     const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
       where: {

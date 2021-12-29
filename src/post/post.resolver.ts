@@ -8,8 +8,8 @@ import { CreatePostInput } from './create-post.input'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
-import { GetPostsArgs } from './get-posts.args'
-import { GetPostArgs } from './get-post.args'
+import { PostsArgs } from './posts.args'
+import { PostArgs } from './post.args'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Cache } from 'cache-manager'
 import { Post } from './post.model'
@@ -21,13 +21,13 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
-  async posts(@Args() GetPostsArgs?: GetPostsArgs) {
-    const cacheKey = 'posts:' + JSON.stringify(GetPostsArgs)
+  async posts(@Args() PostsArgs?: PostsArgs) {
+    const cacheKey = 'posts:' + JSON.stringify(PostsArgs)
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
 
-    const { tag, userId, schoolId, after, limit } = GetPostsArgs
+    const { tag, userId, schoolId, after, limit } = PostsArgs
     const { posts, cursor } = await this.postService.find(tag, userId, schoolId, after, limit)
     const response = { items: posts, nextCursor: cursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
@@ -37,8 +37,8 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => Post)
-  async post(@Args() GetPostArgs?: GetPostArgs) {
-    return this.postService.getById(GetPostArgs.id)
+  async post(@Args() PostArgs?: PostArgs) {
+    return this.postService.getById(PostArgs.id)
   }
 
   @UseGuards(AuthGuard)

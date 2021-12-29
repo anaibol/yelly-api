@@ -1,6 +1,7 @@
 /*
   Warnings:
 
+  - You are about to drop the column `itemId` on the `Notification` table. All the data in the column will be lost.
   - You are about to drop the column `type` on the `Notification` table. All the data in the column will be lost.
   - You are about to drop the column `userSourceId` on the `Notification` table. All the data in the column will be lost.
   - You are about to drop the column `userTargetId` on the `Notification` table. All the data in the column will be lost.
@@ -11,6 +12,12 @@
 
 */
 -- DropForeignKey
+ALTER TABLE `City` DROP FOREIGN KEY `City_countryId_fkey`;
+
+-- DropForeignKey
+ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_postReactionId_fkey`;
+
+-- DropForeignKey
 ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_userSourceId_fkey`;
 
 -- DropForeignKey
@@ -20,7 +27,8 @@ ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_userTargetId_fkey`;
 ALTER TABLE `Followship` ADD COLUMN `id` VARCHAR(191) NOT NULL;
 
 -- AlterTable
-ALTER TABLE `Notification` DROP COLUMN `type`,
+ALTER TABLE `Notification` DROP COLUMN `itemId`,
+    DROP COLUMN `type`,
     DROP COLUMN `userSourceId`,
     DROP COLUMN `userTargetId`,
     ADD COLUMN `followshipId` VARCHAR(191) NULL,
@@ -33,7 +41,13 @@ CREATE UNIQUE INDEX `Followship_id_key` ON `Followship`(`id`);
 CREATE UNIQUE INDEX `Notification_followshipId_key` ON `Notification`(`followshipId`);
 
 -- AddForeignKey
+ALTER TABLE `City` ADD CONSTRAINT `City_countryId_fkey` FOREIGN KEY (`countryId`) REFERENCES `Country`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `Notification` ADD CONSTRAINT `Notification_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Notification` ADD CONSTRAINT `Notification_postReactionId_fkey` FOREIGN KEY (`postReactionId`) REFERENCES `PostReaction`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Notification` ADD CONSTRAINT `Notification_followshipId_fkey` FOREIGN KEY (`followshipId`) REFERENCES `Followship`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

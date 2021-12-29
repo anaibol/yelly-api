@@ -5,7 +5,7 @@ import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/g
 import { User } from './user.model'
 
 import { PaginationArgs } from '../common/pagination.args'
-import { GetPostsArgs } from '../post/get-posts.args'
+import { PostsArgs } from '../post/posts.args'
 
 import { ToggleFollowInput } from './toggle-follow.input'
 import { AuthGuard } from '../auth/auth-guard'
@@ -53,13 +53,13 @@ export class UserResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() user: User, @Args() GetPostsArgs?: GetPostsArgs) {
-    const cacheKey = 'userPosts:' + JSON.stringify({ GetPostsArgs, user })
+  async posts(@Parent() user: User, @Args() PostsArgs?: PostsArgs) {
+    const cacheKey = 'userPosts:' + JSON.stringify({ PostsArgs, user })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
 
-    const { schoolId, after, limit } = GetPostsArgs
+    const { schoolId, after, limit } = PostsArgs
 
     const posts = await this.prismaService.user.findUnique({ where: { id: user.id } }).posts({
       where: {

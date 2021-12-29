@@ -3,7 +3,7 @@ import { CACHE_MANAGER, Inject } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { School } from './school.model'
 import { SchoolService } from './school.service'
-import { GetPostsArgs } from '../post/get-posts.args'
+import { PostsArgs } from '../post/posts.args'
 import { GetSchoolArgs } from './get-school.args'
 import { PrismaService } from 'src/core/prisma.service'
 import { postSelect } from '../post/post.constant'
@@ -24,13 +24,13 @@ export class SchoolResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() school: School, @Args() GetPostsArgs?: GetPostsArgs) {
-    const cacheKey = 'schoolPosts:' + JSON.stringify(GetPostsArgs)
+  async posts(@Parent() school: School, @Args() PostsArgs?: PostsArgs) {
+    const cacheKey = 'schoolPosts:' + JSON.stringify(PostsArgs)
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
 
-    const { after, limit } = GetPostsArgs
+    const { after, limit } = PostsArgs
 
     const posts = await this.prismaService.school.findUnique({ where: { id: school.id } }).posts({
       ...(after && {

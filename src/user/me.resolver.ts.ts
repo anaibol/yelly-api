@@ -7,7 +7,7 @@ import { Me } from './me.model'
 import { Token } from './token.model'
 
 import { PaginationArgs } from '../common/pagination.args'
-import { GetPostsArgs } from '../post/get-posts.args'
+import { PostsArgs } from '../post/posts.args'
 
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
@@ -144,13 +144,13 @@ export class MeResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() me: Me, @Args() GetPostsArgs?: GetPostsArgs) {
-    const cacheKey = 'mePosts:' + JSON.stringify({ GetPostsArgs, me })
+  async posts(@Parent() me: Me, @Args() PostsArgs?: PostsArgs) {
+    const cacheKey = 'mePosts:' + JSON.stringify({ PostsArgs, me })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
 
-    const { schoolId, after, limit } = GetPostsArgs
+    const { schoolId, after, limit } = PostsArgs
 
     const posts = await this.prismaService.user.findUnique({ where: { id: me.id } }).posts({
       where: {

@@ -8,6 +8,7 @@ import { DeletePostInput } from './delete-post.input'
 import { TagService } from 'src/tag/tag.service'
 import { NotificationService } from 'src/notification/notification.service'
 import { CreateCommentInput } from './create-comment.input'
+import { postSelect } from './post.constant'
 
 @Injectable()
 export class PostService {
@@ -55,52 +56,7 @@ export class PostService {
         createdAt: 'desc',
       },
       take: limit,
-      select: {
-        _count: {
-          select: {
-            reactions: true,
-            comments: true,
-          },
-        },
-        id: true,
-        createdAt: true,
-        viewsCount: true,
-        text: true,
-        reactions: {
-          select: {
-            id: true,
-            reaction: true,
-            authorId: true,
-          },
-          // distinct: 'reaction',
-          take: 2,
-        },
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            birthdate: true,
-            pictureId: true,
-          },
-        },
-        tags: {
-          select: {
-            id: true,
-            createdAt: true,
-            text: true,
-            isLive: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-          },
-        },
-      },
+      select: postSelect,
     })
 
     const mappedPosts = posts.map((post) => ({
@@ -117,71 +73,7 @@ export class PostService {
   async getById(postId: string) {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
-      select: {
-        _count: {
-          select: {
-            reactions: true,
-            comments: true,
-          },
-        },
-        id: true,
-        createdAt: true,
-        viewsCount: true,
-        text: true,
-        reactions: {
-          select: {
-            id: true,
-            reaction: true,
-            authorId: true,
-          },
-          // distinct: 'reaction',
-          take: 2,
-        },
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            birthdate: true,
-            pictureId: true,
-          },
-        },
-        comments: {
-          orderBy: {
-            createdAt: 'asc',
-          },
-          select: {
-            text: true,
-            authorId: true,
-            id: true,
-            createdAt: true,
-            author: {
-              select: {
-                id: true,
-                pictureId: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
-        tags: {
-          select: {
-            id: true,
-            createdAt: true,
-            text: true,
-            isLive: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-          },
-        },
-      },
+      select: postSelect,
     })
 
     return {
