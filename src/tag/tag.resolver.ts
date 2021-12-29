@@ -16,7 +16,7 @@ import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
-import { postSelect } from '../post/post.constant'
+import { postSelect } from '../post/postSelect.constant'
 
 @Resolver(Tag)
 export class TagResolver {
