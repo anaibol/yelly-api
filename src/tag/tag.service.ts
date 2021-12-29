@@ -22,7 +22,6 @@ export class TagService {
             lastName: true,
           },
         },
-
         posts: {
           select: {
             author: {
