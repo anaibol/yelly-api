@@ -17,7 +17,6 @@ import { UserService } from './user.service'
 import { AuthService, AuthUser } from '../auth/auth.service'
 import { NotificationService } from '../notification/notification.service'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
-import { PostService } from 'src/post/post.service'
 
 import { ForgotPasswordInput } from './forgot-password.input'
 import { SignUpInput } from './sign-up.input'
@@ -31,7 +30,6 @@ export class MeResolver {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private prismaService: PrismaService,
-    private postService: PostService,
     private userService: UserService,
     private authService: AuthService,
     private notificationService: NotificationService,
@@ -60,10 +58,7 @@ export class MeResolver {
 
     if (!user) return new UnauthorizedException()
 
-    return {
-      ...user,
-      unreadNotificationsCount: await this.notificationService.countUnreadNotifications(user.id),
-    }
+    return user
   }
 
   @Mutation(() => SendbirdAccessToken)
