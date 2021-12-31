@@ -60,4 +60,39 @@ export class PushNotificationService {
       body: JSON.stringify({}),
     }
   }
+
+  async createFollowshipPushNotification({ followerId, followeeId }) {
+    const url = `${process.env.APP_BASE_URL}/user/${followerId}`
+
+    const followeeData = await this.prismaService.user.findUnique({
+      select: {
+        id: true,
+        firstName: true,
+        expoPushNotificationTokens: true,
+      },
+      where: { id: followeeId },
+    })
+
+    const followerData = await this.prismaService.user.findUnique({
+      select: {
+        firstName: true,
+      },
+      where: { id: followerId },
+    })
+
+    const message = {
+      to: followeeData.expoPushNotificationTokens.map(({ token }) => token),
+      title: `Vous avez un nouveau suiveur`,
+      body: `${followerData.firstName} a commencé à te suivre`,
+      data: { userId: followeeData.id, url },
+      sound: 'default' as const,
+    }
+
+    await expo.sendNotifications([message])
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({}),
+    }
+  }
 }
