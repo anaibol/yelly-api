@@ -29,6 +29,11 @@ export const PostSelect = {
       lastName: true,
       birthdate: true,
       pictureId: true,
+      school: {
+        select: {
+          name: true,
+        },
+      },
     },
   },
   tags: {
