@@ -23,6 +23,12 @@ export class SchoolService {
             pictureId: true,
           },
         },
+        city: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         _count: {
           select: {
             users: true,
