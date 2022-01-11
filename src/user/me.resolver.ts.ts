@@ -20,6 +20,7 @@ import { UpdateUserInput } from './update-user.input'
 import { ResetPasswordInput } from './reset-password-.input'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 import { FirebaseSignUpInput } from './dto/firebase-signup.input'
+import { FirebaseSignInInput } from './dto/firebase-signin.input'
 
 @Resolver(() => Me)
 export class MeResolver {
@@ -44,6 +45,17 @@ export class MeResolver {
     return {
       accessToken,
     }
+  }
+
+  @Mutation(() => Token)
+  async firebaseSignIn(@Args('input') signUpInput: FirebaseSignInInput) {
+    const user = await this.authService.validateFirebaseUser(signUpInput.accessToken)
+
+    if (!user) throw new UnauthorizedException()
+
+    const accessToken = await this.authService.getAccessToken(user.id)
+
+    return { accessToken }
   }
 
   @Query(() => Me)
