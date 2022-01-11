@@ -11,9 +11,9 @@ export type AuthUser = { id: string } | null
 export class AuthService {
   constructor(private prismaService: PrismaService, private readonly jwtService: JwtService) {}
 
-  async validateFirebaseUser(accessToken: string): Promise<AuthUser> {
+  async validateFirebaseUser(firebaseIdToken: string): Promise<AuthUser> {
     // decode firebase token
-    const firebaseUser: DecodedIdToken = await getAuth().verifyIdToken(accessToken)
+    const firebaseUser: DecodedIdToken = await getAuth().verifyIdToken(firebaseIdToken)
 
     const { email = null, phone_number: phoneNumber = null } = firebaseUser
 

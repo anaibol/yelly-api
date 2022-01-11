@@ -49,7 +49,7 @@ export class MeResolver {
 
   @Mutation(() => Token)
   async firebaseSignIn(@Args('input') signUpInput: FirebaseSignInInput) {
-    const user = await this.authService.validateFirebaseUser(signUpInput.accessToken)
+    const user = await this.authService.validateFirebaseUser(signUpInput.firebaseIdToken)
 
     if (!user) throw new UnauthorizedException()
 
