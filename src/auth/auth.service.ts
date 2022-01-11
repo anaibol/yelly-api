@@ -15,18 +15,11 @@ export class AuthService {
     // decode firebase token
     const firebaseUser: DecodedIdToken = await getAuth().verifyIdToken(accessToken)
 
+    const { email = null, phone_number: phoneNumber = null } = firebaseUser
+
     // check if user exists
     const [user] = await this.prismaService.user.findMany({
-      where: {
-        OR: [
-          {
-            phoneNumber: firebaseUser.phone_number,
-          },
-          {
-            email: firebaseUser.email,
-          },
-        ],
-      },
+      where: { OR: [{ phoneNumber }, { email }] },
     })
 
     if (!user) return null
