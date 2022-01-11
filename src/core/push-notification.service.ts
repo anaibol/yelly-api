@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { PostReaction } from '@prisma/client'
+import { PostComment, PostReaction } from '@prisma/client'
 import { PrismaService } from 'src/core/prisma.service'
 import expo from '../utils/expo'
 
@@ -121,5 +121,33 @@ export class PushNotificationService {
       statusCode: 200,
       body: JSON.stringify({}),
     }
+  }
+
+  async postComment(postComment: Partial<PostComment>) {
+    const { authorId: postAuthorID } = await this.prismaService.post.findUnique({
+      where: {
+        id: postComment.postId,
+      },
+      select: {
+        authorId: true,
+      },
+    })
+
+    const pushTokens = await this.getPushTokensByUsersIds([postAuthorID])
+
+    const { firstName: commenterFirstName } = await this.prismaService.user.findUnique({
+      where: { id: postComment.authorId },
+    })
+
+    const messages = pushTokens.map((expoPushNotificationToken) => {
+      return {
+        to: expoPushNotificationToken.token,
+        body: `${commenterFirstName} a commenté ton post`,
+        data: { url: `${process.env.APP_BASE_URL}/post/${postComment.postId}` },
+        sound: 'default' as const,
+      }
+    })
+
+    await expo.sendNotifications(messages)
   }
 }

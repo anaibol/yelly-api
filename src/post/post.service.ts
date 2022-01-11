@@ -109,6 +109,7 @@ export class PostService {
       totalCommentsCount: post._count.comments,
     }
   }
+
   async create(createPostInput: CreatePostInput, authUserId: string) {
     const { text, tag: tagText } = createPostInput
 
@@ -258,7 +259,7 @@ export class PostService {
   async createComment(createCommentInput: CreateCommentInput, authUserId: string) {
     const { postId, text } = createCommentInput
 
-    const updated = await this.prismaService.postComment.create({
+    const comment = await this.prismaService.postComment.create({
       data: {
         text,
         postId,
@@ -266,6 +267,8 @@ export class PostService {
       },
     })
 
-    return !!updated
+    await this.pushNotificationService.postComment(comment)
+
+    return !!comment
   }
 }
