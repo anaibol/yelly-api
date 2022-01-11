@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { subYears, addYears } from 'date-fns'
 import { DEFAULT_LIMIT } from '../common/pagination.constant'
 import { PrismaService } from '../core/prisma.service'
 import { CreatePostInput } from './create-post.input'
@@ -10,6 +11,8 @@ import { NotificationService } from 'src/notification/notification.service'
 import { CreateCommentInput } from './create-comment.input'
 import { PostSelect } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
+
+const TOTAL_YEARS = 2
 
 @Injectable()
 export class PostService {
@@ -29,7 +32,12 @@ export class PostService {
     return true
   }
 
-  async find(tagText, userId, schoolId: string, currentCursor, limit = DEFAULT_LIMIT) {
+  async find(tagText, userId, schoolId: string, currentCursor, limit = DEFAULT_LIMIT, authUserId: string) {
+    const authUserData = await this.prismaService.user.findUnique({
+      select: { birthdate: true },
+      where: { id: authUserId },
+    })
+
     const posts = await this.prismaService.post.findMany({
       ...(tagText && {
         where: {
@@ -52,6 +60,14 @@ export class PostService {
           },
         },
       }),
+      where: {
+        author: {
+          birthdate: {
+            gte: new Date(subYears(new Date(authUserData.birthdate), TOTAL_YEARS)),
+            lte: new Date(addYears(new Date(authUserData.birthdate), TOTAL_YEARS)),
+          },
+        },
+      },
       ...(currentCursor && {
         cursor: {
           createdAt: new Date(+currentCursor).toISOString(),
