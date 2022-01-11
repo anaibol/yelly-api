@@ -499,8 +499,6 @@ export class UserService {
     // decode firebase token
     const firebaseUser: DecodedIdToken = await getAuth().verifyIdToken(firebaseIdToken)
 
-    console.log({ firebaseUser })
-
     const { email = null, phone_number: phoneNumber = null } = firebaseUser
 
     // check if user exists
