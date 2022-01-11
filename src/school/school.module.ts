@@ -8,9 +8,10 @@ import { SchoolResolver } from './school.resolver'
 import { SchoolService } from './school.service'
 import { TagService } from 'src/tag/tag.service'
 import { NotificationService } from 'src/notification/notification.service'
+import { PushNotificationModule } from 'src/sendbird-webhook/sendbird-webhook.module'
 
 @Module({
-  imports: [CacheModule.register(), CoreModule, AuthModule, UserModule],
+  imports: [CacheModule.register(), CoreModule, AuthModule, UserModule, PushNotificationModule],
   providers: [PostService, PostResolver, SchoolResolver, SchoolService, TagService, NotificationService],
   exports: [SchoolService],
 })
