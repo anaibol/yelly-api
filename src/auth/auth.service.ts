@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
 
+import { DecodedIdToken, getAuth } from 'firebase-admin/auth'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 
@@ -12,14 +13,25 @@ export class AuthService {
 
   async validateFirebaseUser(accessToken: string): Promise<AuthUser> {
     // decode firebase token
+    const firebaseUser: DecodedIdToken = await getAuth().verifyIdToken(accessToken)
 
     // check if user exists
+    const [user] = await this.prismaService.user.findMany({
+      where: {
+        OR: [
+          {
+            phoneNumber: firebaseUser.phone_number,
+          },
+          {
+            email: firebaseUser.email,
+          },
+        ],
+      },
+    })
 
-    // if user return user
+    if (!user) return null
 
-    // else return null
-
-    return null
+    return { id: user.id }
   }
 
   async validateUser(email: string, password: string): Promise<AuthUser> {
