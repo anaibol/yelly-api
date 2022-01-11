@@ -116,15 +116,11 @@ export class MeResolver {
 
   @Mutation(() => Token)
   async firebaseSignUp(@Args('input') firebaseSignUpInput: FirebaseSignUpInput) {
-    // const user = await this.authService.validateFirebaseUser()
+    const user = await this.userService.firebaseSignUp(firebaseSignUpInput)
 
-    // const user = await this.userService.signUp(firebaseSignUpInput)
+    const accessToken = this.authService.getAccessToken(user.id)
 
-    // const accessToken = this.authService.getAccessToken(user.id)
-
-    return {
-      accessToken: '',
-    }
+    return { accessToken }
   }
 
   @Mutation(() => Me)

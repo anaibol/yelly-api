@@ -13,6 +13,7 @@ import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
 import { FirebaseSignUpInput } from './dto/firebase-signup.input'
+import { DecodedIdToken, getAuth } from 'firebase-admin/auth'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
@@ -494,7 +495,33 @@ export class UserService {
     }
   }
 
-  // async firebaseSignUp(firebaseSignUpInput: FirebaseSignUpInput) {}
+  async firebaseSignUp({ accessToken, locale }: FirebaseSignUpInput) {
+    // decode firebase token
+    const firebaseUser: DecodedIdToken = await getAuth().verifyIdToken(accessToken)
+
+    console.log({ firebaseUser })
+
+    const { email = null, phone_number: phoneNumber = null } = firebaseUser
+
+    // check if user exists
+    const [userExists] = await this.prismaService.user.findMany({
+      where: { OR: [{ phoneNumber }, { email }] },
+    })
+
+    if (userExists) throw new ForbiddenException('User exists')
+
+    // create user
+    const user = await this.prismaService.user.create({
+      data: {
+        email,
+        phoneNumber,
+        locale,
+        roles: '[]',
+      },
+    })
+
+    return { id: user.id }
+  }
 
   async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<User> {
     const user = await this.prismaService.user.findUnique({
