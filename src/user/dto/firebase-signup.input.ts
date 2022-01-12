@@ -3,7 +3,7 @@ import { Field, InputType } from '@nestjs/graphql'
 @InputType()
 export class FirebaseSignUpInput {
   @Field()
-  firebaseIdToken: string
+  idToken: string
 
   @Field()
   locale: string

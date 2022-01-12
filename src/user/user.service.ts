@@ -495,9 +495,9 @@ export class UserService {
     }
   }
 
-  async firebaseSignUp({ firebaseIdToken, locale }: FirebaseSignUpInput) {
+  async firebaseSignUp({ idToken, locale }: FirebaseSignUpInput) {
     // decode firebase token
-    const firebaseUser: DecodedIdToken = await getAuth().verifyIdToken(firebaseIdToken)
+    const firebaseUser: DecodedIdToken = await getAuth().verifyIdToken(idToken)
 
     const { email = null, phone_number: phoneNumber = null } = firebaseUser
 
