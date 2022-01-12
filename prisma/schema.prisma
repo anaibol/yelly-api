@@ -65,6 +65,7 @@ model User {
   lastName                     String?
   email                        String?                           @unique
   phoneNumber                  String?                           @unique
+  firebaseId                   String?                           @unique
   roles                        String                            @db.LongText
   password                     String?
   birthdate                    DateTime?                         @db.Date
