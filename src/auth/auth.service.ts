@@ -1,19 +1,24 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
 
-import { DecodedIdToken, getAuth } from 'firebase-admin/auth'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
+
+import { FirebaseService } from 'src/core/firebase.service'
 
 export type AuthUser = { id: string } | null
 
 @Injectable()
 export class AuthService {
-  constructor(private prismaService: PrismaService, private readonly jwtService: JwtService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private firebaseService: FirebaseService,
+    private readonly jwtService: JwtService
+  ) {}
 
   async validateFirebaseUser(idToken: string): Promise<AuthUser> {
     // decode firebase token
-    const firebaseUser: DecodedIdToken = await getAuth().verifyIdToken(idToken)
+    const firebaseUser = await this.firebaseService.verifyIdToken(idToken)
 
     const { email = null, phone_number: phoneNumber = null } = firebaseUser
 

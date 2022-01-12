@@ -141,8 +141,8 @@ export class MeResolver {
     return this.userService.updateMe(updateUserData, authUser.id)
   }
 
-  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
   async deleteAuthUser(@CurrentUser() authUser: AuthUser) {
     return this.userService.deleteById(authUser.id)
   }

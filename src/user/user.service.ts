@@ -13,7 +13,7 @@ import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
 import { FirebaseSignUpInput } from './dto/firebase-signup.input'
-import { DecodedIdToken, getAuth } from 'firebase-admin/auth'
+import { FirebaseService } from 'src/core/firebase.service'
 
 const cleanUndefinedFromObj = (obj) =>
   Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
@@ -26,7 +26,8 @@ export class UserService {
     private emailService: EmailService,
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
-    private sendbirdService: SendbirdService
+    private sendbirdService: SendbirdService,
+    private firebaseService: FirebaseService
   ) {}
 
   async hasUserPostedOnTag(userId, tagText) {
@@ -415,15 +416,16 @@ export class UserService {
 
   async deleteById(userId: string) {
     try {
-      await this.prismaService.user.delete({
-        where: {
-          id: userId,
-        },
-      })
+      const user = await this.prismaService.user.findUnique({ where: { id: userId } })
 
-      this.sendbirdService.deleteUser(userId)
+      if (user.firebaseId) this.firebaseService.deleteUser(user.firebaseId)
+
+      this.sendbirdService.deleteUser(user.id)
+
       const usersAlgoliaIndex = this.algoliaService.initIndex('USERS')
-      usersAlgoliaIndex.deleteObject(userId)
+      usersAlgoliaIndex.deleteObject(user.id)
+
+      await this.prismaService.user.delete({ where: { id: user.id } })
       return true
     } catch {
       throw new NotFoundUserException()
@@ -497,9 +499,9 @@ export class UserService {
 
   async firebaseSignUp({ idToken, locale }: FirebaseSignUpInput) {
     // decode firebase token
-    const firebaseUser: DecodedIdToken = await getAuth().verifyIdToken(idToken)
+    const firebaseUser = await this.firebaseService.verifyIdToken(idToken)
 
-    const { email = null, phone_number: phoneNumber = null } = firebaseUser
+    const { email = null, phone_number: phoneNumber = null, uid: firebaseId } = firebaseUser
 
     // check if user exists
     const [userExists] = await this.prismaService.user.findMany({
@@ -513,6 +515,7 @@ export class UserService {
       data: {
         email,
         phoneNumber,
+        firebaseId,
         locale,
         roles: '[]',
       },
