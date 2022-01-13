@@ -97,13 +97,15 @@ export class NotificationService {
   }
 
   async updateIsSeenNotification(notificationId: string) {
-    this.prismaService.notification.update({
-      where: {
-        id: notificationId,
-      },
+    const update = await this.prismaService.notification.update({
       data: {
         isSeen: true,
       },
+      where: {
+        id: notificationId,
+      },
     })
+
+    return !!update
   }
 }
