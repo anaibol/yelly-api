@@ -7,11 +7,11 @@ import { TagResolver } from './tag.resolver'
 import { PostService } from '../post/post.service'
 import { TagService } from './tag.service'
 import { NotificationService } from 'src/notification/notification.service'
-import { PushNotificationModule } from 'src/sendbird-webhook/sendbird-webhook.module'
+import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Module({
-  imports: [CacheModule.register(), CoreModule, AuthModule, UserModule, PushNotificationModule],
-  providers: [PostService, NotificationService, PostResolver, TagService, TagResolver],
+  imports: [CacheModule.register(), CoreModule, AuthModule, UserModule],
+  providers: [PostService, NotificationService, PushNotificationService, PostResolver, TagService, TagResolver],
   exports: [TagService],
 })
 export class TagModule {}

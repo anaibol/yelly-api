@@ -10,10 +10,10 @@ import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.
 import { UploadResolver } from './upload.resolver'
 import { PostService } from 'src/post/post.service'
 import { TagService } from 'src/tag/tag.service'
-import { PushNotificationModule } from 'src/sendbird-webhook/sendbird-webhook.module'
+import { SendbirdWebhookModule } from 'src/sendbird-webhook/sendbird-webhook.module'
 
 @Module({
-  imports: [CacheModule.register(), CoreModule, forwardRef(() => AuthModule), PushNotificationModule],
+  imports: [CacheModule.register(), CoreModule, forwardRef(() => AuthModule), SendbirdWebhookModule],
   providers: [
     UserService,
     UserResolver,
