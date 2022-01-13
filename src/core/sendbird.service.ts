@@ -112,7 +112,7 @@ export class SendbirdService {
           message_type: 'MESG',
           user_id: SAMUEL_ADMIN_ID,
           message: `Hello ${userFirstName},
-En tant que fondateur de l’app ça m’aiderait de ouf si tu pouvais me donner ton avis sur l’app. Tu aimes bien ?`,
+          En tant que fondateur de l’app ça m’aiderait de ouf si tu pouvais me donner ton avis sur l’app. Tu aimes bien ?`,
         })
       }
     } catch (error) {
