@@ -157,6 +157,7 @@ export class TagService {
         id: true,
         text: true,
         createdAt: true,
+        isLive: true,
         author: {
           select: {
             id: true,
