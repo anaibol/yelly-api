@@ -13,6 +13,7 @@ import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
 import { NotificationService } from 'src/notification/notification.service'
+import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Injectable()
 export class UserService {
@@ -23,7 +24,8 @@ export class UserService {
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
     private sendbirdService: SendbirdService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private pushNotificationService: PushNotificationService
   ) {}
 
   async hasUserPostedOnTag(userId, tagText) {
@@ -358,6 +360,7 @@ export class UserService {
       })
 
       this.notificationService.createFollowshipNotification(otherUserId, followship.id)
+      this.pushNotificationService.createFollowshipPushNotification(followshipData)
     } else {
       await this.prismaService.followship.delete({
         where: {
