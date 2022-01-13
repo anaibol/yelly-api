@@ -21,14 +21,14 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
-  async posts(@Args() postsArgs?: PostsArgs) {
+  async posts(@Args() postsArgs?: PostsArgs, @CurrentUser() authUser?: AuthUser) {
     const cacheKey = 'posts:' + JSON.stringify(postsArgs)
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
 
     const { tag, userId, schoolId, after, limit } = postsArgs
-    const { posts, cursor } = await this.postService.find(tag, userId, schoolId, after, limit)
+    const { posts, cursor } = await this.postService.find(tag, userId, schoolId, after, limit, authUser.id)
     const response = { items: posts, nextCursor: cursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
