@@ -64,7 +64,7 @@ export class PushNotificationService {
   async createFollowshipPushNotification({ followerId, followeeId }) {
     const url = `${process.env.APP_BASE_URL}/user/${followerId}`
 
-    const followeeData = await this.prismaService.user.findUnique({
+    const followeeUserData = await this.prismaService.user.findUnique({
       select: {
         id: true,
         firstName: true,
@@ -73,7 +73,7 @@ export class PushNotificationService {
       where: { id: followeeId },
     })
 
-    const followerData = await this.prismaService.user.findUnique({
+    const followerUserData = await this.prismaService.user.findUnique({
       select: {
         firstName: true,
       },
@@ -81,10 +81,10 @@ export class PushNotificationService {
     })
 
     const message = {
-      to: followeeData.expoPushNotificationTokens.map(({ token }) => token),
+      to: followeeUserData.expoPushNotificationTokens.map(({ token }) => token),
       title: `Vous avez un nouveau suiveur`,
-      body: `${followerData.firstName} a commencé à te suivre`,
-      data: { userId: followeeData.id, url },
+      body: `${followerUserData.firstName} a commencé à te suivre`,
+      data: { userId: followeeUserData.id, url },
       sound: 'default' as const,
     }
 
