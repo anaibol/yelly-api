@@ -111,7 +111,7 @@ export class SendbirdService {
         await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
           message_type: 'MESG',
           user_id: SAMUEL_ADMIN_ID,
-          message: `coHello ${userFirstName}, j’espère que tu as profité de tes vacances ! En tant que fondateur de l’app ça m’aiderait de ouf si tu pouvais me donner ton avis sur l’app. Tu aimes bien ?`,
+          message: `Hello XXX, En tant que fondateur de l’app ça m’aiderait de ouf si tu pouvais me donner ton avis sur l’app. Tu aimes bien ?`,
         })
       }
     } catch (error) {
