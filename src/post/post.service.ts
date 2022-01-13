@@ -9,13 +9,15 @@ import { TagService } from 'src/tag/tag.service'
 import { NotificationService } from 'src/notification/notification.service'
 import { CreateCommentInput } from './create-comment.input'
 import { PostSelect } from './post-select.constant'
+import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Injectable()
 export class PostService {
   constructor(
     private prismaService: PrismaService,
     private tagService: TagService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private pushNotificationService: PushNotificationService
   ) {}
 
   async trackPostViews(postsIds: string[]) {
@@ -210,6 +212,7 @@ export class PostService {
       select: {
         authorId: true,
         id: true,
+        postId: true,
         post: {
           select: {
             authorId: true,
@@ -232,9 +235,10 @@ export class PostService {
       update: reactionData,
     })
 
-    if (postReaction.post.authorId !== authUserId)
+    if (postReaction.post.authorId !== authUserId) {
       this.notificationService.upsertPostReactionNotification(postReaction.post.authorId, postReaction.id)
-
+      this.pushNotificationService.postReaction(postReaction)
+    }
     return !!postReaction
   }
 

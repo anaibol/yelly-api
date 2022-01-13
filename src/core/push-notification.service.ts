@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { PostReaction } from '@prisma/client'
 import { PrismaService } from 'src/core/prisma.service'
 import expo from '../utils/expo'
 
@@ -30,7 +31,6 @@ export class PushNotificationService {
 
     const { sender, members, payload } = body
     const pushTokens = await this.getPushTokensByUsersIds(members.map((members) => members.user_id))
-
     const receiverUsersTokens = pushTokens.filter(({ userId }) => userId !== sender.user_id)
 
     const senderUser = await this.prismaService.user.findUnique({
@@ -59,6 +59,33 @@ export class PushNotificationService {
       statusCode: 200,
       body: JSON.stringify({}),
     }
+  }
+
+  async postReaction(postReaction: Partial<PostReaction>) {
+    const { authorId: postAuthorID } = await this.prismaService.post.findUnique({
+      where: {
+        id: postReaction.postId,
+      },
+      select: {
+        authorId: true,
+      },
+    })
+
+    const pushTokens = await this.getPushTokensByUsersIds([postAuthorID])
+    const reactionUserData = await this.prismaService.user.findUnique({ where: { id: postReaction.authorId } })
+
+    // TODO: ask for text and setup translations file
+    const messages = pushTokens.map((expoPushNotificationToken) => {
+      return {
+        to: expoPushNotificationToken.token,
+        title: 'Tu as une nouvelle réaction',
+        body: `${reactionUserData.firstName} vous envoie ${postReaction.reaction}`,
+        data: { url: `${process.env.APP_BASE_URL}/post/${postReaction.postId}` },
+        sound: 'default' as const,
+      }
+    })
+
+    await expo.sendNotifications(messages)
   }
 
   async createFollowshipPushNotification({ followerId, followeeId }) {
