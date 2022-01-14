@@ -137,6 +137,7 @@ export class UserService {
             pictureId: true,
             school: {
               select: {
+                id: true,
                 name: true,
               },
             },
@@ -175,6 +176,7 @@ export class UserService {
             pictureId: true,
             school: {
               select: {
+                id: true,
                 name: true,
               },
             },
@@ -238,6 +240,11 @@ export class UserService {
                 name: true,
               },
             },
+            _count: {
+              select: {
+                users: true,
+              },
+            },
           },
         },
         training: {
@@ -253,7 +260,12 @@ export class UserService {
       throw new NotFoundUserException()
     }
 
-    return this.formatUser(user)
+    const formattedUser = this.formatUser(user)
+
+    return {
+      ...formattedUser,
+      expoPushNotificationTokens: user.expoPushNotificationTokens.map(({ token }) => token),
+    }
   }
 
   async requestResetPassword(email: string) {

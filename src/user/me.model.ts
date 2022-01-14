@@ -18,6 +18,7 @@ export class Me {
   instagram?: string
   isFilled?: boolean
   sendbirdAccessToken?: string
+  expoPushNotificationTokens?: string[]
   about?: string
   locale?: string
   training?: Training
