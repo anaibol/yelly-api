@@ -29,12 +29,7 @@ export class UserResolver {
   @Query(() => User, { name: 'user' })
   @UseGuards(AuthGuard)
   findOne(@Args('id') id: string): Promise<User> {
-    return this.prismaService.school.findFirst({
-      select: {
-        id: true,
-        name: true,
-      },
-    })
+    return this.userService.findOne(id)
   }
 
   @UseGuards(AuthGuard)

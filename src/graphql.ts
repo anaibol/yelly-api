@@ -107,6 +107,7 @@ export interface Me {
   avatar3dId?: Nullable<string>
   birthdate?: Nullable<DateTime>
   email?: Nullable<string>
+  expoPushNotificationTokens?: Nullable<string[]>
   firstName?: Nullable<string>
   followees?: Nullable<User[]>
   followeesCount?: Nullable<number>

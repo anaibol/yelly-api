@@ -71,6 +71,7 @@ type Me {
   avatar3dId: String
   birthdate: DateTime
   email: String
+  expoPushNotificationTokens: [String!]
   firstName: String
   followees(after: String, limit: Int = 10): [User!]
   followeesCount: Int

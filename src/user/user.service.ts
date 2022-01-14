@@ -14,6 +14,7 @@ import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
 import { NotificationService } from 'src/notification/notification.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
+import { User as PrismaUser } from '@prisma/client'
 
 @Injectable()
 export class UserService {
@@ -28,7 +29,7 @@ export class UserService {
     private pushNotificationService: PushNotificationService
   ) {}
 
-  async hasUserPostedOnTag(userId, tagText) {
+  async hasUserPostedOnTag(userId, tagText): Promise<boolean> {
     const post = await this.prismaService.post.findFirst({
       select: {
         id: true,
@@ -48,8 +49,11 @@ export class UserService {
     return post != null
   }
 
-  async findByEmail(email: string) {
-    const user = await this.prismaService.user.findUnique({
+  findByEmail(email: string): Promise<{
+    id: string
+    password: string
+  }> {
+    return this.prismaService.user.findUnique({
       where: {
         email,
       },
@@ -58,11 +62,6 @@ export class UserService {
         password: true,
       },
     })
-
-    return {
-      ...user,
-      id: user.id,
-    }
   }
 
   async findOne(userId) {
@@ -135,6 +134,7 @@ export class UserService {
         },
         take: limit,
         select: {
+          id: true,
           createdAt: true,
           follower: {
             select: {
@@ -153,7 +153,7 @@ export class UserService {
         },
       })
 
-    const mappedFollowers = followers.map(({ follower, createdAt }) => ({ follower, createdAt }))
+    const mappedFollowers = followers.map(({ follower, createdAt }) => ({ ...follower, createdAt }))
 
     const nextCursor = mappedFollowers.length === limit ? mappedFollowers[limit - 1].createdAt.getTime().toString() : ''
 
@@ -179,6 +179,7 @@ export class UserService {
         },
         take: limit,
         select: {
+          id: true,
           createdAt: true,
           followee: {
             select: {
@@ -197,14 +198,14 @@ export class UserService {
         },
       })
 
-    const mappedFollowees = followees.map(({ followee, createdAt }) => ({ followee, createdAt }))
+    const mappedFollowees = followees.map(({ followee, createdAt }) => ({ ...followee, createdAt }))
 
     const nextCursor = mappedFollowees.length === limit ? mappedFollowees[limit - 1].createdAt.getTime().toString() : ''
 
     return { items: mappedFollowees, nextCursor }
   }
 
- async  isFollowingAuthUser(id, authUserId: string) {
+  async isFollowingAuthUser(id, authUserId: string) {
     const result = await this.prismaService.followship.findUnique({
       where: {
         followerId_followeeId: {
