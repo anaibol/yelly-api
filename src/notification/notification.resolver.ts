@@ -14,13 +14,13 @@ export class NotificationResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedNotifications, { name: 'notifications' })
   async getNotifications(@Args() PaginationArgs: PaginationArgs, @CurrentUser() authUser: AuthUser) {
-    const { notifications, cursor } = await this.notificationService.find(
+    const { notifications, nextCursor } = await this.notificationService.find(
       authUser.id,
       PaginationArgs.after,
       PaginationArgs.limit
     )
 
-    return { items: notifications, nextCursor: cursor }
+    return { items: notifications, nextCursor }
   }
 
   @UseGuards(AuthGuard)

@@ -29,10 +29,10 @@ import { SchoolModule } from './school/school.module'
       typePaths: ['./**/*.gql'],
       definitions: {
         path: join(process.cwd(), 'src/graphql.ts'),
-        outputAs: 'class',
+        // outputAs: 'class',
       },
       debug: process.env.NODE_ENV !== 'production',
-      autoSchemaFile: join(process.cwd(), '../schema.gql'),
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       context: ({ req, res }): any => ({ req, res }),
       buildSchemaOptions: {

@@ -56,7 +56,7 @@ export class PostService {
         cursor: {
           createdAt: new Date(+currentCursor).toISOString(),
         },
-        skip: 1, // Skip the cursor
+        skip: 1,
       }),
       orderBy: {
         createdAt: 'desc',
@@ -71,9 +71,9 @@ export class PostService {
       totalCommentsCount: post._count.comments,
     }))
 
-    const cursor = posts.length === limit ? posts[limit - 1].createdAt : ''
+    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
 
-    return { posts: mappedPosts, cursor }
+    return { posts: mappedPosts, nextCursor }
   }
 
   async getById(postId: string) {

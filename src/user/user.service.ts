@@ -72,7 +72,6 @@ export class UserService {
       },
       select: {
         id: true,
-        email: true,
         firstName: true,
         lastName: true,
         pictureId: true,
@@ -110,88 +109,102 @@ export class UserService {
 
     if (!user) throw new NotFoundUserException()
 
-    return this.formatUser(user)
+    return {
+      ...user,
+      followersCount: user._count.followersFollowships,
+      followeesCount: user._count.followersFollowships,
+    }
   }
 
-  async getUserFollowers(id, currentCursor, limit = DEFAULT_LIMIT) {
-    const followers = await this.prismaService.followship.findMany({
-      where: {
-        followeeId: id,
+  async getUserFollowers(userId, currentCursor, limit = DEFAULT_LIMIT) {
+    const followers = await this.prismaService.user
+      .findUnique({
+        where: {
+          id: userId,
+        },
+      })
+      .followeesFollowships({
         ...(currentCursor && {
           cursor: {
             createdAt: new Date(+currentCursor).toISOString(),
           },
-          skip: 1, // Skip the cursor
+          skip: 1,
         }),
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: {
-        follower: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            pictureId: true,
-            school: {
-              select: {
-                id: true,
-                name: true,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: limit,
+        select: {
+          createdAt: true,
+          follower: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              pictureId: true,
+              school: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
         },
-      },
-    })
+      })
 
-    return followers.map(({ follower: { id, ...folower } }) => ({
-      ...folower,
-      id,
-    }))
+    const mappedFollowers = followers.map(({ follower, createdAt }) => ({ follower, createdAt }))
+
+    const nextCursor = mappedFollowers.length === limit ? mappedFollowers[limit - 1].createdAt.getTime().toString() : ''
+
+    return { items: mappedFollowers, nextCursor }
   }
 
-  async getUserFollowees(id, currentCursor, limit = DEFAULT_LIMIT) {
-    const followees = await this.prismaService.followship.findMany({
-      where: {
-        followerId: id,
+  async getUserFollowees(userId, currentCursor, limit = DEFAULT_LIMIT) {
+    const followees = await this.prismaService.user
+      .findUnique({
+        where: {
+          id: userId,
+        },
+      })
+      .followeesFollowships({
         ...(currentCursor && {
           cursor: {
             createdAt: new Date(+currentCursor).toISOString(),
           },
-          skip: 1, // Skip the cursor
+          skip: 1,
         }),
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: {
-        followee: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            pictureId: true,
-            school: {
-              select: {
-                id: true,
-                name: true,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: limit,
+        select: {
+          createdAt: true,
+          followee: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              pictureId: true,
+              school: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
         },
-      },
-    })
+      })
 
-    return followees.map(({ followee: { id, ...followee } }) => ({
-      ...followee,
-      id: id,
-    }))
+    const mappedFollowees = followees.map(({ followee, createdAt }) => ({ followee, createdAt }))
+
+    const nextCursor = mappedFollowees.length === limit ? mappedFollowees[limit - 1].createdAt.getTime().toString() : ''
+
+    return { items: mappedFollowees, nextCursor }
   }
 
-  async isFollowingAuthUser(id, authUserId: string) {
+ async  isFollowingAuthUser(id, authUserId: string) {
     const result = await this.prismaService.followship.findUnique({
       where: {
         followerId_followeeId: {
@@ -260,12 +273,12 @@ export class UserService {
       throw new NotFoundUserException()
     }
 
-    const formattedUser = this.formatUser(user)
-
     return {
-      ...formattedUser,
+      ...user,
+      followeesCount: user._count.followersFollowships,
+      followersCount: user._count.followeesFollowships,
       school: {
-        ...formattedUser.school,
+        ...user.school,
         totalUsersCount: user.school?._count.users,
       },
       expoPushNotificationTokens: user.expoPushNotificationTokens.map(({ token }) => token),
@@ -557,7 +570,7 @@ export class UserService {
       this.syncUsersIndexWithAlgolia(userId)
     }
 
-    return this.formatUser(updatedUser)
+    return updatedUser
   }
 
   async updateSenbirdUser(user) {
@@ -569,16 +582,5 @@ export class UserService {
         pictureId: user.pictureId,
       })
     }
-  }
-
-  formatUser(user) {
-    const formattedUser = user
-
-    if (user._count) {
-      formattedUser.followeesCount = user._count.followersFollowships
-      formattedUser.followersCount = user._count.followeesFollowships
-    }
-
-    return formattedUser
   }
 }

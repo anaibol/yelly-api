@@ -6,7 +6,7 @@ export class PostComment {
   @Field(() => ID)
   id: string
   text: string
-  createdAt?: string
+  createdAt?: Date
   authorId: string
   author: User
 }

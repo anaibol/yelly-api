@@ -65,7 +65,7 @@ export class TagResolver {
         cursor: {
           createdAt: new Date(+after).toISOString(),
         },
-        skip: 1, // Skip the cursor
+        skip: 1,
       }),
       orderBy: {
         createdAt: 'desc',
@@ -80,7 +80,7 @@ export class TagResolver {
       totalCommentsCount: post._count.comments,
     }))
 
-    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt : ''
+    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
     const response = { items: formattedPosts, nextCursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 

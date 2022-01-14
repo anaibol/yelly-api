@@ -5,19 +5,29 @@
 type City {
   country: Country
   googlePlaceId: String
-  id: String!
+  id: ID!
   lat: String
   lng: String
   name: String!
 }
 
 type Country {
-  id: String!
+  id: ID!
   name: String!
+}
+
+input CreateCommentInput {
+  postId: String!
+  text: String!
 }
 
 input CreateLiveTagInput {
   text: String!
+}
+
+input CreateOrUpdatePostReactionInput {
+  postId: String!
+  reaction: String!
 }
 
 input CreatePostInput {
@@ -34,59 +44,81 @@ input DeletePostInput {
   id: String!
 }
 
+input DeletePostReactionInput {
+  postId: String!
+}
+
 input ForgotPasswordInput {
   email: String!
+}
+
+type LastUsers {
+  firstName: String!
+  id: String!
+  pictureId: String
 }
 
 type LiveTagAuthUser {
   authUserPosted: Boolean!
   id: String!
+  lastUsers: [LastUsers!]
+  postCount: Int!
   text: String!
 }
 
 type Me {
   about: String
+  avatar3dId: String
   birthdate: DateTime
-  email: String!
-  firstName: String!
-  followees: [User!]!
-  followeesCount: Int!
-  followers: [User!]!
-  followersCount: Int!
-  id: String!
+  email: String
+  firstName: String
+  followees(after: String, limit: Int = 10): [User!]
+  followeesCount: Int
+  followers(after: String, limit: Int = 10): [User!]
+  followersCount: Int
+  id: ID!
   instagram: String
   isFilled: Boolean
-  lastName: String!
+  lastName: String
   locale: String
   pictureId: String
-  posts: [Post!]
+  posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
+  school: School
   sendbirdAccessToken: String
   snapchat: String
-  unreadNotificationsCount: Float!
-  userTraining: UserTraining!
+  training: Training
 }
 
 type Mutation {
+  addExpoPushNotificationsToken(input: String!): Boolean!
   createLiveTag(input: CreateLiveTagInput!): Tag!
+  createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Boolean!
   createPost(input: CreatePostInput!): Post!
+  createPostComment(input: CreateCommentInput!): Boolean!
   deleteAuthUser: Boolean!
+  deleteExpoPushNotificationsToken(input: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
-  forgotPassword(input: ForgotPasswordInput!): User!
-  refreshSendbirdAccessToken: String!
-  signUp(input: SignUpInput!): User!
+  deletePostReaction(input: DeletePostReactionInput!): Boolean!
+  forgotPassword(input: ForgotPasswordInput!): Boolean!
+  refreshSendbirdAccessToken: SendbirdAccessToken!
+  resetPassword(input: ResetPasswordInput!): Token!
+  signIn(input: SignInInput!): Token!
+  signUp(input: SignUpInput!): Token!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
   trackPostViews(postsIds: [String!]!): Boolean!
-  updateMe(input: UpdateUserInput!): Boolean!
+  updateIsSeenNotification(input: String!): Boolean!
+  updateMe(input: UpdateUserInput!): Me!
 }
 
 type Notification {
-  action: String!
   createdAt: DateTime!
-  id: String!
-  isSeen: Boolean!
+  follower: User
+  id: ID!
+  isSeen: Boolean
   itemId: String
+  postReaction: PostReaction
+  type: String!
   user: User!
-  userSource: User!
 }
 
 type PaginatedNotifications {
@@ -101,29 +133,65 @@ type PaginatedPosts {
 
 type Post {
   author: User!
-  createdAt: String!
-  id: String!
+  comments: [PostComment!]
+  createdAt: DateTime!
+  id: ID!
+  reactions: [PostReaction!]!
   tags: [Tag!]!
   text: String!
-  viewsCount: Float!
+  totalCommentsCount: Int
+  totalReactionsCount: Int!
+  viewsCount: Int!
+}
+
+type PostComment {
+  author: User!
+  authorId: String!
+  createdAt: DateTime
+  id: ID!
+  text: String!
+}
+
+type PostReaction {
+  author: User
+  createdAt: DateTime
+  id: ID!
+  postId: String
+  reaction: String!
 }
 
 type Query {
-  liveTag: LiveTagAuthUser!
+  getS3PresignedUploadUrl: Upload!
+  liveTag: LiveTagAuthUser
   me: Me!
   notifications(after: String, limit: Int = 10): PaginatedNotifications!
-  postsFeed(after: String, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
+  post(id: String!): Post!
+  posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts!
+  school(googlePlaceId: String, id: String): School
+  tag(id: String): Tag!
+  unreadNotificationsCount: Int!
   user(id: String!): User!
+}
+
+input ResetPasswordInput {
+  password: String!
+  resetToken: String!
 }
 
 type School {
   city: City
   googlePlaceId: String
-  id: String!
+  id: ID!
   lat: String
   lng: String
-  name: String!
-  posts?: Post[]
+  name: String
+  posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
+  totalUsersCount: Int
+  users: [User!]
+}
+
+type SendbirdAccessToken {
+  sendbirdAccessToken: String!
 }
 
 input SignInInput {
@@ -132,24 +200,17 @@ input SignInInput {
 }
 
 input SignUpInput {
-  birthdate: DateTime!
   email: String!
-  firstName: String!
-  instagram: String!
-  lastName: String!
+  locale: String!
   password: String!
-  pictureId: String!
-  schoolGooglePlaceId: String!
-  snapchat: String!
-  trainingName: String!
 }
 
 type Tag {
-  author: User!
-  createdAt: String!
-  id: String!
+  author: User
+  createdAt: DateTime
+  id: ID!
   isLive: Boolean!
-  posts: [Post!]!
+  posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
   text: String!
 }
 
@@ -163,16 +224,18 @@ type Token {
 }
 
 type Training {
-  id: String!
+  id: ID!
   name: String!
 }
 
 input UpdateUserInput {
   about: String
+  avatar3dId: String
   birthdate: DateTime
   email: String
   firstName: String
   instagram: String
+  isFilled: Boolean
   lastName: String
   password: String
   pictureId: String
@@ -181,28 +244,28 @@ input UpdateUserInput {
   trainingName: String
 }
 
+type Upload {
+  key: String!
+  url: String!
+}
+
 type User {
   about: String
+  avatar3dId: String
   birthdate: DateTime
-  firstName: String!
+  firstName: String
   followees(after: String, limit: Int = 10): [User!]
   followeesCount: Int
   followers(after: String, limit: Int = 10): [User!]
   followersCount: Int
-  id: String!
+  id: ID!
   instagram: String
-  lastName: String!
+  isFollowingAuthUser: Boolean
+  lastName: String
   locale: String
   pictureId: String
-  posts: [Post!]
-  snapchat: String
-  userTraining: UserTraining!
-}
-
-type UserTraining {
-  createdAt: DateTime
-  id: String!
+  posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
   school: School
+  snapchat: String
   training: Training
-  updatedAt: DateTime
 }
