@@ -547,14 +547,13 @@ export class UserService {
             sendbirdAccessToken,
           },
         })
-
         updatedUser.sendbirdAccessToken = sendbirdAccessToken
+        this.syncUsersIndexWithAlgolia(userId)
       } catch (error) {
         // CATCH ERROR SO IT CONTINUES
       }
     } else if (updatedUser.isFilled) {
       this.updateSenbirdUser(updatedUser)
-
       this.syncUsersIndexWithAlgolia(userId)
     }
 
