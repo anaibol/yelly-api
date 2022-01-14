@@ -17,6 +17,7 @@ import { TagService } from './tag.service'
 import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
 import { PostSelect } from '../post/post-select.constant'
+import { PaginatedPosts } from 'src/post/paginated-posts.model'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -29,7 +30,7 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => LiveTagAuthUser, { name: 'liveTag', nullable: true })
-  async getLiveTag(@CurrentUser() authUser: AuthUser) {
+  async getLiveTag(@CurrentUser() authUser: AuthUser): Promise<LiveTagAuthUser> {
     const liveTag = await this.tagService.getLiveTag()
 
     if (!liveTag) return
@@ -41,7 +42,7 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Tag)
-  createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() authUser: AuthUser) {
+  createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() authUser: AuthUser): Promise<Tag> {
     return this.tagService.createLiveTag(createLiveTag.text, authUser.id)
   }
 
@@ -52,11 +53,11 @@ export class TagResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() tag: Tag, @Args() postsArgs?: PostsArgs) {
+  async posts(@Parent() tag: Tag, @Args() postsArgs?: PostsArgs): Promise<PaginatedPosts> {
     const cacheKey = 'tagPosts:' + JSON.stringify({ PostsArgs, tag })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
-    if (previousResponse) return previousResponse
+    if (previousResponse) return previousResponse as PaginatedPosts
 
     const { limit, after } = postsArgs
 
@@ -65,7 +66,7 @@ export class TagResolver {
         cursor: {
           createdAt: new Date(+after).toISOString(),
         },
-        skip: 1, // Skip the cursor
+        skip: 1,
       }),
       orderBy: {
         createdAt: 'desc',
@@ -80,7 +81,7 @@ export class TagResolver {
       totalCommentsCount: post._count.comments,
     }))
 
-    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt : ''
+    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
     const response = { items: formattedPosts, nextCursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 

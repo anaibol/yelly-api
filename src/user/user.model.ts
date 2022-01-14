@@ -25,3 +25,21 @@ export class User {
   followers?: User[]
   isFollowingAuthUser?: boolean
 }
+
+// @ObjectType()
+// export class UserProfile {
+//   @Field(() => ID)
+//   id: string
+//   firstName: string
+//   lastName: string
+//   birthdate: Date
+//   pictureId: string
+//   avatar3dId: string
+//   snapchat: string
+//   instagram: string
+//   about: string
+//   training: Training
+//   school: School
+//   followersCount: number
+//   followeesCount: number
+// }

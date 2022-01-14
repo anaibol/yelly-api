@@ -15,6 +15,8 @@ import { UserService } from './user.service'
 import { AuthUser } from '../auth/auth.service'
 import { PrismaService } from 'src/core/prisma.service'
 import { PostSelect } from 'src/post/post-select.constant'
+import { PaginatedPosts } from 'src/post/paginated-posts.model'
+import { PaginatedUsers } from 'src/post/paginated-users.model'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -26,36 +28,39 @@ export class UserResolver {
 
   @Query(() => User, { name: 'user' })
   @UseGuards(AuthGuard)
-  findOne(@Args('id') id: string) {
+  findOne(@Args('id') id: string): Promise<User> {
     return this.userService.findOne(id)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  toggleFollowUser(@Args('input') toggleFollowInput: ToggleFollowInput, @CurrentUser() authUser: AuthUser) {
+  toggleFollowUser(
+    @Args('input') toggleFollowInput: ToggleFollowInput,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<boolean> {
     return this.userService.toggleFollow(authUser.id, toggleFollowInput.otherUserId, toggleFollowInput.value)
   }
 
   @ResolveField()
-  async followers(@Parent() user: User, @Args() paginationArgs: PaginationArgs) {
+  async followers(@Parent() user: User, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
     return this.userService.getUserFollowers(user.id, paginationArgs.after, paginationArgs.limit)
   }
 
   @ResolveField()
-  async followees(@Parent() user: User, @Args() paginationArgs: PaginationArgs) {
+  async followees(@Parent() user: User, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
     return this.userService.getUserFollowees(user.id, paginationArgs.after, paginationArgs.limit)
   }
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async isFollowingAuthUser(@Parent() user: User, @CurrentUser() authUser: AuthUser) {
+  async isFollowingAuthUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.userService.isFollowingAuthUser(user.id, authUser.id)
   }
 
-  @ResolveField()
-  async posts(@Parent() user: User, @Args() postsArgs?: PostsArgs) {
+  @ResolveField('posts', () => PaginatedPosts)
+  async posts(@Parent() user: User, @Args() postsArgs?: PostsArgs): Promise<PaginatedPosts> {
     const cacheKey = 'userPosts:' + JSON.stringify({ postsArgs, user })
-    const previousResponse = await this.cacheManager.get(cacheKey)
+    const previousResponse = await this.cacheManager.get<PaginatedPosts>(cacheKey)
 
     if (previousResponse) return previousResponse
 
@@ -73,7 +78,7 @@ export class UserResolver {
         cursor: {
           createdAt: new Date(+after).toISOString(),
         },
-        skip: 1, // Skip the cursor
+        skip: 1,
       }),
       orderBy: {
         createdAt: 'desc',
@@ -88,7 +93,7 @@ export class UserResolver {
       totalCommentsCount: post._count.comments,
     }))
 
-    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt : ''
+    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
     const response = { items: formattedPosts, nextCursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
