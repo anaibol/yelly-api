@@ -264,6 +264,10 @@ export class UserService {
 
     return {
       ...formattedUser,
+      school: {
+        ...formattedUser.school,
+        totalUsersCount: formattedUser.school._count.users,
+      },
       expoPushNotificationTokens: user.expoPushNotificationTokens.map(({ token }) => token),
     }
   }
