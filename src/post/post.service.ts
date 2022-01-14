@@ -6,15 +6,18 @@ import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reactio
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { TagService } from 'src/tag/tag.service'
-import { CreateCommentInput } from './create-comment-input'
-import { AlgoliaService } from 'src/core/algolia.service'
+import { NotificationService } from 'src/notification/notification.service'
+import { CreateCommentInput } from './create-comment.input'
+import { PostSelect } from './post-select.constant'
+import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Injectable()
 export class PostService {
   constructor(
     private prismaService: PrismaService,
     private tagService: TagService,
-    private algoliaService: AlgoliaService
+    private notificationService: NotificationService,
+    private pushNotificationService: PushNotificationService
   ) {}
 
   async trackPostViews(postsIds: string[]) {
@@ -25,26 +28,30 @@ export class PostService {
 
     return true
   }
-  // TODO: Add return type, is not q expected result
+
   async find(tagText, userId, schoolId: string, currentCursor, limit = DEFAULT_LIMIT) {
     const posts = await this.prismaService.post.findMany({
-      where: {
-        ...(tagText && {
+      ...(tagText && {
+        where: {
           tags: {
             every: {
               text: tagText,
             },
           },
-        }),
-        ...(userId && {
+        },
+      }),
+      ...(userId && {
+        where: {
           authorId: userId,
-        }),
-        ...(schoolId && {
+        },
+      }),
+      ...(schoolId && {
+        where: {
           author: {
             schoolId,
           },
-        }),
-      },
+        },
+      }),
       ...(currentCursor && {
         cursor: {
           createdAt: new Date(+currentCursor).toISOString(),
@@ -55,52 +62,7 @@ export class PostService {
         createdAt: 'desc',
       },
       take: limit,
-      select: {
-        _count: {
-          select: {
-            reactions: true,
-            comments: true,
-          },
-        },
-        id: true,
-        createdAt: true,
-        viewsCount: true,
-        text: true,
-        reactions: {
-          select: {
-            id: true,
-            reaction: true,
-            authorId: true,
-          },
-          distinct: 'reaction',
-          take: 2,
-        },
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            birthdate: true,
-            pictureId: true,
-          },
-        },
-        tags: {
-          select: {
-            id: true,
-            createdAt: true,
-            text: true,
-            isLive: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-          },
-        },
-      },
+      select: PostSelect,
     })
 
     const mappedPosts = posts.map((post) => ({
@@ -118,35 +80,11 @@ export class PostService {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
-        _count: {
-          select: {
-            reactions: true,
-            comments: true,
-          },
-        },
-        id: true,
-        createdAt: true,
-        viewsCount: true,
-        text: true,
-        reactions: {
-          select: {
-            id: true,
-            reaction: true,
-            authorId: true,
-          },
-          distinct: 'reaction',
-          take: 2,
-        },
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            birthdate: true,
-            pictureId: true,
-          },
-        },
+        ...PostSelect,
         comments: {
+          orderBy: {
+            createdAt: 'asc',
+          },
           select: {
             text: true,
             authorId: true,
@@ -158,25 +96,6 @@ export class PostService {
                 pictureId: true,
                 firstName: true,
                 lastName: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
-        tags: {
-          select: {
-            id: true,
-            createdAt: true,
-            text: true,
-            isLive: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
               },
             },
           },
@@ -190,6 +109,7 @@ export class PostService {
       totalCommentsCount: post._count.comments,
     }
   }
+
   async create(createPostInput: CreatePostInput, authUserId: string) {
     const { text, tag: tagText } = createPostInput
 
@@ -283,18 +203,44 @@ export class PostService {
       postId,
     }
 
-    const updated = await this.prismaService.postReaction.upsert({
+    const postReaction = await this.prismaService.postReaction.upsert({
       where: {
         authorId_postId: {
           authorId,
           postId,
         },
       },
-      create: reactionData,
+      select: {
+        authorId: true,
+        id: true,
+        postId: true,
+        post: {
+          select: {
+            authorId: true,
+          },
+        },
+      },
+      create: {
+        author: {
+          connect: {
+            id: authUserId,
+          },
+        },
+        reaction,
+        post: {
+          connect: {
+            id: postId,
+          },
+        },
+      },
       update: reactionData,
     })
 
-    return !!updated
+    if (postReaction.post.authorId !== authUserId) {
+      this.notificationService.upsertPostReactionNotification(postReaction.post.authorId, postReaction.id)
+      this.pushNotificationService.postReaction(postReaction)
+    }
+    return !!postReaction
   }
 
   async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUserId: string): Promise<boolean> {
@@ -313,7 +259,7 @@ export class PostService {
   async createComment(createCommentInput: CreateCommentInput, authUserId: string) {
     const { postId, text } = createCommentInput
 
-    const updated = await this.prismaService.postComment.create({
+    const comment = await this.prismaService.postComment.create({
       data: {
         text,
         postId,
@@ -321,6 +267,8 @@ export class PostService {
       },
     })
 
-    return !!updated
+    await this.pushNotificationService.postComment(comment)
+
+    return !!comment
   }
 }

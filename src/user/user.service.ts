@@ -6,7 +6,7 @@ import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { SendbirdService } from '../core/sendbird.service'
-import { SchoolService } from './school.service'
+import { SchoolService } from '../school/school.service'
 import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
@@ -27,7 +27,7 @@ export class UserService {
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
     private sendbirdService: SendbirdService,
-    private firebaseService: FirebaseService
+    private firebaseService: FirebaseService,
   ) {}
 
   async hasUserPostedOnTag(userId, tagText) {
@@ -89,47 +89,6 @@ export class UserService {
             followersFollowships: true,
           },
         },
-        posts: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 10,
-          select: {
-            id: true,
-            createdAt: true,
-            viewsCount: true,
-            text: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-            tags: {
-              select: {
-                id: true,
-                text: true,
-                isLive: true,
-              },
-            },
-            reactions: {
-              select: {
-                id: true,
-                reaction: true,
-                authorId: true,
-              },
-              distinct: 'reaction',
-              take: 2,
-            },
-            _count: {
-              select: {
-                reactions: true,
-              },
-            },
-          },
-        },
         school: {
           select: {
             id: true,
@@ -150,6 +109,8 @@ export class UserService {
         },
       },
     })
+
+    if (!user) throw new NotFoundUserException()
 
     return this.formatUser(user)
   }
@@ -253,7 +214,6 @@ export class UserService {
         email: true,
         firstName: true,
         lastName: true,
-        password: true,
         pictureId: true,
         avatar3dId: true,
         birthdate: true,
@@ -267,48 +227,6 @@ export class UserService {
           select: {
             followeesFollowships: true,
             followersFollowships: true,
-          },
-        },
-        posts: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 10,
-          select: {
-            id: true,
-            createdAt: true,
-            viewsCount: true,
-            text: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                pictureId: true,
-              },
-            },
-            tags: {
-              select: {
-                id: true,
-                text: true,
-                isLive: true,
-              },
-            },
-            reactions: {
-              select: {
-                id: true,
-                reaction: true,
-                authorId: true,
-              },
-              distinct: 'reaction',
-              take: 2,
-            },
-            _count: {
-              select: {
-                reactions: true,
-                comments: true,
-              },
-            },
           },
         },
         school: {
@@ -332,6 +250,7 @@ export class UserService {
         },
       },
     })
+
     if (!user) {
       throw new NotFoundUserException()
     }
@@ -433,19 +352,22 @@ export class UserService {
   }
 
   async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
-    const followship = {
+    const followshipData = {
       followerId: authUserId,
       followeeId: otherUserId,
     }
 
     if (value) {
-      await this.prismaService.followship.create({
-        data: followship,
+      const followship = await this.prismaService.followship.create({
+        data: followshipData,
       })
+
+      this.notificationService.createFollowshipNotification(otherUserId, followship.id)
+      this.pushNotificationService.createFollowshipPushNotification(followshipData)
     } else {
       await this.prismaService.followship.delete({
         where: {
-          followerId_followeeId: followship,
+          followerId_followeeId: followshipData,
         },
       })
     }
@@ -525,75 +447,56 @@ export class UserService {
   }
 
   async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<User> {
-    const user = await this.prismaService.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        isFilled: true,
-      },
-    })
-
-    if (!user) {
-      throw new NotFoundException()
-    }
-
     const schoolData =
       updateUserData.schoolGooglePlaceId && (await this.schoolService.getOrCreate(updateUserData.schoolGooglePlaceId))
 
     const updatedUser = await this.prismaService.user.update({
-      where: {
-        id: userId,
-      },
       select: {
         id: true,
         isFilled: true,
-        ...(updateUserData.isFilled && {
-          email: true,
-          firstName: true,
-          lastName: true,
-          password: true,
-          pictureId: true,
-          avatar3dId: true,
-          birthdate: true,
-          about: true,
-          instagram: true,
-          snapchat: true,
-          sendbirdAccessToken: true,
-          school: {
-            select: {
-              id: true,
-              name: true,
-              city: {
-                select: {
-                  id: true,
-                  name: true,
-                },
+        email: true,
+        firstName: true,
+        lastName: true,
+        pictureId: true,
+        avatar3dId: true,
+        birthdate: true,
+        about: true,
+        sendbirdAccessToken: true,
+        school: {
+          select: {
+            id: true,
+            name: true,
+            city: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
-          training: {
-            select: {
-              id: true,
-              name: true,
-            },
+        },
+        training: {
+          select: {
+            id: true,
+            name: true,
           },
-        }),
+        },
+      },
+      where: {
+        id: userId,
       },
       data: {
-        ...cleanUndefinedFromObj({
-          firstName: updateUserData.firstName,
-          lastName: updateUserData.lastName,
-          email: updateUserData.email,
-          password: updateUserData.password,
-          birthdate: updateUserData.birthdate,
-          instagram: updateUserData.instagram,
-          snapchat: updateUserData.snapchat,
-          pictureId: updateUserData.pictureId,
-          avatar3dId: updateUserData.avatar3dId,
-          about: updateUserData.about,
-          isFilled: updateUserData.isFilled,
-        }),
-        ...(updateUserData.trainingName && {
+        firstName: updateUserData.firstName,
+        lastName: updateUserData.lastName,
+        email: updateUserData.email,
+        password: updateUserData.password,
+        birthdate: updateUserData.birthdate,
+        instagram: updateUserData.instagram,
+        snapchat: updateUserData.snapchat,
+        pictureId: updateUserData.pictureId,
+        avatar3dId: updateUserData.avatar3dId,
+        about: updateUserData.about,
+        isFilled: updateUserData.isFilled,
+        ...(schoolData && {
           school: {
             connectOrCreate: {
               where: {
@@ -630,6 +533,8 @@ export class UserService {
               },
             },
           },
+        }),
+        ...(updateUserData.trainingName && {
           training: {
             connectOrCreate: {
               where: {
@@ -644,7 +549,7 @@ export class UserService {
       },
     })
 
-    if (!user.isFilled && updatedUser.isFilled) {
+    if (updateUserData.isFilled) {
       try {
         const sendbirdAccessToken = await this.sendbirdService.createUser(updatedUser)
 
@@ -659,16 +564,12 @@ export class UserService {
 
         updatedUser.sendbirdAccessToken = sendbirdAccessToken
       } catch (error) {
-        console.log(error)
+        // CATCH ERROR SO IT CONTINUES
       }
-    }
+    } else if (updatedUser.isFilled) {
+      this.updateSenbirdUser(updatedUser)
 
-    if (updatedUser.isFilled) {
-      // if (updatedUser.firstName || updatedUser.lastName || updatedUser.pictureId) {
-      //   this.updateSenbirdUser(updatedUser)
-      // }
-
-      this.syncUsersIndexWithAlgolia(user.id)
+      this.syncUsersIndexWithAlgolia(userId)
     }
 
     return this.formatUser(updatedUser)
@@ -692,14 +593,6 @@ export class UserService {
       formattedUser.followeesCount = user._count.followersFollowships
       formattedUser.followersCount = user._count.followeesFollowships
     }
-
-    formattedUser.posts = user.posts
-      ? user.posts.map((post) => ({
-          ...post,
-          totalReactionsCount: post._count.reactions,
-          totalCommentsCount: post._count.comments,
-        }))
-      : []
 
     return formattedUser
   }

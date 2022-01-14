@@ -1,10 +1,49 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
-
 import { getCityNameWithCountry, getGoogleCityByName, getGooglePlaceDetails } from '../utils/googlePlaces'
+
 @Injectable()
 export class SchoolService {
   constructor(private prismaService: PrismaService) {}
+
+  async getSchool(id: string, googlePlaceId: string) {
+    const school = await this.prismaService.school.findUnique({
+      where: {
+        ...(id && { id }),
+        ...(googlePlaceId && { googlePlaceId }),
+      },
+      select: {
+        name: true,
+        id: true,
+        users: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            pictureId: true,
+          },
+        },
+        city: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            users: true,
+          },
+        },
+      },
+    })
+
+    if (!school) return null
+
+    return {
+      ...school,
+      totalUsersCount: school._count.users,
+    }
+  }
 
   async getOrCreate(googlePlaceId: string) {
     const school = await this.prismaService.school.findUnique({

@@ -15,28 +15,26 @@ model City {
   googlePlaceId String?  @unique
   lat           Float?
   lng           Float?
-  country       Country  @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  country       Country  @relation(fields: [countryId], references: [id])
   schools       School[]
-
 }
 
 model Country {
   id   String @id @default(uuid())
   name String @unique
   city City[]
-
 }
 
 model Notification {
-  id           String              @id @default(uuid())
-  userSourceId String
-  userTargetId String?
-  action       NotificationAction?
-  isSeen       Boolean
-  createdAt    DateTime            @unique @default(now()) @db.DateTime(0)
-  itemId       String?
-  userSource   User                @relation("userSource", fields: [userSourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  user         User?               @relation(fields: [userTargetId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  id             String        @id @default(uuid())
+  isSeen         Boolean       @default(false)
+  createdAt      DateTime      @unique @default(now()) @db.DateTime(0)
+  postReactionId String?       @unique
+  followshipId   String?       @unique
+  userId         String
+  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  postReaction   PostReaction? @relation(fields: [postReactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  followship     Followship?   @relation(fields: [followshipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
 }
 
@@ -48,15 +46,14 @@ model School {
   lng           Float?
   cityId        String
   city          City    @relation(fields: [cityId], references: [id])
-  User          User[]
-
+  posts         Post[]
+  users         User[]
 }
 
 model Training {
   id   String @id @default(uuid())
   name String @unique
-
-  User User[]
+  user User[]
 }
 
 model User {
@@ -70,7 +67,6 @@ model User {
   password                     String?
   birthdate                    DateTime?                         @db.Date
   pictureId                    String?
-  avatar3dId                   String?
   snapchat                     String?
   instagram                    String?
   resetToken                   String?
@@ -81,32 +77,32 @@ model User {
   isFilled                     Boolean                           @default(false)
   androidPushnotificationToken String?
   sendbirdAccessToken          String?
-  expoPushNotificationTokens   ExpoPushNotificationAccessToken[]
   iosPushnotificationToken     String?
   about                        String?
   locale                       String?
-  notification                 Notification[]                    @relation("userSource")
-  notifications                Notification[]
+  trainingId                   String?
+  schoolId                     String?
+  avatar3dId                   String?
+  school                       School?                           @relation(fields: [schoolId], references: [id])
+  training                     Training?                         @relation(fields: [trainingId], references: [id])
+  expoPushNotificationTokens   ExpoPushNotificationAccessToken[]
+  followeesFollowships         Followship[]                      @relation("followees")
+  followersFollowships         Followship[]                      @relation("followers")
   posts                        Post[]
   postComments                 PostComment[]
-  tags                         Tag[]
-  followersFollowships         Followship[]                      @relation("followers")
-  followeesFollowships         Followship[]                      @relation("followees")
   postReactions                PostReaction[]
-
-  trainingId String?
-  schoolId   String?
-  school     School?   @relation(fields: [schoolId], references: [id])
-  training   Training? @relation(fields: [trainingId], references: [id])
-
+  notifications                Notification[]
+  tags                         Tag[]
 }
 
 model Followship {
-  follower   User     @relation("followers", fields: [followerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  followerId String
-  followee   User     @relation("followees", fields: [followeeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  followeeId String
-  createdAt  DateTime @unique @default(now())
+  id           String         @unique @default(uuid())
+  followerId   String
+  followeeId   String
+  createdAt    DateTime       @unique @default(now())
+  followee     User           @relation("followees", fields: [followeeId], references: [id], onDelete: Cascade)
+  follower     User           @relation("followers", fields: [followerId], references: [id], onDelete: Cascade)
+  notification Notification[]
 
   @@id([followerId, followeeId])
 }
@@ -117,9 +113,8 @@ model Tag {
   createdAt DateTime @default(now())
   authorId  String?
   isLive    Boolean  @default(false)
-  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull, onUpdate: SetNull)
+  author    User?    @relation(fields: [authorId], references: [id], onUpdate: SetNull)
   posts     Post[]
-
 }
 
 model Post {
@@ -127,11 +122,13 @@ model Post {
   text       String         @db.Text
   createdAt  DateTime       @unique @default(now())
   authorId   String
-  author     User           @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  tags       Tag[]
-  reactions  PostReaction[]
   viewsCount Int            @default(0)
+  schoolId   String?
+  author     User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  school     School?        @relation(fields: [schoolId], references: [id])
   comments   PostComment[]
+  reactions  PostReaction[]
+  tags       Tag[]
 
   @@unique([authorId, id], map: "author_post_id_fkey")
 }
@@ -141,25 +138,20 @@ model PostComment {
   text      String   @db.Text
   createdAt DateTime @unique @default(now())
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   postId    String
-}
-
-enum NotificationAction {
-  seen
-  add
-  groupMembershipRequest
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
 model PostReaction {
-  id        String   @id @default(uuid())
-  createdAt DateTime @unique @default(now())
-  reaction  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  postId    String
-  authorId  String
+  id           String         @id @default(uuid())
+  createdAt    DateTime       @unique @default(now())
+  reaction     String
+  postId       String
+  authorId     String
+  author       User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post         Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  notification Notification[]
 
   @@unique([authorId, postId], map: "author_post_id_fkey")
 }
@@ -168,5 +160,5 @@ model ExpoPushNotificationAccessToken {
   id     String @id @default(uuid())
   userId String
   token  String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -1,19 +1,12 @@
-import { Field, ObjectType } from '@nestjs/graphql'
+import { Field, ID, ObjectType } from '@nestjs/graphql'
+import { User } from '../user/user.model'
 
 @ObjectType()
 export class PostReaction {
-  @Field({ nullable: true })
+  @Field(() => ID)
   id: string
-
-  @Field({ nullable: true })
-  createdAt: string
-
-  @Field()
+  createdAt?: string
   reaction: string
-
-  @Field(() => String, { nullable: true })
-  authorId: string
-
-  @Field(() => String, { nullable: true })
-  postId: string
+  postId?: string
+  author?: User
 }

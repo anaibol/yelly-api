@@ -7,5 +7,6 @@ import { PushNotificationService } from '../core/push-notification.service'
   imports: [CoreModule],
   providers: [PushNotificationService],
   controllers: [SendbirdWebhookController],
+  exports: [PushNotificationService],
 })
-export class PushNotificationModule {}
+export class SendbirdWebhookModule {}

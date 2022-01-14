@@ -9,7 +9,7 @@ export class NotificationService {
   async find(userId: string, currentCursor, limit = DEFAULT_LIMIT) {
     const notifications = await this.prismaService.notification.findMany({
       where: {
-        userTargetId: userId,
+        userId,
       },
       ...(currentCursor && {
         cursor: {
@@ -19,14 +19,30 @@ export class NotificationService {
       }),
       select: {
         id: true,
-        action: true,
         createdAt: true,
         isSeen: true,
-        userSource: {
+        postReaction: {
           select: {
-            id: true,
-            firstName: true,
-            pictureId: true,
+            reaction: true,
+            postId: true,
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                pictureId: true,
+              },
+            },
+          },
+        },
+        followship: {
+          select: {
+            follower: {
+              select: {
+                id: true,
+                firstName: true,
+                pictureId: true,
+              },
+            },
           },
         },
       },
@@ -38,15 +54,58 @@ export class NotificationService {
 
     const cursor = notifications.length === limit ? notifications[limit - 1].createdAt : ''
 
-    return { notifications, cursor }
+    const formattedNotifications = notifications.map(({ followship, ...notification }) => ({
+      ...notification,
+      follower: followship?.follower,
+    }))
+
+    return { notifications: formattedNotifications, cursor }
   }
 
-  async countUnreadNotifications(userTargetId: string) {
+  async getUnreadNotificationsCount(userId: string) {
     return this.prismaService.notification.count({
       where: {
-        userTargetId,
+        userId,
         isSeen: false,
       },
     })
+  }
+
+  async upsertPostReactionNotification(userId: string, postReactionId: string) {
+    return this.prismaService.notification.upsert({
+      where: {
+        postReactionId,
+      },
+      create: {
+        userId,
+        postReactionId,
+      },
+      update: {
+        userId,
+        postReactionId,
+      },
+    })
+  }
+
+  async createFollowshipNotification(userId: string, followshipId: string) {
+    return this.prismaService.notification.create({
+      data: {
+        userId,
+        followshipId,
+      },
+    })
+  }
+
+  async updateIsSeenNotification(notificationId: string) {
+    const update = await this.prismaService.notification.update({
+      data: {
+        isSeen: true,
+      },
+      where: {
+        id: notificationId,
+      },
+    })
+
+    return !!update
   }
 }

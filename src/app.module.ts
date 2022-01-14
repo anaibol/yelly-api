@@ -8,17 +8,24 @@ import { CoreModule } from './core/core.module'
 import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
 import { NotificationModule } from './notification/notification.module'
-import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
+import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
 import { PushNotificationService } from './core/push-notification.service'
 import { SendbirdWebhookController } from './sendbird-webhook/sendbird-webhook.controller'
-import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.module'
-
+import { SchoolModule } from './school/school.module'
 @Module({
   imports: [
     CacheModule.register(),
     GraphQLModule.forRoot({
       playground: false,
-      plugins: [ApolloServerPluginLandingPageLocalDefault()],
+      plugins: [
+        ApolloServerPluginLandingPageLocalDefault(),
+        process.env.NODE_ENV !== 'development' &&
+          ApolloServerPluginUsageReporting({
+            sendVariableValues: { all: true },
+            sendHeaders: { all: true },
+            sendUnexecutableOperationDocuments: true,
+          }),
+      ].filter((v) => v),
       // typePaths: ['./**/*.gql'],
       // definitions: {
       //   path: join(process.cwd(), 'src/graphql.ts'),
@@ -28,6 +35,9 @@ import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.modu
       autoSchemaFile: join(process.cwd(), '../schema.gql'),
       sortSchema: true,
       context: ({ req, res }): any => ({ req, res }),
+      buildSchemaOptions: {
+        numberScalarMode: 'integer',
+      },
     }),
     UserModule,
     PostModule,
@@ -36,7 +46,7 @@ import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.modu
     CommonModule,
     AuthModule,
     NotificationModule,
-    PushNotificationModule,
+    SchoolModule,
   ],
   providers: [PushNotificationService],
   controllers: [SendbirdWebhookController],

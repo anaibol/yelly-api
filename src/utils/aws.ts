@@ -14,6 +14,7 @@ const s3Configuration: S3ClientConfig = {
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
   region: REGION,
+  useAccelerateEndpoint: true,
 }
 const s3 = new S3Client(s3Configuration)
 

@@ -10,7 +10,7 @@ type SendbirdUser = {
   metadata: {
     firstName: string
     lastName: string
-    birthdate: Date
+    pictureId: string
   }
 }
 
@@ -19,7 +19,6 @@ type IncomingUser = {
   firstName: string
   lastName: string
   pictureId: string
-  birthdate: Date
 }
 
 const SAMUEL_ADMIN_ID = process.env.SAMUEL_ADMIN_ID
@@ -31,7 +30,7 @@ const cleanUndefinedFromObj = (obj) =>
 export class SendbirdService {
   client: Axios
 
-  constructor(private prismaService: PrismaService) {
+  constructor() {
     this.client = axios.create({
       baseURL: process.env.SENDBIRD_BASE_URL,
       headers: {
@@ -42,7 +41,7 @@ export class SendbirdService {
   }
 
   async createUser(user: IncomingUser): Promise<string> {
-    const profileUrl = user.pictureId && 'http://yelly.imgix.net/' + user.pictureId + '?format=auto'
+    const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}?format=auto`
 
     const sendbirdUser: SendbirdUser = {
       user_id: user.id,
@@ -52,7 +51,7 @@ export class SendbirdService {
       metadata: {
         firstName: user.firstName,
         lastName: user.lastName,
-        birthdate: user.birthdate,
+        pictureId: user.pictureId,
       },
     }
 
@@ -62,8 +61,15 @@ export class SendbirdService {
     return data.access_token
   }
 
-  updateUser(user: Partial<IncomingUser>) {
-    const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}/?format=auto`
+  async updateUser(user: Partial<IncomingUser>) {
+    const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}?format=auto`
+
+    const updatedUserData: Partial<SendbirdUser> = {
+      nickname: `${user.firstName} ${user.lastName}`,
+      ...cleanUndefinedFromObj({
+        profile_url: profileUrl,
+      }),
+    }
 
     const metadata = cleanUndefinedFromObj({
       firstName: user.firstName,
@@ -71,20 +77,13 @@ export class SendbirdService {
       pictureId: user.pictureId,
     })
 
-    const updatedUserData: Partial<SendbirdUser> = {
-      ...cleanUndefinedFromObj({
-        profile_url: profileUrl,
-        ...(Object.keys(metadata).length && {
-          nickname: `${user.firstName} ${user.lastName}`,
-          metadata,
-        }),
-      }),
-    }
-
-    return this.client.put(`/v3/users/${user.id}`, updatedUserData)
+    await Promise.all([
+      this.client.put(`/v3/users/${user.id}`, updatedUserData),
+      Object.keys(metadata).length && this.client.put(`/v3/users/${user.id}/metadata`, { metadata, upsert: true }),
+    ])
   }
 
-  async getAccessToken(userId: string) {
+  async getAccessToken(userId: string): Promise<string> {
     const response = await this.client.put(`/v3/users/${userId}`, { issue_access_token: true })
     return response.data.access_token
   }
@@ -112,10 +111,8 @@ export class SendbirdService {
         await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
           message_type: 'MESG',
           user_id: SAMUEL_ADMIN_ID,
-          message: `Salut ${userFirstName}, 
-          Je m'appelle Samuel et c'est moi qui ai crée Yelly 😄 ! Bienvenue sur l'app !
-          ça m'aiderait de ouf si tu pouvais me donner quelques conseils ou idées pour l'améliorer. Je prends aussi les critiques !
-          Merci !`,
+          message: `Hello ${userFirstName},
+          En tant que fondateur de l’app ça m’aiderait de ouf si tu pouvais me donner ton avis sur l’app. Tu aimes bien ?`,
         })
       }
     } catch (error) {
