@@ -13,10 +13,9 @@ import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
 import { FirebaseSignUpInput } from './dto/firebase-signup.input'
+import { NotificationService } from 'src/notification/notification.service'
+import { PushNotificationService } from 'src/core/push-notification.service'
 import { FirebaseService } from 'src/core/firebase.service'
-
-const cleanUndefinedFromObj = (obj) =>
-  Object.entries(obj).reduce((a, [k, v]) => (v === undefined ? a : ((a[k] = v), a)), {})
 
 @Injectable()
 export class UserService {
@@ -27,7 +26,9 @@ export class UserService {
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
     private sendbirdService: SendbirdService,
-    private firebaseService: FirebaseService,
+    private notificationService: NotificationService,
+    private pushNotificationService: PushNotificationService,
+    private firebaseService: FirebaseService
   ) {}
 
   async hasUserPostedOnTag(userId, tagText) {

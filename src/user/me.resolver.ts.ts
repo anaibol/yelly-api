@@ -22,10 +22,10 @@ import { ForgotPasswordInput } from './forgot-password.input'
 import { SignUpInput } from './sign-up.input'
 import { SignInInput } from './sign-in.input'
 import { UpdateUserInput } from './update-user.input'
-import { ResetPasswordInput } from './reset-password-.input'
-import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 import { FirebaseSignUpInput } from './dto/firebase-signup.input'
 import { FirebaseSignInInput } from './dto/firebase-signin.input'
+import { ResetPasswordInput } from './reset-password.input'
+import { PostSelect } from 'src/post/post-select.constant'
 
 @Resolver(() => Me)
 export class MeResolver {
