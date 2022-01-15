@@ -15,7 +15,6 @@ import { CurrentUser } from '../auth/user.decorator'
 import { PrismaService } from '../core/prisma.service'
 import { UserService } from './user.service'
 import { AuthService, AuthUser } from '../auth/auth.service'
-import { NotificationService } from '../notification/notification.service'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 
 import { ForgotPasswordInput } from './forgot-password.input'
