@@ -14,7 +14,6 @@ import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
 import { NotificationService } from 'src/notification/notification.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
-import { User as PrismaUser } from '@prisma/client'
 
 @Injectable()
 export class UserService {
@@ -110,7 +109,7 @@ export class UserService {
 
     return {
       ...user,
-      followersCount: user._count.followersFollowships,
+      followersCount: user._count.followeesFollowships,
       followeesCount: user._count.followersFollowships,
     }
   }
@@ -289,12 +288,15 @@ export class UserService {
 
     return {
       ...user,
+      // THIS IS THE OPOSITE
       followeesCount: user._count.followersFollowships,
       followersCount: user._count.followeesFollowships,
-      school: {
-        ...user.school,
-        totalUsersCount: user.school?._count.users,
-      },
+      ...(user.school && {
+        school: {
+          ...user.school,
+          totalUsersCount: user.school?._count.users,
+        },
+      }),
       expoPushNotificationTokens: user.expoPushNotificationTokens.map(({ token }) => token),
     }
   }
