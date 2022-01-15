@@ -13,6 +13,7 @@ import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
 import { NotificationService } from 'src/notification/notification.service'
+import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Injectable()
 export class UserService {
@@ -23,10 +24,11 @@ export class UserService {
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
     private sendbirdService: SendbirdService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private pushNotificationService: PushNotificationService
   ) {}
 
-  async hasUserPostedOnTag(userId, tagText) {
+  async hasUserPostedOnTag(userId, tagText): Promise<boolean> {
     const post = await this.prismaService.post.findFirst({
       select: {
         id: true,
@@ -46,8 +48,11 @@ export class UserService {
     return post != null
   }
 
-  async findByEmail(email: string) {
-    const user = await this.prismaService.user.findUnique({
+  findByEmail(email: string): Promise<{
+    id: string
+    password: string
+  }> {
+    return this.prismaService.user.findUnique({
       where: {
         email,
       },
@@ -56,11 +61,6 @@ export class UserService {
         password: true,
       },
     })
-
-    return {
-      ...user,
-      id: user.id,
-    }
   }
 
   async findOne(userId) {
@@ -70,7 +70,6 @@ export class UserService {
       },
       select: {
         id: true,
-        email: true,
         firstName: true,
         lastName: true,
         pictureId: true,
@@ -108,91 +107,122 @@ export class UserService {
 
     if (!user) throw new NotFoundUserException()
 
-    return this.formatUser(user)
+    return {
+      ...user,
+      followersCount: user._count.followeesFollowships,
+      followeesCount: user._count.followersFollowships,
+    }
   }
 
-  async getUserFollowers(id, currentCursor, limit = DEFAULT_LIMIT) {
-    const followers = await this.prismaService.followship.findMany({
-      where: {
-        followeeId: id,
+  async getUserFollowers(userId, currentCursor, limit = DEFAULT_LIMIT) {
+    const followers = await this.prismaService.user
+      .findUnique({
+        where: {
+          id: userId,
+        },
+      })
+      .followeesFollowships({
         ...(currentCursor && {
           cursor: {
             createdAt: new Date(+currentCursor).toISOString(),
           },
-          skip: 1, // Skip the cursor
+          skip: 1,
         }),
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: {
-        follower: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            pictureId: true,
-            school: {
-              select: {
-                name: true,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: limit,
+        select: {
+          id: true,
+          createdAt: true,
+          follower: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              pictureId: true,
+              school: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
         },
-      },
-    })
+      })
 
-    return followers.map(({ follower: { id, ...folower } }) => ({
-      ...folower,
-      id,
-    }))
+    const mappedFollowers = followers.map(({ follower, createdAt }) => ({ ...follower, createdAt }))
+
+    const nextCursor = mappedFollowers.length === limit ? mappedFollowers[limit - 1].createdAt.getTime().toString() : ''
+
+    return { items: mappedFollowers, nextCursor }
   }
 
-  async getUserFollowees(id, currentCursor, limit = DEFAULT_LIMIT) {
-    const followees = await this.prismaService.followship.findMany({
-      where: {
-        followerId: id,
+  async getUserFollowees(userId, currentCursor, limit = DEFAULT_LIMIT) {
+    const followees = await this.prismaService.user
+      .findUnique({
+        where: {
+          id: userId,
+        },
+      })
+      .followeesFollowships({
         ...(currentCursor && {
           cursor: {
             createdAt: new Date(+currentCursor).toISOString(),
           },
-          skip: 1, // Skip the cursor
+          skip: 1,
         }),
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: {
-        followee: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            pictureId: true,
-            school: {
-              select: {
-                name: true,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: limit,
+        select: {
+          id: true,
+          createdAt: true,
+          followee: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              pictureId: true,
+              school: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
         },
-      },
-    })
+      })
 
-    return followees.map(({ followee: { id, ...followee } }) => ({
-      ...followee,
-      id: id,
-    }))
+    const mappedFollowees = followees.map(({ followee, createdAt }) => ({ ...followee, createdAt }))
+
+    const nextCursor = mappedFollowees.length === limit ? mappedFollowees[limit - 1].createdAt.getTime().toString() : ''
+
+    return { items: mappedFollowees, nextCursor }
   }
 
-  async isFollowingAuthUser(id, authUserId: string) {
+  async isFollowingAuthUser(id: string, authUserId: string): Promise<boolean> {
     const result = await this.prismaService.followship.findUnique({
       where: {
         followerId_followeeId: {
           followerId: id,
           followeeId: authUserId,
+        },
+      },
+    })
+
+    return !!result
+  }
+
+  async isAuthUserFollowing(authUserId: string, id: string): Promise<boolean> {
+    const result = await this.prismaService.followship.findUnique({
+      where: {
+        followerId_followeeId: {
+          followerId: authUserId,
+          followeeId: id,
         },
       },
     })
@@ -236,6 +266,11 @@ export class UserService {
                 name: true,
               },
             },
+            _count: {
+              select: {
+                users: true,
+              },
+            },
           },
         },
         training: {
@@ -251,7 +286,19 @@ export class UserService {
       throw new NotFoundUserException()
     }
 
-    return this.formatUser(user)
+    return {
+      ...user,
+      // THIS IS THE OPOSITE
+      followeesCount: user._count.followersFollowships,
+      followersCount: user._count.followeesFollowships,
+      ...(user.school && {
+        school: {
+          ...user.school,
+          totalUsersCount: user.school?._count.users,
+        },
+      }),
+      expoPushNotificationTokens: user.expoPushNotificationTokens.map(({ token }) => token),
+    }
   }
 
   async requestResetPassword(email: string) {
@@ -356,8 +403,8 @@ export class UserService {
       const followship = await this.prismaService.followship.create({
         data: followshipData,
       })
-
       this.notificationService.createFollowshipNotification(otherUserId, followship.id)
+      this.pushNotificationService.createFollowshipPushNotification(followshipData)
     } else {
       await this.prismaService.followship.delete({
         where: {
@@ -528,18 +575,17 @@ export class UserService {
             sendbirdAccessToken,
           },
         })
-
         updatedUser.sendbirdAccessToken = sendbirdAccessToken
+        this.syncUsersIndexWithAlgolia(userId)
       } catch (error) {
         // CATCH ERROR SO IT CONTINUES
       }
     } else if (updatedUser.isFilled) {
       this.updateSenbirdUser(updatedUser)
-
       this.syncUsersIndexWithAlgolia(userId)
     }
 
-    return this.formatUser(updatedUser)
+    return updatedUser
   }
 
   async updateSenbirdUser(user) {
@@ -551,16 +597,5 @@ export class UserService {
         pictureId: user.pictureId,
       })
     }
-  }
-
-  formatUser(user) {
-    const formattedUser = user
-
-    if (user._count) {
-      formattedUser.followeesCount = user._count.followersFollowships
-      formattedUser.followersCount = user._count.followeesFollowships
-    }
-
-    return formattedUser
   }
 }

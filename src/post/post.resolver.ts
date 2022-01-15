@@ -28,8 +28,8 @@ export class PostResolver {
     if (previousResponse) return previousResponse
 
     const { tag, userId, schoolId, after, limit } = postsArgs
-    const { posts, cursor } = await this.postService.find(tag, userId, schoolId, after, limit)
-    const response = { items: posts, nextCursor: cursor }
+    const { posts, nextCursor } = await this.postService.find(tag, userId, schoolId, after, limit)
+    const response = { items: posts, nextCursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
     return response

@@ -47,7 +47,7 @@ model School {
   cityId        String
   city          City    @relation(fields: [cityId], references: [id])
   posts         Post[]
-  user          User[]
+  users         User[]
 }
 
 model Training {
@@ -94,7 +94,7 @@ model User {
 }
 
 model Followship {
-  id String         @unique @default(uuid())
+  id           String         @unique @default(uuid())
   followerId   String
   followeeId   String
   createdAt    DateTime       @unique @default(now())

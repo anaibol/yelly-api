@@ -15,7 +15,7 @@ export class NotificationService {
         cursor: {
           createdAt: new Date(+currentCursor).toISOString(),
         },
-        skip: 1, // Skip the cursor
+        skip: 1,
       }),
       select: {
         id: true,
@@ -52,14 +52,14 @@ export class NotificationService {
       take: limit,
     })
 
-    const cursor = notifications.length === limit ? notifications[limit - 1].createdAt : ''
+    const nextCursor = notifications.length === limit ? notifications[limit - 1].createdAt.getTime().toString() : ''
 
     const formattedNotifications = notifications.map(({ followship, ...notification }) => ({
       ...notification,
       follower: followship?.follower,
     }))
 
-    return { notifications: formattedNotifications, cursor }
+    return { notifications: formattedNotifications, nextCursor }
   }
 
   async getUnreadNotificationsCount(userId: string) {
@@ -97,13 +97,15 @@ export class NotificationService {
   }
 
   async updateIsSeenNotification(notificationId: string) {
-    this.prismaService.notification.update({
-      where: {
-        id: notificationId,
-      },
+    const update = await this.prismaService.notification.update({
       data: {
         isSeen: true,
       },
+      where: {
+        id: notificationId,
+      },
     })
+
+    return !!update
   }
 }

@@ -11,7 +11,6 @@ import { NotificationModule } from './notification/notification.module'
 import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
 import { PushNotificationService } from './core/push-notification.service'
 import { SendbirdWebhookController } from './sendbird-webhook/sendbird-webhook.controller'
-import { PushNotificationModule } from './sendbird-webhook/sendbird-webhook.module'
 import { SchoolModule } from './school/school.module'
 @Module({
   imports: [
@@ -33,7 +32,7 @@ import { SchoolModule } from './school/school.module'
       //   outputAs: 'class',
       // },
       debug: process.env.NODE_ENV !== 'production',
-      autoSchemaFile: join(process.cwd(), '../schema.gql'),
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       context: ({ req, res }): any => ({ req, res }),
       buildSchemaOptions: {
@@ -47,7 +46,6 @@ import { SchoolModule } from './school/school.module'
     CommonModule,
     AuthModule,
     NotificationModule,
-    PushNotificationModule,
     SchoolModule,
   ],
   providers: [PushNotificationService],

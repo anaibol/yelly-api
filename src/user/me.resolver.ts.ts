@@ -24,6 +24,8 @@ import { SignInInput } from './sign-in.input'
 import { UpdateUserInput } from './update-user.input'
 import { ResetPasswordInput } from './reset-password.input'
 import { PostSelect } from 'src/post/post-select.constant'
+import { User } from './user.model'
+import { PaginatedUsers } from 'src/post/paginated-users.model'
 
 @Resolver(() => Me)
 export class MeResolver {
@@ -53,7 +55,7 @@ export class MeResolver {
 
   @Query(() => Me)
   @UseGuards(AuthGuard)
-  async me(@CurrentUser() authUser: AuthUser) {
+  async me(@CurrentUser() authUser: AuthUser): Promise<Me | UnauthorizedException> {
     const user = await this.userService.findMe(authUser.id)
 
     if (!user) return new UnauthorizedException()
@@ -129,12 +131,12 @@ export class MeResolver {
   }
 
   @ResolveField()
-  async followers(@Parent() user: Me, @Args() paginationArgs: PaginationArgs) {
+  async followers(@Parent() user: Me, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
     return this.userService.getUserFollowers(user.id, paginationArgs.after, paginationArgs.limit)
   }
 
   @ResolveField()
-  async followees(@Parent() user: Me, @Args() paginationArgs: PaginationArgs) {
+  async followees(@Parent() user: Me, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
     return this.userService.getUserFollowees(user.id, paginationArgs.after, paginationArgs.limit)
   }
 
@@ -159,7 +161,7 @@ export class MeResolver {
         cursor: {
           createdAt: new Date(+after).toISOString(),
         },
-        skip: 1, // Skip the cursor
+        skip: 1,
       }),
       orderBy: {
         createdAt: 'desc',
@@ -174,7 +176,7 @@ export class MeResolver {
       totalCommentsCount: post._count.comments,
     }))
 
-    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt : ''
+    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
     const response = { items: formattedPosts, nextCursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 

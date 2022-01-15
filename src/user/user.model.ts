@@ -1,5 +1,6 @@
 import { ID, Field, ObjectType } from '@nestjs/graphql'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
+import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { School } from '../school/school.model'
 import { Training } from './training.model'
 
@@ -21,7 +22,8 @@ export class User {
   posts?: PaginatedPosts
   followersCount?: number
   followeesCount?: number
-  followees?: User[]
-  followers?: User[]
+  followees?: PaginatedUsers
+  followers?: PaginatedUsers
   isFollowingAuthUser?: boolean
+  isAuthUserFollowing?: boolean
 }

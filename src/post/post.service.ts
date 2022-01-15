@@ -9,13 +9,15 @@ import { TagService } from 'src/tag/tag.service'
 import { NotificationService } from 'src/notification/notification.service'
 import { CreateCommentInput } from './create-comment.input'
 import { PostSelect } from './post-select.constant'
+import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Injectable()
 export class PostService {
   constructor(
     private prismaService: PrismaService,
     private tagService: TagService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private pushNotificationService: PushNotificationService
   ) {}
 
   async trackPostViews(postsIds: string[]) {
@@ -54,7 +56,7 @@ export class PostService {
         cursor: {
           createdAt: new Date(+currentCursor).toISOString(),
         },
-        skip: 1, // Skip the cursor
+        skip: 1,
       }),
       orderBy: {
         createdAt: 'desc',
@@ -69,9 +71,9 @@ export class PostService {
       totalCommentsCount: post._count.comments,
     }))
 
-    const cursor = posts.length === limit ? posts[limit - 1].createdAt : ''
+    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
 
-    return { posts: mappedPosts, cursor }
+    return { posts: mappedPosts, nextCursor }
   }
 
   async getById(postId: string) {
@@ -107,6 +109,7 @@ export class PostService {
       totalCommentsCount: post._count.comments,
     }
   }
+
   async create(createPostInput: CreatePostInput, authUserId: string) {
     const { text, tag: tagText } = createPostInput
 
@@ -210,6 +213,7 @@ export class PostService {
       select: {
         authorId: true,
         id: true,
+        postId: true,
         post: {
           select: {
             authorId: true,
@@ -232,9 +236,10 @@ export class PostService {
       update: reactionData,
     })
 
-    if (postReaction.post.authorId !== authUserId)
+    if (postReaction.post.authorId !== authUserId) {
       this.notificationService.upsertPostReactionNotification(postReaction.post.authorId, postReaction.id)
-
+      this.pushNotificationService.postReaction(postReaction)
+    }
     return !!postReaction
   }
 
@@ -254,7 +259,7 @@ export class PostService {
   async createComment(createCommentInput: CreateCommentInput, authUserId: string) {
     const { postId, text } = createCommentInput
 
-    const updated = await this.prismaService.postComment.create({
+    const comment = await this.prismaService.postComment.create({
       data: {
         text,
         postId,
@@ -262,6 +267,8 @@ export class PostService {
       },
     })
 
-    return !!updated
+    await this.pushNotificationService.postComment(comment)
+
+    return !!comment
   }
 }
