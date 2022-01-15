@@ -132,6 +132,11 @@ type PaginatedPosts {
   nextCursor: String!
 }
 
+type PaginatedUsers {
+  items: [User!]!
+  nextCursor: String!
+}
+
 type Post {
   author: User!
   comments: [PostComment!]
@@ -255,12 +260,13 @@ type User {
   avatar3dId: String
   birthdate: DateTime
   firstName: String
-  followees(after: String, limit: Int = 10): [User!]
+  followees(after: String, limit: Int = 10): PaginatedUsers
   followeesCount: Int
-  followers(after: String, limit: Int = 10): [User!]
+  followers(after: String, limit: Int = 10): PaginatedUsers
   followersCount: Int
   id: ID!
   instagram: String
+  isAuthUserFollowing: Boolean
   isFollowingAuthUser: Boolean
   lastName: String
   locale: String

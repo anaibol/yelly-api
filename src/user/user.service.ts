@@ -205,12 +205,25 @@ export class UserService {
     return { items: mappedFollowees, nextCursor }
   }
 
-  async isFollowingAuthUser(id, authUserId: string) {
+  async isFollowingAuthUser(id: string, authUserId: string): Promise<boolean> {
     const result = await this.prismaService.followship.findUnique({
       where: {
         followerId_followeeId: {
           followerId: id,
           followeeId: authUserId,
+        },
+      },
+    })
+
+    return !!result
+  }
+
+  async isAuthUserFollowing(authUserId: string, id: string): Promise<boolean> {
+    const result = await this.prismaService.followship.findUnique({
+      where: {
+        followerId_followeeId: {
+          followerId: authUserId,
+          followeeId: id,
         },
       },
     })
@@ -388,7 +401,6 @@ export class UserService {
       const followship = await this.prismaService.followship.create({
         data: followshipData,
       })
-
       this.notificationService.createFollowshipNotification(otherUserId, followship.id)
       this.pushNotificationService.createFollowshipPushNotification(followshipData)
     } else {

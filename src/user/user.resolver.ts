@@ -57,6 +57,12 @@ export class UserResolver {
     return this.userService.isFollowingAuthUser(user.id, authUser.id)
   }
 
+  @UseGuards(AuthGuard)
+  @ResolveField()
+  async isAuthUserFollowing(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.isAuthUserFollowing(authUser.id, user.id)
+  }
+
   @ResolveField('posts', () => PaginatedPosts)
   async posts(@Parent() user: User, @Args() postsArgs?: PostsArgs): Promise<PaginatedPosts> {
     const cacheKey = 'userPosts:' + JSON.stringify({ postsArgs, user })
