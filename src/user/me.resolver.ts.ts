@@ -24,7 +24,6 @@ import { SignInInput } from './sign-in.input'
 import { UpdateUserInput } from './update-user.input'
 import { ResetPasswordInput } from './reset-password.input'
 import { PostSelect } from 'src/post/post-select.constant'
-import { User } from './user.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 
 @Resolver(() => Me)
@@ -34,7 +33,6 @@ export class MeResolver {
     private prismaService: PrismaService,
     private userService: UserService,
     private authService: AuthService,
-    private notificationService: NotificationService,
     private expoPushNotificationsTokenService: ExpoPushNotificationsTokenService
   ) {}
 
