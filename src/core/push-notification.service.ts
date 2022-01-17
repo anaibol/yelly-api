@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PostComment, PostReaction } from '@prisma/client'
+import { ExpoPushErrorReceipt } from 'expo-server-sdk'
 import { PrismaService } from 'src/core/prisma.service'
 import expo from '../utils/expo'
 
@@ -173,17 +174,16 @@ export class PushNotificationService {
     const results = await expo.sendNotifications(messages)
 
     // results.map((result) => {
-    //   if (result.status === 'rejected') {
-    //     const error = result.reason as ExpoPushErrorReceipt
-
-    //     if (error.details.error === 'DeviceNotRegistered') {
-    //       this.prismaService.expoPushNotificationAccessToken.delete({
-    //         where: {
-    //           token: asd.token,
-    //         }
-    //       }),
-    //     }
+    // if (result.status === 'rejected') {
+    //   const error = result.reason as ExpoPushErrorReceipt
+    //   if (error.details.error === 'DeviceNotRegistered') {
+    //     this.prismaService.expoPushNotificationAccessToken.deleteMany({
+    //       where: {
+    //         token: asd.token,
+    //       }
+    //     }),
     //   }
+    // }
     // })
   }
 }
