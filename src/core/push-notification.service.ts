@@ -153,7 +153,7 @@ export class PushNotificationService {
   }
 
   async newLiveTag() {
-    if (process.env.NODE_ENV !== 'production') return
+    // if (process.env.NODE_ENV !== 'production') return
 
     const allPushTokens = await this.prismaService.expoPushNotificationAccessToken.findMany({
       select: {
