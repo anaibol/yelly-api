@@ -150,7 +150,7 @@ export class TagService {
       },
     })
 
-    this.pushNotificationService.newLiveTag(newTag)
+    this.pushNotificationService.newLiveTag()
 
     return newTag
   }
