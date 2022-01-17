@@ -22,6 +22,7 @@ import { PushNotificationService } from 'src/core/push-notification.service'
     UploadResolver,
     SchoolService,
     NotificationService,
+    PushNotificationService,
     ExpoPushNotificationsTokenService,
     PostService,
     TagService,
