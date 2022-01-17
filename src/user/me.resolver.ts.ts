@@ -15,7 +15,6 @@ import { CurrentUser } from '../auth/user.decorator'
 import { PrismaService } from '../core/prisma.service'
 import { UserService } from './user.service'
 import { AuthService, AuthUser } from '../auth/auth.service'
-import { NotificationService } from '../notification/notification.service'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 
 import { ForgotPasswordInput } from './forgot-password.input'
@@ -24,7 +23,6 @@ import { SignInInput } from './sign-in.input'
 import { UpdateUserInput } from './update-user.input'
 import { ResetPasswordInput } from './reset-password.input'
 import { PostSelect } from 'src/post/post-select.constant'
-import { User } from './user.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 
 @Resolver(() => Me)
@@ -34,7 +32,6 @@ export class MeResolver {
     private prismaService: PrismaService,
     private userService: UserService,
     private authService: AuthService,
-    private notificationService: NotificationService,
     private expoPushNotificationsTokenService: ExpoPushNotificationsTokenService
   ) {}
 
