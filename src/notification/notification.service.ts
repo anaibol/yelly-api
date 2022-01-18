@@ -54,12 +54,12 @@ export class NotificationService {
 
     const nextCursor = notifications.length === limit ? notifications[limit - 1].createdAt.getTime().toString() : ''
 
-    const formattedNotifications = notifications.map(({ followship, ...notification }) => ({
+    const items = notifications.map(({ followship, ...notification }) => ({
       ...notification,
       follower: followship?.follower,
     }))
 
-    return { notifications: formattedNotifications, nextCursor }
+    return { items, nextCursor }
   }
 
   async getUnreadCount(userId: string) {

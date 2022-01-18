@@ -19,7 +19,7 @@ export class NotificationResolver {
       PaginationArgs.limit
     )
 
-    return { items: notifications, nextCursor }
+    return { items, nextCursor }
   }
 
   @UseGuards(AuthGuard)
