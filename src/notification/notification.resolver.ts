@@ -1,6 +1,5 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
-// import { MarkAsReadInput } from '../mark-as-read.input'
 import { PaginatedNotifications } from './paginated-notifications.model'
 import { NotificationService } from './notification.service'
 import { PaginationArgs } from '../common/pagination.args'
@@ -12,9 +11,9 @@ export class NotificationResolver {
   constructor(private notificationService: NotificationService) {}
 
   @UseGuards(AuthGuard)
-  @Query(() => PaginatedNotifications, { name: 'notifications' })
-  async getNotifications(@Args() PaginationArgs: PaginationArgs, @CurrentUser() authUser: AuthUser) {
-    const { notifications, nextCursor } = await this.notificationService.find(
+  @Query(() => PaginatedNotifications)
+  async notifications(@Args() PaginationArgs: PaginationArgs, @CurrentUser() authUser: AuthUser) {
+    const { items, nextCursor } = await this.notificationService.find(
       authUser.id,
       PaginationArgs.after,
       PaginationArgs.limit
@@ -26,12 +25,12 @@ export class NotificationResolver {
   @UseGuards(AuthGuard)
   @Query(() => Number)
   unreadNotificationsCount(@CurrentUser() authUser: AuthUser) {
-    return this.notificationService.getUnreadNotificationsCount(authUser.id)
+    return this.notificationService.getUnreadCount(authUser.id)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  updateIsSeenNotification(@Args('input') notificationId: string) {
-    return this.notificationService.updateIsSeenNotification(notificationId)
+  markNotificationAsRead(@Args('notificationId') notificationId: string) {
+    return this.notificationService.markAsRead(notificationId)
   }
 }

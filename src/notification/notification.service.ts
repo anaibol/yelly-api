@@ -62,7 +62,7 @@ export class NotificationService {
     return { notifications: formattedNotifications, nextCursor }
   }
 
-  async getUnreadNotificationsCount(userId: string) {
+  async getUnreadCount(userId: string) {
     return this.prismaService.notification.count({
       where: {
         userId,
@@ -96,7 +96,7 @@ export class NotificationService {
     })
   }
 
-  async updateIsSeenNotification(notificationId: string) {
+  async markAsRead(notificationId: string) {
     const update = await this.prismaService.notification.update({
       data: {
         isSeen: true,
