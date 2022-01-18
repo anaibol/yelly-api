@@ -33,6 +33,12 @@ export const PostSelect = {
         select: {
           id: true,
           name: true,
+          city: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
     },
