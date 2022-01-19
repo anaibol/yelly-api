@@ -101,13 +101,13 @@ type Mutation {
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
+  markNotificationAsRead(notificationId: String!): Boolean!
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): Token!
   signIn(input: SignInInput!): Token!
   signUp(input: SignUpInput!): Token!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
   trackPostViews(postsIds: [String!]!): Boolean!
-  updateIsSeenNotification(input: String!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
 }
 

@@ -54,15 +54,15 @@ export class NotificationService {
 
     const nextCursor = notifications.length === limit ? notifications[limit - 1].createdAt.getTime().toString() : ''
 
-    const formattedNotifications = notifications.map(({ followship, ...notification }) => ({
+    const items = notifications.map(({ followship, ...notification }) => ({
       ...notification,
       follower: followship?.follower,
     }))
 
-    return { notifications: formattedNotifications, nextCursor }
+    return { items, nextCursor }
   }
 
-  async getUnreadNotificationsCount(userId: string) {
+  async getUnreadCount(userId: string) {
     return this.prismaService.notification.count({
       where: {
         userId,
@@ -96,7 +96,7 @@ export class NotificationService {
     })
   }
 
-  async updateIsSeenNotification(notificationId: string) {
+  async markAsRead(notificationId: string) {
     const update = await this.prismaService.notification.update({
       data: {
         isSeen: true,
