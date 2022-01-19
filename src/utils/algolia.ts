@@ -75,6 +75,43 @@ export const algoliaUserSelect = {
   },
 }
 
+export const algoliaTagSelect = {
+  id: true,
+  text: true,
+  createdAt: true,
+  _count: {
+    select: {
+      posts: true,
+    },
+  },
+  author: {
+    select: {
+      id: true,
+      pictureId: true,
+      firstName: true,
+      lastName: true,
+    },
+  },
+  posts: {
+    select: {
+      createdAt: true,
+      author: {
+        select: {
+          id: true,
+          pictureId: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+    },
+    take: 5,
+    distinct: 'authorId' as const,
+    orderBy: {
+      createdAt: 'desc' as const,
+    },
+  },
+}
+
 export function mapAlgoliaUser(user): UserIndexAlgoliaInterface {
   return {
     id: user.id,
