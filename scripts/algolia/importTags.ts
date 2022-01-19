@@ -1,5 +1,6 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
+import { algoliaTagSelect } from '../../src/utils/algolia'
 
 async function main() {
   const INDEX_NAME = 'prod_TAGS'
@@ -9,33 +10,7 @@ async function main() {
   let skip = 0
   while (hasTags) {
     const tags = await prisma.tag.findMany({
-      select: {
-        id: true,
-        text: true,
-        createdAt: true,
-        _count: {
-          select: {
-            posts: true,
-          },
-        },
-        posts: {
-          select: {
-            author: {
-              select: {
-                id: true,
-                pictureId: true,
-                firstName: true,
-              },
-            },
-            createdAt: true,
-          },
-          take: 5,
-          distinct: 'authorId',
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
-      },
+      select: algoliaTagSelect,
       skip: skip,
       take: 500,
     })

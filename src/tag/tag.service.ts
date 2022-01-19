@@ -3,7 +3,8 @@ import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
 import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
-import { PushNotificationService } from 'src/core/push-notification.service'
+import { PushNotificationService } from '../core/push-notification.service'
+import { algoliaTagSelect } from '../utils/algolia'
 
 @Injectable()
 export class TagService {
@@ -16,35 +17,7 @@ export class TagService {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
 
     const tag = await this.prismaService.tag.findUnique({
-      select: {
-        id: true,
-        createdAt: true,
-        author: {
-          select: {
-            id: true,
-            pictureId: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-        posts: {
-          select: {
-            author: {
-              select: {
-                id: true,
-                pictureId: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-          take: 5,
-          distinct: 'authorId',
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
-      },
+      select: algoliaTagSelect,
       where: {
         text: tagText,
       },
@@ -60,13 +33,13 @@ export class TagService {
         _operation: 'Increment',
         value: 1,
       },
-      createdAtTimestamp: Date.parse(tag.createdAt.toString()),
-      // updatedAtTimestamp: Date.parse(post.createdAt.toString()),
+      createdAtTimestamp: tag.createdAt.getTime(),
+      // updatedAtTimestamp: tag.updatedAt.getTime(),
       createdAt: tag.createdAt,
-      // updatedAt: post.createdAt,
+      // updatedAt: post.updatedAt,
     }
 
-    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tagText)
+    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id)
   }
 
   async getLiveTag() {
@@ -177,19 +150,8 @@ export class TagService {
   }
 
   async deleteById(id: string) {
-    const tag = await this.prismaService.tag.delete({
-      where: {
-        id,
-      },
-      select: {
-        text: true,
-      },
-    })
-
-    if (!tag) return false
-
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
-    this.algoliaService.deleteObject(algoliaTagIndex, tag.text)
+    this.algoliaService.deleteObject(algoliaTagIndex, id)
     return true
   }
 }

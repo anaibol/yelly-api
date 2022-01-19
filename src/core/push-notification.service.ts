@@ -96,7 +96,11 @@ export class PushNotificationService {
       select: {
         id: true,
         firstName: true,
-        expoPushNotificationTokens: true,
+        expoPushNotificationTokens: {
+          select: {
+            token: true,
+          },
+        },
       },
       where: { id: followeeId },
     })
