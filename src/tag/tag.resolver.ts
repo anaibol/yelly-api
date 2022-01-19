@@ -1,7 +1,5 @@
-import { CACHE_MANAGER, Inject, UseGuards } from '@nestjs/common'
+import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
-import { Cache } from 'cache-manager'
-
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
@@ -21,12 +19,7 @@ import { PaginatedPosts } from 'src/post/paginated-posts.model'
 
 @Resolver(Tag)
 export class TagResolver {
-  constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private tagService: TagService,
-    private userService: UserService,
-    private prismaService: PrismaService
-  ) {}
+  constructor(private tagService: TagService, private userService: UserService, private prismaService: PrismaService) {}
 
   @UseGuards(AuthGuard)
   @Query(() => LiveTagAuthUser, { name: 'liveTag', nullable: true })
@@ -54,11 +47,6 @@ export class TagResolver {
 
   @ResolveField()
   async posts(@Parent() tag: Tag, @Args() postsArgs?: PostsArgs): Promise<PaginatedPosts> {
-    const cacheKey = 'tagPosts:' + JSON.stringify({ postsArgs, tag })
-    const previousResponse = await this.cacheManager.get(cacheKey)
-
-    if (previousResponse) return previousResponse as PaginatedPosts
-
     const { limit, after } = postsArgs
 
     const items = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
@@ -76,9 +64,7 @@ export class TagResolver {
     })
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
-    const response = { items, nextCursor }
-    this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
-    return response
+    return { items, nextCursor }
   }
 }

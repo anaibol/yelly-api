@@ -1,4 +1,4 @@
-import { CacheModule, Module } from '@nestjs/common'
+import { Module } from '@nestjs/common'
 import { AuthModule } from '../auth/auth.module'
 import { CoreModule } from '../core/core.module'
 import { UserModule } from '../user/user.module'
@@ -9,7 +9,7 @@ import { NotificationService } from 'src/notification/notification.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Module({
-  imports: [CacheModule.register(), CoreModule, AuthModule, UserModule],
+  imports: [CoreModule, AuthModule, UserModule],
   providers: [PostService, TagService, PostResolver, NotificationService, PushNotificationService],
   exports: [PostService],
 })

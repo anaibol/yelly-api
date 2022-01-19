@@ -1,6 +1,4 @@
 import { Resolver, Query, Args, ResolveField, Parent } from '@nestjs/graphql'
-import { CACHE_MANAGER, Inject } from '@nestjs/common'
-import { Cache } from 'cache-manager'
 import { School } from './school.model'
 import { SchoolService } from './school.service'
 import { PostsArgs } from '../post/posts.args'
@@ -10,11 +8,7 @@ import { PostSelect } from '../post/post-select.constant'
 
 @Resolver(School)
 export class SchoolResolver {
-  constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private schoolService: SchoolService,
-    private prismaService: PrismaService
-  ) {}
+  constructor(private schoolService: SchoolService, private prismaService: PrismaService) {}
 
   @Query(() => School, { nullable: true })
   async school(@Args() SchoolArgs?: SchoolArgs) {
@@ -25,11 +19,6 @@ export class SchoolResolver {
 
   @ResolveField()
   async posts(@Parent() school: School, @Args() postsArgs?: PostsArgs) {
-    const cacheKey = 'schoolPosts:' + JSON.stringify({ postsArgs, school })
-    const previousResponse = await this.cacheManager.get(cacheKey)
-
-    if (previousResponse) return previousResponse
-
     const { after, limit } = postsArgs
 
     const items = await this.prismaService.school.findUnique({ where: { id: school.id } }).posts({
@@ -47,9 +36,7 @@ export class SchoolResolver {
     })
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
-    const response = { items: items, nextCursor }
-    this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
-    return response
+    return { items, nextCursor }
   }
 }
