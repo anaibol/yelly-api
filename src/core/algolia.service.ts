@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import algoliasearch from 'algoliasearch'
+import algoliasearch, { SearchIndex } from 'algoliasearch'
 
 @Injectable()
 export class AlgoliaService {
@@ -13,7 +13,7 @@ export class AlgoliaService {
     return this.client.initIndex(this.indexPrefix + indexName)
   }
 
-  saveObject(index: any, objectToAdd: any, objectID: any) {
+  saveObject(index: SearchIndex, objectToAdd: any, objectID: string) {
     return index.saveObject({
       ...objectToAdd,
       objectID,
@@ -24,7 +24,7 @@ export class AlgoliaService {
     return index.deleteObject(objectId)
   }
 
-  partialUpdateObject(index: any, objectToUpdate: any, objectID: any) {
+  partialUpdateObject(index: SearchIndex, objectToUpdate: any, objectID: string) {
     return index.partialUpdateObject(
       {
         objectID,
@@ -36,7 +36,7 @@ export class AlgoliaService {
     )
   }
 
-  incrementValue(index: any, objectToUpdateOrCreate: any, objectID: any) {
+  incrementValue(index: SearchIndex, objectToUpdateOrCreate: any, objectID: string) {
     index.partialUpdateObject({
       ...objectToUpdateOrCreate,
       postCount: {
