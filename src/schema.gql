@@ -48,6 +48,15 @@ input DeletePostReactionInput {
   postId: String!
 }
 
+input FirebaseSignInInput {
+  idToken: String!
+}
+
+input FirebaseSignUpInput {
+  idToken: String!
+  locale: String!
+}
+
 input ForgotPasswordInput {
   email: String!
 }
@@ -82,6 +91,7 @@ type Me {
   isFilled: Boolean
   lastName: String
   locale: String
+  phoneNumber: String
   pictureId: String
   posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
   school: School
@@ -100,6 +110,8 @@ type Mutation {
   deleteExpoPushNotificationsToken(input: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
+  firebaseSignIn(input: FirebaseSignInInput!): Token!
+  firebaseSignUp(input: FirebaseSignUpInput!): Token!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   markNotificationAsRead(notificationId: String!): Boolean!
   refreshSendbirdAccessToken: SendbirdAccessToken!
