@@ -31,7 +31,14 @@ export const PostSelect = {
       pictureId: true,
       school: {
         select: {
+          id: true,
           name: true,
+          city: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
     },

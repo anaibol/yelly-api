@@ -10,7 +10,7 @@ import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Module({
   imports: [CacheModule.register(), CoreModule, AuthModule, UserModule],
-  providers: [PostService, TagService, NotificationService, PostResolver, PushNotificationService],
+  providers: [PostService, TagService, PostResolver, NotificationService, PushNotificationService],
   exports: [PostService],
 })
 export class PostModule {}

@@ -32,7 +32,7 @@ import { SchoolModule } from './school/school.module'
       //   outputAs: 'class',
       // },
       debug: process.env.NODE_ENV !== 'production',
-      autoSchemaFile: join(process.cwd(), '../schema.gql'),
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       context: ({ req, res }): any => ({ req, res }),
       buildSchemaOptions: {

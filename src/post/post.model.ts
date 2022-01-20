@@ -9,7 +9,7 @@ export class Post {
   @Field(() => ID)
   id: string
   text: string
-  createdAt: string
+  createdAt: Date
   viewsCount: number
   tags: Tag[]
   author: User

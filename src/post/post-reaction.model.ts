@@ -5,7 +5,7 @@ import { User } from '../user/user.model'
 export class PostReaction {
   @Field(() => ID)
   id: string
-  createdAt?: string
+  createdAt?: Date
   reaction: string
   postId?: string
   author?: User
