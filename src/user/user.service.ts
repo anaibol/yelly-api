@@ -12,8 +12,10 @@ import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
+import { FirebaseSignUpInput } from './dto/firebase-signup.input'
 import { NotificationService } from 'src/notification/notification.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
+import { FirebaseService } from 'src/core/firebase.service'
 
 @Injectable()
 export class UserService {
@@ -25,7 +27,8 @@ export class UserService {
     private schoolService: SchoolService,
     private sendbirdService: SendbirdService,
     private notificationService: NotificationService,
-    private pushNotificationService: PushNotificationService
+    private pushNotificationService: PushNotificationService,
+    private firebaseService: FirebaseService
   ) {}
 
   async hasUserPostedOnTag(userId, tagText): Promise<boolean> {
@@ -378,15 +381,16 @@ export class UserService {
 
   async deleteById(userId: string) {
     try {
-      await this.prismaService.user.delete({
-        where: {
-          id: userId,
-        },
-      })
+      const user = await this.prismaService.user.findUnique({ where: { id: userId } })
 
-      this.sendbirdService.deleteUser(userId)
+      if (user.firebaseId) this.firebaseService.deleteUser(user.firebaseId)
+
+      this.sendbirdService.deleteUser(user.id)
+
       const usersAlgoliaIndex = this.algoliaService.initIndex('USERS')
-      usersAlgoliaIndex.deleteObject(userId)
+      usersAlgoliaIndex.deleteObject(user.id)
+
+      await this.prismaService.user.delete({ where: { id: user.id } })
       return true
     } catch {
       throw new NotFoundUserException()
@@ -458,6 +462,33 @@ export class UserService {
     return {
       id: user.id,
     }
+  }
+
+  async firebaseSignUp({ idToken, locale }: FirebaseSignUpInput) {
+    // decode firebase token
+    const firebaseUser = await this.firebaseService.verifyIdToken(idToken)
+
+    const { email = null, phone_number: phoneNumber = null, uid: firebaseId } = firebaseUser
+
+    // check if user exists
+    const [userExists] = await this.prismaService.user.findMany({
+      where: { OR: [{ phoneNumber }, { email }] },
+    })
+
+    if (userExists) throw new ForbiddenException('User exists')
+
+    // create user
+    const user = await this.prismaService.user.create({
+      data: {
+        email,
+        phoneNumber,
+        firebaseId,
+        locale,
+        roles: '[]',
+      },
+    })
+
+    return { id: user.id }
   }
 
   async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<User> {

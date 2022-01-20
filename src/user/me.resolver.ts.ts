@@ -21,6 +21,8 @@ import { ForgotPasswordInput } from './forgot-password.input'
 import { SignUpInput } from './sign-up.input'
 import { SignInInput } from './sign-in.input'
 import { UpdateUserInput } from './update-user.input'
+import { FirebaseSignUpInput } from './dto/firebase-signup.input'
+import { FirebaseSignInInput } from './dto/firebase-signin.input'
 import { ResetPasswordInput } from './reset-password.input'
 import { PostSelect } from 'src/post/post-select.constant'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
@@ -48,6 +50,17 @@ export class MeResolver {
     return {
       accessToken,
     }
+  }
+
+  @Mutation(() => Token)
+  async firebaseSignIn(@Args('input') signUpInput: FirebaseSignInInput) {
+    const user = await this.authService.validateFirebaseUser(signUpInput.idToken)
+
+    if (!user) throw new UnauthorizedException()
+
+    const accessToken = await this.authService.getAccessToken(user.id)
+
+    return { accessToken }
   }
 
   @Query(() => Me)
@@ -115,14 +128,23 @@ export class MeResolver {
     }
   }
 
+  @Mutation(() => Token)
+  async firebaseSignUp(@Args('input') firebaseSignUpInput: FirebaseSignUpInput) {
+    const user = await this.userService.firebaseSignUp(firebaseSignUpInput)
+
+    const accessToken = this.authService.getAccessToken(user.id)
+
+    return { accessToken }
+  }
+
   @Mutation(() => Me)
   @UseGuards(AuthGuard)
   updateMe(@Args('input') updateUserData: UpdateUserInput, @CurrentUser() authUser: AuthUser) {
     return this.userService.updateMe(updateUserData, authUser.id)
   }
 
-  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
   async deleteAuthUser(@CurrentUser() authUser: AuthUser) {
     return this.userService.deleteById(authUser.id)
   }
