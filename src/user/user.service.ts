@@ -495,6 +495,19 @@ export class UserService {
     const schoolData =
       updateUserData.schoolGooglePlaceId && (await this.schoolService.getOrCreate(updateUserData.schoolGooglePlaceId))
 
+    const prevSchoolData =
+      schoolData &&
+      (await this.prismaService.user.findUnique({
+        where: { id: userId },
+        select: {
+          school: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      }))
+
     const updatedUser = await this.prismaService.user.update({
       select: {
         id: true,
@@ -543,39 +556,8 @@ export class UserService {
         isFilled: updateUserData.isFilled,
         ...(schoolData && {
           school: {
-            connectOrCreate: {
-              where: {
-                googlePlaceId: schoolData.googlePlaceId,
-              },
-              create: {
-                name: schoolData.name,
-                googlePlaceId: schoolData.googlePlaceId,
-                lat: schoolData.lat,
-                lng: schoolData.lng,
-                city: {
-                  connectOrCreate: {
-                    where: {
-                      googlePlaceId: schoolData.city.googlePlaceId,
-                    },
-                    create: {
-                      name: schoolData.city.name,
-                      googlePlaceId: schoolData.city.googlePlaceId,
-                      lat: schoolData.city.lat,
-                      lng: schoolData.city.lng,
-                      country: {
-                        connectOrCreate: {
-                          where: {
-                            name: schoolData.city.country.name,
-                          },
-                          create: {
-                            name: schoolData.city.country.name,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
+            connect: {
+              id: schoolData.id,
             },
           },
         }),
@@ -614,6 +596,11 @@ export class UserService {
     } else if (updatedUser.isFilled) {
       this.updateSenbirdUser(updatedUser)
       this.syncUsersIndexWithAlgolia(userId)
+    }
+
+    if (updateUserData.schoolGooglePlaceId) {
+      this.schoolService.syncAlgoliaSchool(schoolData.id)
+      if (prevSchoolData.school.id !== schoolData.id) this.schoolService.syncAlgoliaSchool(prevSchoolData.school.id)
     }
 
     return updatedUser
