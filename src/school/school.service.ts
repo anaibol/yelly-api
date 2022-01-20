@@ -118,7 +118,7 @@ export class SchoolService {
       city,
     }
 
-    const newSchool = await this.prismaService.school.create({
+    return this.prismaService.school.create({
       data: {
         name: schoolData.name,
         googlePlaceId: schoolData.googlePlaceId,
@@ -149,8 +149,6 @@ export class SchoolService {
         },
       },
     })
-
-    return newSchool
   }
 
   async getOrCreateCity(googlePlaceId: string) {
