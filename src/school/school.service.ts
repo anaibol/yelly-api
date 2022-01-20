@@ -17,10 +17,7 @@ export class SchoolService {
       select: algoliaSchoolSelect,
     })
 
-    if (!school) {
-      console.log('finish')
-      return
-    }
+    if (!school) return
 
     const objectToUpdateOrCreate: SchoolIndexAlgoliaInterface = {
       id: school.id,
