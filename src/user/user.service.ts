@@ -585,6 +585,8 @@ export class UserService {
       this.syncUsersIndexWithAlgolia(userId)
     }
 
+    this.schoolService.syncSchoolIndexWithAlgolia(updatedUser.school.id)
+
     return updatedUser
   }
 
