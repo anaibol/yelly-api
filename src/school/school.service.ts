@@ -9,7 +9,7 @@ import { SchoolIndexAlgoliaInterface } from './school-index-algolia.interface'
 export class SchoolService {
   constructor(private prismaService: PrismaService, private algoliaService: AlgoliaService) {}
 
-  async syncSchoolIndexWithAlgolia(schoolId: string) {
+  async syncAlgoliaSchool(schoolId: string) {
     const algoliaTagIndex = await this.algoliaService.initIndex('SCHOOLS')
 
     const school = await this.prismaService.school.findUnique({
@@ -110,13 +110,47 @@ export class SchoolService {
 
     const { lat, lng } = googlePlaceDetail.geometry.location
 
-    return {
+    const schoolData = {
       name: googlePlaceDetail.name,
       googlePlaceId: googlePlaceDetail.place_id,
       lat: typeof lat === 'function' ? lat() : lat,
       lng: typeof lng === 'function' ? lng() : lng,
       city,
     }
+
+    const newSchool = await this.prismaService.school.create({
+      data: {
+        name: schoolData.name,
+        googlePlaceId: schoolData.googlePlaceId,
+        lat: schoolData.lat,
+        lng: schoolData.lng,
+        city: {
+          connectOrCreate: {
+            where: {
+              googlePlaceId: schoolData.city.googlePlaceId,
+            },
+            create: {
+              name: schoolData.city.name,
+              googlePlaceId: schoolData.city.googlePlaceId,
+              lat: schoolData.city.lat,
+              lng: schoolData.city.lng,
+              country: {
+                connectOrCreate: {
+                  where: {
+                    name: schoolData.city.country.name,
+                  },
+                  create: {
+                    name: schoolData.city.country.name,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return newSchool
   }
 
   async getOrCreateCity(googlePlaceId: string) {
