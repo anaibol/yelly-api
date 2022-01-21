@@ -500,11 +500,7 @@ export class UserService {
       (await this.prismaService.user.findUnique({
         where: { id: userId },
         select: {
-          school: {
-            select: {
-              id: true,
-            },
-          },
+          schoolId: true,
         },
       }))
 
@@ -601,8 +597,8 @@ export class UserService {
     if (updateUserData.schoolGooglePlaceId) {
       this.schoolService.syncAlgoliaSchool(schoolData.id)
 
-      if (prevSchoolData && prevSchoolData.school.id !== schoolData.id) {
-        this.schoolService.syncAlgoliaSchool(prevSchoolData.school.id)
+      if (prevSchoolData && prevSchoolData.schoolId !== schoolData.id) {
+        this.schoolService.syncAlgoliaSchool(prevSchoolData.schoolId)
       }
     }
 
