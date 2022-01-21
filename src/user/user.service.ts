@@ -600,7 +600,10 @@ export class UserService {
 
     if (updateUserData.schoolGooglePlaceId) {
       this.schoolService.syncAlgoliaSchool(schoolData.id)
-      if (prevSchoolData.school.id !== schoolData.id) this.schoolService.syncAlgoliaSchool(prevSchoolData.school.id)
+
+      if (prevSchoolData && prevSchoolData.school.id !== schoolData.id) {
+        this.schoolService.syncAlgoliaSchool(prevSchoolData.school.id)
+      }
     }
 
     return updatedUser
