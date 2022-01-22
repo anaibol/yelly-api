@@ -50,10 +50,6 @@ input DeletePostReactionInput {
 
 input FirebaseSignInInput {
   idToken: String!
-}
-
-input FirebaseSignUpInput {
-  idToken: String!
   locale: String!
 }
 
@@ -111,13 +107,11 @@ type Mutation {
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
   firebaseSignIn(input: FirebaseSignInInput!): Token!
-  firebaseSignUp(input: FirebaseSignUpInput!): Token!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   markNotificationAsRead(notificationId: String!): Boolean!
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): Token!
   signIn(input: SignInInput!): Token!
-  signUp(input: SignUpInput!): Token!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
   trackPostViews(postsIds: [String!]!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
@@ -214,12 +208,6 @@ type SendbirdAccessToken {
 
 input SignInInput {
   email: String!
-  password: String!
-}
-
-input SignUpInput {
-  email: String!
-  locale: String!
   password: String!
 }
 

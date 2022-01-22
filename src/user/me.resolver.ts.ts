@@ -18,11 +18,9 @@ import { AuthService, AuthUser } from '../auth/auth.service'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 
 import { ForgotPasswordInput } from './forgot-password.input'
-import { SignUpInput } from './sign-up.input'
 import { SignInInput } from './sign-in.input'
 import { UpdateUserInput } from './update-user.input'
-import { FirebaseSignUpInput } from './dto/firebase-signup.input'
-import { FirebaseSignInInput } from './dto/firebase-signin.input'
+import { FirebaseSignInInput } from './firebase-signin.input'
 import { ResetPasswordInput } from './reset-password.input'
 import { PostSelect } from 'src/post/post-select.constant'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
@@ -53,8 +51,8 @@ export class MeResolver {
   }
 
   @Mutation(() => Token)
-  async firebaseSignIn(@Args('input') signUpInput: FirebaseSignInInput) {
-    const user = await this.authService.validateFirebaseUser(signUpInput.idToken)
+  async firebaseSignIn(@Args('input') signInInput: FirebaseSignInInput) {
+    const user = await this.userService.firebaseSignIn(signInInput)
 
     if (!user) throw new UnauthorizedException()
 
@@ -109,34 +107,6 @@ export class MeResolver {
     }
   }
 
-  @Mutation(() => Token)
-  async signUp(@Args('input') signUpData: SignUpInput) {
-    if (
-      process.env.ADMIN_MODE === 'true' &&
-      process.env.NODE_ENV === 'production' &&
-      !signUpData.email.endsWith('@yelly.app')
-    ) {
-      throw new UnauthorizedException()
-    }
-
-    const user = await this.userService.signUp(signUpData)
-
-    const accessToken = this.authService.getAccessToken(user.id)
-
-    return {
-      accessToken,
-    }
-  }
-
-  @Mutation(() => Token)
-  async firebaseSignUp(@Args('input') firebaseSignUpInput: FirebaseSignUpInput) {
-    const user = await this.userService.firebaseSignUp(firebaseSignUpInput)
-
-    const accessToken = this.authService.getAccessToken(user.id)
-
-    return { accessToken }
-  }
-
   @Mutation(() => Me)
   @UseGuards(AuthGuard)
   updateMe(@Args('input') updateUserData: UpdateUserInput, @CurrentUser() authUser: AuthUser) {
@@ -145,7 +115,7 @@ export class MeResolver {
 
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
-  async deleteAuthUser(@CurrentUser() authUser: AuthUser) {
+  async deleteAuthUser(@CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.userService.deleteById(authUser.id)
   }
 

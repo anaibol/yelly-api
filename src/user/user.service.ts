@@ -7,15 +7,14 @@ import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { SendbirdService } from '../core/sendbird.service'
 import { SchoolService } from '../school/school.service'
-import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
-import { FirebaseSignUpInput } from './dto/firebase-signup.input'
 import { NotificationService } from 'src/notification/notification.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { FirebaseService } from 'src/core/firebase.service'
+import { FirebaseSignInInput } from './firebase-signin.input'
 
 @Injectable()
 export class UserService {
@@ -379,18 +378,13 @@ export class UserService {
     return randomBytes(25).toString('hex')
   }
 
-  async deleteById(userId: string) {
+  async deleteById(userId: string): Promise<boolean> {
     try {
-      const user = await this.prismaService.user.findUnique({ where: { id: userId } })
+      const user = await this.prismaService.user.findUnique({ select: { firebaseId: true }, where: { id: userId } })
+      await this.prismaService.user.delete({ where: { id: userId } })
 
-      if (user.firebaseId) this.firebaseService.deleteUser(user.firebaseId)
+      if (user.firebaseId) await this.firebaseService.deleteUser(user.firebaseId)
 
-      this.sendbirdService.deleteUser(user.id)
-
-      const usersAlgoliaIndex = this.algoliaService.initIndex('USERS')
-      usersAlgoliaIndex.deleteObject(user.id)
-
-      await this.prismaService.user.delete({ where: { id: user.id } })
       return true
     } catch {
       throw new NotFoundUserException()
@@ -433,58 +427,26 @@ export class UserService {
     return this.algoliaService.partialUpdateObject(usersIndex, newUserAlgoliaObject, user.id)
   }
 
-  async signUp(signUpData: SignUpInput) {
-    const { email, password, locale } = signUpData
+  async firebaseSignIn({ idToken, locale }: FirebaseSignInInput) {
+    const firebaseUser = await this.firebaseService.verifyIdToken(idToken)
 
-    const userExists = await this.prismaService.user.findUnique({
+    const { phone_number: phoneNumber, uid: firebaseId } = firebaseUser
+
+    const user = await this.prismaService.user.upsert({
       where: {
-        email,
+        phoneNumber,
       },
       select: {
         id: true,
       },
-    })
-
-    if (userExists) throw new ForbiddenException('Email exists')
-
-    const saltOrRounds = 10
-    const hash = await bcrypt.hash(password, saltOrRounds)
-
-    const user = await this.prismaService.user.create({
-      data: {
-        email,
-        password: hash,
-        locale,
-        roles: '[]',
-      },
-    })
-
-    return {
-      id: user.id,
-    }
-  }
-
-  async firebaseSignUp({ idToken, locale }: FirebaseSignUpInput) {
-    // decode firebase token
-    const firebaseUser = await this.firebaseService.verifyIdToken(idToken)
-
-    const { email = null, phone_number: phoneNumber = null, uid: firebaseId } = firebaseUser
-
-    // check if user exists
-    const [userExists] = await this.prismaService.user.findMany({
-      where: { OR: [{ phoneNumber }, { email }] },
-    })
-
-    if (userExists) throw new ForbiddenException('User exists')
-
-    // create user
-    const user = await this.prismaService.user.create({
-      data: {
-        email,
+      create: {
         phoneNumber,
         firebaseId,
         locale,
         roles: '[]',
+      },
+      update: {
+        firebaseId,
       },
     })
 
@@ -594,7 +556,7 @@ export class UserService {
       this.syncUsersIndexWithAlgolia(userId)
     }
 
-    if (updateUserData.schoolGooglePlaceId) {
+    if (schoolData?.id) {
       this.schoolService.syncAlgoliaSchool(schoolData.id)
 
       if (prevSchoolData && prevSchoolData.schoolId !== schoolData.id) {
