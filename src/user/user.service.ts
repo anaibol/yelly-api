@@ -559,7 +559,7 @@ export class UserService {
     if (schoolData?.id) {
       this.schoolService.syncAlgoliaSchool(schoolData.id)
 
-      if (prevSchoolData && prevSchoolData.schoolId !== schoolData.id) {
+      if (prevSchoolData?.schoolId && prevSchoolData.schoolId !== schoolData.id) {
         this.schoolService.syncAlgoliaSchool(prevSchoolData.schoolId)
       }
     }
