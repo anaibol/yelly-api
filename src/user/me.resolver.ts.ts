@@ -18,7 +18,7 @@ import { AuthService, AuthUser } from '../auth/auth.service'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 
 import { ForgotPasswordInput } from './forgot-password.input'
-import { SignInInput } from './sign-in.input'
+import { EmailSignInInput } from './email-sign-in.input'
 import { UpdateUserInput } from './update-user.input'
 import { FirebaseSignInInput } from './firebase-signin.input'
 import { ResetPasswordInput } from './reset-password.input'
@@ -36,7 +36,7 @@ export class MeResolver {
   ) {}
 
   @Mutation(() => Token)
-  async signIn(@Args('input') signInInput: SignInInput) {
+  async emailSignIn(@Args('input') signInInput: EmailSignInInput) {
     const user = await this.authService.validateUser(signInInput.email, signInInput.password)
 
     if (!user) {
