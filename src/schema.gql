@@ -2,6 +2,16 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AccessToken {
+  accessToken: String!
+}
+
+input CheckPhoneNumberVerificationCodeInput {
+  locale: String!
+  phoneNumber: String!
+  verificationCode: String!
+}
+
 type City {
   country: Country
   googlePlaceId: String
@@ -53,13 +63,13 @@ input EmailSignInInput {
   password: String!
 }
 
-input FirebaseSignInInput {
-  idToken: String!
-  locale: String!
-}
-
 input ForgotPasswordInput {
   email: String!
+}
+
+input InitPhoneNumberVerificationInput {
+  locale: String!
+  phoneNumber: String!
 }
 
 type LastUsers {
@@ -103,6 +113,7 @@ type Me {
 
 type Mutation {
   addExpoPushNotificationsToken(input: String!): Boolean!
+  checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createLiveTag(input: CreateLiveTagInput!): Tag!
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Boolean!
   createPost(input: CreatePostInput!): Post!
@@ -111,12 +122,11 @@ type Mutation {
   deleteExpoPushNotificationsToken(input: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
-  emailSignIn(input: EmailSignInInput!): Token!
-  firebaseSignIn(input: FirebaseSignInInput!): Token!
+  emailSignIn(input: EmailSignInInput!): AccessToken!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   markNotificationAsRead(notificationId: String!): Boolean!
   refreshSendbirdAccessToken: SendbirdAccessToken!
-  resetPassword(input: ResetPasswordInput!): Token!
+  resetPassword(input: ResetPasswordInput!): AccessToken!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
   trackPostViews(postsIds: [String!]!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
@@ -179,6 +189,7 @@ type PostReaction {
 
 type Query {
   getS3PresignedUploadUrl: Upload!
+  initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
   liveTag: LiveTagAuthUser
   me: Me!
   notifications(after: String, limit: Int = 10): PaginatedNotifications!
@@ -223,10 +234,6 @@ type Tag {
 input ToggleFollowInput {
   otherUserId: String!
   value: Boolean!
-}
-
-type Token {
-  accessToken: String!
 }
 
 type Training {
