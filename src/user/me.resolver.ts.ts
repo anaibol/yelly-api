@@ -4,7 +4,7 @@ import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/g
 import { SendbirdAccessToken } from './sendbirdAccessToken'
 
 import { Me } from './me.model'
-import { Token } from './token.model'
+import { AccessToken } from './accessToken.model'
 
 import { PaginationArgs } from '../common/pagination.args'
 import { PostsArgs } from '../post/posts.args'
@@ -20,22 +20,25 @@ import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.
 import { ForgotPasswordInput } from './forgot-password.input'
 import { EmailSignInInput } from './email-sign-in.input'
 import { UpdateUserInput } from './update-user.input'
-import { FirebaseSignInInput } from './firebase-signin.input'
 import { ResetPasswordInput } from './reset-password.input'
 import { PostSelect } from 'src/post/post-select.constant'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
+import TwilioService from 'src/core/twilio.service'
+import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
+import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
 
 @Resolver(() => Me)
 export class MeResolver {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private prismaService: PrismaService,
+    private twilioService: TwilioService,
     private userService: UserService,
     private authService: AuthService,
     private expoPushNotificationsTokenService: ExpoPushNotificationsTokenService
   ) {}
 
-  @Mutation(() => Token)
+  @Mutation(() => AccessToken)
   async emailSignIn(@Args('input') signInInput: EmailSignInInput) {
     const user = await this.authService.validateUser(signInInput.email, signInInput.password)
 
@@ -50,11 +53,24 @@ export class MeResolver {
     }
   }
 
-  @Mutation(() => Token)
-  async firebaseSignIn(@Args('input') signInInput: FirebaseSignInInput) {
-    const user = await this.userService.firebaseSignIn(signInInput)
+  @Mutation(() => Boolean)
+  async initPhoneNumberVerification(@Args('input') initPhoneNumberVerificationInput: InitPhoneNumberVerificationInput) {
+    await this.twilioService.initPhoneNumberVerification(
+      initPhoneNumberVerificationInput.phoneNumber,
+      initPhoneNumberVerificationInput.locale
+    )
 
-    if (!user) throw new UnauthorizedException()
+    return true
+  }
+
+  @Mutation(() => AccessToken)
+  async checkPhoneNumberVerificationCode(
+    @Args('input') checkPhoneNumberVerificationCodeInput: CheckPhoneNumberVerificationCodeInput
+  ): Promise<AccessToken> {
+    const { phoneNumber, verificationCode, locale } = checkPhoneNumberVerificationCodeInput
+    await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
+
+    const user = await this.userService.findOrCreate(phoneNumber, locale)
 
     const accessToken = await this.authService.getAccessToken(user.id)
 
@@ -97,11 +113,12 @@ export class MeResolver {
     return true
   }
 
-  @Mutation(() => Token)
+  @Mutation(() => AccessToken)
   async resetPassword(@Args('input') resetPasswordInput: ResetPasswordInput) {
     const user = await this.userService.resetPassword(resetPasswordInput.password, resetPasswordInput.resetToken)
 
     const accessToken = this.authService.getAccessToken(user.id)
+
     return {
       accessToken,
     }

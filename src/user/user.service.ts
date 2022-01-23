@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { DEFAULT_LIMIT } from '../common/pagination.constant'
@@ -13,8 +13,6 @@ import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
 import { NotificationService } from 'src/notification/notification.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
-import { FirebaseService } from 'src/core/firebase.service'
-import { FirebaseSignInInput } from './firebase-signin.input'
 
 @Injectable()
 export class UserService {
@@ -26,8 +24,7 @@ export class UserService {
     private schoolService: SchoolService,
     private sendbirdService: SendbirdService,
     private notificationService: NotificationService,
-    private pushNotificationService: PushNotificationService,
-    private firebaseService: FirebaseService
+    private pushNotificationService: PushNotificationService
   ) {}
 
   async hasUserPostedOnTag(userId, tagText): Promise<boolean> {
@@ -380,10 +377,7 @@ export class UserService {
 
   async deleteById(userId: string): Promise<boolean> {
     try {
-      const user = await this.prismaService.user.findUnique({ select: { firebaseId: true }, where: { id: userId } })
       await this.prismaService.user.delete({ where: { id: userId } })
-
-      if (user.firebaseId) await this.firebaseService.deleteUser(user.firebaseId)
 
       return true
     } catch {
@@ -427,11 +421,7 @@ export class UserService {
     return this.algoliaService.partialUpdateObject(usersIndex, newUserAlgoliaObject, user.id)
   }
 
-  async firebaseSignIn({ idToken, locale }: FirebaseSignInInput) {
-    const firebaseUser = await this.firebaseService.verifyIdToken(idToken)
-
-    const { phone_number: phoneNumber, uid: firebaseId } = firebaseUser
-
+  async findOrCreate(phoneNumber: string, locale: string): Promise<User> {
     const user = await this.prismaService.user.upsert({
       where: {
         phoneNumber,
@@ -441,13 +431,10 @@ export class UserService {
       },
       create: {
         phoneNumber,
-        firebaseId,
         locale,
         roles: '[]',
       },
-      update: {
-        firebaseId,
-      },
+      update: {},
     })
 
     return { id: user.id }

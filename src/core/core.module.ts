@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
 import { AlgoliaService } from './algolia.service'
 import { EmailService } from './email.service'
-import { FirebaseService } from './firebase.service'
 import { PrismaService } from './prisma.service'
 import { SendbirdService } from './sendbird.service'
+import TwilioService from './twilio.service'
 
 @Module({
   providers: [
@@ -15,8 +15,8 @@ import { SendbirdService } from './sendbird.service'
     AlgoliaService,
     EmailService,
     SendbirdService,
-    FirebaseService,
+    TwilioService,
   ],
-  exports: [PrismaService, AlgoliaService, EmailService, SendbirdService, FirebaseService],
+  exports: [PrismaService, AlgoliaService, EmailService, SendbirdService, TwilioService],
 })
 export class CoreModule {}
