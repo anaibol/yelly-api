@@ -124,6 +124,7 @@ type Mutation {
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
+  initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
   markNotificationAsRead(notificationId: String!): Boolean!
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
@@ -189,7 +190,6 @@ type PostReaction {
 
 type Query {
   getS3PresignedUploadUrl: Upload!
-  initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
   liveTag: LiveTagAuthUser
   me: Me!
   notifications(after: String, limit: Int = 10): PaginatedNotifications!

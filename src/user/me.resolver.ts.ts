@@ -53,7 +53,7 @@ export class MeResolver {
     }
   }
 
-  @Query(() => Boolean)
+  @Mutation(() => Boolean)
   async initPhoneNumberVerification(@Args('input') initPhoneNumberVerificationInput: InitPhoneNumberVerificationInput) {
     await this.twilioService.initPhoneNumberVerification(
       initPhoneNumberVerificationInput.phoneNumber,
