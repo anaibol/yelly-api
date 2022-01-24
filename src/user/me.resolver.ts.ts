@@ -27,6 +27,12 @@ import TwilioService from 'src/core/twilio.service'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
 
+function validatePhoneNumberForE164(phoneNumber) {
+  const regEx = /^\+[1-9]\d{10,14}$/
+
+  return regEx.test(phoneNumber)
+}
+
 @Resolver(() => Me)
 export class MeResolver {
   constructor(
@@ -68,7 +74,12 @@ export class MeResolver {
     @Args('input') checkPhoneNumberVerificationCodeInput: CheckPhoneNumberVerificationCodeInput
   ): Promise<AccessToken> {
     const { phoneNumber, verificationCode, locale } = checkPhoneNumberVerificationCodeInput
-    await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
+
+    if (!validatePhoneNumberForE164(phoneNumber)) return
+
+    if (!process.env.PHONE_VERIFICATION_DISABLED) {
+      await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
+    }
 
     const user = await this.userService.findOrCreate(phoneNumber, locale)
 
