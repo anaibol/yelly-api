@@ -378,6 +378,10 @@ export class UserService {
   async deleteById(userId: string): Promise<boolean> {
     try {
       await this.prismaService.user.delete({ where: { id: userId } })
+      const algoliaUserIndex = await this.algoliaService.initIndex('USERS')
+
+      this.algoliaService.deleteObject(algoliaUserIndex, userId)
+      this.sendbirdService.deleteUser(userId)
 
       return true
     } catch {
