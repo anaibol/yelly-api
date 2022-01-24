@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import axios, { Axios } from 'axios'
-import { PrismaService } from './prisma.service'
 
 type SendbirdUser = {
   user_id: string
