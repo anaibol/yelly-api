@@ -1,5 +1,6 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
+import { algoliaSchoolSelect } from '../../src/utils/algolia'
 
 async function main() {
   const INDEX_NAME = 'dev_SCHOOLS'
@@ -11,13 +12,7 @@ async function main() {
     const schools = await prisma.school.findMany({
       skip: skip,
       take: 500,
-      include: {
-        city: {
-          include: {
-            country: true,
-          },
-        },
-      },
+      select: algoliaSchoolSelect,
     })
 
     if (schools.length == 0) {
@@ -25,8 +20,10 @@ async function main() {
       console.log('finish')
       return
     }
+
     skip += 500
     console.log('insert ' + skip)
+
     const algoliaSchools = schools.map((school) => {
       return {
         id: school.id,
@@ -48,7 +45,7 @@ async function main() {
             name: school.city.country.name,
           },
         },
-
+        userCount: school._count.users,
         objectID: school.id,
       }
     })

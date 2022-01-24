@@ -1,8 +1,7 @@
 import { InputType } from '@nestjs/graphql'
 
 @InputType()
-export class SignUpInput {
-  email: string
-  password: string
+export class InitPhoneNumberVerificationInput {
+  phoneNumber: string
   locale: string
 }

@@ -59,9 +59,11 @@ model User {
   id                           String                            @id @default(uuid())
   firstName                    String?
   lastName                     String?
-  email                        String                            @unique
+  email                        String?                           @unique
+  phoneNumber                  String?                           @unique
+  firebaseId                   String?                           @unique
   roles                        String                            @db.LongText
-  password                     String
+  password                     String?
   birthdate                    DateTime?                         @db.Date
   pictureId                    String?
   snapchat                     String?

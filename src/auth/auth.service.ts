@@ -9,7 +9,6 @@ export type AuthUser = { id: string } | null
 @Injectable()
 export class AuthService {
   constructor(private prismaService: PrismaService, private readonly jwtService: JwtService) {}
-
   async validateUser(email: string, password: string): Promise<AuthUser> {
     if (process.env.ADMIN_MODE === 'true' && process.env.NODE_ENV === 'production' && !email.endsWith('@yelly.app'))
       return null

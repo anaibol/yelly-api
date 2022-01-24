@@ -112,6 +112,33 @@ export const algoliaTagSelect = {
   },
 }
 
+export const algoliaSchoolSelect = {
+  id: true,
+  name: true,
+  googlePlaceId: true,
+  lat: true,
+  lng: true,
+  _count: {
+    select: {
+      users: true,
+    },
+  },
+  city: {
+    select: {
+      id: true,
+      name: true,
+      lat: true,
+      lng: true,
+      country: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
+}
+
 export function mapAlgoliaUser(user): UserIndexAlgoliaInterface {
   return {
     id: user.id,

@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { DEFAULT_LIMIT } from '../common/pagination.constant'
@@ -7,7 +7,6 @@ import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { SendbirdService } from '../core/sendbird.service'
 import { SchoolService } from '../school/school.service'
-import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
@@ -376,17 +375,10 @@ export class UserService {
     return randomBytes(25).toString('hex')
   }
 
-  async deleteById(userId: string) {
+  async deleteById(userId: string): Promise<boolean> {
     try {
-      await this.prismaService.user.delete({
-        where: {
-          id: userId,
-        },
-      })
+      await this.prismaService.user.delete({ where: { id: userId } })
 
-      this.sendbirdService.deleteUser(userId)
-      const usersAlgoliaIndex = this.algoliaService.initIndex('USERS')
-      usersAlgoliaIndex.deleteObject(userId)
       return true
     } catch {
       throw new NotFoundUserException()
@@ -429,40 +421,37 @@ export class UserService {
     return this.algoliaService.partialUpdateObject(usersIndex, newUserAlgoliaObject, user.id)
   }
 
-  async signUp(signUpData: SignUpInput) {
-    const { email, password, locale } = signUpData
-
-    const userExists = await this.prismaService.user.findUnique({
+  async findOrCreate(phoneNumber: string, locale: string): Promise<User> {
+    const user = await this.prismaService.user.upsert({
       where: {
-        email,
+        phoneNumber,
       },
       select: {
         id: true,
       },
-    })
-
-    if (userExists) throw new ForbiddenException('Email exists')
-
-    const saltOrRounds = 10
-    const hash = await bcrypt.hash(password, saltOrRounds)
-
-    const user = await this.prismaService.user.create({
-      data: {
-        email,
-        password: hash,
+      create: {
+        phoneNumber,
         locale,
         roles: '[]',
       },
+      update: {},
     })
 
-    return {
-      id: user.id,
-    }
+    return { id: user.id }
   }
 
   async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<User> {
     const schoolData =
       updateUserData.schoolGooglePlaceId && (await this.schoolService.getOrCreate(updateUserData.schoolGooglePlaceId))
+
+    const prevSchoolData =
+      schoolData &&
+      (await this.prismaService.user.findUnique({
+        where: { id: userId },
+        select: {
+          schoolId: true,
+        },
+      }))
 
     const updatedUser = await this.prismaService.user.update({
       select: {
@@ -474,6 +463,8 @@ export class UserService {
         pictureId: true,
         avatar3dId: true,
         birthdate: true,
+        instagram: true,
+        snapchat: true,
         about: true,
         sendbirdAccessToken: true,
         school: {
@@ -512,39 +503,8 @@ export class UserService {
         isFilled: updateUserData.isFilled,
         ...(schoolData && {
           school: {
-            connectOrCreate: {
-              where: {
-                googlePlaceId: schoolData.googlePlaceId,
-              },
-              create: {
-                name: schoolData.name,
-                googlePlaceId: schoolData.googlePlaceId,
-                lat: schoolData.lat,
-                lng: schoolData.lng,
-                city: {
-                  connectOrCreate: {
-                    where: {
-                      googlePlaceId: schoolData.city.googlePlaceId,
-                    },
-                    create: {
-                      name: schoolData.city.name,
-                      googlePlaceId: schoolData.city.googlePlaceId,
-                      lat: schoolData.city.lat,
-                      lng: schoolData.city.lng,
-                      country: {
-                        connectOrCreate: {
-                          where: {
-                            name: schoolData.city.country.name,
-                          },
-                          create: {
-                            name: schoolData.city.country.name,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
+            connect: {
+              id: schoolData.id,
             },
           },
         }),
@@ -583,6 +543,14 @@ export class UserService {
     } else if (updatedUser.isFilled) {
       this.updateSenbirdUser(updatedUser)
       this.syncUsersIndexWithAlgolia(userId)
+    }
+
+    if (schoolData?.id) {
+      this.schoolService.syncAlgoliaSchool(schoolData.id)
+
+      if (prevSchoolData?.schoolId && prevSchoolData.schoolId !== schoolData.id) {
+        this.schoolService.syncAlgoliaSchool(prevSchoolData.schoolId)
+      }
     }
 
     return updatedUser

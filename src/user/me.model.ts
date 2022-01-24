@@ -9,6 +9,7 @@ export class Me {
   @Field(() => ID)
   id: string
   email?: string
+  phoneNumber?: string
   firstName?: string
   lastName?: string
   birthdate?: Date
