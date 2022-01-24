@@ -463,6 +463,8 @@ export class UserService {
         pictureId: true,
         avatar3dId: true,
         birthdate: true,
+        instagram: true,
+        snapchat: true,
         about: true,
         sendbirdAccessToken: true,
         school: {
