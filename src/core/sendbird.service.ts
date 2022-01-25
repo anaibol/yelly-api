@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import axios, { Axios } from 'axios'
-import { PrismaService } from './prisma.service'
 
 type SendbirdUser = {
   user_id: string
@@ -113,6 +112,37 @@ export class SendbirdService {
           user_id: SAMUEL_ADMIN_ID,
           message: `Hello ${userFirstName},
           En tant que fondateur de l’app ça m’aiderait de ouf si tu pouvais me donner ton avis sur l’app. Tu aimes bien ?`,
+        })
+      }
+    } catch (error) {
+      console.log('error:', error)
+    }
+    return true
+  }
+
+  async reactionMessage(reactionAuthorId: string, postAuthorId, postReactionId: string) {
+    const userIds = [reactionAuthorId, postAuthorId]
+    const channelUrl = `${reactionAuthorId}_${postAuthorId}`
+
+    try {
+      const channel = await this.client.post('/v3/group_channels', {
+        user_ids: userIds,
+        channel_url: channelUrl,
+        custom_type: '1-1',
+        is_distinct: true,
+      })
+
+      if (channel) {
+        await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
+          message_type: 'MESG',
+          custom_type: 'post_reaction',
+          user_id: reactionAuthorId,
+          message: `🥳`,
+          data: JSON.stringify({
+            postId: 123,
+            text: 'Grand, fin et mou, comme un spaghetti une vraie masterclass ce prof',
+            tag: '#DécrisTonProf',
+          }),
         })
       }
     } catch (error) {

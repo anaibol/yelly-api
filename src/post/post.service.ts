@@ -10,6 +10,7 @@ import { NotificationService } from 'src/notification/notification.service'
 import { CreateCommentInput } from './create-comment.input'
 import { PostSelect } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
+import { SendbirdService } from 'src/core/sendbird.service'
 
 @Injectable()
 export class PostService {
@@ -17,7 +18,8 @@ export class PostService {
     private prismaService: PrismaService,
     private tagService: TagService,
     private notificationService: NotificationService,
-    private pushNotificationService: PushNotificationService
+    private pushNotificationService: PushNotificationService,
+    private sendbirdService: SendbirdService
   ) {}
 
   async trackPostViews(postsIds: string[]) {
@@ -239,7 +241,9 @@ export class PostService {
     if (postReaction.post.authorId !== authUserId) {
       this.notificationService.upsertPostReactionNotification(postReaction.post.authorId, postReaction.id)
       this.pushNotificationService.postReaction(postReaction)
+      this.sendbirdService.reactionMessage(authorId, postReaction.post.authorId, postReaction.id)
     }
+
     return !!postReaction
   }
 
