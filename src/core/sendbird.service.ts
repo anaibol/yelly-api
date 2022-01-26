@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import axios, { Axios } from 'axios'
+import { Post } from 'src/post/post.model'
 
 type SendbirdUser = {
   user_id: string
@@ -120,7 +121,7 @@ export class SendbirdService {
     return true
   }
 
-  async reactionMessage(reactionAuthorId: string, postAuthorId, postReactionId: string) {
+  async reactionMessage(reactionAuthorId: string, postAuthorId, post: Partial<Post>, reaction: string) {
     const userIds = [reactionAuthorId, postAuthorId]
     const channelUrl = `${reactionAuthorId}_${postAuthorId}`
 
@@ -137,11 +138,11 @@ export class SendbirdService {
           message_type: 'MESG',
           custom_type: 'post_reaction',
           user_id: reactionAuthorId,
-          message: `🥳`,
+          message: reaction,
           data: JSON.stringify({
-            postId: 123,
-            text: 'Grand, fin et mou, comme un spaghetti une vraie masterclass ce prof',
-            tag: '#DécrisTonProf',
+            postId: post.id,
+            text: post.text,
+            tag: post.tags,
           }),
         })
       }
