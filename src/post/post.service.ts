@@ -21,7 +21,6 @@ export class PostService {
     private pushNotificationService: PushNotificationService,
     private sendbirdService: SendbirdService
   ) {}
-
   async trackPostViews(postsIds: string[]) {
     await this.prismaService.post.updateMany({
       where: { id: { in: postsIds } },
@@ -242,7 +241,6 @@ export class PostService {
     })
 
     if (postReaction.post.authorId !== authUserId) {
-      this.notificationService.upsertPostReactionNotification(postReaction.post.authorId, postReaction.id)
       this.pushNotificationService.postReaction(postReaction)
       this.sendbirdService.sendPostReactionMessage(postReaction.id)
     }
