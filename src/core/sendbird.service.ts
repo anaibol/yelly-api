@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common'
+import { PostReaction } from '@prisma/client'
 import axios, { Axios } from 'axios'
+import { PrismaService } from './prisma.service'
 
 type SendbirdUser = {
   user_id: string
@@ -29,7 +31,7 @@ const cleanUndefinedFromObj = (obj) =>
 export class SendbirdService {
   client: Axios
 
-  constructor() {
+  constructor(private prismaService: PrismaService) {
     this.client = axios.create({
       baseURL: process.env.SENDBIRD_BASE_URL,
       headers: {
@@ -112,6 +114,62 @@ export class SendbirdService {
           user_id: SAMUEL_ADMIN_ID,
           message: `Hello ${userFirstName},
           En tant que fondateur de l’app ça m’aiderait de ouf si tu pouvais me donner ton avis sur l’app. Tu aimes bien ?`,
+        })
+      }
+    } catch (error) {
+      console.log('error:', error)
+    }
+    return true
+  }
+
+  async sendPostReactionMessage(postReactionId: string) {
+    const postReaction = await this.prismaService.postReaction.findUnique({
+      where: { id: postReactionId },
+      select: {
+        authorId: true,
+        reaction: true,
+        post: {
+          select: {
+            id: true,
+            text: true,
+            authorId: true,
+            tags: {
+              select: {
+                id: true,
+                text: true,
+                isLive: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const { authorId, post, reaction } = postReaction
+
+    const userIds = [authorId, post.authorId]
+    const channelUrl = `${authorId}_${post.authorId}`
+
+    try {
+      const channel = await this.client.post('/v3/group_channels', {
+        user_ids: userIds,
+        channel_url: channelUrl,
+        custom_type: '1-1',
+        is_distinct: true,
+        inviter_id: authorId,
+      })
+
+      if (channel) {
+        await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
+          message_type: 'MESG',
+          custom_type: 'post_reaction',
+          user_id: authorId,
+          message: reaction,
+          data: JSON.stringify({
+            postId: post.id,
+            text: post.text,
+            tag: post.tags,
+          }),
         })
       }
     } catch (error) {
