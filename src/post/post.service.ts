@@ -105,6 +105,8 @@ export class PostService {
       },
     })
 
+    if (!post) throw new Error('Post not found')
+
     return {
       ...post,
       totalReactionsCount: post._count.reactions,
@@ -246,7 +248,9 @@ export class PostService {
       const post = await this.prismaService.post.findUnique({
         where: { id: postReaction.postId },
         select: {
+          id: true,
           text: true,
+          authorId: true,
           tags: {
             select: {
               id: true,
@@ -257,7 +261,7 @@ export class PostService {
         },
       })
 
-      this.sendbirdService.sendReactionMessage(authorId, postReaction.post.authorId, post, reaction)
+      this.sendbirdService.sendPostReactionMessage(postReaction, post)
     }
 
     return !!postReaction

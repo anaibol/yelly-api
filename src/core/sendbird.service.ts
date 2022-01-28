@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
+import { Post, PostReaction } from '@prisma/client'
 import axios, { Axios } from 'axios'
-import { Post } from 'src/post/post.model'
 
 type SendbirdUser = {
   user_id: string
@@ -121,9 +121,9 @@ export class SendbirdService {
     return true
   }
 
-  async sendReactionMessage(reactionAuthorId: string, postAuthorId, post: Partial<Post>, reaction: string) {
-    const userIds = [reactionAuthorId, postAuthorId]
-    const channelUrl = `${reactionAuthorId}_${postAuthorId}`
+  async sendPostReactionMessage(postReaction: Partial<PostReaction>, post: Partial<Post>) {
+    const userIds = [postReaction.authorId, post.authorId]
+    const channelUrl = `${postReaction.authorId}_${post.authorId}`
 
     try {
       const channel = await this.client.post('/v3/group_channels', {
@@ -131,15 +131,15 @@ export class SendbirdService {
         channel_url: channelUrl,
         custom_type: '1-1',
         is_distinct: true,
-        inviter_id: reactionAuthorId,
+        inviter_id: postReaction.authorId,
       })
 
       if (channel) {
         await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
           message_type: 'MESG',
           custom_type: 'post_reaction',
-          user_id: reactionAuthorId,
-          message: reaction,
+          user_id: postReaction.authorId,
+          message: postReaction.reaction,
           data: JSON.stringify({
             postId: post.id,
             text: post.text,
