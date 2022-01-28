@@ -168,7 +168,7 @@ export class SendbirdService {
           data: JSON.stringify({
             postId: post.id,
             text: post.text,
-            tag: post.tags,
+            tags: post.tags,
           }),
         })
       }
