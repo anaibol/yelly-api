@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { Post, PostReaction } from '@prisma/client'
+import { PostReaction } from '@prisma/client'
 import axios, { Axios } from 'axios'
+import { PrismaService } from './prisma.service'
 
 type SendbirdUser = {
   user_id: string
@@ -30,7 +31,7 @@ const cleanUndefinedFromObj = (obj) =>
 export class SendbirdService {
   client: Axios
 
-  constructor() {
+  constructor(private prismaService: PrismaService) {
     this.client = axios.create({
       baseURL: process.env.SENDBIRD_BASE_URL,
       headers: {
@@ -121,9 +122,33 @@ export class SendbirdService {
     return true
   }
 
-  async sendPostReactionMessage(postReaction: Partial<PostReaction>, post: Partial<Post>) {
-    const userIds = [postReaction.authorId, post.authorId]
-    const channelUrl = `${postReaction.authorId}_${post.authorId}`
+  async sendPostReactionMessage(postReactionId: string) {
+    const postReaction = await this.prismaService.postReaction.findUnique({
+      where: { id: postReactionId },
+      select: {
+        authorId: true,
+        reaction: true,
+        post: {
+          select: {
+            id: true,
+            text: true,
+            authorId: true,
+            tags: {
+              select: {
+                id: true,
+                text: true,
+                isLive: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const { authorId, post, reaction } = postReaction
+
+    const userIds = [authorId, post.authorId]
+    const channelUrl = `${authorId}_${post.authorId}`
 
     try {
       const channel = await this.client.post('/v3/group_channels', {
@@ -131,15 +156,15 @@ export class SendbirdService {
         channel_url: channelUrl,
         custom_type: '1-1',
         is_distinct: true,
-        inviter_id: postReaction.authorId,
+        inviter_id: authorId,
       })
 
       if (channel) {
         await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
           message_type: 'MESG',
           custom_type: 'post_reaction',
-          user_id: postReaction.authorId,
-          message: postReaction.reaction,
+          user_id: authorId,
+          message: reaction,
           data: JSON.stringify({
             postId: post.id,
             text: post.text,

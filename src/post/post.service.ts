@@ -244,24 +244,7 @@ export class PostService {
     if (postReaction.post.authorId !== authUserId) {
       this.notificationService.upsertPostReactionNotification(postReaction.post.authorId, postReaction.id)
       this.pushNotificationService.postReaction(postReaction)
-
-      const post = await this.prismaService.post.findUnique({
-        where: { id: postReaction.postId },
-        select: {
-          id: true,
-          text: true,
-          authorId: true,
-          tags: {
-            select: {
-              id: true,
-              text: true,
-              isLive: true,
-            },
-          },
-        },
-      })
-
-      this.sendbirdService.sendPostReactionMessage(postReaction, post)
+      this.sendbirdService.sendPostReactionMessage(postReaction.id)
     }
 
     return !!postReaction
