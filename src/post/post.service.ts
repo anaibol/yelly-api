@@ -6,7 +6,6 @@ import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reactio
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { TagService } from 'src/tag/tag.service'
-import { NotificationService } from 'src/notification/notification.service'
 import { CreateCommentInput } from './create-comment.input'
 import { PostSelect } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
@@ -17,7 +16,6 @@ export class PostService {
   constructor(
     private prismaService: PrismaService,
     private tagService: TagService,
-    private notificationService: NotificationService,
     private pushNotificationService: PushNotificationService,
     private sendbirdService: SendbirdService
   ) {}
@@ -240,10 +238,7 @@ export class PostService {
       update: reactionData,
     })
 
-    if (postReaction.post.authorId !== authUserId) {
-      this.pushNotificationService.postReaction(postReaction)
-      this.sendbirdService.sendPostReactionMessage(postReaction.id)
-    }
+    if (postReaction.post.authorId !== authUserId) this.sendbirdService.sendPostReactionMessage(postReaction.id)
 
     return !!postReaction
   }
