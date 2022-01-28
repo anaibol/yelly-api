@@ -121,7 +121,7 @@ export class SendbirdService {
     return true
   }
 
-  async reactionMessage(reactionAuthorId: string, postAuthorId, post: Partial<Post>, reaction: string) {
+  async sendReactionMessage(reactionAuthorId: string, postAuthorId, post: Partial<Post>, reaction: string) {
     const userIds = [reactionAuthorId, postAuthorId]
     const channelUrl = `${reactionAuthorId}_${postAuthorId}`
 
@@ -131,6 +131,7 @@ export class SendbirdService {
         channel_url: channelUrl,
         custom_type: '1-1',
         is_distinct: true,
+        inviter_id: reactionAuthorId,
       })
 
       if (channel) {

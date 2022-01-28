@@ -257,7 +257,7 @@ export class PostService {
         },
       })
 
-      this.sendbirdService.reactionMessage(authorId, postReaction.post.authorId, post, reaction)
+      this.sendbirdService.sendReactionMessage(authorId, postReaction.post.authorId, post, reaction)
     }
 
     return !!postReaction
