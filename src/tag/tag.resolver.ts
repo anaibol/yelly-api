@@ -61,7 +61,7 @@ export class TagResolver {
 
     const { limit, after } = postsArgs
 
-    const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
+    const items = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),
@@ -75,14 +75,8 @@ export class TagResolver {
       select: PostSelect,
     })
 
-    const formattedPosts = posts.map((post) => ({
-      ...post,
-      totalReactionsCount: post._count.reactions,
-      totalCommentsCount: post._count.comments,
-    }))
-
-    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
-    const response = { items: formattedPosts, nextCursor }
+    const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
+    const response = { items, nextCursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
     return response

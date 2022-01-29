@@ -32,7 +32,7 @@ export class SchoolResolver {
 
     const { after, limit } = postsArgs
 
-    const posts = await this.prismaService.school.findUnique({ where: { id: school.id } }).posts({
+    const items = await this.prismaService.school.findUnique({ where: { id: school.id } }).posts({
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),
@@ -46,14 +46,8 @@ export class SchoolResolver {
       select: PostSelect,
     })
 
-    const formattedPosts = posts.map((post) => ({
-      ...post,
-      totalReactionsCount: post._count.reactions,
-      totalCommentsCount: post._count.comments,
-    }))
-
-    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
-    const response = { items: formattedPosts, nextCursor }
+    const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
+    const response = { items: items, nextCursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
     return response

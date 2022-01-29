@@ -64,15 +64,9 @@ export class PostService {
       select: PostSelect,
     })
 
-    const mappedPosts = posts.map((post) => ({
-      ...post,
-      totalReactionsCount: post._count.reactions,
-      totalCommentsCount: post._count.comments,
-    }))
-
     const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
 
-    return { posts: mappedPosts, nextCursor }
+    return { posts, nextCursor }
   }
 
   async getById(postId: string) {
@@ -104,11 +98,7 @@ export class PostService {
 
     if (!post) throw new Error('Post not found')
 
-    return {
-      ...post,
-      totalReactionsCount: post._count.reactions,
-      totalCommentsCount: post._count.comments,
-    }
+    return post
   }
 
   async create(createPostInput: CreatePostInput, authUserId: string) {
