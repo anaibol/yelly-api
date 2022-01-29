@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { PostReaction } from '@prisma/client'
 import axios, { Axios } from 'axios'
 import { PrismaService } from './prisma.service'
+
+const buildChannelUrl = (userIds: string[]): string => {
+  return userIds.sort().join('_')
+}
 
 type SendbirdUser = {
   user_id: string
@@ -148,30 +151,35 @@ export class SendbirdService {
     const { authorId, post, reaction } = postReaction
 
     const userIds = [authorId, post.authorId]
-    const channelUrl = `${authorId}_${post.authorId}`
+    const channelUrl = buildChannelUrl(userIds)
 
     try {
-      const channel = await this.client.post('/v3/group_channels', {
-        user_ids: userIds,
-        channel_url: channelUrl,
-        custom_type: '1-1',
-        is_distinct: true,
-        inviter_id: authorId,
-      })
+      const channelExists = await this.client
+        .get(`/v3/group_channels/${userIds}`)
+        .then(() => Promise.resolve(true))
+        .catch(() => Promise.resolve(false))
 
-      if (channel) {
-        await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
-          message_type: 'MESG',
-          custom_type: 'post_reaction',
-          user_id: authorId,
-          message: reaction,
-          data: JSON.stringify({
-            postId: post.id,
-            text: post.text,
-            tags: post.tags,
-          }),
+      if (!channelExists) {
+        await this.client.post('/v3/group_channels', {
+          user_ids: userIds,
+          channel_url: channelUrl,
+          custom_type: '1-1',
+          is_distinct: true,
+          inviter_id: authorId,
         })
       }
+
+      await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
+        message_type: 'MESG',
+        custom_type: 'post_reaction',
+        user_id: authorId,
+        message: reaction,
+        data: JSON.stringify({
+          postId: post.id,
+          text: post.text,
+          tags: post.tags,
+        }),
+      })
     } catch (error) {
       console.log('error:', error)
     }
