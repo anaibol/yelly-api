@@ -164,11 +164,8 @@ type Post {
   comments: [PostComment!]
   createdAt: DateTime!
   id: ID!
-  reactions: [PostReaction!]!
   tags: [Tag!]!
   text: String!
-  totalCommentsCount: Int
-  totalReactionsCount: Int!
   viewsCount: Int!
 }
 
