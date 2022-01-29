@@ -18,6 +18,12 @@ export const PostSelect = {
             select: {
               id: true,
               name: true,
+              country: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
           },
         },

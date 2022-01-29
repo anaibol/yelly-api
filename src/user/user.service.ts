@@ -91,6 +91,12 @@ export class UserService {
               select: {
                 id: true,
                 name: true,
+                country: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
           },
@@ -263,6 +269,12 @@ export class UserService {
               select: {
                 id: true,
                 name: true,
+                country: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
             _count: {
@@ -479,6 +491,12 @@ export class UserService {
               select: {
                 id: true,
                 name: true,
+                country: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
           },
