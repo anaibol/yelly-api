@@ -6,20 +6,19 @@ import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reactio
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { TagService } from 'src/tag/tag.service'
-import { NotificationService } from 'src/notification/notification.service'
 import { CreateCommentInput } from './create-comment.input'
 import { PostSelect } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
+import { SendbirdService } from 'src/core/sendbird.service'
 
 @Injectable()
 export class PostService {
   constructor(
     private prismaService: PrismaService,
     private tagService: TagService,
-    private notificationService: NotificationService,
-    private pushNotificationService: PushNotificationService
+    private pushNotificationService: PushNotificationService,
+    private sendbirdService: SendbirdService
   ) {}
-
   async trackPostViews(postsIds: string[]) {
     await this.prismaService.post.updateMany({
       where: { id: { in: postsIds } },
@@ -65,15 +64,9 @@ export class PostService {
       select: PostSelect,
     })
 
-    const mappedPosts = posts.map((post) => ({
-      ...post,
-      totalReactionsCount: post._count.reactions,
-      totalCommentsCount: post._count.comments,
-    }))
-
     const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
 
-    return { posts: mappedPosts, nextCursor }
+    return { posts, nextCursor }
   }
 
   async getById(postId: string) {
@@ -103,11 +96,9 @@ export class PostService {
       },
     })
 
-    return {
-      ...post,
-      totalReactionsCount: post._count.reactions,
-      totalCommentsCount: post._count.comments,
-    }
+    if (!post) throw new Error('Post not found')
+
+    return post
   }
 
   async create(createPostInput: CreatePostInput, authUserId: string) {
@@ -214,6 +205,7 @@ export class PostService {
         authorId: true,
         id: true,
         postId: true,
+        reaction: true,
         post: {
           select: {
             authorId: true,
@@ -236,10 +228,8 @@ export class PostService {
       update: reactionData,
     })
 
-    if (postReaction.post.authorId !== authUserId) {
-      this.notificationService.upsertPostReactionNotification(postReaction.post.authorId, postReaction.id)
-      this.pushNotificationService.postReaction(postReaction)
-    }
+    if (postReaction.post.authorId !== authUserId) this.sendbirdService.sendPostReactionMessage(postReaction.id)
+
     return !!postReaction
   }
 

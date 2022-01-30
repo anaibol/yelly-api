@@ -71,22 +71,6 @@ export class NotificationService {
     })
   }
 
-  async upsertPostReactionNotification(userId: string, postReactionId: string) {
-    return this.prismaService.notification.upsert({
-      where: {
-        postReactionId,
-      },
-      create: {
-        userId,
-        postReactionId,
-      },
-      update: {
-        userId,
-        postReactionId,
-      },
-    })
-  }
-
   async createFollowshipNotification(userId: string, followshipId: string) {
     return this.prismaService.notification.create({
       data: {

@@ -72,7 +72,7 @@ export class UserResolver {
 
     const { schoolId, after, limit } = postsArgs
 
-    const posts = await this.prismaService.user.findUnique({ where: { id: user.id } }).posts({
+    const items = await this.prismaService.user.findUnique({ where: { id: user.id } }).posts({
       ...(schoolId && {
         where: {
           author: {
@@ -93,14 +93,8 @@ export class UserResolver {
       select: PostSelect,
     })
 
-    const formattedPosts = posts.map((post) => ({
-      ...post,
-      totalReactionsCount: post._count.reactions,
-      totalCommentsCount: post._count.comments,
-    }))
-
-    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
-    const response = { items: formattedPosts, nextCursor }
+    const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
+    const response = { items, nextCursor }
     this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
     return response

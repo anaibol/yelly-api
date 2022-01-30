@@ -1,27 +1,8 @@
 export const PostSelect = {
-  _count: {
-    select: {
-      reactions: true,
-      comments: true,
-    },
-  },
   id: true,
   createdAt: true,
   viewsCount: true,
   text: true,
-  reactions: {
-    select: {
-      id: true,
-      reaction: true,
-      author: {
-        select: {
-          id: true,
-        },
-      },
-    },
-    distinct: 'reaction' as const,
-    take: 2,
-  },
   author: {
     select: {
       id: true,
@@ -37,6 +18,12 @@ export const PostSelect = {
             select: {
               id: true,
               name: true,
+              country: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
           },
         },

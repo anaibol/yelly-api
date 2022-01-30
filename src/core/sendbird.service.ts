@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common'
 import axios, { Axios } from 'axios'
 import { PrismaService } from './prisma.service'
 
+const buildChannelUrl = (userIds: string[]): string => {
+  return userIds.sort().join('_')
+}
+
 type SendbirdUser = {
   user_id: string
   nickname: string
@@ -30,7 +34,7 @@ const cleanUndefinedFromObj = (obj) =>
 export class SendbirdService {
   client: Axios
 
-  constructor() {
+  constructor(private prismaService: PrismaService) {
     this.client = axios.create({
       baseURL: process.env.SENDBIRD_BASE_URL,
       headers: {
@@ -115,6 +119,67 @@ export class SendbirdService {
           En tant que fondateur de l’app ça m’aiderait de ouf si tu pouvais me donner ton avis sur l’app. Tu aimes bien ?`,
         })
       }
+    } catch (error) {
+      console.log('error:', error)
+    }
+    return true
+  }
+
+  async sendPostReactionMessage(postReactionId: string) {
+    const postReaction = await this.prismaService.postReaction.findUnique({
+      where: { id: postReactionId },
+      select: {
+        authorId: true,
+        reaction: true,
+        post: {
+          select: {
+            id: true,
+            text: true,
+            authorId: true,
+            tags: {
+              select: {
+                id: true,
+                text: true,
+                isLive: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const { authorId, post, reaction } = postReaction
+
+    const userIds = [authorId, post.authorId]
+    const channelUrl = buildChannelUrl(userIds)
+
+    try {
+      const channelExists = await this.client
+        .get(`/v3/group_channels/${userIds}`)
+        .then(() => Promise.resolve(true))
+        .catch(() => Promise.resolve(false))
+
+      if (!channelExists) {
+        await this.client.post('/v3/group_channels', {
+          user_ids: userIds,
+          channel_url: channelUrl,
+          custom_type: '1-1',
+          is_distinct: true,
+          inviter_id: authorId,
+        })
+      }
+
+      await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
+        message_type: 'MESG',
+        custom_type: 'post_reaction',
+        user_id: authorId,
+        message: reaction,
+        data: JSON.stringify({
+          postId: post.id,
+          text: post.text,
+          tags: post.tags,
+        }),
+      })
     } catch (error) {
       console.log('error:', error)
     }

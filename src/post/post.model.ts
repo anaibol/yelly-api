@@ -13,8 +13,5 @@ export class Post {
   viewsCount: number
   tags: Tag[]
   author: User
-  reactions: PostReaction[]
-  totalReactionsCount: number
   comments?: PostComment[]
-  totalCommentsCount?: number
 }

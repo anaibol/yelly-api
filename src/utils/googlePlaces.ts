@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-const key = 'AIzaSyBohCYYvkdmFxcEd4qsqy3CkX-6FVqujPw'
 const GOOGLE_MAPS_API = 'https://maps.googleapis.com/maps/api/'
 
 type AddressComponents = {
@@ -72,10 +71,10 @@ export async function getCityNameWithCountry(googlePlaceId: string): Promise<str
 
 export async function getGooglePlaceDetails(googlePlaceId: string) {
   const response = await axios.get(
-    `${GOOGLE_MAPS_API}place/details/json?language=fr&place_id=` + googlePlaceId + '&key=' + key
+    `${GOOGLE_MAPS_API}place/details/json?language=fr&place_id=` + googlePlaceId + '&key=' + process.env.GOOGLE_API_KEY
   )
 
-  if (response.data.status == 'INVALID_REQUEST' || typeof response.data.result == 'undefined') return null
+  if (response.data.status !== 'OK' || typeof response.data.result == 'undefined') return null
 
   return response.data.result as google.maps.places.PlaceResult | null
 }
@@ -85,7 +84,7 @@ export async function getGoogleCityByName(cityName: string): Promise<google.maps
     params: {
       language: 'fr',
       address: cityName,
-      key: key,
+      key: process.env.GOOGLE_API_KEY,
     },
   })
 
