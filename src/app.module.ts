@@ -19,7 +19,7 @@ import { SchoolModule } from './school/school.module'
       playground: false,
       plugins: [
         ApolloServerPluginLandingPageLocalDefault(),
-        process.env.NODE_ENV !== 'development' &&
+        process.env.NODE_ENV === 'production' &&
           ApolloServerPluginUsageReporting({
             sendVariableValues: { all: true },
             sendHeaders: { all: true },

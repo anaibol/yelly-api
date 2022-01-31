@@ -61,6 +61,8 @@ export class MeResolver {
 
   @Mutation(() => Boolean)
   async initPhoneNumberVerification(@Args('input') initPhoneNumberVerificationInput: InitPhoneNumberVerificationInput) {
+    if (process.env.NODE_ENV === 'development') return true
+
     await this.twilioService.initPhoneNumberVerification(
       initPhoneNumberVerificationInput.phoneNumber,
       initPhoneNumberVerificationInput.locale
