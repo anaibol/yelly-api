@@ -61,7 +61,7 @@ export class SendbirdService {
 
     const { data } = await this.client.post('/v3/users', sendbirdUser)
 
-    this.welcomeMessage(user.id, user.firstName)
+    // this.welcomeMessage(user.id, user.firstName)
     return data.access_token
   }
 
@@ -147,6 +147,8 @@ export class SendbirdService {
         },
       },
     })
+
+    if (!postReaction) throw new Error('No post reaction')
 
     const { authorId, post, reaction } = postReaction
 

@@ -6,14 +6,11 @@ export class ExpoPushNotificationsTokenService {
   constructor(private prismaService: PrismaService) {}
 
   async create(userId: string, token: string): Promise<boolean> {
-    const tokenExist = await this.prismaService.expoPushNotificationAccessToken.count({
+    await this.prismaService.expoPushNotificationAccessToken.delete({
       where: {
-        userId,
         token,
       },
     })
-
-    if (tokenExist) return true
 
     await this.prismaService.expoPushNotificationAccessToken.create({
       data: {
@@ -24,6 +21,7 @@ export class ExpoPushNotificationsTokenService {
         id: true,
       },
     })
+
     return true
   }
 
