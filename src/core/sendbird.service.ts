@@ -148,6 +148,8 @@ export class SendbirdService {
       },
     })
 
+    if (!postReaction) throw new Error('No post reaction')
+
     const { authorId, post, reaction } = postReaction
 
     const userIds = [authorId, post.authorId]

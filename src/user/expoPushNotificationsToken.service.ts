@@ -8,7 +8,7 @@ export class ExpoPushNotificationsTokenService {
   async create(userId: string, token: string): Promise<boolean> {
     await this.prismaService.expoPushNotificationAccessToken.delete({
       where: {
-        token: token,
+        token,
       },
     })
 
@@ -21,6 +21,7 @@ export class ExpoPushNotificationsTokenService {
         id: true,
       },
     })
+
     return true
   }
 
