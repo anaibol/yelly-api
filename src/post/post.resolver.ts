@@ -22,7 +22,7 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
   async posts(@Args() postsArgs?: PostsArgs) {
-    const cacheKey = 'posts:' + JSON.stringify(postsArgs)
+    const cacheKey = 'posts:' + JSON.stringify({ postsArgs })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse
