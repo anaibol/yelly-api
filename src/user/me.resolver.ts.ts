@@ -161,7 +161,7 @@ export class MeResolver {
 
   @ResolveField()
   async posts(@Parent() me: Me, @Args() postsArgs?: PostsArgs) {
-    const cacheKey = 'mePosts:' + JSON.stringify({ PostsArgs, me })
+    const cacheKey = 'mePosts:' + JSON.stringify({ postsArgs, me })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse

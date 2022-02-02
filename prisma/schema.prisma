@@ -158,6 +158,6 @@ model PostReaction {
 model ExpoPushNotificationAccessToken {
   id     String @id @default(uuid())
   userId String
-  token  String
+  token  String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

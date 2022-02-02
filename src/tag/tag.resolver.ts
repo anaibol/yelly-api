@@ -54,7 +54,7 @@ export class TagResolver {
 
   @ResolveField()
   async posts(@Parent() tag: Tag, @Args() postsArgs?: PostsArgs): Promise<PaginatedPosts> {
-    const cacheKey = 'tagPosts:' + JSON.stringify({ PostsArgs, tag })
+    const cacheKey = 'tagPosts:' + JSON.stringify({ postsArgs, tag })
     const previousResponse = await this.cacheManager.get(cacheKey)
 
     if (previousResponse) return previousResponse as PaginatedPosts
