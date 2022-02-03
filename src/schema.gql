@@ -4,6 +4,7 @@
 
 type AccessToken {
   accessToken: String!
+  refreshAccessToken: String!
 }
 
 input CheckPhoneNumberVerificationCodeInput {
@@ -126,6 +127,7 @@ type Mutation {
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
   markNotificationAsRead(notificationId: String!): Boolean!
+  refreshAccessToken: AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
