@@ -106,9 +106,9 @@ export class MeResolver {
   @Mutation(() => AccessToken)
   async refreshAccessToken(
     @CurrentUser() authUser: AuthUser,
-    @Args('refresToken') refresToken: string
+    @Args('refreshToken') refreshToken: string
   ): Promise<AccessToken> {
-    return this.authService.refreshAccessToken(refresToken)
+    return this.authService.refreshAccessToken(refreshToken)
   }
 
   @Mutation(() => SendbirdAccessToken)

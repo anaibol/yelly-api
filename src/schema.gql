@@ -127,7 +127,7 @@ type Mutation {
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
   markNotificationAsRead(notificationId: String!): Boolean!
-  refreshAccessToken(refresToken: String!): AccessToken!
+  refreshAccessToken(refreshToken: String!): AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
   toggleFollowUser(input: ToggleFollowInput!): Boolean!
