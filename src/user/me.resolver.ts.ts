@@ -104,7 +104,6 @@ export class MeResolver {
   }
 
   @Mutation(() => AccessToken)
-  @UseGuards(AuthGuard)
   async refreshAccessToken(
     @CurrentUser() authUser: AuthUser,
     @Args('refresToken') refresToken: string
