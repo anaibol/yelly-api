@@ -45,7 +45,7 @@ export class MeResolver {
   ) {}
 
   @Mutation(() => AccessToken)
-  async emailSignIn(@Args('input') signInInput: EmailSignInInput) {
+  async emailSignIn(@Args('input') signInInput: EmailSignInInput): Promise<AccessToken> {
     const user = await this.authService.validateUser(signInInput.email, signInInput.password)
 
     if (!user) {
@@ -53,9 +53,11 @@ export class MeResolver {
     }
 
     const accessToken = await this.authService.getAccessToken(user.id)
+    const refreshAccessToken = await this.authService.getAccessToken(user.id)
 
     return {
       accessToken,
+      refreshAccessToken,
     }
   }
 
@@ -86,8 +88,9 @@ export class MeResolver {
     const user = await this.userService.findOrCreate(phoneNumber, locale)
 
     const accessToken = await this.authService.getAccessToken(user.id)
+    const refreshAccessToken = await this.authService.getAccessToken(user.id)
 
-    return { accessToken }
+    return { accessToken, refreshAccessToken }
   }
 
   @Query(() => Me)
@@ -98,6 +101,15 @@ export class MeResolver {
     if (!user) return new UnauthorizedException()
 
     return user
+  }
+
+  @Mutation(() => AccessToken)
+  @UseGuards(AuthGuard)
+  async refreshAccessToken(@CurrentUser() authUser: AuthUser): Promise<AccessToken> {
+    const accessToken = await this.authService.getAccessToken(authUser.id)
+    const refreshAccessToken = await this.authService.getAccessToken(authUser.id)
+
+    return { accessToken, refreshAccessToken }
   }
 
   @Mutation(() => SendbirdAccessToken)
