@@ -27,7 +27,7 @@ import TwilioService from 'src/core/twilio.service'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
 
-function validatePhoneNumberForE164(phoneNumber) {
+function validatePhoneNumberForE164(phoneNumber: string) {
   const regEx = /^\+[1-9]\d{10,14}$/
 
   return regEx.test(phoneNumber)
@@ -45,7 +45,7 @@ export class MeResolver {
   ) {}
 
   @Mutation(() => AccessToken)
-  async emailSignIn(@Args('input') signInInput: EmailSignInInput) {
+  async emailSignIn(@Args('input') signInInput: EmailSignInInput): Promise<AccessToken> {
     const user = await this.authService.validateUser(signInInput.email, signInInput.password)
 
     if (!user) {
@@ -53,9 +53,11 @@ export class MeResolver {
     }
 
     const accessToken = await this.authService.getAccessToken(user.id)
+    const refreshToken = await this.authService.getRefreshToken(user.id)
 
     return {
       accessToken,
+      refreshToken,
     }
   }
 
@@ -77,7 +79,7 @@ export class MeResolver {
   ): Promise<AccessToken> {
     const { phoneNumber, verificationCode, locale } = checkPhoneNumberVerificationCodeInput
 
-    if (!validatePhoneNumberForE164(phoneNumber)) return
+    if (!validatePhoneNumberForE164(phoneNumber)) throw new Error('Invalid access token')
 
     if (!process.env.PHONE_VERIFICATION_DISABLED) {
       await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
@@ -86,8 +88,9 @@ export class MeResolver {
     const user = await this.userService.findOrCreate(phoneNumber, locale)
 
     const accessToken = await this.authService.getAccessToken(user.id)
+    const refreshToken = await this.authService.getAccessToken(user.id)
 
-    return { accessToken }
+    return { accessToken, refreshToken }
   }
 
   @Query(() => Me)
@@ -98,6 +101,15 @@ export class MeResolver {
     if (!user) return new UnauthorizedException()
 
     return user
+  }
+
+  @Mutation(() => AccessToken)
+  @UseGuards(AuthGuard)
+  async refreshAccessToken(
+    @CurrentUser() authUser: AuthUser,
+    @Args('refresToken') refresToken: string
+  ): Promise<AccessToken> {
+    return this.authService.refreshAccessToken(refresToken)
   }
 
   @Mutation(() => SendbirdAccessToken)
