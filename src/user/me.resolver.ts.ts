@@ -88,7 +88,7 @@ export class MeResolver {
     const user = await this.userService.findOrCreate(phoneNumber, locale)
 
     const accessToken = await this.authService.getAccessToken(user.id)
-    const refreshToken = await this.authService.getAccessToken(user.id)
+    const refreshToken = await this.authService.getRefreshToken(user.id)
 
     return { accessToken, refreshToken }
   }
@@ -138,13 +138,15 @@ export class MeResolver {
   }
 
   @Mutation(() => AccessToken)
-  async resetPassword(@Args('input') resetPasswordInput: ResetPasswordInput) {
+  async resetPassword(@Args('input') resetPasswordInput: ResetPasswordInput): Promise<AccessToken> {
     const user = await this.userService.resetPassword(resetPasswordInput.password, resetPasswordInput.resetToken)
 
-    const accessToken = this.authService.getAccessToken(user.id)
+    const accessToken = await this.authService.getAccessToken(user.id)
+    const refreshToken = await this.authService.getRefreshToken(user.id)
 
     return {
       accessToken,
+      refreshToken,
     }
   }
 

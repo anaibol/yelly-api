@@ -13,6 +13,8 @@ import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
 import { NotificationService } from 'src/notification/notification.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
+import { PartialUpdateObjectResponse } from '@algolia/client-search'
+import { User as PrismaUser } from '@prisma/client'
 
 @Injectable()
 export class UserService {
@@ -312,7 +314,7 @@ export class UserService {
     }
   }
 
-  async requestResetPassword(email: string) {
+  async requestResetPassword(email: string): Promise<boolean> {
     await this.findByEmail(email)
 
     const resetToken = this.generateResetToken()
@@ -331,7 +333,7 @@ export class UserService {
     return true
   }
 
-  async resetPassword(password: string, resetToken: string) {
+  async resetPassword(password: string, resetToken: string): Promise<Partial<PrismaUser>> {
     const user = await this.prismaService.user.findFirst({
       where: {
         resetToken,
@@ -358,14 +360,10 @@ export class UserService {
 
     if (!userUpdated) throw new NotFoundUserException()
 
-    const formattedUser = {
-      ...user,
-      id: user.id,
-    }
-    return formattedUser
+    return user
   }
 
-  async refreshSendbirdAccessToken(userId: string) {
+  async refreshSendbirdAccessToken(userId: string): Promise<string> {
     try {
       const accessToken = await this.sendbirdService.getAccessToken(userId)
 
@@ -424,7 +422,7 @@ export class UserService {
     return true
   }
 
-  async syncUsersIndexWithAlgolia(userId: string) {
+  async syncUsersIndexWithAlgolia(userId: string): Promise<PartialUpdateObjectResponse> {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
       select: algoliaUserSelect,
