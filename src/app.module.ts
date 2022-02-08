@@ -8,11 +8,7 @@ import { CoreModule } from './core/core.module'
 import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
 import { NotificationModule } from './notification/notification.module'
-import {
-  ApolloServerPluginCacheControl,
-  ApolloServerPluginLandingPageLocalDefault,
-  ApolloServerPluginUsageReporting,
-} from 'apollo-server-core'
+import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
 import { PushNotificationService } from './core/push-notification.service'
 import { SendbirdWebhookController } from './sendbird-webhook/sendbird-webhook.controller'
 import { SchoolModule } from './school/school.module'
@@ -21,7 +17,6 @@ import { SchoolModule } from './school/school.module'
     GraphQLModule.forRoot({
       playground: false,
       plugins: [
-        ApolloServerPluginCacheControl({ defaultMaxAge: 5 }),
         ApolloServerPluginLandingPageLocalDefault(),
         process.env.NODE_ENV === 'production' &&
           ApolloServerPluginUsageReporting({
