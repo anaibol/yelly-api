@@ -101,7 +101,7 @@ export class SchoolService {
     if (school) return school
 
     const googlePlaceDetail = await getGooglePlaceDetails(googlePlaceId)
-    const cityName = await getCityNameWithCountry(googlePlaceId)
+    const cityName = await getCityNameWithCountry(googlePlaceDetail)
     const googleCity = await getGoogleCityByName(cityName)
     const city = await this.getOrCreateCity(googleCity.place_id)
 

@@ -61,8 +61,10 @@ export function getCountryName(addressComponents: google.maps.GeocoderAddressCom
   return country
 }
 
-export async function getCityNameWithCountry(googlePlaceId: string): Promise<string> {
-  const { address_components: addressComponents } = await getGooglePlaceDetails(googlePlaceId)
+export async function getCityNameWithCountry(googlePlace: google.maps.places.PlaceResult): Promise<string> {
+  if (!googlePlace?.address_components) throw new Error('No google place')
+
+  const { address_components: addressComponents } = googlePlace
 
   const cityName = getCityName(addressComponents)
 
