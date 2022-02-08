@@ -6,7 +6,7 @@ export class ExpoPushNotificationsTokenService {
   constructor(private prismaService: PrismaService) {}
 
   async create(userId: string, token: string): Promise<boolean> {
-    await this.prismaService.expoPushNotificationAccessToken.delete({
+    await this.prismaService.expoPushNotificationAccessToken.deleteMany({
       where: {
         token,
       },
