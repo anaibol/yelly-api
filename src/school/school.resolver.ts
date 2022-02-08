@@ -18,7 +18,7 @@ export class SchoolResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() school: School, @Args() postsArgs?: PostsArgs) {
+  async posts(@Parent() school: School, @Args() postsArgs: PostsArgs) {
     const { after, limit } = postsArgs
 
     const items = await this.prismaService.school.findUnique({ where: { id: school.id } }).posts({

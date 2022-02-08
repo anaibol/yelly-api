@@ -59,7 +59,7 @@ export class UserResolver {
   }
 
   @ResolveField('posts', () => PaginatedPosts)
-  async posts(@Parent() user: User, @Args() postsArgs?: PostsArgs): Promise<PaginatedPosts> {
+  async posts(@Parent() user: User, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
     const { schoolId, after, limit } = postsArgs
 
     const items = await this.prismaService.user.findUnique({ where: { id: user.id } }).posts({

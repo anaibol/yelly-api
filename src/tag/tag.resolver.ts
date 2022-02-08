@@ -46,7 +46,7 @@ export class TagResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() tag: Tag, @Args() postsArgs?: PostsArgs): Promise<PaginatedPosts> {
+  async posts(@Parent() tag: Tag, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
     const { limit, after } = postsArgs
 
     const items = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
