@@ -1,4 +1,4 @@
-import { CacheModule, forwardRef, Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { UserService } from './user.service'
 import { UserResolver } from './user.resolver'
 import { MeResolver } from './me.resolver.ts'
@@ -14,7 +14,7 @@ import { SendbirdWebhookModule } from 'src/sendbird-webhook/sendbird-webhook.mod
 import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Module({
-  imports: [CacheModule.register(), CoreModule, forwardRef(() => AuthModule), SendbirdWebhookModule],
+  imports: [CoreModule, forwardRef(() => AuthModule), SendbirdWebhookModule],
   providers: [
     UserService,
     UserResolver,

@@ -1,5 +1,4 @@
-import { Cache } from 'cache-manager'
-import { CACHE_MANAGER, Inject, UnauthorizedException, UseGuards } from '@nestjs/common'
+import { UnauthorizedException, UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
 import { SendbirdAccessToken } from './sendbirdAccessToken'
 
@@ -36,7 +35,6 @@ function validatePhoneNumberForE164(phoneNumber: string) {
 @Resolver(() => Me)
 export class MeResolver {
   constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private prismaService: PrismaService,
     private twilioService: TwilioService,
     private userService: UserService,
@@ -173,12 +171,7 @@ export class MeResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() me: Me, @Args() postsArgs?: PostsArgs) {
-    const cacheKey = 'mePosts:' + JSON.stringify({ postsArgs, me })
-    const previousResponse = await this.cacheManager.get(cacheKey)
-
-    if (previousResponse) return previousResponse
-
+  async posts(@Parent() me: Me, @Args() postsArgs: PostsArgs) {
     const { schoolId, after, limit } = postsArgs
 
     const items = await this.prismaService.user.findUnique({ where: { id: me.id } }).posts({
@@ -203,9 +196,7 @@ export class MeResolver {
     })
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
-    const response = { items, nextCursor }
-    this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
-    return response
+    return { items, nextCursor }
   }
 }

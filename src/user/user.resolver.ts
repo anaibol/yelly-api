@@ -1,5 +1,4 @@
-import { Cache } from 'cache-manager'
-import { CACHE_MANAGER, Inject, UseGuards } from '@nestjs/common'
+import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
 
 import { User } from './user.model'
@@ -20,11 +19,7 @@ import { PaginatedUsers } from 'src/post/paginated-users.model'
 
 @Resolver(() => User)
 export class UserResolver {
-  constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private userService: UserService,
-    private prismaService: PrismaService
-  ) {}
+  constructor(private userService: UserService, private prismaService: PrismaService) {}
 
   @Query(() => User, { name: 'user' })
   @UseGuards(AuthGuard)
@@ -64,12 +59,7 @@ export class UserResolver {
   }
 
   @ResolveField('posts', () => PaginatedPosts)
-  async posts(@Parent() user: User, @Args() postsArgs?: PostsArgs): Promise<PaginatedPosts> {
-    const cacheKey = 'userPosts:' + JSON.stringify({ postsArgs, user })
-    const previousResponse = await this.cacheManager.get<PaginatedPosts>(cacheKey)
-
-    if (previousResponse) return previousResponse
-
+  async posts(@Parent() user: User, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
     const { schoolId, after, limit } = postsArgs
 
     const items = await this.prismaService.user.findUnique({ where: { id: user.id } }).posts({
@@ -94,9 +84,7 @@ export class UserResolver {
     })
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
-    const response = { items, nextCursor }
-    this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
-    return response
+    return { items, nextCursor }
   }
 }

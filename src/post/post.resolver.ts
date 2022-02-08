@@ -1,4 +1,4 @@
-import { UseGuards, Inject, CACHE_MANAGER } from '@nestjs/common'
+import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
@@ -11,33 +11,25 @@ import { DeletePostInput } from './delete-post.input'
 import { PostsArgs } from './posts.args'
 import { PostArgs } from './post.args'
 import { PaginatedPosts } from './paginated-posts.model'
-import { Cache } from 'cache-manager'
 import { Post } from './post.model'
 import { CreateCommentInput } from './create-comment.input'
 
 @Resolver()
 export class PostResolver {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private postService: PostService) {}
+  constructor(private postService: PostService) {}
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
-  async posts(@Args() postsArgs?: PostsArgs) {
-    const cacheKey = 'posts:' + JSON.stringify({ postsArgs })
-    const previousResponse = await this.cacheManager.get(cacheKey)
-
-    if (previousResponse) return previousResponse
-
+  async posts(@Args() postsArgs: PostsArgs) {
     const { tag, userId, schoolId, after, limit } = postsArgs
     const { posts, nextCursor } = await this.postService.find(tag, userId, schoolId, after, limit)
-    const response = { items: posts, nextCursor }
-    this.cacheManager.set(cacheKey, response, { ttl: 5 })
 
-    return response
+    return { items: posts, nextCursor }
   }
 
   @UseGuards(AuthGuard)
   @Query(() => Post)
-  async post(@Args() PostArgs?: PostArgs) {
+  async post(@Args() PostArgs: PostArgs) {
     return this.postService.getById(PostArgs.id)
   }
 
