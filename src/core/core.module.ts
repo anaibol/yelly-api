@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotificationsToken.service'
 import { AlgoliaService } from './algolia.service'
 import { EmailService } from './email.service'
 import { PrismaService } from './prisma.service'
@@ -16,7 +17,15 @@ import TwilioService from './twilio.service'
     EmailService,
     SendbirdService,
     TwilioService,
+    ExpoPushNotificationsTokenService,
   ],
-  exports: [PrismaService, AlgoliaService, EmailService, SendbirdService, TwilioService],
+  exports: [
+    PrismaService,
+    AlgoliaService,
+    EmailService,
+    SendbirdService,
+    TwilioService,
+    ExpoPushNotificationsTokenService,
+  ],
 })
 export class CoreModule {}

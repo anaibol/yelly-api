@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common'
 import { PostComment, PostReaction } from '@prisma/client'
-// import { ExpoPushErrorReceipt } from 'expo-server-sdk'
+import { ExpoPushErrorReceipt } from 'expo-server-sdk'
 import { PrismaService } from 'src/core/prisma.service'
+import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotificationsToken.service'
 import expo from '../utils/expo'
 
 @Injectable()
 export class PushNotificationService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private expoPushNotificationTokenService: ExpoPushNotificationsTokenService
+  ) {}
 
   getPushTokensByUsersIds(usersId: string[]) {
     return this.prismaService.expoPushNotificationAccessToken.findMany({
@@ -54,7 +58,7 @@ export class PushNotificationService {
       }
     })
 
-    await expo.sendNotifications(messages)
+    await this.sendNotifications(messages, pushTokens)
 
     return {
       statusCode: 200,
@@ -86,7 +90,7 @@ export class PushNotificationService {
       }
     })
 
-    await expo.sendNotifications(messages)
+    await this.sendNotifications(messages, pushTokens)
   }
 
   async createFollowshipPushNotification({ followerId, followeeId }) {
@@ -156,6 +160,23 @@ export class PushNotificationService {
     await expo.sendNotifications(messages)
   }
 
+  async sendNotifications(messages, tokens) {
+    const results = await expo.sendNotifications(messages)
+
+    results.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        result.value.map((expoValue) => {
+          if (expoValue.status === 'error') {
+            const error = expoValue as ExpoPushErrorReceipt
+            if (error.details.error === 'DeviceNotRegistered') {
+              this.expoPushNotificationTokenService.deleteByUserAndToken(tokens[index].userId, tokens[index].token)
+            }
+          }
+        })
+      }
+    })
+  }
+
   async newLiveTag() {
     // if (process.env.NODE_ENV !== 'production') return
 
@@ -175,19 +196,6 @@ export class PushNotificationService {
       }
     })
 
-    const results = await expo.sendNotifications(messages)
-
-    // results.map((result) => {
-    // if (result.status === 'rejected') {
-    //   const error = result.reason as ExpoPushErrorReceipt
-    //   if (error.details.error === 'DeviceNotRegistered') {
-    //     this.prismaService.expoPushNotificationAccessToken.deleteMany({
-    //       where: {
-    //         token: asd.token,
-    //       }
-    //     }),
-    //   }
-    // }
-    // })
+    await this.sendNotifications(messages, allPushTokens)
   }
 }
