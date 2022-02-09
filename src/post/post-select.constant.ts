@@ -14,6 +14,8 @@ export const PostSelect = {
         select: {
           id: true,
           name: true,
+          lat: true,
+          lng: true,
           city: {
             select: {
               id: true,

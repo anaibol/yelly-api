@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql'
+import { Field, ID, ObjectType, Float } from '@nestjs/graphql'
 import { City } from 'src/user/city.model'
 import { User } from 'src/user/user.model'
 import { PaginatedPosts } from '../post/paginated-posts.model'
@@ -8,9 +8,11 @@ export class School {
   @Field(() => ID)
   id: string
   name?: string
-  googlePlaceId?: string
-  lat?: string
-  lng?: string
+  googlePlaceId?: string | null
+  @Field(() => Float)
+  lat?: number
+  @Field(() => Float)
+  lng?: number
   city?: City
   totalUsersCount?: number
   posts?: PaginatedPosts

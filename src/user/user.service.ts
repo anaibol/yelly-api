@@ -267,6 +267,8 @@ export class UserService {
             id: true,
             name: true,
             googlePlaceId: true,
+            lat: true,
+            lng: true,
             city: {
               select: {
                 id: true,

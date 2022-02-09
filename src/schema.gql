@@ -209,8 +209,8 @@ type School {
   city: City
   googlePlaceId: String
   id: ID!
-  lat: String
-  lng: String
+  lat: Float
+  lng: Float
   name: String
   posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
   totalUsersCount: Int
