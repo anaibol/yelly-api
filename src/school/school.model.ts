@@ -8,7 +8,7 @@ export class School {
   @Field(() => ID)
   id: string
   name?: string
-  googlePlaceId?: string
+  googlePlaceId?: string | null
   @Field(() => Float)
   lat?: number
   @Field(() => Float)
