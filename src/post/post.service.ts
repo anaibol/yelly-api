@@ -63,21 +63,22 @@ export class PostService {
           authorId: userId,
         },
       }),
-      ...(user.school.city.country.id && {
-        where: {
-          author: {
-            is: {
-              school: {
-                city: {
-                  country: {
-                    id: user.school.city.country.id,
+      ...(!schoolId &&
+        user.school.city.country.id && {
+          where: {
+            author: {
+              is: {
+                school: {
+                  city: {
+                    country: {
+                      id: user.school.city.country.id,
+                    },
                   },
                 },
               },
             },
           },
-        },
-      }),
+        }),
       ...(schoolId && {
         where: {
           author: {
