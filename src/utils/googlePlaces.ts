@@ -4,7 +4,7 @@ const GOOGLE_MAPS_API = 'https://maps.googleapis.com/maps/api/'
 
 type AddressComponents = {
   country: string
-  countryCode: string
+  short_name: string
   locality: string
   postal_town: string
   administrative_area_level_3: string
@@ -36,7 +36,7 @@ export function getAddressComponents(addressComponents: google.maps.GeocoderAddr
 
   return {
     country: country?.long_name,
-    countryCode: country?.short_name,
+    short_name: country?.short_name,
     locality: locality?.long_name,
     postal_town: postal_town?.long_name,
     administrative_area_level_3: administrative_area_level_3?.long_name,
@@ -70,8 +70,8 @@ export function getCountryName(addressComponents: google.maps.GeocoderAddressCom
 }
 
 export function getCountryLanguageCode(addressComponents: google.maps.GeocoderAddressComponent[]): string {
-  const { countryCode } = getAddressComponents(addressComponents)
-  return languageCodes[countryCode.toUpperCase()] || ''
+  const { short_name } = getAddressComponents(addressComponents)
+  return languageCodes[short_name.toUpperCase()] || ''
 }
 
 export async function getCityNameWithCountry(googlePlace: google.maps.places.PlaceResult): Promise<string> {
