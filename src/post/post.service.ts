@@ -29,6 +29,25 @@ export class PostService {
   }
 
   async find(tagText, userId, schoolId: string, currentCursor, limit = DEFAULT_LIMIT) {
+    const user = await this.prismaService.user.findFirst({
+      where: { id: userId },
+      select: {
+        school: {
+          select: {
+            city: {
+              select: {
+                country: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
     const posts = await this.prismaService.post.findMany({
       ...(tagText && {
         where: {
@@ -44,6 +63,22 @@ export class PostService {
           authorId: userId,
         },
       }),
+      ...(!schoolId &&
+        user.school.city.country.id && {
+          where: {
+            author: {
+              is: {
+                school: {
+                  city: {
+                    country: {
+                      id: user.school.city.country.id,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
       ...(schoolId && {
         where: {
           author: {

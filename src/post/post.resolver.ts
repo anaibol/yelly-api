@@ -20,9 +20,9 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
-  async posts(@Args() postsArgs: PostsArgs) {
+  async posts(@Args() postsArgs: PostsArgs, @CurrentUser() authUser: AuthUser) {
     const { tag, userId, schoolId, after, limit } = postsArgs
-    const { posts, nextCursor } = await this.postService.find(tag, userId, schoolId, after, limit)
+    const { posts, nextCursor } = await this.postService.find(tag, authUser.id, schoolId, after, limit)
 
     return { items: posts, nextCursor }
   }
