@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { algoliaSchoolSelect } from 'src/utils/algolia'
 import { PrismaService } from '../core/prisma.service'
-import { getCityNameWithCountry, getGoogleCityByName, getGooglePlaceDetails } from '../utils/googlePlaces'
+import {
+  getCityNameWithCountry,
+  getCountryLanguageCode,
+  getGoogleCityByName,
+  getGooglePlaceDetails,
+} from '../utils/googlePlaces'
 import { SchoolIndexAlgoliaInterface } from './school-index-algolia.interface'
 
 @Injectable()
@@ -104,11 +109,12 @@ export class SchoolService {
     const cityName = await getCityNameWithCountry(googlePlaceDetail)
     const googleCity = await getGoogleCityByName(cityName)
     const city = await this.getOrCreateCity(googleCity.place_id)
-
+    const countryLanguageCode = await getCountryLanguageCode(googlePlaceDetail.address_components)
+    const googlePlaceDetailTranslated = await getGooglePlaceDetails(googlePlaceId, countryLanguageCode)
     const { lat, lng } = googlePlaceDetail.geometry.location
 
     const schoolData = {
-      name: googlePlaceDetail.name,
+      name: googlePlaceDetailTranslated.name,
       googlePlaceId: googlePlaceDetail.place_id,
       lat: typeof lat === 'function' ? lat() : lat,
       lng: typeof lng === 'function' ? lng() : lng,

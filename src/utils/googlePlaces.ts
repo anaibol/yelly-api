@@ -4,11 +4,18 @@ const GOOGLE_MAPS_API = 'https://maps.googleapis.com/maps/api/'
 
 type AddressComponents = {
   country: string
+  short_name: string
   locality: string
   postal_town: string
   administrative_area_level_3: string
   administrative_area_level_2: string
   administrative_area_level_1: string
+}
+
+const languageCodes = {
+  US: 'en',
+  FR: 'fr',
+  ES: 'es',
 }
 
 export function getAddressComponents(addressComponents: google.maps.GeocoderAddressComponent[]): AddressComponents {
@@ -29,6 +36,7 @@ export function getAddressComponents(addressComponents: google.maps.GeocoderAddr
 
   return {
     country: country?.long_name,
+    short_name: country?.short_name,
     locality: locality?.long_name,
     postal_town: postal_town?.long_name,
     administrative_area_level_3: administrative_area_level_3?.long_name,
@@ -61,6 +69,11 @@ export function getCountryName(addressComponents: google.maps.GeocoderAddressCom
   return country
 }
 
+export function getCountryLanguageCode(addressComponents: google.maps.GeocoderAddressComponent[]): string {
+  const { short_name } = getAddressComponents(addressComponents)
+  return languageCodes[short_name.toUpperCase()] || ''
+}
+
 export async function getCityNameWithCountry(googlePlace: google.maps.places.PlaceResult): Promise<string> {
   if (!googlePlace?.address_components) throw new Error('No google place')
 
@@ -71,10 +84,14 @@ export async function getCityNameWithCountry(googlePlace: google.maps.places.Pla
   return cityName + getCountryName(addressComponents)
 }
 
-export async function getGooglePlaceDetails(googlePlaceId: string) {
-  const response = await axios.get(
-    `${GOOGLE_MAPS_API}place/details/json?language=fr&place_id=` + googlePlaceId + '&key=' + process.env.GOOGLE_API_KEY
-  )
+export async function getGooglePlaceDetails(googlePlaceId: string, language?: string) {
+  const response = await axios.get(`${GOOGLE_MAPS_API}place/details/json`, {
+    params: {
+      language,
+      place_id: googlePlaceId,
+      key: process.env.GOOGLE_API_KEY,
+    },
+  })
 
   if (response.data.status !== 'OK' || typeof response.data.result == 'undefined') return null
 
