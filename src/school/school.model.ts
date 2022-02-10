@@ -9,10 +9,12 @@ export class School {
   id: string
   name?: string
   googlePlaceId?: string | null
+
   @Field(() => Float)
-  lat?: number
+  lat?: number | null
   @Field(() => Float)
-  lng?: number
+  lng?: number | null
+
   city?: City
   totalUsersCount?: number
   posts?: PaginatedPosts
