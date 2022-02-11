@@ -54,7 +54,11 @@ export class AuthService {
         refreshToken: this.jwtService.sign({ sub: userId, role: refreshRole }),
       }
     } catch (error) {
-      throw new UnauthorizedException()
+      throw new UnauthorizedException(
+        JSON.stringify({
+          refreshToken,
+        })
+      )
     }
   }
 }
