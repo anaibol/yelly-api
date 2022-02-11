@@ -41,7 +41,9 @@ export class AuthService {
 
   async refreshAccessToken(refreshToken: string): Promise<AccessToken> {
     try {
-      const { sub: userId, role } = await this.jwtService.verify(refreshToken)
+      const { sub: userId, role } = await this.jwtService.verify(refreshToken, {
+        ignoreExpiration: true,
+      })
 
       // TODO: uncomment when front supports refresh access token
       // if (role !== refreshRole) throw new Error('Invalid refresh token role')
