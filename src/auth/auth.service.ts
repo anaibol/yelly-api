@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
 
 import { JwtService } from '@nestjs/jwt'
@@ -43,14 +43,18 @@ export class AuthService {
   }
 
   async refreshAccessToken(refreshToken: string): Promise<AccessToken> {
-    const { sub: userId, role } = await this.jwtService.verify(refreshToken)
+    try {
+      const { sub: userId, role } = await this.jwtService.verify(refreshToken)
 
-    // TODO: uncomment when front supports refresh access token
-    // if (role !== refreshRole) throw new Error('Invalid refresh token role')
+      // TODO: uncomment when front supports refresh access token
+      // if (role !== refreshRole) throw new Error('Invalid refresh token role')
 
-    return {
-      accessToken: this.jwtService.sign({ sub: userId, role: 'user' }),
-      refreshToken: this.jwtService.sign({ sub: userId, role: refreshRole }),
+      return {
+        accessToken: this.jwtService.sign({ sub: userId, role: 'user' }),
+        refreshToken: this.jwtService.sign({ sub: userId, role: refreshRole }),
+      }
+    } catch (error) {
+      throw new UnauthorizedException()
     }
   }
 }
