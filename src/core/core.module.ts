@@ -5,6 +5,8 @@ import { EmailService } from './email.service'
 import { PrismaService } from './prisma.service'
 import { SendbirdService } from './sendbird.service'
 import TwilioService from './twilio.service'
+import { Neo4jService } from './neo4j.service'
+import { PushNotificationService } from './push-notification.service'
 
 @Module({
   providers: [
@@ -18,6 +20,8 @@ import TwilioService from './twilio.service'
     SendbirdService,
     TwilioService,
     ExpoPushNotificationsTokenService,
+    Neo4jService,
+    PushNotificationService,
   ],
   exports: [
     PrismaService,
@@ -26,6 +30,8 @@ import TwilioService from './twilio.service'
     SendbirdService,
     TwilioService,
     ExpoPushNotificationsTokenService,
+    Neo4jService,
+    PushNotificationService,
   ],
 })
 export class CoreModule {}

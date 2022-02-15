@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { Twilio } from 'twilio'
+import { VerificationInstance } from 'twilio/lib/rest/verify/v2/service/verification'
 
 @Injectable()
 export default class TwilioService {
@@ -9,7 +10,7 @@ export default class TwilioService {
     this.twilioClient = new Twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
   }
 
-  initPhoneNumberVerification(phoneNumber: string, locale: string) {
+  initPhoneNumberVerification(phoneNumber: string, locale: string): Promise<VerificationInstance> {
     return this.twilioClient.verify
       .services(process.env.TWILIO_VERIFICATION_SERVICE_SID)
       .verifications.create({ to: phoneNumber, channel: 'sms', locale })

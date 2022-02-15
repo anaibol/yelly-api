@@ -1,32 +1,30 @@
 import { ID, Field, ObjectType } from '@nestjs/graphql'
-import { User } from './user.model'
 import { School } from '../school/school.model'
 import { Training } from './training.model'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
+import { PaginatedUsers } from 'src/post/paginated-users.model'
 
 @ObjectType()
 export class Me {
   @Field(() => ID)
   id: string
-  email?: string
-  phoneNumber?: string
-  firstName?: string
-  lastName?: string
-  birthdate?: Date
-  pictureId?: string
-  avatar3dId?: string
-  snapchat?: string
-  instagram?: string
+  email?: string | null
+  phoneNumber?: string | null
+  firstName?: string | null
+  lastName?: string | null
+  birthdate?: Date | null
+  pictureId?: string | null
+  avatar3dId?: string | null
+  snapchat?: string | null
+  instagram?: string | null
   isFilled?: boolean
-  sendbirdAccessToken?: string
+  sendbirdAccessToken?: string | null
   expoPushNotificationTokens?: string[]
-  about?: string
+  about?: string | null
   locale?: string
-  training?: Training
-  school?: School
+  training?: Training | null
+  school?: School | null
   posts?: PaginatedPosts
-  followersCount?: number
-  followeesCount?: number
-  followees?: User[]
-  followers?: User[]
+  friends?: PaginatedUsers
+  friendsCount?: number
 }

@@ -6,7 +6,6 @@ import { User } from './user.model'
 import { PaginationArgs } from '../common/pagination.args'
 import { PostsArgs } from '../post/posts.args'
 
-import { ToggleFollowInput } from './toggle-follow.input'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 
@@ -16,6 +15,7 @@ import { PrismaService } from 'src/core/prisma.service'
 import { PostSelect } from 'src/post/post-select.constant'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
+import { FriendRequest } from './friendRequest.model'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -28,34 +28,79 @@ export class UserResolver {
   }
 
   @UseGuards(AuthGuard)
+  @Mutation(() => FriendRequest)
+  createFriendRequest(
+    @Args('otherUserId') otherUserId: string,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<FriendRequest> {
+    return this.userService.createFriendRequest(authUser.id, otherUserId)
+  }
+
+  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  toggleFollowUser(
-    @Args('input') toggleFollowInput: ToggleFollowInput,
+  acceptFriendRequest(
+    @Args('friendRequestId') friendRequestId: string,
     @CurrentUser() authUser: AuthUser
   ): Promise<boolean> {
-    return this.userService.toggleFollow(authUser.id, toggleFollowInput.otherUserId, toggleFollowInput.value)
+    return this.userService.acceptFriendRequest(authUser.id, friendRequestId)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  declineFriendRequest(
+    @Args('friendRequestId') friendRequestId: string,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<boolean> {
+    return this.userService.declineFriendRequest(authUser.id, friendRequestId)
   }
 
   @ResolveField()
-  async followers(@Parent() user: User, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getUserFollowers(user.id, paginationArgs.after, paginationArgs.limit)
+  async friends(@Parent() user: User, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
+    return this.userService.getFriends(user.id, paginationArgs.after, paginationArgs.limit)
   }
 
   @ResolveField()
-  async followees(@Parent() user: User, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getUserFollowees(user.id, paginationArgs.after, paginationArgs.limit)
+  async friendsCount(@Parent() user: User): Promise<number> {
+    return this.userService.getFriendsCount(user.id)
+  }
+
+  @ResolveField()
+  commonFriendsCount(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<number> {
+    return this.userService.getCommonFriendsCount(authUser.id, user.id)
   }
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async isFollowingAuthUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.isFollowingAuthUser(user.id, authUser.id)
+  async commonFriends(
+    @Parent() user: User,
+    @CurrentUser() authUser: AuthUser,
+    @Args() paginationArgs: PaginationArgs
+  ): Promise<PaginatedUsers> {
+    return this.userService.getCommonFriends(authUser.id, user.id, paginationArgs.after, paginationArgs.limit)
   }
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async isAuthUserFollowing(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.isAuthUserFollowing(authUser.id, user.id)
+  isAuthUserFriend(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.isFriend(authUser.id, user.id)
+  }
+
+  @UseGuards(AuthGuard)
+  @ResolveField()
+  async authUserFriendRequestFromUser(
+    @Parent() user: User,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<FriendRequest | null> {
+    return this.userService.getFriendRequest(user.id, authUser.id)
+  }
+
+  @UseGuards(AuthGuard)
+  @ResolveField()
+  async authUserFriendRequestToUser(
+    @Parent() user: User,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<FriendRequest | null> {
+    return this.userService.getFriendRequest(authUser.id, user.id)
   }
 
   @ResolveField('posts', () => PaginatedPosts)

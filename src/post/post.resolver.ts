@@ -64,14 +64,14 @@ export class PostResolver {
   @Mutation(() => Boolean)
   async createOrUpdatePostReaction(
     @Args('input') createPostReactionData: CreateOrUpdatePostReactionInput,
-    @CurrentUser() authUser
+    @CurrentUser() authUser: AuthUser
   ) {
     return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser.id)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async createPostComment(@Args('input') createPostCommentData: CreateCommentInput, @CurrentUser() authUser) {
+  async createPostComment(@Args('input') createPostCommentData: CreateCommentInput, @CurrentUser() authUser: AuthUser) {
     return this.postService.createComment(createPostCommentData, authUser.id)
   }
 }

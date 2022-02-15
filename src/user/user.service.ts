@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { DEFAULT_LIMIT } from '../common/pagination.constant'
 import { AlgoliaService } from '../core/algolia.service'
+import { Neo4jService } from './../core/neo4j.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { SendbirdService } from '../core/sendbird.service'
@@ -11,10 +12,11 @@ import { UpdateUserInput } from './update-user.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
-import { NotificationService } from 'src/notification/notification.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
-import { PartialUpdateObjectResponse } from '@algolia/client-search'
-import { User as PrismaUser } from '@prisma/client'
+import { Me } from './me.model'
+import { PaginatedUsers } from 'src/post/paginated-users.model'
+import { FriendRequest } from './friendRequest.model'
+import { SendbirdAccessToken } from './sendbirdAccessToken'
 
 @Injectable()
 export class UserService {
@@ -25,11 +27,11 @@ export class UserService {
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
     private sendbirdService: SendbirdService,
-    private notificationService: NotificationService,
-    private pushNotificationService: PushNotificationService
+    private pushNotificationService: PushNotificationService,
+    private neo4jService: Neo4jService
   ) {}
 
-  async hasUserPostedOnTag(userId, tagText): Promise<boolean> {
+  async hasUserPostedOnTag(userId: string, tagText: string): Promise<boolean> {
     const post = await this.prismaService.post.findFirst({
       select: {
         id: true,
@@ -49,10 +51,7 @@ export class UserService {
     return post != null
   }
 
-  findByEmail(email: string): Promise<{
-    id: string
-    password: string
-  }> {
+  findByEmail(email: string): Promise<User | null> {
     return this.prismaService.user.findUnique({
       where: {
         email,
@@ -64,7 +63,7 @@ export class UserService {
     })
   }
 
-  async findOne(userId) {
+  async findOne(userId: string): Promise<User> {
     const user = await this.prismaService.user.findUnique({
       where: {
         id: userId,
@@ -79,12 +78,6 @@ export class UserService {
         about: true,
         instagram: true,
         snapchat: true,
-        _count: {
-          select: {
-            followeesFollowships: true,
-            followersFollowships: true,
-          },
-        },
         school: {
           select: {
             id: true,
@@ -114,130 +107,126 @@ export class UserService {
 
     if (!user) throw new NotFoundUserException()
 
+    return user
+  }
+
+  async getFriendsCount(userId: string): Promise<number> {
+    const OgmUser = this.neo4jService.ogm.model('User')
+
+    const result = await OgmUser.find({
+      where: {
+        id: userId,
+      },
+      selectionSet: `
+        {
+          friendsAggregate {
+            count
+          }
+        }
+      `,
+    })
+
+    if (!result.length) return 0
+
+    if (!result[0].friendsAggregate) throw new Error('No error')
+
+    return result[0].friendsAggregate?.count
+  }
+
+  async getCommonFriendsCount(userId: string, otherUserId: string): Promise<number> {
+    const session = this.neo4jService.driver.session()
+
+    const result = await session.run(
+      `MATCH (user:User { id: $userId })-[:IS_FRIEND]->(mutualFriends)-[:IS_FRIEND]->(otherUser:User { id : $otherUserId }) RETURN count(mutualFriends) as count`,
+      { userId, otherUserId }
+    )
+
+    return result.records[0].get('count').toNumber()
+  }
+
+  // if (!result[0].friendsAggregate) throw new Error('No error')
+
+  async getFriends(userId: string, after?: string, limit = DEFAULT_LIMIT): Promise<PaginatedUsers> {
+    const OgmUser = this.neo4jService.ogm.model('User')
+
+    // sort: [
+    //   {
+    //     createdAt: DESC
+    //   }
+    // ]
+    const result = await OgmUser.find({
+      where: {
+        id: userId,
+      },
+      selectionSet: `
+        {
+          friendsConnection(first: ${limit}) {
+            edges {
+              node {
+                id
+                firstName
+                lastName
+                pictureId
+              }
+            }
+            pageInfo {
+              endCursor
+              hasNextPage
+            }
+            totalCount
+          }
+        }
+      `,
+    })
+
     return {
-      ...user,
-      followersCount: user._count.followeesFollowships,
-      followeesCount: user._count.followersFollowships,
+      items: result[0].friendsConnection.edges.map(({ node }) => ({
+        id: node.id,
+        firstName: node.firstName,
+        lastName: node.lastName,
+        pictureId: node.pictureId,
+      })),
+      nextCursor: result[0].friendsConnection.pageInfo.endCursor || '',
     }
   }
 
-  async getUserFollowers(userId, currentCursor, limit = DEFAULT_LIMIT) {
-    const followers = await this.prismaService.user
-      .findUnique({
-        where: {
-          id: userId,
-        },
-      })
-      .followeesFollowships({
-        ...(currentCursor && {
-          cursor: {
-            createdAt: new Date(+currentCursor).toISOString(),
-          },
-          skip: 1,
-        }),
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: limit,
-        select: {
-          id: true,
-          createdAt: true,
-          follower: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              pictureId: true,
-              school: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-        },
-      })
-
-    const mappedFollowers = followers.map(({ follower, createdAt }) => ({ ...follower, createdAt }))
-
-    const nextCursor = mappedFollowers.length === limit ? mappedFollowers[limit - 1].createdAt.getTime().toString() : ''
-
-    return { items: mappedFollowers, nextCursor }
-  }
-
-  async getUserFollowees(userId, currentCursor, limit = DEFAULT_LIMIT) {
-    const followees = await this.prismaService.user
-      .findUnique({
-        where: {
-          id: userId,
-        },
-      })
-      .followeesFollowships({
-        ...(currentCursor && {
-          cursor: {
-            createdAt: new Date(+currentCursor).toISOString(),
-          },
-          skip: 1,
-        }),
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: limit,
-        select: {
-          id: true,
-          createdAt: true,
-          followee: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              pictureId: true,
-              school: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-        },
-      })
-
-    const mappedFollowees = followees.map(({ followee, createdAt }) => ({ ...followee, createdAt }))
-
-    const nextCursor = mappedFollowees.length === limit ? mappedFollowees[limit - 1].createdAt.getTime().toString() : ''
-
-    return { items: mappedFollowees, nextCursor }
-  }
-
-  async isFollowingAuthUser(id: string, authUserId: string): Promise<boolean> {
-    const result = await this.prismaService.followship.findUnique({
+  async isFriend(userId: string, otherUserId: string): Promise<boolean> {
+    const friend = await this.prismaService.friend.findUnique({
       where: {
-        followerId_followeeId: {
-          followerId: id,
-          followeeId: authUserId,
+        userId_otherUserId: {
+          userId,
+          otherUserId,
         },
       },
     })
 
-    return !!result
+    return !!friend
   }
 
-  async isAuthUserFollowing(authUserId: string, id: string): Promise<boolean> {
-    const result = await this.prismaService.followship.findUnique({
+  async getFriendRequest(fromUserId: string, toUserId: string): Promise<FriendRequest | null> {
+    return this.prismaService.friendRequest.findUnique({
+      select: {
+        id: true,
+        status: true,
+        fromUser: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            pictureId: true,
+          },
+        },
+      },
       where: {
-        followerId_followeeId: {
-          followerId: authUserId,
-          followeeId: id,
+        fromUserId_toUserId: {
+          fromUserId,
+          toUserId,
         },
       },
     })
-
-    return !!result
   }
 
-  async findMe(userId: string) {
+  async findMe(userId: string): Promise<Me> {
     const user = await this.prismaService.user.findUnique({
       where: {
         id: userId,
@@ -256,12 +245,6 @@ export class UserService {
         expoPushNotificationTokens: true,
         instagram: true,
         snapchat: true,
-        _count: {
-          select: {
-            followeesFollowships: true,
-            followersFollowships: true,
-          },
-        },
         school: {
           select: {
             id: true,
@@ -281,11 +264,6 @@ export class UserService {
                 },
               },
             },
-            _count: {
-              select: {
-                users: true,
-              },
-            },
           },
         },
         training: {
@@ -303,15 +281,6 @@ export class UserService {
 
     return {
       ...user,
-      // THIS IS THE OPOSITE
-      followeesCount: user._count.followersFollowships,
-      followersCount: user._count.followeesFollowships,
-      ...(user.school && {
-        school: {
-          ...user.school,
-          totalUsersCount: user.school?._count.users,
-        },
-      }),
       expoPushNotificationTokens: user.expoPushNotificationTokens.map(({ token }) => token),
     }
   }
@@ -335,7 +304,7 @@ export class UserService {
     return true
   }
 
-  async resetPassword(password: string, resetToken: string): Promise<Partial<PrismaUser>> {
+  async resetPassword(password: string, resetToken: string): Promise<User> {
     const user = await this.prismaService.user.findFirst({
       where: {
         resetToken,
@@ -365,19 +334,20 @@ export class UserService {
     return user
   }
 
-  async refreshSendbirdAccessToken(userId: string): Promise<string> {
+  async refreshSendbirdAccessToken(userId: string): Promise<SendbirdAccessToken> {
     try {
-      const accessToken = await this.sendbirdService.getAccessToken(userId)
+      const sendbirdAccessToken = await this.sendbirdService.getAccessToken(userId)
 
-      this.prismaService.user.update({
+      await this.prismaService.user.update({
         where: {
           id: userId,
         },
         data: {
-          sendbirdAccessToken: accessToken,
+          sendbirdAccessToken,
         },
       })
-      return accessToken
+
+      return { sendbirdAccessToken }
     } catch {
       throw new BadRequestException('Sendbird error')
     }
@@ -401,34 +371,206 @@ export class UserService {
     }
   }
 
-  async toggleFollow(authUserId: string, otherUserId: string, value: boolean) {
-    const followshipData = {
-      followerId: authUserId,
-      followeeId: otherUserId,
-    }
-
-    if (value) {
-      const followship = await this.prismaService.followship.create({
-        data: followshipData,
-      })
-      this.notificationService.createFollowshipNotification(otherUserId, followship.id)
-      this.pushNotificationService.createFollowshipPushNotification(followshipData)
-    } else {
-      await this.prismaService.followship.delete({
-        where: {
-          followerId_followeeId: followshipData,
+  async createFriendRequest(userId: string, otherUserId: string): Promise<FriendRequest> {
+    const friendRequest = await this.prismaService.friendRequest.create({
+      data: {
+        fromUser: {
+          connect: {
+            id: userId,
+          },
         },
-      })
+        toUser: {
+          connect: {
+            id: otherUserId,
+          },
+        },
+        notification: {
+          create: {
+            userId: otherUserId,
+          },
+        },
+      },
+    })
+
+    this.pushNotificationService.createFriendRequestPushNotification(friendRequest)
+
+    return friendRequest
+  }
+
+  async getCommonFriends(
+    userId: string,
+    otherUserId: string,
+    after?: string,
+    limit = DEFAULT_LIMIT
+  ): Promise<PaginatedUsers> {
+    const session = this.neo4jService.driver.session()
+    // SKIP
+    // LIMIT
+    const result = await session.run(
+      `MATCH (user:User { id: $userId })-[:IS_FRIEND]->(mutualFriends)-[:IS_FRIEND]->(otherUser:User { id : $otherUserId }) RETURN mutualFriends`,
+      { userId, otherUserId }
+    )
+
+    return {
+      items: result.records.length ? result.records.map((node) => node.get('mutualFriends').properties) : [],
+      nextCursor: '',
     }
+  }
+
+  async declineFriendRequest(authUserId: string, friendRequestId: string): Promise<boolean> {
+    const exists = await this.prismaService.friendRequest.findFirst({
+      where: {
+        id: friendRequestId,
+        toUserId: authUserId,
+      },
+    })
+
+    if (!exists) return false
+
+    await this.prismaService.friendRequest.update({
+      where: {
+        id: friendRequestId,
+      },
+      data: {
+        status: 'DECLINED',
+        notification: {
+          delete: true,
+        },
+      },
+    })
 
     return true
   }
 
-  async syncUsersIndexWithAlgolia(userId: string): Promise<PartialUpdateObjectResponse> {
+  async acceptFriendRequest(authUserId: string, friendRequestId: string): Promise<boolean> {
+    const friendRequest = await this.prismaService.friendRequest.findFirst({
+      where: {
+        id: friendRequestId,
+        toUserId: authUserId,
+      },
+    })
+
+    if (!friendRequest) return false
+
+    const { fromUserId, toUserId } = friendRequest
+
+    await this.createFriendship(fromUserId, toUserId)
+
+    await this.prismaService.friendRequest.update({
+      where: {
+        id: friendRequestId,
+      },
+      data: {
+        status: 'ACCEPTED',
+        notification: {
+          delete: true,
+          create: {
+            userId: fromUserId,
+          },
+        },
+      },
+    })
+
+    this.pushNotificationService.createFriendRequestAcceptedPushNotification(friendRequest)
+
+    return true
+  }
+
+  async createFriendship(userId: string, otherUserId: string): Promise<boolean> {
+    const OgmUser = this.neo4jService.ogm.model('User')
+
+    await Promise.all([
+      this.prismaService.friend.createMany({
+        data: [
+          {
+            userId,
+            otherUserId,
+          },
+          {
+            userId: otherUserId,
+            otherUserId: userId,
+          },
+        ],
+      }),
+      OgmUser.update({
+        where: {
+          id: userId,
+        },
+        connect: {
+          friends: [
+            {
+              where: {
+                node: {
+                  id: otherUserId,
+                },
+              },
+            },
+          ],
+        },
+      }),
+      OgmUser.update({
+        where: {
+          id: otherUserId,
+        },
+        connect: {
+          friends: [
+            {
+              where: {
+                node: {
+                  id: userId,
+                },
+              },
+            },
+          ],
+        },
+      }),
+    ])
+
+    return true
+  }
+
+  deleteFriendship(userId: string, otherUserId: string) {
+    return Promise.all([
+      this.prismaService.friend.delete({
+        where: {
+          userId_otherUserId: {
+            userId: userId,
+            otherUserId: otherUserId,
+          },
+        },
+      }),
+      this.prismaService.friend.delete({
+        where: {
+          userId_otherUserId: {
+            userId: otherUserId,
+            otherUserId: userId,
+          },
+        },
+      }),
+    ])
+    // return this.prismaService.friend.deleteMany({
+    //   where: {
+    //     OR: [
+    //       {
+    //         userId: userId,
+    //         otherUserId: otherUserId,
+    //       },
+    //       {
+    //         userId: otherUserId,
+    //         otherUserId: userId,
+    //       },
+    //     ],
+    //   },
+    // })
+  }
+
+  async syncUsersIndexWithAlgolia(userId: string) {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
       select: algoliaUserSelect,
     })
+
+    if (!user) throw new Error('No user')
 
     const usersIndex = this.algoliaService.initIndex('USERS')
 
@@ -456,20 +598,17 @@ export class UserService {
     return { id: user.id }
   }
 
-  async updateMe(updateUserData: UpdateUserInput, userId: string): Promise<User> {
-    const schoolData =
-      updateUserData.schoolGooglePlaceId && (await this.schoolService.getOrCreate(updateUserData.schoolGooglePlaceId))
+  async update(userId: string, data: UpdateUserInput): Promise<User> {
+    const schoolData = data.schoolGooglePlaceId && (await this.schoolService.getOrCreate(data.schoolGooglePlaceId))
 
-    const prevSchoolData =
-      schoolData &&
-      (await this.prismaService.user.findUnique({
-        where: { id: userId },
-        select: {
-          schoolId: true,
-        },
-      }))
+    const prevSchoolData = await this.prismaService.user.findUnique({
+      where: { id: userId },
+    })
 
     const updatedUser = await this.prismaService.user.update({
+      where: {
+        id: userId,
+      },
       select: {
         id: true,
         isFilled: true,
@@ -508,21 +647,18 @@ export class UserService {
           },
         },
       },
-      where: {
-        id: userId,
-      },
       data: {
-        firstName: updateUserData.firstName,
-        lastName: updateUserData.lastName,
-        email: updateUserData.email,
-        password: updateUserData.password,
-        birthdate: updateUserData.birthdate,
-        instagram: updateUserData.instagram,
-        snapchat: updateUserData.snapchat,
-        pictureId: updateUserData.pictureId,
-        avatar3dId: updateUserData.avatar3dId,
-        about: updateUserData.about,
-        isFilled: updateUserData.isFilled,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+        birthdate: data.birthdate,
+        instagram: data.instagram,
+        snapchat: data.snapchat,
+        pictureId: data.pictureId,
+        avatar3dId: data.avatar3dId,
+        about: data.about,
+        isFilled: data.isFilled,
         ...(schoolData && {
           school: {
             connect: {
@@ -530,14 +666,14 @@ export class UserService {
             },
           },
         }),
-        ...(updateUserData.trainingName && {
+        ...(data.trainingName && {
           training: {
             connectOrCreate: {
               where: {
-                name: updateUserData.trainingName,
+                name: data.trainingName,
               },
               create: {
-                name: updateUserData.trainingName,
+                name: data.trainingName,
               },
             },
           },
@@ -545,9 +681,11 @@ export class UserService {
       },
     })
 
-    if (updateUserData.isFilled) {
+    if (!updatedUser) throw new NotFoundUserException()
+
+    if (data.isFilled) {
       try {
-        const sendbirdAccessToken = await this.sendbirdService.createUser(updatedUser)
+        const sendbirdAccessToken = updatedUser && (await this.sendbirdService.createUser(updatedUser))
 
         await this.prismaService.user.update({
           where: {
@@ -559,18 +697,43 @@ export class UserService {
         })
         updatedUser.sendbirdAccessToken = sendbirdAccessToken
         this.syncUsersIndexWithAlgolia(userId)
+
+        const OgmUser = this.neo4jService.ogm.model('User')
+
+        await OgmUser.create({
+          input: [
+            {
+              id: updatedUser.id,
+              firstName: updatedUser.firstName,
+              lastName: updatedUser.lastName,
+              pictureId: updatedUser.pictureId,
+            },
+          ],
+        })
       } catch (error) {
+        console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
     } else if (updatedUser.isFilled) {
       this.updateSenbirdUser(updatedUser)
       this.syncUsersIndexWithAlgolia(userId)
+
+      const OgmUser = this.neo4jService.ogm.model('User')
+
+      await OgmUser.update({
+        where: { id: userId },
+        update: {
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          pictureId: updatedUser.pictureId,
+        },
+      })
     }
 
-    if (schoolData?.id) {
+    if (schoolData) {
       this.schoolService.syncAlgoliaSchool(schoolData.id)
 
-      if (prevSchoolData?.schoolId && prevSchoolData.schoolId !== schoolData.id) {
+      if (prevSchoolData && prevSchoolData.schoolId && prevSchoolData.schoolId !== schoolData.id) {
         this.schoolService.syncAlgoliaSchool(prevSchoolData.schoolId)
       }
     }
@@ -578,7 +741,7 @@ export class UserService {
     return updatedUser
   }
 
-  async updateSenbirdUser(user) {
+  async updateSenbirdUser(user: User): Promise<void> {
     if (user.firstName || user.lastName || user.pictureId) {
       await this.sendbirdService.updateUser({
         id: user.id,

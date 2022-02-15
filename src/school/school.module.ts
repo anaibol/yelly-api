@@ -8,19 +8,10 @@ import { SchoolResolver } from './school.resolver'
 import { SchoolService } from './school.service'
 import { TagService } from 'src/tag/tag.service'
 import { NotificationService } from 'src/notification/notification.service'
-import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Module({
   imports: [CoreModule, AuthModule, UserModule],
-  providers: [
-    PostService,
-    PostResolver,
-    SchoolResolver,
-    SchoolService,
-    TagService,
-    NotificationService,
-    PushNotificationService,
-  ],
+  providers: [PostService, PostResolver, SchoolResolver, SchoolService, TagService, NotificationService],
   exports: [SchoolService],
 })
 export class SchoolModule {}

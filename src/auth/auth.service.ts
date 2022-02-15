@@ -5,17 +5,17 @@ import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { AccessToken } from 'src/user/accessToken.model'
 
-export type AuthUser = { id: string } | null
+export type AuthUser = { id: string }
 
 const refreshRole = 'refresh'
 
 @Injectable()
 export class AuthService {
   constructor(private prismaService: PrismaService, private readonly jwtService: JwtService) {}
-  async validateUser(email: string, password: string): Promise<AuthUser> {
+  async validateUser(email: string, password: string): Promise<AuthUser | null> {
     const user = await this.prismaService.user.findUnique({ where: { email }, select: { password: true, id: true } })
 
-    if (!user) return null
+    if (!user?.password) return null
 
     const hash = user.password.replace('$2y$', '$2b$')
     if (!(await bcrypt.compare(password, hash))) return null
@@ -27,7 +27,7 @@ export class AuthService {
     const payload = { sub: userId, role: 'user' }
 
     return this.jwtService.sign(payload, {
-      expiresIn: '24h',
+      expiresIn: '1d',
     })
   }
 

@@ -10,6 +10,7 @@ import { CreateCommentInput } from './create-comment.input'
 import { PostSelect } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { SendbirdService } from 'src/core/sendbird.service'
+import dates from 'src/utils/dates'
 
 @Injectable()
 export class PostService {
@@ -28,25 +29,31 @@ export class PostService {
     return true
   }
 
-  async find(tagText, userId, schoolId: string, currentCursor, limit = DEFAULT_LIMIT) {
-    const user = await this.prismaService.user.findFirst({
-      where: { id: userId },
-      select: {
-        school: {
-          select: {
-            city: {
-              select: {
-                country: {
-                  select: {
-                    id: true,
+  async find(tagText?: string, userId?: string, schoolId?: string, currentCursor?: string, limit = DEFAULT_LIMIT) {
+    const user =
+      !schoolId &&
+      (await this.prismaService.user.findFirst({
+        where: { id: userId },
+        select: {
+          birthdate: true,
+          school: {
+            select: {
+              city: {
+                select: {
+                  country: {
+                    select: {
+                      id: true,
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
-    })
+      }))
+
+    const userAge = user && user.birthdate && dates.getAge(user.birthdate)
+    const datesRanges = userAge && dates.getDateRanges(userAge)
 
     const posts = await this.prismaService.post.findMany({
       ...(tagText && {
@@ -64,7 +71,8 @@ export class PostService {
         },
       }),
       ...(!schoolId &&
-        user.school.city.country.id && {
+        user &&
+        user?.school?.city.country.id && {
           where: {
             author: {
               is: {
@@ -79,6 +87,15 @@ export class PostService {
             },
           },
         }),
+      // ...(datesRanges && {
+      //   where: {
+      //     author: {
+      //       is: {
+      //         birthdate: datesRanges,
+      //       },
+      //     },
+      //   },
+      // }),
       ...(schoolId && {
         where: {
           author: {
@@ -105,7 +122,7 @@ export class PostService {
   }
 
   async getById(postId: string) {
-    const post = await this.prismaService.post.findUnique({
+    return this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
         ...PostSelect,
@@ -130,10 +147,6 @@ export class PostService {
         },
       },
     })
-
-    if (!post) throw new Error('Post not found')
-
-    return post
   }
 
   async create(createPostInput: CreatePostInput, authUserId: string) {

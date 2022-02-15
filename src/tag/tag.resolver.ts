@@ -16,6 +16,7 @@ import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
 import { PostSelect } from '../post/post-select.constant'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
+import dates from 'src/utils/dates'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -26,7 +27,7 @@ export class TagResolver {
   async getLiveTag(@CurrentUser() authUser: AuthUser): Promise<LiveTagAuthUser> {
     const liveTag = await this.tagService.getLiveTag()
 
-    if (!liveTag) return
+    if (!liveTag) throw new Error('LiveTag not found')
 
     const authUserPosted = await this.userService.hasUserPostedOnTag(authUser.id, liveTag.text)
 
@@ -46,8 +47,35 @@ export class TagResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() tag: Tag, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
+  async posts(
+    @Parent() tag: Tag,
+    @Args() postsArgs: PostsArgs,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PaginatedPosts> {
     const { limit, after } = postsArgs
+
+    const user = await this.prismaService.user.findFirst({
+      where: { id: authUser.id },
+      select: {
+        birthdate: true,
+        school: {
+          select: {
+            city: {
+              select: {
+                country: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const userAge = user && user.birthdate && dates.getAge(user.birthdate)
+    const datesRanges = userAge && dates.getDateRanges(userAge)
 
     const items = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
       ...(after && {
@@ -55,6 +83,15 @@ export class TagResolver {
           createdAt: new Date(+after).toISOString(),
         },
         skip: 1,
+      }),
+      ...(datesRanges && {
+        where: {
+          author: {
+            is: {
+              birthdate: datesRanges,
+            },
+          },
+        },
       }),
       orderBy: {
         createdAt: 'desc',

@@ -5,7 +5,6 @@ import { UserModule } from '../user/user.module'
 import { AuthService } from './auth.service'
 import { jwtConstants } from './constants'
 import { JwtStrategy } from './strategies/jwt.strategy'
-import { LocalStrategy } from './strategies/local.strategy'
 import { CoreModule } from '../core/core.module'
 
 @Module({
@@ -15,10 +14,9 @@ import { CoreModule } from '../core/core.module'
     PassportModule,
     JwtModule.register({
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: '30d' },
     }),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

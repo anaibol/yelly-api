@@ -26,15 +26,26 @@ model Country {
 }
 
 model Notification {
-  id             String        @id @default(uuid())
-  isSeen         Boolean       @default(false)
-  createdAt      DateTime      @unique @default(now()) @db.DateTime(0)
-  postReactionId String?       @unique
-  followshipId   String?       @unique
-  userId         String
-  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  postReaction   PostReaction? @relation(fields: [postReactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  followship     Followship?   @relation(fields: [followshipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  id              String         @id @default(uuid())
+  isSeen          Boolean        @default(false)
+  createdAt       DateTime       @unique @default(now())
+  postReactionId  String?        @unique
+  followshipId    String?        @unique
+  userId          String
+  friendRequestId String?        @unique
+  friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id])
+  postReaction    PostReaction?  @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+}
+
+model Followship {
+  followerId String
+  followeeId String
+  createdAt  DateTime @unique @default(now())
+  id         String   @default(uuid())
+  followee   User     @relation("followees", fields: [followeeId], references: [id], onDelete: Cascade)
+  follower   User     @relation("followers", fields: [followerId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followeeId])
 }
 
 model School {
@@ -60,8 +71,6 @@ model User {
   firstName                    String?
   lastName                     String?
   email                        String?                           @unique
-  phoneNumber                  String?                           @unique
-  firebaseId                   String?                           @unique
   roles                        String                            @db.LongText
   password                     String?
   birthdate                    DateTime?                         @db.Date
@@ -82,28 +91,46 @@ model User {
   trainingId                   String?
   schoolId                     String?
   avatar3dId                   String?
+  phoneNumber                  String?                           @unique
+  userId                       String?
   school                       School?                           @relation(fields: [schoolId], references: [id])
   training                     Training?                         @relation(fields: [trainingId], references: [id])
   expoPushNotificationTokens   ExpoPushNotificationAccessToken[]
   followeesFollowships         Followship[]                      @relation("followees")
   followersFollowships         Followship[]                      @relation("followers")
+  friendUserFriends            Friend[]                          @relation("friendUserFriends")
+  friends                      Friend[]                          @relation("userFriends")
+  friendRequestFromUser        FriendRequest[]                   @relation("friendRequestFromUser")
+  friendRequestToUser          FriendRequest[]                   @relation("friendRequestToUser")
   posts                        Post[]
   postComments                 PostComment[]
   postReactions                PostReaction[]
-  notifications                Notification[]
   tags                         Tag[]
 }
 
-model Followship {
-  id           String         @unique @default(uuid())
-  followerId   String
-  followeeId   String
-  createdAt    DateTime       @unique @default(now())
-  followee     User           @relation("followees", fields: [followeeId], references: [id], onDelete: Cascade)
-  follower     User           @relation("followers", fields: [followerId], references: [id], onDelete: Cascade)
-  notification Notification[]
+model FriendRequest {
+  id             String              @unique @default(uuid())
+  fromUserId     String
+  toUserId       String
+  createdAt      DateTime            @default(now())
+  status         FriendRequestStatus @default(PENDING)
+  notificationId String?
+  fromUser       User                @relation("friendRequestFromUser", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser         User                @relation("friendRequestToUser", fields: [toUserId], references: [id], onDelete: Cascade)
+  notification   Notification?
 
-  @@id([followerId, followeeId])
+  @@id([fromUserId, toUserId])
+}
+
+model Friend {
+  id          String   @unique @default(uuid())
+  userId      String
+  otherUserId String
+  createdAt   DateTime @default(now())
+  otherUser   User     @relation("friendUserFriends", fields: [otherUserId], references: [id], onDelete: Cascade)
+  user        User     @relation("userFriends", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, otherUserId])
 }
 
 model Tag {
@@ -129,7 +156,7 @@ model Post {
   reactions  PostReaction[]
   tags       Tag[]
 
-  @@unique([authorId, id], map: "author_post_id_fkey")
+  @@unique([authorId, id])
 }
 
 model PostComment {
@@ -143,16 +170,16 @@ model PostComment {
 }
 
 model PostReaction {
-  id           String         @id @default(uuid())
-  createdAt    DateTime       @unique @default(now())
+  id           String        @id @default(uuid())
+  createdAt    DateTime      @unique @default(now())
   reaction     String
   postId       String
   authorId     String
-  author       User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  post         Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
-  notification Notification[]
+  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  notification Notification?
 
-  @@unique([authorId, postId], map: "author_post_id_fkey")
+  @@unique([authorId, postId])
 }
 
 model ExpoPushNotificationAccessToken {
@@ -160,4 +187,10 @@ model ExpoPushNotificationAccessToken {
   userId String
   token  String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
 }

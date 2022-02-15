@@ -68,6 +68,19 @@ input ForgotPasswordInput {
   email: String!
 }
 
+type FriendRequest {
+  fromUser: User
+  id: ID!
+  status: FriendRequestStatus
+  toUser: User
+}
+
+enum FriendRequestStatus {
+  ACCEPTED
+  DECLINED
+  PENDING
+}
+
 input InitPhoneNumberVerificationInput {
   locale: String!
   phoneNumber: String!
@@ -94,10 +107,8 @@ type Me {
   email: String
   expoPushNotificationTokens: [String!]
   firstName: String
-  followees(after: String, limit: Int = 10): [User!]
-  followeesCount: Int
-  followers(after: String, limit: Int = 10): [User!]
-  followersCount: Int
+  friends(after: String, limit: Int = 10): PaginatedUsers
+  friendsCount: Int
   id: ID!
   instagram: String
   isFilled: Boolean
@@ -113,12 +124,15 @@ type Me {
 }
 
 type Mutation {
+  acceptFriendRequest(friendRequestId: String!): Boolean!
   addExpoPushNotificationsToken(input: String!): Boolean!
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
+  createFriendRequest(otherUserId: String!): FriendRequest!
   createLiveTag(input: CreateLiveTagInput!): Tag!
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Boolean!
   createPost(input: CreatePostInput!): Post!
   createPostComment(input: CreateCommentInput!): Boolean!
+  declineFriendRequest(friendRequestId: String!): Boolean!
   deleteAuthUser: Boolean!
   deleteExpoPushNotificationsToken(input: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
@@ -130,20 +144,16 @@ type Mutation {
   refreshAccessToken(refreshToken: String!): AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
-  toggleFollowUser(input: ToggleFollowInput!): Boolean!
   trackPostViews(postsIds: [String!]!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
 }
 
 type Notification {
   createdAt: DateTime!
-  follower: User
+  friendRequest: FriendRequest
   id: ID!
   isSeen: Boolean
-  itemId: String
   postReaction: PostReaction
-  type: String!
-  user: User!
 }
 
 type PaginatedNotifications {
@@ -230,11 +240,6 @@ type Tag {
   text: String!
 }
 
-input ToggleFollowInput {
-  otherUserId: String!
-  value: Boolean!
-}
-
 type Training {
   id: ID!
   name: String!
@@ -263,17 +268,18 @@ type Upload {
 
 type User {
   about: String
+  authUserFriendRequestFromUser: FriendRequest
+  authUserFriendRequestToUser: FriendRequest
   avatar3dId: String
   birthdate: DateTime
+  commonFriends(after: String, limit: Int = 10): PaginatedUsers
+  commonFriendsCount: Int
   firstName: String
-  followees(after: String, limit: Int = 10): PaginatedUsers
-  followeesCount: Int
-  followers(after: String, limit: Int = 10): PaginatedUsers
-  followersCount: Int
+  friends(after: String, limit: Int = 10): PaginatedUsers
+  friendsCount: Int
   id: ID!
   instagram: String
-  isAuthUserFollowing: Boolean
-  isFollowingAuthUser: Boolean
+  isAuthUserFriend: Boolean
   lastName: String
   locale: String
   pictureId: String

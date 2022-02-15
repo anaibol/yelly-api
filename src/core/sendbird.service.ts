@@ -9,26 +9,26 @@ const buildChannelUrl = (userIds: string[]): string => {
 type SendbirdUser = {
   user_id: string
   nickname: string
-  profile_url: string
+  profile_url: string | null
   issue_access_token: true
   metadata: {
-    firstName: string
-    lastName: string
-    pictureId: string
+    firstName: string | null
+    lastName: string | null
+    pictureId: string | null
   }
 }
 
 type IncomingUser = {
   id: string
-  firstName: string
-  lastName: string
-  pictureId: string
+  firstName: string | null
+  lastName: string | null
+  pictureId: string | null
 }
 
 const SAMUEL_ADMIN_ID = process.env.SAMUEL_ADMIN_ID
 
-const cleanUndefinedFromObj = (obj) =>
-  Object.entries(obj).reduce((a, [k, v]) => (v === undefined || v === null ? a : ((a[k] = v), a)), {})
+const cleanUndefinedFromObj = (obj: any) =>
+  Object.entries(obj).reduce((a: any, [k, v]) => (v === undefined || v === null ? a : ((a[k] = v), a)), {})
 
 @Injectable()
 export class SendbirdService {
@@ -97,7 +97,7 @@ export class SendbirdService {
     return true
   }
 
-  async welcomeMessage(userId: string, userFirstName: string) {
+  async welcomeMessage(userId: string, userFirstName: string | null) {
     const userIds = [userId, SAMUEL_ADMIN_ID]
     const channelUrl = `${userId}_${SAMUEL_ADMIN_ID}`
 

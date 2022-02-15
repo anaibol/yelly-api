@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
 import { DEFAULT_LIMIT } from '../common/pagination.constant'
+import { PaginatedNotifications } from './paginated-notifications.model'
 
 @Injectable()
 export class NotificationService {
   constructor(private prismaService: PrismaService) {}
 
-  async find(userId: string, currentCursor, limit = DEFAULT_LIMIT) {
-    const notifications = await this.prismaService.notification.findMany({
+  async find(userId: string, currentCursor?: string, limit = DEFAULT_LIMIT): Promise<PaginatedNotifications> {
+    const items = await this.prismaService.notification.findMany({
       where: {
         userId,
       },
@@ -23,6 +24,7 @@ export class NotificationService {
         isSeen: true,
         postReaction: {
           select: {
+            id: true,
             reaction: true,
             postId: true,
             author: {
@@ -34,9 +36,18 @@ export class NotificationService {
             },
           },
         },
-        followship: {
+        friendRequest: {
           select: {
-            follower: {
+            id: true,
+            status: true,
+            fromUser: {
+              select: {
+                id: true,
+                firstName: true,
+                pictureId: true,
+              },
+            },
+            toUser: {
               select: {
                 id: true,
                 firstName: true,
@@ -52,12 +63,7 @@ export class NotificationService {
       take: limit,
     })
 
-    const nextCursor = notifications.length === limit ? notifications[limit - 1].createdAt.getTime().toString() : ''
-
-    const items = notifications.map(({ followship, ...notification }) => ({
-      ...notification,
-      follower: followship?.follower,
-    }))
+    const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
 
     return { items, nextCursor }
   }
@@ -67,15 +73,6 @@ export class NotificationService {
       where: {
         userId,
         isSeen: false,
-      },
-    })
-  }
-
-  async createFollowshipNotification(userId: string, followshipId: string) {
-    return this.prismaService.notification.create({
-      data: {
-        userId,
-        followshipId,
       },
     })
   }

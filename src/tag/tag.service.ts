@@ -23,6 +23,8 @@ export class TagService {
       },
     })
 
+    if (!tag) throw new Error('Tag not found')
+
     const lastUsers = tag.posts.map((post) => post.author)
 
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {

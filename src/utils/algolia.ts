@@ -1,36 +1,38 @@
+import { Prisma } from '@prisma/client'
+
 export type UserIndexAlgoliaInterface = {
   id: string
   objectID: string
-  firstName: string
-  lastName: string
-  pictureId: string
-  createdAtTimestamp: number
-  birthdateTimestamp: number
+  firstName: string | null
+  lastName: string | null
+  pictureId: string | null
+  createdAtTimestamp: number | null
+  birthdateTimestamp: number | null
   hasPicture: boolean
   training: {
-    id: string
-    name: string
+    id?: string
+    name?: string
   }
   school: {
-    id: string
-    name: string
-    googlePlaceId: string
+    id?: string
+    name?: string
+    googlePlaceId?: string | null
     city: {
-      id: string
-      name: string
-      googlePlaceId: string
-      country?: {
-        id: string
-        name: string
+      id?: string
+      name?: string
+      googlePlaceId?: string | null
+      country: {
+        id?: string
+        name?: string
       }
       _geoloc: {
-        lat: number
-        lng: number
+        lat?: number | null
+        lng?: number | null
       }
     }
     _geoloc: {
-      lat: number
-      lng: number
+      lat?: number | null
+      lng?: number | null
     }
   }
 }
@@ -139,7 +141,13 @@ export const algoliaSchoolSelect = {
   },
 }
 
-export function mapAlgoliaUser(user): UserIndexAlgoliaInterface {
+const userWithPosts = Prisma.validator<Prisma.UserArgs>()({
+  select: algoliaUserSelect,
+})
+
+type UserWithPosts = Prisma.UserGetPayload<typeof userWithPosts>
+
+export function mapAlgoliaUser(user: UserWithPosts): UserIndexAlgoliaInterface {
   return {
     id: user.id,
     objectID: user.id,
@@ -150,29 +158,29 @@ export function mapAlgoliaUser(user): UserIndexAlgoliaInterface {
     createdAtTimestamp: user.createdAt ? Date.parse(user.createdAt.toString()) : null,
     hasPicture: user.pictureId != null,
     training: {
-      id: user.training.id,
-      name: user.training.name,
+      id: user.training?.id,
+      name: user.training?.name,
     },
     school: {
-      id: user.school.id,
-      name: user.school.name,
-      googlePlaceId: user.school.googlePlaceId,
+      id: user.school?.id,
+      name: user.school?.name,
+      googlePlaceId: user.school?.googlePlaceId,
       city: {
-        id: user.school.city.id,
-        name: user.school.city.name,
-        googlePlaceId: user.school.city.googlePlaceId,
+        id: user.school?.city.id,
+        name: user.school?.city.name,
+        googlePlaceId: user.school?.city?.googlePlaceId,
         country: {
-          id: user.school.city.country.id,
-          name: user.school.city.country.name,
+          id: user.school?.city.country.id,
+          name: user.school?.city.country.name,
         },
         _geoloc: {
-          lat: user.school.city.lat,
-          lng: user.school.city.lng,
+          lat: user.school?.city?.lat,
+          lng: user.school?.city?.lng,
         },
       },
       _geoloc: {
-        lat: user.school.lat,
-        lng: user.school.lng,
+        lat: user.school?.lat,
+        lng: user.school?.lng,
       },
     },
   }

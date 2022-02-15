@@ -25,6 +25,7 @@ import { PaginatedUsers } from 'src/post/paginated-users.model'
 import TwilioService from 'src/core/twilio.service'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
+import { NotFoundUserException } from './not-found-user.exception'
 
 function validatePhoneNumberForE164(phoneNumber: string) {
   const regEx = /^\+[1-9]\d{10,14}$/
@@ -60,7 +61,9 @@ export class MeResolver {
   }
 
   @Mutation(() => Boolean)
-  async initPhoneNumberVerification(@Args('input') initPhoneNumberVerificationInput: InitPhoneNumberVerificationInput) {
+  async initPhoneNumberVerification(
+    @Args('input') initPhoneNumberVerificationInput: InitPhoneNumberVerificationInput
+  ): Promise<boolean> {
     if (process.env.NODE_ENV === 'development') return true
 
     await this.twilioService.initPhoneNumberVerification(
@@ -77,9 +80,9 @@ export class MeResolver {
   ): Promise<AccessToken> {
     const { phoneNumber, verificationCode, locale } = checkPhoneNumberVerificationCodeInput
 
-    if (!validatePhoneNumberForE164(phoneNumber)) throw new Error('Invalid access token')
+    // if (!validatePhoneNumberForE164(phoneNumber)) throw new Error('Invalid phone number')
 
-    if (!process.env.PHONE_VERIFICATION_DISABLED) {
+    if (process.env.NODE_ENV === 'production') {
       await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
     }
 
@@ -93,10 +96,10 @@ export class MeResolver {
 
   @Query(() => Me)
   @UseGuards(AuthGuard)
-  async me(@CurrentUser() authUser: AuthUser): Promise<Me | UnauthorizedException> {
+  async me(@CurrentUser() authUser: AuthUser): Promise<Me> {
     const user = await this.userService.findMe(authUser.id)
 
-    if (!user) return new UnauthorizedException()
+    if (!user) throw new UnauthorizedException()
 
     return user
   }
@@ -111,26 +114,24 @@ export class MeResolver {
 
   @Mutation(() => SendbirdAccessToken)
   @UseGuards(AuthGuard)
-  async refreshSendbirdAccessToken(@CurrentUser() authUser: AuthUser) {
-    const sendbirdAccessToken = await this.userService.refreshSendbirdAccessToken(authUser.id)
-
-    return { sendbirdAccessToken }
+  refreshSendbirdAccessToken(@CurrentUser() authUser: AuthUser): Promise<SendbirdAccessToken> {
+    return this.userService.refreshSendbirdAccessToken(authUser.id)
   }
 
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
-  addExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser) {
+  addExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.expoPushNotificationsTokenService.create(authUser.id, token)
   }
 
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
-  deleteExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser) {
+  deleteExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.expoPushNotificationsTokenService.deleteByUserAndToken(authUser.id, token)
   }
 
   @Mutation(() => Boolean)
-  async forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput) {
+  async forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput): Promise<boolean> {
     await this.userService.requestResetPassword(forgotPasswordInput.email)
     return true
   }
@@ -138,6 +139,8 @@ export class MeResolver {
   @Mutation(() => AccessToken)
   async resetPassword(@Args('input') resetPasswordInput: ResetPasswordInput): Promise<AccessToken> {
     const user = await this.userService.resetPassword(resetPasswordInput.password, resetPasswordInput.resetToken)
+
+    if (!user) throw new NotFoundUserException()
 
     const accessToken = await this.authService.getAccessToken(user.id)
     const refreshToken = await this.authService.getRefreshToken(user.id)
@@ -151,7 +154,7 @@ export class MeResolver {
   @Mutation(() => Me)
   @UseGuards(AuthGuard)
   updateMe(@Args('input') updateUserData: UpdateUserInput, @CurrentUser() authUser: AuthUser) {
-    return this.userService.updateMe(updateUserData, authUser.id)
+    return this.userService.update(authUser.id, updateUserData)
   }
 
   @Mutation(() => Boolean)
@@ -161,13 +164,13 @@ export class MeResolver {
   }
 
   @ResolveField()
-  async followers(@Parent() user: Me, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getUserFollowers(user.id, paginationArgs.after, paginationArgs.limit)
+  async friends(@Parent() user: Me, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
+    return this.userService.getFriends(user.id, paginationArgs.after, paginationArgs.limit)
   }
 
   @ResolveField()
-  async followees(@Parent() user: Me, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getUserFollowees(user.id, paginationArgs.after, paginationArgs.limit)
+  async friendsCount(@Parent() user: Me): Promise<number> {
+    return this.userService.getFriendsCount(user.id)
   }
 
   @ResolveField()

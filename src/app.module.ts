@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
+import { I18nModule, I18nJsonParser } from 'nestjs-i18n'
 import { join } from 'path'
 import { UserModule } from './user/user.module'
 import { PostModule } from './post/post.module'
@@ -9,8 +10,7 @@ import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
 import { NotificationModule } from './notification/notification.module'
 import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
-import { PushNotificationService } from './core/push-notification.service'
-import { SendbirdWebhookController } from './sendbird-webhook/sendbird-webhook.controller'
+import { SendbirdWebhookModule } from './sendbird-webhook/sendbird-webhook.module'
 import { SchoolModule } from './school/school.module'
 @Module({
   imports: [
@@ -18,20 +18,18 @@ import { SchoolModule } from './school/school.module'
       playground: false,
       plugins: [
         ApolloServerPluginLandingPageLocalDefault(),
-        process.env.NODE_ENV === 'production' &&
-          ApolloServerPluginUsageReporting({
-            sendVariableValues: { all: true },
-            sendHeaders: { all: true },
-            sendUnexecutableOperationDocuments: true,
-          }),
-      ].filter((v) => v),
-      // typePaths: ['./**/*.gql'],
-      // definitions: {
-      //   path: join(process.cwd(), 'src/graphql.ts'),
-      //   outputAs: 'class',
-      // },
+        ...(process.env.NODE_ENV !== 'development'
+          ? [
+              ApolloServerPluginUsageReporting({
+                sendVariableValues: { all: true },
+                sendHeaders: { all: true },
+                sendUnexecutableOperationDocuments: true,
+              }),
+            ]
+          : []),
+      ],
       debug: process.env.NODE_ENV !== 'production',
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile: join(process.cwd(), 'src/schema.graphql'),
       sortSchema: true,
       context: ({ req, res }): any => ({ req, res }),
       buildSchemaOptions: {
@@ -45,9 +43,20 @@ import { SchoolModule } from './school/school.module'
     CommonModule,
     AuthModule,
     NotificationModule,
+    SendbirdWebhookModule,
     SchoolModule,
+    I18nModule.forRoot({
+      fallbackLanguage: 'fr',
+      fallbacks: {
+        'en-*': 'en',
+        'es-*': 'es',
+        'fr-*': 'fr',
+      },
+      parser: I18nJsonParser,
+      parserOptions: {
+        path: join(process.cwd(), 'src/i18n'),
+      },
+    }),
   ],
-  providers: [PushNotificationService],
-  controllers: [SendbirdWebhookController],
 })
 export class AppModule {}

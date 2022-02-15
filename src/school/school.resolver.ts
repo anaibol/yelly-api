@@ -11,7 +11,7 @@ export class SchoolResolver {
   constructor(private schoolService: SchoolService, private prismaService: PrismaService) {}
 
   @Query(() => School, { nullable: true })
-  async school(@Args() SchoolArgs?: SchoolArgs) {
+  async school(@Args() SchoolArgs: SchoolArgs) {
     const { id, googlePlaceId } = SchoolArgs
 
     return this.schoolService.getSchool(id, googlePlaceId)

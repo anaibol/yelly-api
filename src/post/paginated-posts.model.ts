@@ -1,4 +1,4 @@
-import { Field, ObjectType } from '@nestjs/graphql'
+import { ObjectType } from '@nestjs/graphql'
 import { Post } from './post.model'
 
 @ObjectType()

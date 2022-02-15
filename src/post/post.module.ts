@@ -6,11 +6,10 @@ import { PostResolver } from './post.resolver'
 import { PostService } from './post.service'
 import { TagService } from '../tag/tag.service'
 import { NotificationService } from 'src/notification/notification.service'
-import { PushNotificationService } from 'src/core/push-notification.service'
 
 @Module({
   imports: [CoreModule, AuthModule, UserModule],
-  providers: [PostService, TagService, PostResolver, NotificationService, PushNotificationService],
+  providers: [PostService, TagService, PostResolver, NotificationService],
   exports: [PostService],
 })
 export class PostModule {}

@@ -3,16 +3,18 @@ import axios from 'axios'
 const GOOGLE_MAPS_API = 'https://maps.googleapis.com/maps/api/'
 
 type AddressComponents = {
-  country: string
-  short_name: string
-  locality: string
-  postal_town: string
-  administrative_area_level_3: string
-  administrative_area_level_2: string
-  administrative_area_level_1: string
+  country?: string
+  short_name?: string
+  locality?: string
+  postal_town?: string
+  administrative_area_level_3?: string
+  administrative_area_level_2?: string
+  administrative_area_level_1?: string
 }
 
-const languageCodes = {
+const languageCodes: {
+  [key: string]: string
+} = {
   US: 'en',
   FR: 'fr',
   ES: 'es',
@@ -60,31 +62,39 @@ export function getCityName(addressComponents: google.maps.GeocoderAddressCompon
 
   if (postal_town) return postal_town + ' ' + administrativeArea
 
+  if (!administrativeArea) throw new Error('No administrativeArea')
+
   return administrativeArea
 }
 
 export function getCountryName(addressComponents: google.maps.GeocoderAddressComponent[]): string {
   const { country } = getAddressComponents(addressComponents)
 
+  if (!country) throw new Error('No country')
+
   return country
 }
 
 export function getCountryLanguageCode(addressComponents: google.maps.GeocoderAddressComponent[]): string {
   const { short_name } = getAddressComponents(addressComponents)
+
+  if (!short_name) throw new Error('No short_name')
+
   return languageCodes[short_name.toUpperCase()] || ''
 }
 
 export async function getCityNameWithCountry(googlePlace: google.maps.places.PlaceResult): Promise<string> {
   if (!googlePlace?.address_components) throw new Error('No google place')
 
-  const { address_components: addressComponents } = googlePlace
+  const cityName = getCityName(googlePlace.address_components)
 
-  const cityName = getCityName(addressComponents)
-
-  return cityName + getCountryName(addressComponents)
+  return cityName + getCountryName(googlePlace.address_components)
 }
 
-export async function getGooglePlaceDetails(googlePlaceId: string, language?: string) {
+export async function getGooglePlaceDetails(
+  googlePlaceId: string,
+  language?: string
+): Promise<google.maps.places.PlaceResult> {
   const response = await axios.get(`${GOOGLE_MAPS_API}place/details/json`, {
     params: {
       language,
@@ -93,9 +103,9 @@ export async function getGooglePlaceDetails(googlePlaceId: string, language?: st
     },
   })
 
-  if (response.data.status !== 'OK' || typeof response.data.result == 'undefined') return null
+  if (response.data.status !== 'OK' || typeof response.data.result == 'undefined') throw new Error('Place not found')
 
-  return response.data.result as google.maps.places.PlaceResult | null
+  return response.data.result
 }
 
 export async function getGoogleCityByName(cityName: string): Promise<google.maps.GeocoderResult> {

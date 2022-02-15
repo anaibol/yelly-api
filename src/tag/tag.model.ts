@@ -9,6 +9,6 @@ export class Tag {
   text: string
   createdAt?: Date
   isLive: boolean
-  author?: User
+  author?: User | null
   posts?: PaginatedPosts
 }

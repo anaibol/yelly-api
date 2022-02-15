@@ -12,7 +12,10 @@ export class NotificationResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedNotifications)
-  async notifications(@Args() PaginationArgs: PaginationArgs, @CurrentUser() authUser: AuthUser) {
+  async notifications(
+    @Args() PaginationArgs: PaginationArgs,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PaginatedNotifications> {
     const { items, nextCursor } = await this.notificationService.find(
       authUser.id,
       PaginationArgs.after,
@@ -24,13 +27,13 @@ export class NotificationResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => Number)
-  unreadNotificationsCount(@CurrentUser() authUser: AuthUser) {
+  unreadNotificationsCount(@CurrentUser() authUser: AuthUser): Promise<number> {
     return this.notificationService.getUnreadCount(authUser.id)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  markNotificationAsRead(@Args('notificationId') notificationId: string) {
+  markNotificationAsRead(@Args('notificationId') notificationId: string): Promise<boolean> {
     return this.notificationService.markAsRead(notificationId)
   }
 }
