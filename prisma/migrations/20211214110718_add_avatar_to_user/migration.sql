@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `User` ADD COLUMN `avatar2dId` VARCHAR(191) NULL,
-    ADD COLUMN `avatar3dId` VARCHAR(191) NULL;
