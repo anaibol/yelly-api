@@ -46,7 +46,7 @@ import { SchoolModule } from './school/school.module'
     SendbirdWebhookModule,
     SchoolModule,
     I18nModule.forRoot({
-      fallbackLanguage: 'fr',
+      fallbackLanguage: 'en',
       fallbacks: {
         'en-*': 'en',
         'es-*': 'es',

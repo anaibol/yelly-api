@@ -106,6 +106,38 @@
     "@algolia/logger-common" "4.12.0"
     "@algolia/requester-common" "4.12.0"
 
+"@amplitude/identify@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@amplitude/identify/-/identify-1.9.2.tgz#02ca169a6362da292d2950395806c320097a6446"
+  integrity sha512-6PEOBQZIfUdKaLjx0PNInC53n5gheqfRnM8R3vGF6eHCNYv0zPRp9XP9VgpdtqzwHYDeguw23pendC+uqAzfXg==
+  dependencies:
+    "@amplitude/types" "^1.9.2"
+    "@amplitude/utils" "^1.9.2"
+    tslib "^1.9.3"
+
+"@amplitude/node@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@amplitude/node/-/node-1.9.2.tgz#49a92b33f6eaecdf9e5f87669a3fdc59d68ed003"
+  integrity sha512-J0zSPF3B64mChYP8jofNDU8tE8mG+E1ydyedt/EcIq3oqqo54AarPyAjFAQjzE2M4rpJJXoKXkkR0sU36i6MiA==
+  dependencies:
+    "@amplitude/identify" "^1.9.2"
+    "@amplitude/types" "^1.9.2"
+    "@amplitude/utils" "^1.9.2"
+    tslib "^1.9.3"
+
+"@amplitude/types@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@amplitude/types/-/types-1.9.2.tgz#d664c70562317b189f4ba9b33681bad2105df101"
+  integrity sha512-s+Q/O8kNfocZiyGvVdtM5T4JGPwLRZ4Q26wtEF5xJhyCtJglGMe0ixe6u/6iW9s4JHIq+LlPlUu5095pVsdtNA==
+
+"@amplitude/utils@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@amplitude/utils/-/utils-1.9.2.tgz#a9e1a71341f6301096bd71c2df7bcdefec3fdf31"
+  integrity sha512-hGOIoIjmZ0pq/3b2gBrr17TaEarlR+qzFGu5npm76+scd/51F0eNvjd0vgV6WbJT1cxhyH/5Z8kihGWOU3vS3Q==
+  dependencies:
+    "@amplitude/types" "^1.9.2"
+    tslib "^1.9.3"
+
 "@angular-devkit/core@13.0.2":
   version "13.0.2"
   resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-13.0.2.tgz#1ef92388464ca86d22b21c6ebcb9fc3b6a16c374"
@@ -9223,7 +9255,7 @@ tslib@2.3.1, tslib@^2, tslib@^2.0.1, tslib@^2.0.3, tslib@^2.1.0, tslib@^2.3.0, t
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
   integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==
 
-tslib@^1.11.1, tslib@^1.8.1, tslib@^1.9.0:
+tslib@^1.11.1, tslib@^1.8.1, tslib@^1.9.0, tslib@^1.9.3:
   version "1.14.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==

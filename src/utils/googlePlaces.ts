@@ -83,12 +83,12 @@ export function getCountryLanguageCode(addressComponents: google.maps.GeocoderAd
   return languageCodes[short_name.toUpperCase()] || ''
 }
 
-export async function getCityNameWithCountry(googlePlace: google.maps.places.PlaceResult): Promise<string> {
+export async function getGooglePlaceCityAndCountry(googlePlace: google.maps.places.PlaceResult): Promise<string> {
   if (!googlePlace?.address_components) throw new Error('No google place')
 
   const cityName = getCityName(googlePlace.address_components)
 
-  return cityName + getCountryName(googlePlace.address_components)
+  return `${cityName} ${getCountryName(googlePlace.address_components)}`
 }
 
 export async function getGooglePlaceDetails(

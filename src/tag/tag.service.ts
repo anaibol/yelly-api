@@ -125,7 +125,7 @@ export class TagService {
       },
     })
 
-    this.pushNotificationService.newLiveTag()
+    await this.pushNotificationService.newLiveTag()
 
     return newTag
   }

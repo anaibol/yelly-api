@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { School } from '@prisma/client'
+import { City, School } from '@prisma/client'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { algoliaSchoolSelect } from 'src/utils/algolia'
 import { PrismaService } from '../core/prisma.service'
 import {
-  getCityNameWithCountry,
+  getGooglePlaceCityAndCountry,
   getCountryLanguageCode,
   getGoogleCityByName,
   getGooglePlaceDetails,
@@ -106,40 +106,30 @@ export class SchoolService {
 
     if (school) return school
 
-    const googlePlaceDetail = await getGooglePlaceDetails(googlePlaceId)
+    const schoolPlace = await getGooglePlaceDetails(googlePlaceId)
 
-    if (!googlePlaceDetail?.geometry?.location || !googlePlaceDetail.address_components)
-      throw new Error('No googlePlaceDetail')
+    if (!schoolPlace?.geometry?.location || !schoolPlace.address_components) throw new Error('No schoolPlace')
 
-    const cityName = await getCityNameWithCountry(googlePlaceDetail)
-    const googleCity = await getGoogleCityByName(cityName)
+    const cityNameWithCountry = await getGooglePlaceCityAndCountry(schoolPlace)
+    const googleCity = await getGoogleCityByName(cityNameWithCountry)
     const city = await this.getOrCreateCity(googleCity.place_id)
 
-    const countryLanguageCode = await getCountryLanguageCode(googlePlaceDetail.address_components)
+    const countryLanguageCode = await getCountryLanguageCode(schoolPlace.address_components)
     const googlePlaceDetailTranslated = await getGooglePlaceDetails(googlePlaceId, countryLanguageCode)
 
-    if (!googlePlaceDetailTranslated) throw new Error('No googlePlaceDetail')
+    if (!googlePlaceDetailTranslated) throw new Error('No schoolPlace')
 
-    const { lat, lng } = googlePlaceDetail.geometry.location
+    const { lat, lng } = schoolPlace.geometry.location
 
     const schoolData = {
       name: googlePlaceDetailTranslated.name,
-      googlePlaceId: googlePlaceDetail.place_id,
+      googlePlaceId: schoolPlace.place_id,
       lat: typeof lat === 'function' ? lat() : lat,
       lng: typeof lng === 'function' ? lng() : lng,
-      city,
+      cityId: city.id,
     }
 
-    if (
-      !googlePlaceDetail.name ||
-      !schoolData.name ||
-      !schoolData?.city.googlePlaceId ||
-      !schoolData.city.name ||
-      !schoolData?.city?.country
-    )
-      throw new Error('No school google place data')
-
-    if (!schoolData?.city?.country) throw new Error('No school google place data')
+    if (!schoolPlace.name || !schoolData.name) throw new Error('No school google place data')
 
     return this.prismaService.school.create({
       data: {
@@ -147,49 +137,27 @@ export class SchoolService {
         googlePlaceId: schoolData.googlePlaceId,
         lat: schoolData.lat,
         lng: schoolData.lng,
-        city: {
-          connectOrCreate: {
-            where: {
-              googlePlaceId: schoolData.city.googlePlaceId,
-            },
-            create: {
-              name: schoolData.city.name,
-              googlePlaceId: schoolData.city.googlePlaceId,
-              lat: schoolData.city.lat,
-              lng: schoolData.city.lng,
-              country: {
-                connectOrCreate: {
-                  where: {
-                    name: schoolData.city.country.name,
-                  },
-                  create: {
-                    name: schoolData.city.country.name,
-                  },
-                },
-              },
-            },
-          },
-        },
+        cityId: schoolData.cityId,
       },
     })
   }
 
-  async getOrCreateCity(googlePlaceId: string) {
+  async getOrCreateCity(googlePlaceId: string): Promise<City> {
     const city = await this.prismaService.city.findUnique({
       where: {
         googlePlaceId,
       },
     })
 
-    if (city) {
-      return {
-        googlePlaceId: city.googlePlaceId,
-      }
-    }
+    if (city) return city
 
     const cityGooglePlaceDetail = await getGooglePlaceDetails(googlePlaceId)
 
-    if (!cityGooglePlaceDetail?.address_components || !cityGooglePlaceDetail?.geometry?.location)
+    if (
+      !cityGooglePlaceDetail?.address_components ||
+      !cityGooglePlaceDetail?.geometry?.location ||
+      !cityGooglePlaceDetail?.name
+    )
       throw new Error('No cityGooglePlaceDetail')
 
     const { lat: cityLat, lng: cityLng } = cityGooglePlaceDetail.geometry.location
@@ -198,14 +166,23 @@ export class SchoolService {
 
     if (!country) throw new Error('No country')
 
-    return {
-      name: cityGooglePlaceDetail.name,
-      googlePlaceId: cityGooglePlaceDetail.place_id,
-      lat: typeof cityLat === 'function' ? cityLat() : cityLat,
-      lng: typeof cityLng === 'function' ? cityLng() : cityLng,
-      country: {
-        name: country.long_name,
+    return this.prismaService.city.create({
+      data: {
+        name: cityGooglePlaceDetail.name,
+        googlePlaceId: cityGooglePlaceDetail.place_id,
+        lat: typeof cityLat === 'function' ? cityLat() : cityLat,
+        lng: typeof cityLng === 'function' ? cityLng() : cityLng,
+        country: {
+          connectOrCreate: {
+            where: {
+              name: country.long_name,
+            },
+            create: {
+              name: country.long_name,
+            },
+          },
+        },
       },
-    }
+    })
   }
 }

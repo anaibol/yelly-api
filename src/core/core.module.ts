@@ -7,6 +7,7 @@ import { SendbirdService } from './sendbird.service'
 import TwilioService from './twilio.service'
 import { Neo4jService } from './neo4j.service'
 import { PushNotificationService } from './push-notification.service'
+import { AmplitudeService } from './amplitude.service'
 
 @Module({
   providers: [
@@ -22,6 +23,7 @@ import { PushNotificationService } from './push-notification.service'
     ExpoPushNotificationsTokenService,
     Neo4jService,
     PushNotificationService,
+    AmplitudeService,
   ],
   exports: [
     PrismaService,
@@ -32,6 +34,7 @@ import { PushNotificationService } from './push-notification.service'
     ExpoPushNotificationsTokenService,
     Neo4jService,
     PushNotificationService,
+    AmplitudeService,
   ],
 })
 export class CoreModule {}
