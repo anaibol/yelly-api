@@ -685,7 +685,7 @@ export class UserService {
 
     if (data.isFilled) {
       try {
-        const sendbirdAccessToken = updatedUser && (await this.sendbirdService.createUser(updatedUser))
+        const sendbirdAccessToken = await this.sendbirdService.createUser(updatedUser)
 
         await this.prismaService.user.update({
           where: {
@@ -695,7 +695,14 @@ export class UserService {
             sendbirdAccessToken,
           },
         })
+
         updatedUser.sendbirdAccessToken = sendbirdAccessToken
+      } catch (error) {
+        console.log({ error })
+        // CATCH ERROR SO IT CONTINUES
+      }
+
+      try {
         this.syncUsersIndexWithAlgolia(userId)
 
         const OgmUser = this.neo4jService.ogm.model('User')

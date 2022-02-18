@@ -313,7 +313,7 @@ export class PushNotificationService {
     })
 
     const messages = await Promise.all(
-      allPushTokens.map(async ({ token, user: { locale: lang }, userId }) => {
+      allPushTokens.map(async ({ token, user: { locale: lang } }) => {
         return {
           to: token,
           sound: 'default' as const,
