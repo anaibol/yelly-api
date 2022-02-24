@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
+import { ApolloDriver } from '@nestjs/apollo'
 import { I18nModule, I18nJsonParser } from 'nestjs-i18n'
 import { join } from 'path'
 import { UserModule } from './user/user.module'
@@ -15,6 +16,7 @@ import { SchoolModule } from './school/school.module'
 @Module({
   imports: [
     GraphQLModule.forRoot({
+      driver: ApolloDriver,
       playground: false,
       plugins: [
         ApolloServerPluginLandingPageLocalDefault(),
@@ -31,7 +33,7 @@ import { SchoolModule } from './school/school.module'
       debug: process.env.NODE_ENV !== 'production',
       autoSchemaFile: join(process.cwd(), 'src/schema.graphql'),
       sortSchema: true,
-      context: ({ req, res }): any => ({ req, res }),
+      context: ({ req, res }: { req: any; res: any }): any => ({ req, res }),
       buildSchemaOptions: {
         numberScalarMode: 'integer',
       },

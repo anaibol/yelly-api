@@ -26,8 +26,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       },
     })
 
-    console.log({ user })
-
     const country = await this.prismaService.user
       .findUnique({
         where: { id },
@@ -40,8 +38,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       .country({
         select: { id: true },
       })
-
-    console.log({ country })
 
     if (!user?.isActive) return null
 
