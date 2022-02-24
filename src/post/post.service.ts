@@ -29,80 +29,48 @@ export class PostService {
     return true
   }
 
-  async find(tagText?: string, userId?: string, schoolId?: string, currentCursor?: string, limit = DEFAULT_LIMIT) {
-    const user =
-      !schoolId &&
-      (await this.prismaService.user.findFirst({
-        where: { id: userId },
-        select: {
-          birthdate: true,
-          school: {
-            select: {
-              city: {
-                select: {
-                  country: {
-                    select: {
-                      id: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }))
-
-    const userAge = user && user.birthdate && dates.getAge(user.birthdate)
-    const datesRanges = userAge && dates.getDateRanges(userAge)
+  async find(
+    authUserCountryId: string,
+    authUserBirthdate: Date,
+    tagText?: string,
+    schoolId?: string,
+    currentCursor?: string,
+    limit = DEFAULT_LIMIT
+  ) {
+    const userAge = authUserBirthdate && dates.getAge(authUserBirthdate)
+    const datesRanges = dates.getDateRanges(userAge)
 
     const posts = await this.prismaService.post.findMany({
-      ...(tagText && {
-        where: {
-          tags: {
-            every: {
-              text: tagText,
-            },
-          },
-        },
-      }),
-      ...(userId && {
-        where: {
-          authorId: userId,
-        },
-      }),
-      ...(!schoolId &&
-        user &&
-        user?.school?.city.country.id && {
-          where: {
-            author: {
-              is: {
-                school: {
-                  city: {
-                    country: {
-                      id: user.school.city.country.id,
-                    },
-                  },
+      where: {
+        ...(tagText
+          ? {
+              tags: {
+                every: {
+                  text: tagText,
                 },
               },
-            },
-          },
-        }),
-      // ...(datesRanges && {
-      //   where: {
-      //     author: {
-      //       is: {
-      //         birthdate: datesRanges,
-      //       },
-      //     },
-      //   },
-      // }),
-      ...(schoolId && {
-        where: {
-          author: {
-            schoolId,
-          },
+            }
+          : {}),
+        author: {
+          ...(!schoolId && authUserCountryId
+            ? {
+                school: {
+                  city: {
+                    countryId: authUserCountryId,
+                  },
+                },
+              }
+            : {}),
+          birthdate: datesRanges,
         },
-      }),
+        ...(schoolId
+          ? {
+              author: {
+                schoolId,
+              },
+            }
+          : {}),
+      },
       ...(currentCursor && {
         cursor: {
           createdAt: new Date(+currentCursor).toISOString(),

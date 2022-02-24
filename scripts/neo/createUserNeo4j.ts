@@ -16,15 +16,20 @@ async function main() {
   let hasUsers = true
   let skip = 0
   while (hasUsers) {
+    const date = new Date('2022-02-15T14:13:46.158Z')
     const users = await prisma.user.findMany({
       select: {
         id: true,
         firstName: true,
         lastName: true,
         pictureId: true,
+        createdAt: true,
       },
       where: {
         isFilled: true,
+        createdAt: {
+          gt: date.toISOString(),
+        },
       },
       take: 5000,
       skip: skip,

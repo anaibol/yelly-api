@@ -5,7 +5,7 @@ import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { Me } from './me.model'
 import { AccessToken } from './accessToken.model'
 
-import { PaginationArgs } from '../common/pagination.args'
+import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 import { PostsArgs } from '../post/posts.args'
 
 import { AuthGuard } from '../auth/auth-guard'
@@ -82,8 +82,7 @@ export class MeResolver {
 
     // if (!validatePhoneNumberForE164(phoneNumber)) throw new Error('Invalid phone number')
 
-    if (process.env.NODE_ENV === 'development') {
-    } else {
+    if (process.env.NODE_ENV === 'production') {
       await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
     }
 
@@ -154,7 +153,7 @@ export class MeResolver {
 
   @Mutation(() => Me)
   @UseGuards(AuthGuard)
-  updateMe(@Args('input') updateUserData: UpdateUserInput, @CurrentUser() authUser: AuthUser) {
+  updateMe(@Args('input') updateUserData: UpdateUserInput, @CurrentUser() authUser: AuthUser): Promise<Me> {
     return this.userService.update(authUser.id, updateUserData)
   }
 
@@ -165,8 +164,8 @@ export class MeResolver {
   }
 
   @ResolveField()
-  async friends(@Parent() user: Me, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFriends(user.id, paginationArgs.after, paginationArgs.limit)
+  async friends(@Parent() user: Me, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedUsers> {
+    return this.userService.getFriends(user.id, cursorPaginationArgs.after, cursorPaginationArgs.limit)
   }
 
   @ResolveField()

@@ -5,17 +5,16 @@ on:
     branches: [develop]
 
 env:
-  AWS_REGION: eu-central-1
-  ECR_REGISTRY: 968886285118.dkr.ecr.eu-central-1.amazonaws.com
+  AWS_REGION: eu-west-2
+  ECR_REGISTRY: 968886285118.dkr.ecr.eu-west-2.amazonaws.com
   ECR_REPOSITORY: yelly_app
   IMAGE_TAG: latest
   #IMAGE_TAG: ${{ github.sha }} # Tag Commit large (git)
   #ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-  ECS_CLUSTER: DEV-YELLY-CLA
-  ECS_SERVICE_API: service-api-8080
-  ECS_SERVICE_ADMIN-API: service-admin-api-9090
-  ECS_TASK_DEFINITION: task-api
-  ECS_CONTAINER_NAME: task-api
+  ECS_CLUSTER: Dev-YELLY
+  ECS_SERVICE: service-dev-yelly-8080
+  ECS_TASK_DEFINITION: task-dev-yelly-8080
+  ECS_CONTAINER_NAME: dev-yelly
 
 jobs:
   deploy:
@@ -66,20 +65,11 @@ jobs:
           container-name: ${{ env.ECS_CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
-      - name: Deploy Amazon ECS task definition ${{ env.ECS_SERVICE_API }}
+      - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE_API }}
+          service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
-          force-new-deployment: true
-
-      - name: Deploy Amazon ECS task definition ${{ env.ECS_SERVICE_ADMIN-API }}
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE_ADMIN-API }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: false
           force-new-deployment: true

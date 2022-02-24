@@ -3,7 +3,7 @@ import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/g
 
 import { User } from './user.model'
 
-import { PaginationArgs } from '../common/pagination.args'
+import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 import { PostsArgs } from '../post/posts.args'
 
 import { AuthGuard } from '../auth/auth-guard'
@@ -47,6 +47,12 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
+  unfriend(@Args('otherUserId') otherUserId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.deleteFriendship(authUser.id, otherUserId)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
   declineFriendRequest(
     @Args('friendRequestId') friendRequestId: string,
     @CurrentUser() authUser: AuthUser
@@ -55,8 +61,8 @@ export class UserResolver {
   }
 
   @ResolveField()
-  async friends(@Parent() user: User, @Args() paginationArgs: PaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFriends(user.id, paginationArgs.after, paginationArgs.limit)
+  async friends(@Parent() user: User, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedUsers> {
+    return this.userService.getFriends(user.id, cursorPaginationArgs.after, cursorPaginationArgs.limit)
   }
 
   @ResolveField()
@@ -74,9 +80,14 @@ export class UserResolver {
   async commonFriends(
     @Parent() user: User,
     @CurrentUser() authUser: AuthUser,
-    @Args() paginationArgs: PaginationArgs
+    @Args() cursorPaginationArgs: CursorPaginationArgs
   ): Promise<PaginatedUsers> {
-    return this.userService.getCommonFriends(authUser.id, user.id, paginationArgs.after, paginationArgs.limit)
+    return this.userService.getCommonFriends(
+      authUser.id,
+      user.id,
+      cursorPaginationArgs.after,
+      cursorPaginationArgs.limit
+    )
   }
 
   @UseGuards(AuthGuard)

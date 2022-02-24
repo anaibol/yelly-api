@@ -5,13 +5,19 @@ import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
 import { algoliaTagSelect } from '../utils/algolia'
+import { UserService } from '../user/user.service'
+import { DEFAULT_LIMIT } from 'src/common/pagination.constant'
+import { PaginatedTrends } from './paginated-trends.model'
+import { Tag } from './tag.model'
+import { LiveTagAuthUser } from 'src/post/live-tag-auth-user.model'
 
 @Injectable()
 export class TagService {
   constructor(
     private prismaService: PrismaService,
     private algoliaService: AlgoliaService,
-    private pushNotificationService: PushNotificationService
+    private pushNotificationService: PushNotificationService,
+    private userService: UserService
   ) {}
   async syncTagIndexWithAlgolia(tagText: string) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
@@ -44,10 +50,17 @@ export class TagService {
     return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id)
   }
 
-  async getLiveTag() {
+  async getAuthUserLiveTag(authUserId: string, authUserCountryId: string): Promise<LiveTagAuthUser | null> {
     const liveTag = await this.prismaService.tag.findFirst({
       where: {
         isLive: true,
+        author: {
+          school: {
+            city: {
+              countryId: authUserCountryId,
+            },
+          },
+        },
       },
       select: {
         id: true,
@@ -81,40 +94,71 @@ export class TagService {
 
     const lastUsers = liveTag.posts.map((post) => post.author)
 
+    const authUserPosted = await this.userService.hasUserPostedOnTag(authUserId, liveTag.text)
+
     return {
       ...liveTag,
       ...lastUsers,
+      authUserPosted,
       postCount: liveTag._count.posts,
     }
   }
 
-  async createLiveTag(text: string, authUserId: string) {
-    await this.prismaService.tag.updateMany({
-      where: {
-        isLive: true,
-      },
-      data: {
-        isLive: false,
-      },
-    })
+  async createLiveTag(text: string, authorId: string, countryId: string) {
+    // await this.prismaService.tag.updateMany({
+    //   where: {
+    //     isLive: true,
+    //     author: {
+    //       school: {
+    //         city: {
+    //           countryId,
+    //         },
+    //       },
+    //     },
+    //   },
+    //   data: {
+    //     isLive: false,
+    //   },
+    // })
 
-    const newTag = await this.prismaService.tag.upsert({
+    const previousTag = await this.prismaService.tag.findFirst({
       where: {
         text,
-      },
-      create: {
-        text,
-        isLive: true,
         author: {
-          connect: {
-            id: authUserId,
+          school: {
+            city: {
+              countryId,
+            },
           },
         },
       },
-      update: {
-        isLive: true,
-      },
     })
+
+    const newTag = previousTag
+      ? await this.prismaService.tag.update({
+          where: {
+            text,
+          },
+          data: {
+            isLive: true,
+            author: {
+              connect: {
+                id: authorId,
+              },
+            },
+          },
+        })
+      : await this.prismaService.tag.create({
+          data: {
+            text,
+            isLive: true,
+            author: {
+              connect: {
+                id: authorId,
+              },
+            },
+          },
+        })
 
     await this.prismaService.tag.deleteMany({
       where: {
@@ -125,7 +169,7 @@ export class TagService {
       },
     })
 
-    await this.pushNotificationService.newLiveTag()
+    await this.pushNotificationService.newLiveTag(countryId)
 
     return newTag
   }
@@ -155,5 +199,44 @@ export class TagService {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
     this.algoliaService.deleteObject(algoliaTagIndex, id)
     return true
+  }
+
+  async getTrends(authUserCountryId: string, skip = 0, limit = DEFAULT_LIMIT): Promise<PaginatedTrends> {
+    const tags = await this.prismaService.tag.findMany({
+      where: {
+        isLive: false,
+        ...(authUserCountryId && {
+          author: {
+            school: {
+              city: {
+                countryId: authUserCountryId,
+              },
+            },
+          },
+        }),
+      },
+      ...(skip && {
+        skip,
+      }),
+      orderBy: {
+        posts: {
+          _count: 'desc',
+        },
+      },
+      take: limit,
+      select: algoliaTagSelect,
+    })
+
+    const nextSkip = skip + limit
+
+    const dataTags = tags.map((tag) => {
+      return {
+        ...tag,
+        lastUsers: tag.posts.map((post) => post.author),
+        postCount: tag._count.posts,
+      }
+    })
+
+    return { items: dataTags, nextSkip }
   }
 }

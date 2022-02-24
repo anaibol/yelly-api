@@ -2,7 +2,7 @@ import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 import { PaginatedNotifications } from './paginated-notifications.model'
 import { NotificationService } from './notification.service'
-import { PaginationArgs } from '../common/pagination.args'
+import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 import { AuthGuard } from '../auth/auth-guard'
 import { AuthUser } from '../auth/auth.service'
 import { CurrentUser } from '../auth/user.decorator'
@@ -13,13 +13,13 @@ export class NotificationResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedNotifications)
   async notifications(
-    @Args() PaginationArgs: PaginationArgs,
+    @Args() cursorPaginationArgs: CursorPaginationArgs,
     @CurrentUser() authUser: AuthUser
   ): Promise<PaginatedNotifications> {
     const { items, nextCursor } = await this.notificationService.find(
       authUser.id,
-      PaginationArgs.after,
-      PaginationArgs.limit
+      cursorPaginationArgs.after,
+      cursorPaginationArgs.limit
     )
 
     return { items, nextCursor }

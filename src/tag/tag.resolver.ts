@@ -15,8 +15,10 @@ import { TagService } from './tag.service'
 import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
 import { PostSelect } from '../post/post-select.constant'
-import { PaginatedPosts } from 'src/post/paginated-posts.model'
-import dates from 'src/utils/dates'
+import { PaginatedPosts } from '../post/paginated-posts.model'
+import dates from '../utils/dates'
+import { PaginatedTrends } from './paginated-trends.model'
+import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -24,26 +26,38 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => LiveTagAuthUser, { name: 'liveTag', nullable: true })
-  async getLiveTag(@CurrentUser() authUser: AuthUser): Promise<LiveTagAuthUser> {
-    const liveTag = await this.tagService.getLiveTag()
+  async getLiveTag(@CurrentUser() authUser: AuthUser): Promise<LiveTagAuthUser | null> {
+    if (!authUser.countryId) throw new Error('No auth user countryId')
 
-    if (!liveTag) throw new Error('LiveTag not found')
-
-    const authUserPosted = await this.userService.hasUserPostedOnTag(authUser.id, liveTag.text)
-
-    return { ...liveTag, authUserPosted }
+    return this.tagService.getAuthUserLiveTag(authUser.id, authUser.countryId)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Tag)
   createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() authUser: AuthUser): Promise<Tag> {
-    return this.tagService.createLiveTag(createLiveTag.text, authUser.id)
+    if (!authUser.countryId) throw new Error('No auth user countryId')
+
+    return this.tagService.createLiveTag(createLiveTag.text, authUser.id, authUser.countryId)
   }
 
   @Query(() => Tag)
   @UseGuards(AuthGuard)
   async tag(@Args() tagArgs: TagArgs) {
     return this.tagService.findById(tagArgs)
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTrends)
+  async trends(
+    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PaginatedTrends> {
+    if (!authUser.countryId) throw new Error('No auth user countryId')
+
+    const { skip, limit } = offsetPaginationArgs
+    const { items, nextSkip } = await this.tagService.getTrends(authUser.countryId, skip, limit)
+
+    return { items, nextSkip }
   }
 
   @ResolveField()
@@ -58,19 +72,6 @@ export class TagResolver {
       where: { id: authUser.id },
       select: {
         birthdate: true,
-        school: {
-          select: {
-            city: {
-              select: {
-                country: {
-                  select: {
-                    id: true,
-                  },
-                },
-              },
-            },
-          },
-        },
       },
     })
 

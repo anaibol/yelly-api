@@ -68,7 +68,7 @@ export class NotificationService {
     return { items, nextCursor }
   }
 
-  async getUnreadCount(userId: string) {
+  getUnreadCount(userId: string): Promise<number> {
     return this.prismaService.notification.count({
       where: {
         userId,
@@ -77,7 +77,7 @@ export class NotificationService {
     })
   }
 
-  async markAsRead(notificationId: string) {
+  async markAsRead(notificationId: string): Promise<boolean> {
     const update = await this.prismaService.notification.update({
       data: {
         isSeen: true,

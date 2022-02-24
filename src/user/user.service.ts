@@ -21,6 +21,7 @@ import { SendbirdAccessToken } from './sendbirdAccessToken'
 @Injectable()
 export class UserService {
   googleApiKey = process.env.GOOGLE_API_KEY
+
   constructor(
     private prismaService: PrismaService,
     private emailService: EmailService,
@@ -30,6 +31,19 @@ export class UserService {
     private pushNotificationService: PushNotificationService,
     private neo4jService: Neo4jService
   ) {}
+
+  // async getUserLocale(userId: string): Promise<string> {
+  //   const user = await this.prismaService.user.findUnique({
+  //     where: { id: userId },
+  //     select: {
+  //       locale: true,
+  //     },
+  //   })
+
+  //   if (!user) throw new Error('USER not found')
+
+  //   return user.locale ? user.locale.split('-')[0] : 'en'
+  // }
 
   async hasUserPostedOnTag(userId: string, tagText: string): Promise<boolean> {
     const post = await this.prismaService.post.findFirst({
@@ -427,15 +441,18 @@ export class UserService {
 
     if (!exists) return false
 
+    await this.prismaService.notification.delete({
+      where: {
+        friendRequestId,
+      },
+    })
+
     await this.prismaService.friendRequest.update({
       where: {
         id: friendRequestId,
       },
       data: {
         status: 'DECLINED',
-        notification: {
-          delete: true,
-        },
       },
     })
 
@@ -456,6 +473,12 @@ export class UserService {
 
     await this.createFriendship(fromUserId, toUserId)
 
+    await this.prismaService.notification.delete({
+      where: {
+        friendRequestId,
+      },
+    })
+
     await this.prismaService.friendRequest.update({
       where: {
         id: friendRequestId,
@@ -463,7 +486,6 @@ export class UserService {
       data: {
         status: 'ACCEPTED',
         notification: {
-          delete: true,
           create: {
             userId: fromUserId,
           },
@@ -529,8 +551,8 @@ export class UserService {
     return true
   }
 
-  deleteFriendship(userId: string, otherUserId: string) {
-    return Promise.all([
+  async deleteFriendship(userId: string, otherUserId: string): Promise<boolean> {
+    await Promise.all([
       this.prismaService.friend.delete({
         where: {
           userId_otherUserId: {
@@ -562,6 +584,8 @@ export class UserService {
     //     ],
     //   },
     // })
+
+    return true
   }
 
   async syncUsersIndexWithAlgolia(userId: string) {
@@ -598,12 +622,8 @@ export class UserService {
     return { id: user.id }
   }
 
-  async update(userId: string, data: UpdateUserInput): Promise<User> {
+  async update(userId: string, data: UpdateUserInput): Promise<Me> {
     const schoolData = data.schoolGooglePlaceId && (await this.schoolService.getOrCreate(data.schoolGooglePlaceId))
-
-    const prevSchoolData = await this.prismaService.user.findUnique({
-      where: { id: userId },
-    })
 
     const updatedUser = await this.prismaService.user.update({
       where: {
@@ -685,7 +705,7 @@ export class UserService {
 
     if (data.isFilled) {
       try {
-        const sendbirdAccessToken = await this.sendbirdService.createUser(updatedUser)
+        const sendbirdAccessToken = updatedUser && (await this.sendbirdService.createUser(updatedUser))
 
         await this.prismaService.user.update({
           where: {
@@ -722,11 +742,16 @@ export class UserService {
         // CATCH ERROR SO IT CONTINUES
       }
     } else if (updatedUser.isFilled) {
-      this.updateSenbirdUser(updatedUser)
+      try {
+        await this.updateSenbirdUser(updatedUser)
+      } catch (error) {
+        console.log({ error })
+        // CATCH ERROR SO IT CONTINUES
+      }
+
       this.syncUsersIndexWithAlgolia(userId)
 
       const OgmUser = this.neo4jService.ogm.model('User')
-
       await OgmUser.update({
         where: { id: userId },
         update: {
@@ -740,8 +765,17 @@ export class UserService {
     if (schoolData) {
       this.schoolService.syncAlgoliaSchool(schoolData.id)
 
-      if (prevSchoolData && prevSchoolData.schoolId && prevSchoolData.schoolId !== schoolData.id) {
-        this.schoolService.syncAlgoliaSchool(prevSchoolData.schoolId)
+      const previousSchool =
+        schoolData &&
+        (await this.prismaService.user.findUnique({
+          where: { id: userId },
+          select: {
+            schoolId: true,
+          },
+        }))
+
+      if (previousSchool?.schoolId && previousSchool.schoolId !== schoolData.id) {
+        this.schoolService.syncAlgoliaSchool(previousSchool.schoolId)
       }
     }
 

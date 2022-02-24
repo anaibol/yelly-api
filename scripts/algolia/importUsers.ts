@@ -1,8 +1,11 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
+import 'dotenv/config'
 
 async function main() {
+  const algoliaKey = process.env.ALGOLIA_API_KEY as string
+  const algoliaId = process.env.ALGOLIA_APP_ID as string
   const prisma = new PrismaClient()
 
   let hasUsers = true
@@ -27,13 +30,13 @@ async function main() {
     }
     skip += 500
 
-    const algoliaClient = await algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_API_KEY)
-    const userIndex = await algoliaClient.initIndex('dev_USERS')
+    const algoliaClient = await algoliasearch(algoliaId, algoliaKey)
+    const userIndex = await algoliaClient.initIndex('prod_USERS')
     console.log('insert ' + skip)
 
     const algoliaUsers = users.map((user) => mapAlgoliaUser(user))
 
-    userIndex.partialUpdateObjects(algoliaUsers, { createIfNotExists: true })
+    await userIndex.partialUpdateObjects(algoliaUsers, { createIfNotExists: true })
   }
 }
 

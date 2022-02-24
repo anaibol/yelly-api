@@ -17,6 +17,8 @@ model City {
   lng           Float?
   country       Country  @relation(fields: [countryId], references: [id])
   schools       School[]
+
+  @@index([countryId], map: "City_countryId_fkey")
 }
 
 model Country {
@@ -46,6 +48,7 @@ model Followship {
   follower   User     @relation("followers", fields: [followerId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followeeId])
+  @@index([followeeId], map: "Followship_followeeId_fkey")
 }
 
 model School {
@@ -58,6 +61,8 @@ model School {
   city          City    @relation(fields: [cityId], references: [id])
   posts         Post[]
   users         User[]
+
+  @@index([cityId], map: "School_cityId_fkey")
 }
 
 model Training {
@@ -91,7 +96,7 @@ model User {
   trainingId                   String?
   schoolId                     String?
   avatar3dId                   String?
-  phoneNumber                  String?                           @unique
+  phoneNumber                  String?                           @unique(map: "User_phoneNumber_fkey")
   userId                       String?
   school                       School?                           @relation(fields: [schoolId], references: [id])
   training                     Training?                         @relation(fields: [trainingId], references: [id])
@@ -106,6 +111,9 @@ model User {
   postComments                 PostComment[]
   postReactions                PostReaction[]
   tags                         Tag[]
+
+  @@index([schoolId], map: "User_schoolId_fkey")
+  @@index([trainingId], map: "User_trainingId_fkey")
 }
 
 model FriendRequest {
@@ -120,6 +128,7 @@ model FriendRequest {
   notification   Notification?
 
   @@id([fromUserId, toUserId])
+  @@index([toUserId], map: "FriendRequest_toUserId_fkey")
 }
 
 model Friend {
@@ -131,6 +140,7 @@ model Friend {
   user        User     @relation("userFriends", fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, otherUserId])
+  @@index([otherUserId], map: "Friend_otherUserId_fkey")
 }
 
 model Tag {
@@ -141,6 +151,8 @@ model Tag {
   isLive    Boolean  @default(false)
   author    User?    @relation(fields: [authorId], references: [id], onUpdate: SetNull)
   posts     Post[]
+
+  @@index([authorId], map: "Tag_authorId_fkey")
 }
 
 model Post {
@@ -156,7 +168,8 @@ model Post {
   reactions  PostReaction[]
   tags       Tag[]
 
-  @@unique([authorId, id])
+  @@unique([authorId, id], map: "author_post_id_fkey")
+  @@index([schoolId], map: "Post_schoolId_fkey")
 }
 
 model PostComment {
@@ -167,6 +180,9 @@ model PostComment {
   postId    String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([authorId], map: "PostComment_authorId_fkey")
+  @@index([postId], map: "PostComment_postId_fkey")
 }
 
 model PostReaction {
@@ -176,10 +192,11 @@ model PostReaction {
   postId       String
   authorId     String
   author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "PostReaction_ibfk_1")
   notification Notification?
 
-  @@unique([authorId, postId])
+  @@unique([authorId, postId], map: "author_post_id_fkey")
+  @@index([postId], map: "PostReaction_postId_fkey")
 }
 
 model ExpoPushNotificationAccessToken {
@@ -187,6 +204,8 @@ model ExpoPushNotificationAccessToken {
   userId String
   token  String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "ExpoPushNotificationAccessToken_userId_fkey")
 }
 
 enum FriendRequestStatus {

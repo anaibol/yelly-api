@@ -145,6 +145,7 @@ type Mutation {
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
   trackPostViews(postsIds: [String!]!): Boolean!
+  unfriend(otherUserId: String!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
 }
 
@@ -164,6 +165,11 @@ type PaginatedNotifications {
 type PaginatedPosts {
   items: [Post!]!
   nextCursor: String!
+}
+
+type PaginatedTrends {
+  items: [Trend!]!
+  nextSkip: Int!
 }
 
 type PaginatedUsers {
@@ -206,6 +212,7 @@ type Query {
   posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(id: String): Tag!
+  trends(limit: Int = 10, skip: Int): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
 }
@@ -235,7 +242,9 @@ type Tag {
   author: User
   createdAt: DateTime
   id: ID!
-  isLive: Boolean!
+  isLive: Boolean
+  lastUsers: [User!]
+  postCount: Int
   posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
   text: String!
 }
@@ -243,6 +252,14 @@ type Tag {
 type Training {
   id: ID!
   name: String!
+}
+
+type Trend {
+  author: User
+  id: ID!
+  lastUsers: [User!]
+  postCount: Int
+  text: String!
 }
 
 input UpdateUserInput {
