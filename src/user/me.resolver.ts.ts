@@ -82,9 +82,7 @@ export class MeResolver {
 
     // if (!validatePhoneNumberForE164(phoneNumber)) throw new Error('Invalid phone number')
 
-    if (process.env.NODE_ENV === 'production') {
-      await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
-    }
+    await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
 
     const user = await this.userService.findOrCreate(phoneNumber, locale)
 
