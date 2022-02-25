@@ -12,6 +12,7 @@ import { PushNotificationService } from 'src/core/push-notification.service'
 import { SendbirdService } from 'src/core/sendbird.service'
 import dates from 'src/utils/dates'
 import { AuthUser } from 'src/auth/auth.service'
+import { uniqBy } from 'lodash'
 
 @Injectable()
 export class PostService {
@@ -182,7 +183,7 @@ export class PostService {
       friendsReactedPosts,
     ])
 
-    const posts = [...new Set(results.flat())].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    const posts = uniqBy(results.flat(), 'id').sort((a: any, b: any) => a.createdAt.getTime() - b.createdAt.getTime())
 
     const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
 
