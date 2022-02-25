@@ -27,9 +27,7 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => LiveTagAuthUser, { name: 'liveTag', nullable: true })
   async getLiveTag(@CurrentUser() authUser: AuthUser): Promise<LiveTagAuthUser | null> {
-    if (!authUser.countryId) throw new Error('No auth user countryId')
-
-    return this.tagService.getAuthUserLiveTag(authUser.id, authUser.countryId)
+    return this.tagService.getAuthUserLiveTag(authUser)
   }
 
   @UseGuards(AuthGuard)

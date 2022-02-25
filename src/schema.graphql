@@ -208,7 +208,6 @@ type Query {
   liveTag: LiveTagAuthUser
   me: Me!
   notifications(after: String, limit: Int = 10): PaginatedNotifications!
-  post(id: String!): Post!
   posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(id: String): Tag!

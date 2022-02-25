@@ -304,7 +304,7 @@ export class PushNotificationService {
     return Promise.allSettled(deleteTokens.flat())
   }
 
-  async newLiveTag(authUserCountryId: string) {
+  async newLiveTag(authorCountryId: string) {
     if (process.env.NODE_ENV !== 'production') return
 
     const allPushTokens = await this.prismaService.expoPushNotificationAccessToken.findMany({
@@ -322,7 +322,7 @@ export class PushNotificationService {
         user: {
           school: {
             city: {
-              countryId: authUserCountryId,
+              countryId: authorCountryId,
             },
           },
         },
