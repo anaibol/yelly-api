@@ -6,4 +6,5 @@ export class PostsArgs extends CursorPaginationArgs {
   tag?: string
   userId?: string
   schoolId?: string
+  forYou?: boolean
 }

@@ -30,7 +30,13 @@ export class PostService {
     return true
   }
 
-  async find(authUser: AuthUser, tagText?: string, schoolId?: string, currentCursor?: string, limit = DEFAULT_LIMIT) {
+  async findForYou(
+    authUser: AuthUser,
+    tagText?: string,
+    schoolId?: string,
+    currentCursor?: string,
+    limit = DEFAULT_LIMIT
+  ) {
     const userAge = authUser.birthdate && dates.getAge(authUser.birthdate)
     const datesRanges = userAge ? dates.getDateRanges(userAge) : undefined
 
@@ -46,16 +52,16 @@ export class PostService {
             }
           : {}),
         author: {
-          // ...(!schoolId && authUser.countryId
-          //   ? {
-          //       school: {
-          //         city: {
-          //           countryId: authUser.countryId,
-          //         },
-          //       },
-          //     }
-          //   : {}),
-          // birthdate: datesRanges,
+          ...(!schoolId && authUser.countryId
+            ? {
+                school: {
+                  city: {
+                    countryId: authUser.countryId,
+                  },
+                },
+              }
+            : {}),
+          birthdate: datesRanges,
         },
         ...(schoolId
           ? {
@@ -71,9 +77,6 @@ export class PostService {
         },
         skip: 1,
       }),
-      // orderBy: {
-      //   createdAt: 'desc',
-      // },
       take: limit,
       select: PostSelect,
     }
@@ -120,6 +123,27 @@ export class PostService {
       },
     })
 
+    const friendsReactedPosts = this.prismaService.post.findMany({
+      ...defaultQuery,
+      where: {
+        ...defaultQuery.where,
+        reactions: {
+          some: {
+            author: {
+              friends: {
+                some: {
+                  otherUserId: authUser.id,
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
     const sameSchoolPosts = this.prismaService.post.findMany({
       ...defaultQuery,
       where: {
@@ -150,9 +174,68 @@ export class PostService {
       },
     })
 
-    const results = await Promise.all([sameSchoolPosts, sameCityPosts, friendsPosts, friendsOfFriendsPosts])
+    const results = await Promise.all([
+      sameSchoolPosts,
+      sameCityPosts,
+      friendsPosts,
+      friendsOfFriendsPosts,
+      friendsReactedPosts,
+    ])
 
     const posts = [...new Set(results.flat())].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+
+    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
+
+    return { posts, nextCursor }
+  }
+
+  async find(authUser: AuthUser, tagText?: string, schoolId?: string, currentCursor?: string, limit = DEFAULT_LIMIT) {
+    const userAge = authUser.birthdate && dates.getAge(authUser.birthdate)
+    const datesRanges = userAge ? dates.getDateRanges(userAge) : undefined
+
+    const posts = await this.prismaService.post.findMany({
+      where: {
+        ...(tagText
+          ? {
+              tags: {
+                every: {
+                  text: tagText,
+                },
+              },
+            }
+          : {}),
+        author: {
+          ...(!schoolId && authUser.countryId
+            ? {
+                school: {
+                  city: {
+                    countryId: authUser.countryId,
+                  },
+                },
+              }
+            : {}),
+          birthdate: datesRanges,
+        },
+        ...(schoolId
+          ? {
+              author: {
+                schoolId,
+              },
+            }
+          : {}),
+      },
+      ...(currentCursor && {
+        cursor: {
+          createdAt: new Date(+currentCursor).toISOString(),
+        },
+        skip: 1,
+      }),
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
+      select: PostSelect,
+    })
 
     const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
 
