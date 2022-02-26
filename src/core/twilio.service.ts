@@ -22,7 +22,8 @@ export default class TwilioService {
       },
     })
 
-    if (!user || !user.isActive) return null
+    if (!user) return null
+    // if (!user || !user.isActive) return null
 
     return await this.twilioClient.verify
       .services(process.env.TWILIO_VERIFICATION_SERVICE_SID)
