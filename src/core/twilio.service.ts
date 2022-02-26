@@ -11,21 +11,8 @@ export default class TwilioService {
     this.twilioClient = new Twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
   }
 
-  async initPhoneNumberVerification(phoneNumber: string, locale: string): Promise<VerificationInstance | null> {
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        phoneNumber,
-      },
-      select: {
-        id: true,
-        isActive: true,
-      },
-    })
-
-    if (!user) return null
-    // if (!user || !user.isActive) return null
-
-    return await this.twilioClient.verify
+  initPhoneNumberVerification(phoneNumber: string, locale: string): Promise<VerificationInstance | null> {
+    return this.twilioClient.verify
       .services(process.env.TWILIO_VERIFICATION_SERVICE_SID)
       .verifications.create({ to: phoneNumber, channel: 'sms', locale })
   }
