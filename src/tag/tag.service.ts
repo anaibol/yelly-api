@@ -169,7 +169,7 @@ export class TagService {
       },
     })
 
-    await this.pushNotificationService.newLiveTag(countryId)
+    this.pushNotificationService.newLiveTag(countryId)
 
     return newTag
   }

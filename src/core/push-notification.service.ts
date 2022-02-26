@@ -278,34 +278,29 @@ export class PushNotificationService {
     messages: ExpoPushMessage[],
     tokens: ExpoPushNotificationAccessToken[],
     trackEvent?: TRACK_EVENT
-  ): Promise<PromiseSettledResult<boolean>[]> {
-    const results = await expo.sendNotifications(messages)
+  ): Promise<(boolean[] | undefined)[]> {
+    const res = await expo.sendNotifications(messages)
 
-    const deleteTokens = results.map((result, index) => {
-      if (result.status !== 'fulfilled') return false
+    return res.map((result, index) => {
+      if (result.status !== 'fulfilled') return
 
       const expoPushTickets = result.value
-
       return expoPushTickets.map((ticket) => {
         if (ticket.status == 'ok') {
           if (trackEvent) this.amplitudeService.logEvent(trackEvent, tokens[index].userId)
-
           return true
         } else {
           const errorType = ticket.details?.error
           if (errorType === 'DeviceNotRegistered')
             this.expoPushNotificationTokenService.deleteByUserAndToken(tokens[index].userId, tokens[index].token)
-
           return false
         }
       })
     })
-
-    return Promise.allSettled(deleteTokens.flat())
   }
 
-  async newLiveTag(authUserCountryId: string) {
-    if (process.env.NODE_ENV !== 'production') return
+  async newLiveTag(authorCountryId: string) {
+    if (process.env.NODE_ENV === 'development') return
 
     const allPushTokens = await this.prismaService.expoPushNotificationAccessToken.findMany({
       select: {
@@ -322,7 +317,7 @@ export class PushNotificationService {
         user: {
           school: {
             city: {
-              countryId: authUserCountryId,
+              countryId: authorCountryId,
             },
           },
         },
@@ -330,27 +325,23 @@ export class PushNotificationService {
     })
 
     try {
-      const allMessages = await Promise.allSettled(
-        allPushTokens.map(async ({ token, user: { locale: lang } }) => {
-          return {
-            to: token,
-            sound: 'default' as const,
-            title: 'Yelly',
-            body: await this.i18n.translate('notifications.NEW_LIVE_TAG_BODY', { ...(lang && { lang }) }),
-          }
-        })
+      const messages = await Promise.all(
+        allPushTokens
+          .map(async ({ token, user: { locale: lang } }) => {
+            return {
+              to: token,
+              sound: 'default' as const,
+              title: 'Yelly',
+              body: await this.i18n
+                .translate('notifications.NEW_LIVE_TAG_BODY', { ...(lang && { lang }) })
+                .catch((e) => null),
+            }
+          })
+          .filter((v) => v)
       )
 
-      const messages = allMessages
-        .map((message) => {
-          if (message.status !== 'fulfilled') return
-
-          return message.value
-        })
-        .filter((v) => v)
-
       // Typescript is not smart to recognize it will never be undefined
-      await this.sendNotifications(messages as ExpoPushMessage[], allPushTokens, 'NEW_LIVE_TAG_PUSH_NOTIFICATION_SENT')
+      await this.sendNotifications(messages, allPushTokens, 'NEW_LIVE_TAG_PUSH_NOTIFICATION_SENT')
     } catch (e) {
       throw e
     }
