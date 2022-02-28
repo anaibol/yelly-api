@@ -412,6 +412,31 @@ export class UserService {
     return friendRequest
   }
 
+  async deleteFriendRequest(authUser: AuthUser, friendRequestId: string): Promise<boolean> {
+    const exists = await this.prismaService.friendRequest.findFirst({
+      where: {
+        id: friendRequestId,
+        fromUserId: authUser.id,
+      },
+    })
+
+    if (!exists) return false
+
+    await this.prismaService.notification.delete({
+      where: {
+        friendRequestId,
+      },
+    })
+
+    await this.prismaService.friendRequest.delete({
+      where: {
+        id: friendRequestId,
+      },
+    })
+
+    return true
+  }
+
   async getCommonFriends(
     userId: string,
     otherUserId: string,
