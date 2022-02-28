@@ -61,7 +61,7 @@ export class PostService {
                 },
               }
             : {}),
-          //    birthdate: datesRanges,
+          birthdate: datesRanges,
         },
         ...(schoolId
           ? {
