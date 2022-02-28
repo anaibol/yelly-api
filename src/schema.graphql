@@ -135,6 +135,7 @@ type Mutation {
   declineFriendRequest(friendRequestId: String!): Boolean!
   deleteAuthUser: Boolean!
   deleteExpoPushNotificationsToken(input: String!): Boolean!
+  deleteFriendRequest(friendRequestId: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!

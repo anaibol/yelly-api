@@ -47,6 +47,15 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
+  deleteFriendRequest(
+    @Args('friendRequestId') friendRequestId: string,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<boolean> {
+    return this.userService.deleteFriendRequest(authUser, friendRequestId)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
   unfriend(@Args('otherUserId') otherUserId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.userService.deleteFriendship(authUser.id, otherUserId)
   }
