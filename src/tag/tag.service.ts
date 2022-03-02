@@ -106,25 +106,9 @@ export class TagService {
   }
 
   async createLiveTag(text: string, authorId: string, countryId: string) {
-    // await this.prismaService.tag.updateMany({
-    //   where: {
-    //     isLive: true,
-    //     author: {
-    //       school: {
-    //         city: {
-    //           countryId,
-    //         },
-    //       },
-    //     },
-    //   },
-    //   data: {
-    //     isLive: false,
-    //   },
-    // })
-
-    const previousTag = await this.prismaService.tag.findFirst({
+    await this.prismaService.tag.updateMany({
       where: {
-        text,
+        isLive: true,
         author: {
           school: {
             city: {
@@ -133,31 +117,32 @@ export class TagService {
           },
         },
       },
+      data: {
+        isLive: false,
+      },
+    })
+
+    const previousTag = await this.prismaService.tag.findFirst({
+      where: {
+        text,
+      },
     })
 
     const newTag = previousTag
       ? await this.prismaService.tag.update({
           where: {
-            text,
+            id: previousTag.id,
           },
           data: {
             isLive: true,
-            author: {
-              connect: {
-                id: authorId,
-              },
-            },
+            authorId,
           },
         })
       : await this.prismaService.tag.create({
           data: {
             text,
             isLive: true,
-            author: {
-              connect: {
-                id: authorId,
-              },
-            },
+            authorId,
           },
         })
 
