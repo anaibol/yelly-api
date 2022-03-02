@@ -104,7 +104,7 @@ export class UserService {
                 country: {
                   select: {
                     id: true,
-                    name: true,
+                    code: true,
                   },
                 },
               },
@@ -274,7 +274,7 @@ export class UserService {
                 country: {
                   select: {
                     id: true,
-                    name: true,
+                    code: true,
                   },
                 },
               },
@@ -679,7 +679,7 @@ export class UserService {
                 country: {
                   select: {
                     id: true,
-                    name: true,
+                    code: true,
                   },
                 },
               },

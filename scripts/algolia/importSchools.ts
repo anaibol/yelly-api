@@ -42,7 +42,7 @@ async function main() {
           },
           country: {
             id: school.city.country.id,
-            name: school.city.country.name,
+            code: school.city.country.code,
           },
         },
         userCount: school._count.users,

@@ -42,7 +42,7 @@ export class SchoolService {
         },
         country: {
           id: school.city.country.id,
-          name: school.city.country.name,
+          code: school.city.country.code,
         },
       },
       userCount: school._count.users,
@@ -175,10 +175,10 @@ export class SchoolService {
         country: {
           connectOrCreate: {
             where: {
-              name: country.long_name,
+              code: country.short_name.toLowerCase(),
             },
             create: {
-              name: country.long_name,
+              code: country.short_name.toLowerCase(),
             },
           },
         },

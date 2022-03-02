@@ -23,7 +23,7 @@ export const PostSelect = {
               country: {
                 select: {
                   id: true,
-                  name: true,
+                  code: true,
                 },
               },
             },

@@ -23,7 +23,7 @@ model City {
 
 model Country {
   id   String @id @default(uuid())
-  name String @unique
+  code String @unique
   city City[]
 }
 

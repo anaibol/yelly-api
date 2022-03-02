@@ -34,7 +34,7 @@ async function main() {
         name: city.name,
         country: {
           id: city.country.id,
-          name: city.country.name,
+          code: city.country.code,
         },
         googlePlaceId: city.googlePlaceId,
         _geoloc: {

@@ -23,7 +23,7 @@ export type UserIndexAlgoliaInterface = {
       googlePlaceId?: string | null
       country: {
         id?: string
-        name?: string
+        code?: string
       }
       _geoloc: {
         lat?: number | null
@@ -68,7 +68,7 @@ export const algoliaUserSelect = {
           country: {
             select: {
               id: true,
-              name: true,
+              code: true,
             },
           },
         },
@@ -134,7 +134,7 @@ export const algoliaSchoolSelect = {
       country: {
         select: {
           id: true,
-          name: true,
+          code: true,
         },
       },
     },
@@ -171,7 +171,7 @@ export function mapAlgoliaUser(user: UserWithPosts): UserIndexAlgoliaInterface {
         googlePlaceId: user.school?.city?.googlePlaceId,
         country: {
           id: user.school?.city.country.id,
-          name: user.school?.city.country.name,
+          code: user.school?.city.country.code,
         },
         _geoloc: {
           lat: user.school?.city?.lat,
