@@ -194,6 +194,12 @@ export class UserService {
       `,
     })
 
+    if (!result.length)
+      return {
+        items: [],
+        nextCursor: '',
+      }
+
     return {
       items: result[0].friendsConnection.edges.map(({ node }) => ({
         id: node.id,
