@@ -20,7 +20,7 @@ import { UserService } from 'src/user/user.service'
 
 @Resolver(Tag)
 export class TagResolver {
-  constructor(private tagService: TagService, private userService: UserService, private prismaService: PrismaService) {}
+  constructor(private tagService: TagService, private prismaService: PrismaService) {}
 
   @UseGuards(AuthGuard)
   @Query(() => [Tag])
