@@ -420,7 +420,7 @@ export class UserService {
       },
     })
 
-    if (!exists) return false
+    if (!exists) throw new Error("Friend request doesn't exists or is not from this user")
 
     await this.prismaService.notification.delete({
       where: {
@@ -596,6 +596,9 @@ export class UserService {
         },
       }),
     ])
+
+    return true
+
     // return this.prismaService.friend.deleteMany({
     //   where: {
     //     OR: [
@@ -610,8 +613,6 @@ export class UserService {
     //     ],
     //   },
     // })
-
-    return true
   }
 
   async syncUsersIndexWithAlgolia(userId: string) {

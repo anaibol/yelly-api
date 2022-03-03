@@ -34,8 +34,10 @@ async function main() {
       console.log('finish')
       return
     }
+
     skip += CHUNK_SIZE
     console.log('insert ' + skip)
+
     const algoliaCities = cities.map((city) => {
       return {
         id: city.id,
