@@ -2,17 +2,25 @@ import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 import { algoliaTagSelect } from '../../src/utils/algolia'
 
+const INDEX_NAME = 'dev_TAGS'
+const CHUNK_SIZE = 5000
+
+const algoliaKey = process.env.ALGOLIA_API_KEY as string
+const algoliaId = process.env.ALGOLIA_APP_ID as string
+const prisma = new PrismaClient()
+
 async function main() {
-  const INDEX_NAME = 'prod_TAGS'
-  const prisma = new PrismaClient()
+  const algoliaClient = await algoliasearch(algoliaId, algoliaKey)
+  const userIndex = await algoliaClient.initIndex(INDEX_NAME)
 
   let hasTags = true
   let skip = 0
+
   while (hasTags) {
     const tags = await prisma.tag.findMany({
       select: algoliaTagSelect,
       skip: skip,
-      take: 500,
+      take: CHUNK_SIZE,
     })
 
     if (tags.length == 0) {
@@ -20,7 +28,9 @@ async function main() {
       console.log('finish')
       return
     }
-    skip += 500
+
+    skip += CHUNK_SIZE
+
     console.log('insert ' + skip)
     const algoliaTags = tags.map((tag) => {
       const lastPost = tag.posts[0]
@@ -41,8 +51,6 @@ async function main() {
 
     //console.log(algoliaTags)
 
-    const algoliaClient = await algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_API_KEY)
-    const userIndex = await algoliaClient.initIndex(INDEX_NAME)
     userIndex.partialUpdateObjects(algoliaTags, { createIfNotExists: true })
   }
 }

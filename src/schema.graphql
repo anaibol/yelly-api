@@ -23,8 +23,8 @@ type City {
 }
 
 type Country {
+  code: String!
   id: ID!
-  name: String!
 }
 
 input CreateCommentInput {

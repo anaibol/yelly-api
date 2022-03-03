@@ -1,12 +1,20 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 
+const INDEX_NAME = 'dev_CITIES'
+const CHUNK_SIZE = 5000
+
+const algoliaKey = process.env.ALGOLIA_API_KEY as string
+const algoliaId = process.env.ALGOLIA_APP_ID as string
+const prisma = new PrismaClient()
+
 async function main() {
-  const INDEX_NAME = 'dev_CITIES'
-  const prisma = new PrismaClient()
+  const algoliaClient = await algoliasearch(algoliaId, algoliaKey)
+  const userIndex = await algoliaClient.initIndex(INDEX_NAME)
 
   let hasCities = true
   let skip = 0
+
   while (hasCities) {
     const cities = await prisma.city.findMany({
       select: {
@@ -18,7 +26,7 @@ async function main() {
         country: true,
       },
       skip: skip,
-      take: 500,
+      take: CHUNK_SIZE,
     })
 
     if (cities.length == 0) {
@@ -26,7 +34,7 @@ async function main() {
       console.log('finish')
       return
     }
-    skip += 500
+    skip += CHUNK_SIZE
     console.log('insert ' + skip)
     const algoliaCities = cities.map((city) => {
       return {
@@ -45,8 +53,6 @@ async function main() {
       }
     })
 
-    const algoliaClient = await algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_API_KEY)
-    const userIndex = await algoliaClient.initIndex(INDEX_NAME)
     userIndex.partialUpdateObjects(algoliaCities, { createIfNotExists: true })
   }
 }
