@@ -49,14 +49,14 @@ async function main() {
         // find country
         let country = await prisma.country.findFirst({
           where: {
-            name: city.country.name,
+            code: city.country.code,
           },
         })
 
         if (!country) {
           country = await prisma.country.create({
             data: {
-              name: city.country.name,
+              code: city.country.code,
             },
           })
         }
@@ -133,7 +133,7 @@ async function getInfosCity(googlePlaceId: string) {
     lat: typeof cityLat === 'function' ? cityLat() : cityLat,
     lng: typeof cityLng === 'function' ? cityLng() : cityLng,
     country: {
-      name: country.long_name,
+      code: country.short_name,
     },
   }
 }

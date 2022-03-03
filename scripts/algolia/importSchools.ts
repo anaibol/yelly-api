@@ -2,16 +2,24 @@ import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 import { algoliaSchoolSelect } from '../../src/utils/algolia'
 
+const INDEX_NAME = 'dev_SCHOOLS'
+const CHUNK_SIZE = 5000
+
+const algoliaKey = process.env.ALGOLIA_API_KEY as string
+const algoliaId = process.env.ALGOLIA_APP_ID as string
+const prisma = new PrismaClient()
+
 async function main() {
-  const INDEX_NAME = 'dev_SCHOOLS'
-  const prisma = new PrismaClient()
+  const algoliaClient = await algoliasearch(algoliaId, algoliaKey)
+  const userIndex = await algoliaClient.initIndex(INDEX_NAME)
 
   let hasSchools = true
   let skip = 0
+
   while (hasSchools) {
     const schools = await prisma.school.findMany({
       skip: skip,
-      take: 500,
+      take: CHUNK_SIZE,
       select: algoliaSchoolSelect,
     })
 
@@ -21,7 +29,7 @@ async function main() {
       return
     }
 
-    skip += 500
+    skip += CHUNK_SIZE
     console.log('insert ' + skip)
 
     const algoliaSchools = schools.map((school) => {
@@ -42,7 +50,7 @@ async function main() {
           },
           country: {
             id: school.city.country.id,
-            name: school.city.country.name,
+            code: school.city.country.code,
           },
         },
         userCount: school._count.users,
@@ -50,8 +58,6 @@ async function main() {
       }
     })
 
-    const algoliaClient = await algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_API_KEY)
-    const userIndex = await algoliaClient.initIndex(INDEX_NAME)
     userIndex.partialUpdateObjects(algoliaSchools, { createIfNotExists: true })
   }
 }

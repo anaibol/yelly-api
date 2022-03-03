@@ -5,7 +5,7 @@ import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { AccessToken } from 'src/user/accessToken.model'
 
-export type AuthUser = { id: string; countryId?: string; birthdate?: Date | null }
+export type AuthUser = { id: string; countryId?: string; cityId?: string; schoolId?: string; birthdate?: Date | null }
 
 const refreshRole = 'refresh'
 

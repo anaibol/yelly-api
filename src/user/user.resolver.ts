@@ -33,7 +33,7 @@ export class UserResolver {
     @Args('otherUserId') otherUserId: string,
     @CurrentUser() authUser: AuthUser
   ): Promise<FriendRequest> {
-    return this.userService.createFriendRequest(authUser.id, otherUserId)
+    return this.userService.createFriendRequest(authUser, otherUserId)
   }
 
   @UseGuards(AuthGuard)
@@ -42,7 +42,16 @@ export class UserResolver {
     @Args('friendRequestId') friendRequestId: string,
     @CurrentUser() authUser: AuthUser
   ): Promise<boolean> {
-    return this.userService.acceptFriendRequest(authUser.id, friendRequestId)
+    return this.userService.acceptFriendRequest(authUser, friendRequestId)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  deleteFriendRequest(
+    @Args('friendRequestId') friendRequestId: string,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<boolean> {
+    return this.userService.deleteFriendRequest(authUser, friendRequestId)
   }
 
   @UseGuards(AuthGuard)
@@ -57,7 +66,7 @@ export class UserResolver {
     @Args('friendRequestId') friendRequestId: string,
     @CurrentUser() authUser: AuthUser
   ): Promise<boolean> {
-    return this.userService.declineFriendRequest(authUser.id, friendRequestId)
+    return this.userService.declineFriendRequest(authUser, friendRequestId)
   }
 
   @ResolveField()

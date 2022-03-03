@@ -23,7 +23,7 @@ model City {
 
 model Country {
   id   String @id @default(uuid())
-  name String @unique
+  code String @unique
   city City[]
 }
 
@@ -32,23 +32,10 @@ model Notification {
   isSeen          Boolean        @default(false)
   createdAt       DateTime       @unique @default(now())
   postReactionId  String?        @unique
-  followshipId    String?        @unique
   userId          String
   friendRequestId String?        @unique
   friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id])
   postReaction    PostReaction?  @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
-}
-
-model Followship {
-  followerId String
-  followeeId String
-  createdAt  DateTime @unique @default(now())
-  id         String   @default(uuid())
-  followee   User     @relation("followees", fields: [followeeId], references: [id], onDelete: Cascade)
-  follower   User     @relation("followers", fields: [followerId], references: [id], onDelete: Cascade)
-
-  @@id([followerId, followeeId])
-  @@index([followeeId], map: "Followship_followeeId_fkey")
 }
 
 model School {
@@ -96,13 +83,11 @@ model User {
   trainingId                   String?
   schoolId                     String?
   avatar3dId                   String?
-  phoneNumber                  String?                           @unique(map: "User_phoneNumber_fkey")
+  phoneNumber                  String?                           @unique
   userId                       String?
   school                       School?                           @relation(fields: [schoolId], references: [id])
   training                     Training?                         @relation(fields: [trainingId], references: [id])
   expoPushNotificationTokens   ExpoPushNotificationAccessToken[]
-  followeesFollowships         Followship[]                      @relation("followees")
-  followersFollowships         Followship[]                      @relation("followers")
   friendUserFriends            Friend[]                          @relation("friendUserFriends")
   friends                      Friend[]                          @relation("userFriends")
   friendRequestFromUser        FriendRequest[]                   @relation("friendRequestFromUser")
@@ -156,14 +141,14 @@ model Tag {
 }
 
 model Post {
-  id         String         @id @default(uuid())
-  text       String         @db.Text
-  createdAt  DateTime       @unique @default(now())
+  id         String        @id @default(uuid())
+  text       String        @db.Text
+  createdAt  DateTime      @unique @default(now())
   authorId   String
-  viewsCount Int            @default(0)
+  viewsCount Int           @default(0)
   schoolId   String?
-  author     User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  school     School?        @relation(fields: [schoolId], references: [id])
+  author     User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  school     School?       @relation(fields: [schoolId], references: [id])
   comments   PostComment[]
   reactions  PostReaction[]
   tags       Tag[]
@@ -192,7 +177,7 @@ model PostReaction {
   postId       String
   authorId     String
   author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "PostReaction_ibfk_1")
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   notification Notification?
 
   @@unique([authorId, postId], map: "author_post_id_fkey")

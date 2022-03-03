@@ -46,10 +46,7 @@ CREATE TABLE `Followship` (
     `id` VARCHAR(191) NOT NULL,
 
     UNIQUE INDEX `Followship_createdAt_key`(`createdAt`),
-<<<<<<<< HEAD:prisma/migrations/20220215165102_initial_migration/migration.sql
-========
     INDEX `Followship_followeeId_fkey`(`followeeId`),
->>>>>>>> develop:prisma/migrations/20220223130450_init/migration.sql
     PRIMARY KEY (`followerId`, `followeeId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -106,13 +103,9 @@ CREATE TABLE `User` (
     `userId` VARCHAR(191) NULL,
 
     UNIQUE INDEX `User_email_key`(`email`),
-<<<<<<<< HEAD:prisma/migrations/20220215165102_initial_migration/migration.sql
-    UNIQUE INDEX `User_phoneNumber_key`(`phoneNumber`),
-========
     UNIQUE INDEX `User_phoneNumber_fkey`(`phoneNumber`),
     INDEX `User_schoolId_fkey`(`schoolId`),
     INDEX `User_trainingId_fkey`(`trainingId`),
->>>>>>>> develop:prisma/migrations/20220223130450_init/migration.sql
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -126,10 +119,7 @@ CREATE TABLE `FriendRequest` (
     `notificationId` VARCHAR(191) NULL,
 
     UNIQUE INDEX `FriendRequest_id_key`(`id`),
-<<<<<<<< HEAD:prisma/migrations/20220215165102_initial_migration/migration.sql
-========
     INDEX `FriendRequest_toUserId_fkey`(`toUserId`),
->>>>>>>> develop:prisma/migrations/20220223130450_init/migration.sql
     PRIMARY KEY (`fromUserId`, `toUserId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -141,10 +131,7 @@ CREATE TABLE `Friend` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `Friend_id_key`(`id`),
-<<<<<<<< HEAD:prisma/migrations/20220215165102_initial_migration/migration.sql
-========
     INDEX `Friend_otherUserId_fkey`(`otherUserId`),
->>>>>>>> develop:prisma/migrations/20220223130450_init/migration.sql
     PRIMARY KEY (`userId`, `otherUserId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -171,12 +158,9 @@ CREATE TABLE `Post` (
     `schoolId` VARCHAR(191) NULL,
 
     UNIQUE INDEX `Post_createdAt_key`(`createdAt`),
-<<<<<<<< HEAD:prisma/migrations/20220215165102_initial_migration/migration.sql
     UNIQUE INDEX `Post_authorId_id_key`(`authorId`, `id`),
-========
     INDEX `Post_schoolId_fkey`(`schoolId`),
     UNIQUE INDEX `author_post_id_fkey`(`authorId`, `id`),
->>>>>>>> develop:prisma/migrations/20220223130450_init/migration.sql
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -196,30 +180,15 @@ CREATE TABLE `PostComment` (
 
 -- CreateTable
 CREATE TABLE `PostReaction` (
-    `id` VARCHAR(191) NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `reaction` VARCHAR(191) NOT NULL,
-    `postId` VARCHAR(191) NOT NULL,
-    `authorId` VARCHAR(191) NOT NULL,
+  `id` varchar(191) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `reaction` varchar(191) NOT NULL,
+  `postId` varchar(191) NOT NULL,
+  `authorId` varchar(191) NOT NULL,
 
-    UNIQUE INDEX `PostReaction_createdAt_key`(`createdAt`),
-<<<<<<<< HEAD:prisma/migrations/20220215165102_initial_migration/migration.sql
-    UNIQUE INDEX `PostReaction_authorId_postId_key`(`authorId`, `postId`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `ExpoPushNotificationAccessToken` (
-    `id` VARCHAR(191) NOT NULL,
-    `userId` VARCHAR(191) NOT NULL,
-    `token` VARCHAR(191) NOT NULL,
-
-    UNIQUE INDEX `ExpoPushNotificationAccessToken_token_key`(`token`),
-========
-    INDEX `PostReaction_postId_fkey`(`postId`),
-    UNIQUE INDEX `author_post_id_fkey`(`authorId`, `postId`),
->>>>>>>> develop:prisma/migrations/20220223130450_init/migration.sql
-    PRIMARY KEY (`id`)
+  UNIQUE INDEX `author_post_id_fkey`(`authorId`, `postId`),
+  UNIQUE INDEX `PostReaction_createdAt_key` (`createdAt`),
+  PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -297,11 +266,7 @@ ALTER TABLE `PostComment` ADD CONSTRAINT `PostComment_postId_fkey` FOREIGN KEY (
 ALTER TABLE `PostReaction` ADD CONSTRAINT `PostReaction_authorId_fkey` FOREIGN KEY (`authorId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-<<<<<<<< HEAD:prisma/migrations/20220215165102_initial_migration/migration.sql
 ALTER TABLE `PostReaction` ADD CONSTRAINT `PostReaction_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `Post`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-========
-ALTER TABLE `PostReaction` ADD CONSTRAINT `PostReaction_ibfk_1` FOREIGN KEY (`postId`) REFERENCES `Post`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT;
->>>>>>>> develop:prisma/migrations/20220223130450_init/migration.sql
 
 -- AddForeignKey
 ALTER TABLE `ExpoPushNotificationAccessToken` ADD CONSTRAINT `ExpoPushNotificationAccessToken_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

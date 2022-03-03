@@ -17,6 +17,7 @@ import { Me } from './me.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { FriendRequest } from './friendRequest.model'
 import { SendbirdAccessToken } from './sendbirdAccessToken'
+import { AuthUser } from 'src/auth/auth.service'
 
 @Injectable()
 export class UserService {
@@ -103,7 +104,7 @@ export class UserService {
                 country: {
                   select: {
                     id: true,
-                    name: true,
+                    code: true,
                   },
                 },
               },
@@ -273,7 +274,7 @@ export class UserService {
                 country: {
                   select: {
                     id: true,
-                    name: true,
+                    code: true,
                   },
                 },
               },
@@ -385,12 +386,12 @@ export class UserService {
     }
   }
 
-  async createFriendRequest(userId: string, otherUserId: string): Promise<FriendRequest> {
+  async createFriendRequest(authUser: AuthUser, otherUserId: string): Promise<FriendRequest> {
     const friendRequest = await this.prismaService.friendRequest.create({
       data: {
         fromUser: {
           connect: {
-            id: userId,
+            id: authUser.id,
           },
         },
         toUser: {
@@ -409,6 +410,31 @@ export class UserService {
     this.pushNotificationService.createFriendRequestPushNotification(friendRequest)
 
     return friendRequest
+  }
+
+  async deleteFriendRequest(authUser: AuthUser, friendRequestId: string): Promise<boolean> {
+    const exists = await this.prismaService.friendRequest.findFirst({
+      where: {
+        id: friendRequestId,
+        fromUserId: authUser.id,
+      },
+    })
+
+    if (!exists) throw new Error("Friend request doesn't exists or is not from this user")
+
+    await this.prismaService.notification.delete({
+      where: {
+        friendRequestId,
+      },
+    })
+
+    await this.prismaService.friendRequest.delete({
+      where: {
+        id: friendRequestId,
+      },
+    })
+
+    return true
   }
 
   async getCommonFriends(
@@ -431,11 +457,11 @@ export class UserService {
     }
   }
 
-  async declineFriendRequest(authUserId: string, friendRequestId: string): Promise<boolean> {
+  async declineFriendRequest(authUser: AuthUser, friendRequestId: string): Promise<boolean> {
     const exists = await this.prismaService.friendRequest.findFirst({
       where: {
         id: friendRequestId,
-        toUserId: authUserId,
+        toUserId: authUser.id,
       },
     })
 
@@ -459,11 +485,11 @@ export class UserService {
     return true
   }
 
-  async acceptFriendRequest(authUserId: string, friendRequestId: string): Promise<boolean> {
+  async acceptFriendRequest(authUser: AuthUser, friendRequestId: string): Promise<boolean> {
     const friendRequest = await this.prismaService.friendRequest.findFirst({
       where: {
         id: friendRequestId,
-        toUserId: authUserId,
+        toUserId: authUser.id,
       },
     })
 
@@ -570,6 +596,9 @@ export class UserService {
         },
       }),
     ])
+
+    return true
+
     // return this.prismaService.friend.deleteMany({
     //   where: {
     //     OR: [
@@ -584,8 +613,6 @@ export class UserService {
     //     ],
     //   },
     // })
-
-    return true
   }
 
   async syncUsersIndexWithAlgolia(userId: string) {
@@ -653,7 +680,7 @@ export class UserService {
                 country: {
                   select: {
                     id: true,
-                    name: true,
+                    code: true,
                   },
                 },
               },

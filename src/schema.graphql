@@ -23,8 +23,8 @@ type City {
 }
 
 type Country {
+  code: String!
   id: ID!
-  name: String!
 }
 
 input CreateCommentInput {
@@ -116,7 +116,7 @@ type Me {
   locale: String
   phoneNumber: String
   pictureId: String
-  posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
   school: School
   sendbirdAccessToken: String
   snapchat: String
@@ -135,6 +135,7 @@ type Mutation {
   declineFriendRequest(friendRequestId: String!): Boolean!
   deleteAuthUser: Boolean!
   deleteExpoPushNotificationsToken(input: String!): Boolean!
+  deleteFriendRequest(friendRequestId: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!
@@ -208,8 +209,7 @@ type Query {
   liveTag: LiveTagAuthUser
   me: Me!
   notifications(after: String, limit: Int = 10): PaginatedNotifications!
-  post(id: String!): Post!
-  posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts!
+  posts(after: String, forYou: Boolean, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(id: String): Tag!
   trends(limit: Int = 10, skip: Int): PaginatedTrends!
@@ -229,7 +229,7 @@ type School {
   lat: Float
   lng: Float
   name: String
-  posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
   totalUsersCount: Int
   users: [User!]
 }
@@ -245,7 +245,7 @@ type Tag {
   isLive: Boolean
   lastUsers: [User!]
   postCount: Int
-  posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
   text: String!
 }
 
@@ -300,7 +300,7 @@ type User {
   lastName: String
   locale: String
   pictureId: String
-  posts(after: String, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, schoolId: String, tag: String, userId: String): PaginatedPosts
   school: School
   snapchat: String
   training: Training

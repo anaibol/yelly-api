@@ -10,6 +10,7 @@ import { DEFAULT_LIMIT } from 'src/common/pagination.constant'
 import { PaginatedTrends } from './paginated-trends.model'
 import { Tag } from './tag.model'
 import { LiveTagAuthUser } from 'src/post/live-tag-auth-user.model'
+import { AuthUser } from 'src/auth/auth.service'
 
 @Injectable()
 export class TagService {
@@ -50,14 +51,14 @@ export class TagService {
     return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id)
   }
 
-  async getAuthUserLiveTag(authUserId: string, authUserCountryId: string): Promise<LiveTagAuthUser | null> {
+  async getAuthUserLiveTag(authUser: AuthUser): Promise<LiveTagAuthUser | null> {
     const liveTag = await this.prismaService.tag.findFirst({
       where: {
         isLive: true,
         author: {
           school: {
             city: {
-              countryId: authUserCountryId,
+              countryId: authUser.countryId,
             },
           },
         },
@@ -94,7 +95,7 @@ export class TagService {
 
     const lastUsers = liveTag.posts.map((post) => post.author)
 
-    const authUserPosted = await this.userService.hasUserPostedOnTag(authUserId, liveTag.text)
+    const authUserPosted = await this.userService.hasUserPostedOnTag(authUser.id, liveTag.text)
 
     return {
       ...liveTag,
@@ -186,15 +187,15 @@ export class TagService {
     return true
   }
 
-  async getTrends(authUserCountryId: string, skip = 0, limit = DEFAULT_LIMIT): Promise<PaginatedTrends> {
+  async getTrends(countryId: string, skip = 0, limit = DEFAULT_LIMIT): Promise<PaginatedTrends> {
     const tags = await this.prismaService.tag.findMany({
       where: {
         isLive: false,
-        ...(authUserCountryId && {
+        ...(countryId && {
           author: {
             school: {
               city: {
-                countryId: authUserCountryId,
+                countryId,
               },
             },
           },

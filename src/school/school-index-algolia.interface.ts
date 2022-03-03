@@ -15,7 +15,7 @@ export interface SchoolIndexAlgoliaInterface {
     }
     country: {
       id: string
-      name: string
+      code: string
     }
   }
   userCount: number
