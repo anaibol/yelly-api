@@ -1,10 +1,31 @@
+import { OGM } from '@neo4j/graphql-ogm'
 import { PrismaClient } from '@prisma/client'
-import getNeo from './ogm'
+import { ModelMap } from 'src/generated/ogm-types'
+import { createDriver } from '../../src/neo/createDriver'
+import { typeDefs } from '../../src/neo'
+import 'dotenv/config'
 
 async function main() {
   const prisma = new PrismaClient()
 
-  const { ogmUser, ogmSchool, ogmTraining } = await getNeo()
+  const neoUri = process.env.NEO4J_URI as string
+  const neoUser = process.env.NEO4J_USER as string
+  const neoPassword = process.env.NEO4J_PASSWORD as string
+
+  const driver = await createDriver({
+    uri: neoUri,
+    user: neoUser,
+    password: neoPassword,
+  })
+
+  const ogm = new OGM<ModelMap>({
+    typeDefs,
+    driver: driver,
+  })
+
+  const OgmUser = ogm.model('User')
+  const OgmSchool = ogm.model('School')
+  const OgmTraining = ogm.model('Training')
 
   let hasUsers = true
   let skip = 0
@@ -19,8 +40,8 @@ async function main() {
         schoolId: true,
         trainingId: true,
       },
-      take,
-      skip,
+      take: take,
+      skip: skip,
     })
 
     if (users.length == 0) {
@@ -34,7 +55,7 @@ async function main() {
 
     const usersMap = users.map((user) => {
       return [
-        ogmUser.update({
+        OgmUser.update({
           where: {
             id: user.id,
           },
@@ -56,7 +77,7 @@ async function main() {
           },
         }),
 
-        ogmSchool.update({
+        OgmSchool.update({
           where: {
             id: user.schoolId,
           },
@@ -73,7 +94,7 @@ async function main() {
           },
         }),
 
-        ogmTraining.update({
+        OgmTraining.update({
           where: {
             id: user.trainingId,
           },

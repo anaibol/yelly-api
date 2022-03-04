@@ -26,12 +26,6 @@ export type Query = {
   users: Array<User>
   usersCount: Scalars['Int']
   usersAggregate: UserAggregateSelection
-  tags: Array<Tag>
-  tagsCount: Scalars['Int']
-  tagsAggregate: TagAggregateSelection
-  posts: Array<Post>
-  postsCount: Scalars['Int']
-  postsAggregate: PostAggregateSelection
   trainings: Array<Training>
   trainingsCount: Scalars['Int']
   trainingsAggregate: TrainingAggregateSelection
@@ -44,6 +38,12 @@ export type Query = {
   schools: Array<School>
   schoolsCount: Scalars['Int']
   schoolsAggregate: SchoolAggregateSelection
+  tags: Array<Tag>
+  tagsCount: Scalars['Int']
+  tagsAggregate: TagAggregateSelection
+  posts: Array<Post>
+  postsCount: Scalars['Int']
+  postsAggregate: PostAggregateSelection
 }
 
 export type QueryUsersArgs = {
@@ -57,32 +57,6 @@ export type QueryUsersCountArgs = {
 
 export type QueryUsersAggregateArgs = {
   where?: Maybe<UserWhere>
-}
-
-export type QueryTagsArgs = {
-  where?: Maybe<TagWhere>
-  options?: Maybe<TagOptions>
-}
-
-export type QueryTagsCountArgs = {
-  where?: Maybe<TagWhere>
-}
-
-export type QueryTagsAggregateArgs = {
-  where?: Maybe<TagWhere>
-}
-
-export type QueryPostsArgs = {
-  where?: Maybe<PostWhere>
-  options?: Maybe<PostOptions>
-}
-
-export type QueryPostsCountArgs = {
-  where?: Maybe<PostWhere>
-}
-
-export type QueryPostsAggregateArgs = {
-  where?: Maybe<PostWhere>
 }
 
 export type QueryTrainingsArgs = {
@@ -137,17 +111,37 @@ export type QuerySchoolsAggregateArgs = {
   where?: Maybe<SchoolWhere>
 }
 
+export type QueryTagsArgs = {
+  where?: Maybe<TagWhere>
+  options?: Maybe<TagOptions>
+}
+
+export type QueryTagsCountArgs = {
+  where?: Maybe<TagWhere>
+}
+
+export type QueryTagsAggregateArgs = {
+  where?: Maybe<TagWhere>
+}
+
+export type QueryPostsArgs = {
+  where?: Maybe<PostWhere>
+  options?: Maybe<PostOptions>
+}
+
+export type QueryPostsCountArgs = {
+  where?: Maybe<PostWhere>
+}
+
+export type QueryPostsAggregateArgs = {
+  where?: Maybe<PostWhere>
+}
+
 export type Mutation = {
   __typename?: 'Mutation'
   createUsers: CreateUsersMutationResponse
   deleteUsers: DeleteInfo
   updateUsers: UpdateUsersMutationResponse
-  createTags: CreateTagsMutationResponse
-  deleteTags: DeleteInfo
-  updateTags: UpdateTagsMutationResponse
-  createPosts: CreatePostsMutationResponse
-  deletePosts: DeleteInfo
-  updatePosts: UpdatePostsMutationResponse
   createTrainings: CreateTrainingsMutationResponse
   deleteTrainings: DeleteInfo
   updateTrainings: UpdateTrainingsMutationResponse
@@ -160,6 +154,12 @@ export type Mutation = {
   createSchools: CreateSchoolsMutationResponse
   deleteSchools: DeleteInfo
   updateSchools: UpdateSchoolsMutationResponse
+  createTags: CreateTagsMutationResponse
+  deleteTags: DeleteInfo
+  updateTags: UpdateTagsMutationResponse
+  createPosts: CreatePostsMutationResponse
+  deletePosts: DeleteInfo
+  updatePosts: UpdatePostsMutationResponse
 }
 
 export type MutationCreateUsersArgs = {
@@ -178,42 +178,6 @@ export type MutationUpdateUsersArgs = {
   disconnect?: Maybe<UserDisconnectInput>
   create?: Maybe<UserRelationInput>
   delete?: Maybe<UserDeleteInput>
-}
-
-export type MutationCreateTagsArgs = {
-  input: Array<TagCreateInput>
-}
-
-export type MutationDeleteTagsArgs = {
-  where?: Maybe<TagWhere>
-  delete?: Maybe<TagDeleteInput>
-}
-
-export type MutationUpdateTagsArgs = {
-  where?: Maybe<TagWhere>
-  update?: Maybe<TagUpdateInput>
-  connect?: Maybe<TagConnectInput>
-  disconnect?: Maybe<TagDisconnectInput>
-  create?: Maybe<TagRelationInput>
-  delete?: Maybe<TagDeleteInput>
-}
-
-export type MutationCreatePostsArgs = {
-  input: Array<PostCreateInput>
-}
-
-export type MutationDeletePostsArgs = {
-  where?: Maybe<PostWhere>
-  delete?: Maybe<PostDeleteInput>
-}
-
-export type MutationUpdatePostsArgs = {
-  where?: Maybe<PostWhere>
-  update?: Maybe<PostUpdateInput>
-  connect?: Maybe<PostConnectInput>
-  disconnect?: Maybe<PostDisconnectInput>
-  create?: Maybe<PostRelationInput>
-  delete?: Maybe<PostDeleteInput>
 }
 
 export type MutationCreateTrainingsArgs = {
@@ -286,6 +250,42 @@ export type MutationUpdateSchoolsArgs = {
   disconnect?: Maybe<SchoolDisconnectInput>
   create?: Maybe<SchoolRelationInput>
   delete?: Maybe<SchoolDeleteInput>
+}
+
+export type MutationCreateTagsArgs = {
+  input: Array<TagCreateInput>
+}
+
+export type MutationDeleteTagsArgs = {
+  where?: Maybe<TagWhere>
+  delete?: Maybe<TagDeleteInput>
+}
+
+export type MutationUpdateTagsArgs = {
+  where?: Maybe<TagWhere>
+  update?: Maybe<TagUpdateInput>
+  connect?: Maybe<TagConnectInput>
+  disconnect?: Maybe<TagDisconnectInput>
+  create?: Maybe<TagRelationInput>
+  delete?: Maybe<TagDeleteInput>
+}
+
+export type MutationCreatePostsArgs = {
+  input: Array<PostCreateInput>
+}
+
+export type MutationDeletePostsArgs = {
+  where?: Maybe<PostWhere>
+  delete?: Maybe<PostDeleteInput>
+}
+
+export type MutationUpdatePostsArgs = {
+  where?: Maybe<PostWhere>
+  update?: Maybe<PostUpdateInput>
+  connect?: Maybe<PostConnectInput>
+  disconnect?: Maybe<PostDisconnectInput>
+  create?: Maybe<PostRelationInput>
+  delete?: Maybe<PostDeleteInput>
 }
 
 export enum SortDirection {
@@ -368,7 +368,7 @@ export type CityCountryCountryAggregationSelection = {
 export type CityCountryCountryNodeAggregateSelection = {
   __typename?: 'CityCountryCountryNodeAggregateSelection'
   id: IdAggregateSelection
-  code: StringAggregateSelection
+  name: StringAggregateSelection
 }
 
 export type CityCountryRelationship = {
@@ -408,7 +408,7 @@ export type CitySchoolsRelationship = {
 export type Country = {
   __typename?: 'Country'
   id: Scalars['ID']
-  code: Scalars['String']
+  name: Scalars['String']
   cities?: Maybe<Array<City>>
   citiesAggregate?: Maybe<CountryCityCitiesAggregationSelection>
   citiesConnection: CountryCitiesConnection
@@ -434,7 +434,7 @@ export type CountryAggregateSelection = {
   __typename?: 'CountryAggregateSelection'
   count: Scalars['Int']
   id: IdAggregateSelection
-  code: StringAggregateSelection
+  name: StringAggregateSelection
 }
 
 export type CountryCitiesConnection = {
@@ -667,7 +667,6 @@ export type PostUserAuthorNodeAggregateSelection = {
   about: StringAggregateSelection
   instagram: StringAggregateSelection
   snapchat: StringAggregateSelection
-  birthdate: DateTimeAggregateSelection
 }
 
 export type School = {
@@ -783,7 +782,6 @@ export type SchoolUserUsersNodeAggregateSelection = {
   about: StringAggregateSelection
   instagram: StringAggregateSelection
   snapchat: StringAggregateSelection
-  birthdate: DateTimeAggregateSelection
 }
 
 export type StringAggregateSelection = {
@@ -900,7 +898,6 @@ export type TagUserAuthorNodeAggregateSelection = {
   about: StringAggregateSelection
   instagram: StringAggregateSelection
   snapchat: StringAggregateSelection
-  birthdate: DateTimeAggregateSelection
 }
 
 export type Training = {
@@ -963,7 +960,6 @@ export type TrainingUserUsersNodeAggregateSelection = {
   about: StringAggregateSelection
   instagram: StringAggregateSelection
   snapchat: StringAggregateSelection
-  birthdate: DateTimeAggregateSelection
 }
 
 export type UpdateCitiesMutationResponse = {
@@ -1026,7 +1022,6 @@ export type User = {
   about?: Maybe<Scalars['String']>
   instagram?: Maybe<Scalars['String']>
   snapchat?: Maybe<Scalars['String']>
-  birthdate?: Maybe<Scalars['DateTime']>
   school?: Maybe<School>
   schoolAggregate?: Maybe<UserSchoolSchoolAggregationSelection>
   training?: Maybe<Training>
@@ -1134,7 +1129,6 @@ export type UserAggregateSelection = {
   about: StringAggregateSelection
   instagram: StringAggregateSelection
   snapchat: StringAggregateSelection
-  birthdate: DateTimeAggregateSelection
 }
 
 export type UserFriendsConnection = {
@@ -1271,7 +1265,6 @@ export type UserUserFriendsNodeAggregateSelection = {
   about: StringAggregateSelection
   instagram: StringAggregateSelection
   snapchat: StringAggregateSelection
-  birthdate: DateTimeAggregateSelection
 }
 
 export type CityConnectInput = {
@@ -1333,26 +1326,26 @@ export type CityCountryNodeAggregationWhereInput = {
   AND?: Maybe<Array<CityCountryNodeAggregationWhereInput>>
   OR?: Maybe<Array<CityCountryNodeAggregationWhereInput>>
   id_EQUAL?: Maybe<Scalars['ID']>
-  code_EQUAL?: Maybe<Scalars['String']>
-  code_AVERAGE_EQUAL?: Maybe<Scalars['Float']>
-  code_LONGEST_EQUAL?: Maybe<Scalars['Int']>
-  code_SHORTEST_EQUAL?: Maybe<Scalars['Int']>
-  code_GT?: Maybe<Scalars['Int']>
-  code_AVERAGE_GT?: Maybe<Scalars['Float']>
-  code_LONGEST_GT?: Maybe<Scalars['Int']>
-  code_SHORTEST_GT?: Maybe<Scalars['Int']>
-  code_GTE?: Maybe<Scalars['Int']>
-  code_AVERAGE_GTE?: Maybe<Scalars['Float']>
-  code_LONGEST_GTE?: Maybe<Scalars['Int']>
-  code_SHORTEST_GTE?: Maybe<Scalars['Int']>
-  code_LT?: Maybe<Scalars['Int']>
-  code_AVERAGE_LT?: Maybe<Scalars['Float']>
-  code_LONGEST_LT?: Maybe<Scalars['Int']>
-  code_SHORTEST_LT?: Maybe<Scalars['Int']>
-  code_LTE?: Maybe<Scalars['Int']>
-  code_AVERAGE_LTE?: Maybe<Scalars['Float']>
-  code_LONGEST_LTE?: Maybe<Scalars['Int']>
-  code_SHORTEST_LTE?: Maybe<Scalars['Int']>
+  name_EQUAL?: Maybe<Scalars['String']>
+  name_AVERAGE_EQUAL?: Maybe<Scalars['Float']>
+  name_LONGEST_EQUAL?: Maybe<Scalars['Int']>
+  name_SHORTEST_EQUAL?: Maybe<Scalars['Int']>
+  name_GT?: Maybe<Scalars['Int']>
+  name_AVERAGE_GT?: Maybe<Scalars['Float']>
+  name_LONGEST_GT?: Maybe<Scalars['Int']>
+  name_SHORTEST_GT?: Maybe<Scalars['Int']>
+  name_GTE?: Maybe<Scalars['Int']>
+  name_AVERAGE_GTE?: Maybe<Scalars['Float']>
+  name_LONGEST_GTE?: Maybe<Scalars['Int']>
+  name_SHORTEST_GTE?: Maybe<Scalars['Int']>
+  name_LT?: Maybe<Scalars['Int']>
+  name_AVERAGE_LT?: Maybe<Scalars['Float']>
+  name_LONGEST_LT?: Maybe<Scalars['Int']>
+  name_SHORTEST_LT?: Maybe<Scalars['Int']>
+  name_LTE?: Maybe<Scalars['Int']>
+  name_AVERAGE_LTE?: Maybe<Scalars['Float']>
+  name_LONGEST_LTE?: Maybe<Scalars['Int']>
+  name_SHORTEST_LTE?: Maybe<Scalars['Int']>
 }
 
 export type CityCountryUpdateConnectionInput = {
@@ -1800,7 +1793,7 @@ export type CountryConnectWhere = {
 
 export type CountryCreateInput = {
   id: Scalars['ID']
-  code: Scalars['String']
+  name: Scalars['String']
   cities?: Maybe<CountryCitiesFieldInput>
 }
 
@@ -1826,12 +1819,12 @@ export type CountryRelationInput = {
 /** Fields to sort Countries by. The order in which sorts are applied is not guaranteed when specifying many fields in one CountrySort object. */
 export type CountrySort = {
   id?: Maybe<SortDirection>
-  code?: Maybe<SortDirection>
+  name?: Maybe<SortDirection>
 }
 
 export type CountryUpdateInput = {
   id?: Maybe<Scalars['ID']>
-  code?: Maybe<Scalars['String']>
+  name?: Maybe<Scalars['String']>
   cities?: Maybe<Array<CountryCitiesUpdateFieldInput>>
 }
 
@@ -1848,16 +1841,16 @@ export type CountryWhere = {
   id_NOT_STARTS_WITH?: Maybe<Scalars['ID']>
   id_ENDS_WITH?: Maybe<Scalars['ID']>
   id_NOT_ENDS_WITH?: Maybe<Scalars['ID']>
-  code?: Maybe<Scalars['String']>
-  code_NOT?: Maybe<Scalars['String']>
-  code_IN?: Maybe<Array<Maybe<Scalars['String']>>>
-  code_NOT_IN?: Maybe<Array<Maybe<Scalars['String']>>>
-  code_CONTAINS?: Maybe<Scalars['String']>
-  code_NOT_CONTAINS?: Maybe<Scalars['String']>
-  code_STARTS_WITH?: Maybe<Scalars['String']>
-  code_NOT_STARTS_WITH?: Maybe<Scalars['String']>
-  code_ENDS_WITH?: Maybe<Scalars['String']>
-  code_NOT_ENDS_WITH?: Maybe<Scalars['String']>
+  name?: Maybe<Scalars['String']>
+  name_NOT?: Maybe<Scalars['String']>
+  name_IN?: Maybe<Array<Maybe<Scalars['String']>>>
+  name_NOT_IN?: Maybe<Array<Maybe<Scalars['String']>>>
+  name_CONTAINS?: Maybe<Scalars['String']>
+  name_NOT_CONTAINS?: Maybe<Scalars['String']>
+  name_STARTS_WITH?: Maybe<Scalars['String']>
+  name_NOT_STARTS_WITH?: Maybe<Scalars['String']>
+  name_ENDS_WITH?: Maybe<Scalars['String']>
+  name_NOT_ENDS_WITH?: Maybe<Scalars['String']>
   cities?: Maybe<CityWhere>
   cities_NOT?: Maybe<CityWhere>
   citiesAggregate?: Maybe<CountryCitiesAggregateInput>
@@ -2054,21 +2047,6 @@ export type PostAuthorNodeAggregationWhereInput = {
   snapchat_AVERAGE_LTE?: Maybe<Scalars['Float']>
   snapchat_LONGEST_LTE?: Maybe<Scalars['Int']>
   snapchat_SHORTEST_LTE?: Maybe<Scalars['Int']>
-  birthdate_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_GT?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_GT?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_GT?: Maybe<Scalars['DateTime']>
-  birthdate_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_LT?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_LT?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_LT?: Maybe<Scalars['DateTime']>
-  birthdate_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_LTE?: Maybe<Scalars['DateTime']>
 }
 
 export type PostAuthorUpdateConnectionInput = {
@@ -2715,21 +2693,6 @@ export type SchoolUsersNodeAggregationWhereInput = {
   snapchat_AVERAGE_LTE?: Maybe<Scalars['Float']>
   snapchat_LONGEST_LTE?: Maybe<Scalars['Int']>
   snapchat_SHORTEST_LTE?: Maybe<Scalars['Int']>
-  birthdate_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_GT?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_GT?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_GT?: Maybe<Scalars['DateTime']>
-  birthdate_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_LT?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_LT?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_LT?: Maybe<Scalars['DateTime']>
-  birthdate_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_LTE?: Maybe<Scalars['DateTime']>
 }
 
 export type SchoolUsersUpdateConnectionInput = {
@@ -2995,21 +2958,6 @@ export type TagAuthorNodeAggregationWhereInput = {
   snapchat_AVERAGE_LTE?: Maybe<Scalars['Float']>
   snapchat_LONGEST_LTE?: Maybe<Scalars['Int']>
   snapchat_SHORTEST_LTE?: Maybe<Scalars['Int']>
-  birthdate_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_GT?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_GT?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_GT?: Maybe<Scalars['DateTime']>
-  birthdate_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_LT?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_LT?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_LT?: Maybe<Scalars['DateTime']>
-  birthdate_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_LTE?: Maybe<Scalars['DateTime']>
 }
 
 export type TagAuthorUpdateConnectionInput = {
@@ -3500,21 +3448,6 @@ export type TrainingUsersNodeAggregationWhereInput = {
   snapchat_AVERAGE_LTE?: Maybe<Scalars['Float']>
   snapchat_LONGEST_LTE?: Maybe<Scalars['Int']>
   snapchat_SHORTEST_LTE?: Maybe<Scalars['Int']>
-  birthdate_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_GT?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_GT?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_GT?: Maybe<Scalars['DateTime']>
-  birthdate_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_LT?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_LT?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_LT?: Maybe<Scalars['DateTime']>
-  birthdate_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_LTE?: Maybe<Scalars['DateTime']>
 }
 
 export type TrainingUsersUpdateConnectionInput = {
@@ -3580,7 +3513,6 @@ export type UserCreateInput = {
   about?: Maybe<Scalars['String']>
   instagram?: Maybe<Scalars['String']>
   snapchat?: Maybe<Scalars['String']>
-  birthdate?: Maybe<Scalars['DateTime']>
   school?: Maybe<UserSchoolFieldInput>
   training?: Maybe<UserTrainingFieldInput>
   friends?: Maybe<UserFriendsFieldInput>
@@ -3793,21 +3725,6 @@ export type UserFriendsNodeAggregationWhereInput = {
   snapchat_AVERAGE_LTE?: Maybe<Scalars['Float']>
   snapchat_LONGEST_LTE?: Maybe<Scalars['Int']>
   snapchat_SHORTEST_LTE?: Maybe<Scalars['Int']>
-  birthdate_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_EQUAL?: Maybe<Scalars['DateTime']>
-  birthdate_GT?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_GT?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_GT?: Maybe<Scalars['DateTime']>
-  birthdate_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_GTE?: Maybe<Scalars['DateTime']>
-  birthdate_LT?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_LT?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_LT?: Maybe<Scalars['DateTime']>
-  birthdate_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_MIN_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_MAX_LTE?: Maybe<Scalars['DateTime']>
 }
 
 export type UserFriendsUpdateConnectionInput = {
@@ -4146,7 +4063,6 @@ export type UserSort = {
   about?: Maybe<SortDirection>
   instagram?: Maybe<SortDirection>
   snapchat?: Maybe<SortDirection>
-  birthdate?: Maybe<SortDirection>
 }
 
 export type UserTagsAggregateInput = {
@@ -4361,7 +4277,6 @@ export type UserUpdateInput = {
   about?: Maybe<Scalars['String']>
   instagram?: Maybe<Scalars['String']>
   snapchat?: Maybe<Scalars['String']>
-  birthdate?: Maybe<Scalars['DateTime']>
   school?: Maybe<UserSchoolUpdateFieldInput>
   training?: Maybe<UserTrainingUpdateFieldInput>
   friends?: Maybe<Array<UserFriendsUpdateFieldInput>>
@@ -4442,14 +4357,6 @@ export type UserWhere = {
   snapchat_NOT_STARTS_WITH?: Maybe<Scalars['String']>
   snapchat_ENDS_WITH?: Maybe<Scalars['String']>
   snapchat_NOT_ENDS_WITH?: Maybe<Scalars['String']>
-  birthdate?: Maybe<Scalars['DateTime']>
-  birthdate_NOT?: Maybe<Scalars['DateTime']>
-  birthdate_IN?: Maybe<Array<Maybe<Scalars['DateTime']>>>
-  birthdate_NOT_IN?: Maybe<Array<Maybe<Scalars['DateTime']>>>
-  birthdate_LT?: Maybe<Scalars['DateTime']>
-  birthdate_LTE?: Maybe<Scalars['DateTime']>
-  birthdate_GT?: Maybe<Scalars['DateTime']>
-  birthdate_GTE?: Maybe<Scalars['DateTime']>
   school?: Maybe<SchoolWhere>
   school_NOT?: Maybe<SchoolWhere>
   schoolAggregate?: Maybe<UserSchoolAggregateInput>
@@ -4481,10 +4388,6 @@ export interface StringAggregateInput {
   shortest?: boolean
   longest?: boolean
 }
-export interface DateTimeAggregateInput {
-  min?: boolean
-  max?: boolean
-}
 export interface UserAggregateInput {
   count?: boolean
   id?: StringAggregateInput
@@ -4494,7 +4397,6 @@ export interface UserAggregateInput {
   about?: StringAggregateInput
   instagram?: StringAggregateInput
   snapchat?: StringAggregateInput
-  birthdate?: DateTimeAggregateInput
 }
 
 export declare class UserModel {
@@ -4545,143 +4447,6 @@ export declare class UserModel {
 export interface StringAggregateInput {
   shortest?: boolean
   longest?: boolean
-}
-export interface DateTimeAggregateInput {
-  min?: boolean
-  max?: boolean
-}
-export interface TagAggregateInput {
-  count?: boolean
-  id?: StringAggregateInput
-  text?: StringAggregateInput
-  createdAt?: DateTimeAggregateInput
-}
-
-export declare class TagModel {
-  public find(args?: {
-    where?: TagWhere
-
-    options?: TagOptions
-    selectionSet?: string | DocumentNode | SelectionSetNode
-    args?: any
-    context?: any
-    rootValue?: any
-  }): Promise<Tag[]>
-  public count(args?: { where?: TagWhere }): Promise<number>
-  public create(args: {
-    input: TagCreateInput[]
-    selectionSet?: string | DocumentNode | SelectionSetNode
-    args?: any
-    context?: any
-    rootValue?: any
-  }): Promise<CreateTagsMutationResponse>
-  public update(args: {
-    where?: TagWhere
-    update?: TagUpdateInput
-    connect?: TagConnectInput
-    disconnect?: TagDisconnectInput
-    create?: TagCreateInput
-
-    selectionSet?: string | DocumentNode | SelectionSetNode
-    args?: any
-    context?: any
-    rootValue?: any
-  }): Promise<UpdateTagsMutationResponse>
-  public delete(args: {
-    where?: TagWhere
-    delete?: TagDeleteInput
-    context?: any
-    rootValue: any
-  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>
-  public aggregate(args: {
-    where?: TagWhere
-
-    aggregate: TagAggregateInput
-    context?: any
-    rootValue?: any
-  }): Promise<TagAggregateSelection>
-}
-
-export interface StringAggregateInput {
-  shortest?: boolean
-  longest?: boolean
-}
-export interface DateTimeAggregateInput {
-  min?: boolean
-  max?: boolean
-}
-export interface IntAggregateInput {
-  max?: boolean
-  min?: boolean
-  average?: boolean
-  sum?: boolean
-}
-export interface PostAggregateInput {
-  count?: boolean
-  id?: StringAggregateInput
-  text?: StringAggregateInput
-  viewsCount?: IntAggregateInput
-  createdAt?: DateTimeAggregateInput
-}
-
-export declare class PostModel {
-  public find(args?: {
-    where?: PostWhere
-
-    options?: PostOptions
-    selectionSet?: string | DocumentNode | SelectionSetNode
-    args?: any
-    context?: any
-    rootValue?: any
-  }): Promise<Post[]>
-  public count(args?: { where?: PostWhere }): Promise<number>
-  public create(args: {
-    input: PostCreateInput[]
-    selectionSet?: string | DocumentNode | SelectionSetNode
-    args?: any
-    context?: any
-    rootValue?: any
-  }): Promise<CreatePostsMutationResponse>
-  public update(args: {
-    where?: PostWhere
-    update?: PostUpdateInput
-    connect?: PostConnectInput
-    disconnect?: PostDisconnectInput
-    create?: PostCreateInput
-
-    selectionSet?: string | DocumentNode | SelectionSetNode
-    args?: any
-    context?: any
-    rootValue?: any
-  }): Promise<UpdatePostsMutationResponse>
-  public delete(args: {
-    where?: PostWhere
-    delete?: PostDeleteInput
-    context?: any
-    rootValue: any
-  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>
-  public aggregate(args: {
-    where?: PostWhere
-
-    aggregate: PostAggregateInput
-    context?: any
-    rootValue?: any
-  }): Promise<PostAggregateSelection>
-}
-
-export interface StringAggregateInput {
-  shortest?: boolean
-  longest?: boolean
-}
-export interface DateTimeAggregateInput {
-  min?: boolean
-  max?: boolean
-}
-export interface IntAggregateInput {
-  max?: boolean
-  min?: boolean
-  average?: boolean
-  sum?: boolean
 }
 export interface IdAggregateInput {
   shortest?: boolean
@@ -4742,16 +4507,6 @@ export interface StringAggregateInput {
   shortest?: boolean
   longest?: boolean
 }
-export interface DateTimeAggregateInput {
-  min?: boolean
-  max?: boolean
-}
-export interface IntAggregateInput {
-  max?: boolean
-  min?: boolean
-  average?: boolean
-  sum?: boolean
-}
 export interface IdAggregateInput {
   shortest?: boolean
   longest?: boolean
@@ -4759,7 +4514,7 @@ export interface IdAggregateInput {
 export interface CountryAggregateInput {
   count?: boolean
   id?: IdAggregateInput
-  code?: StringAggregateInput
+  name?: StringAggregateInput
 }
 
 export declare class CountryModel {
@@ -4810,16 +4565,6 @@ export declare class CountryModel {
 export interface StringAggregateInput {
   shortest?: boolean
   longest?: boolean
-}
-export interface DateTimeAggregateInput {
-  min?: boolean
-  max?: boolean
-}
-export interface IntAggregateInput {
-  max?: boolean
-  min?: boolean
-  average?: boolean
-  sum?: boolean
 }
 export interface IdAggregateInput {
   shortest?: boolean
@@ -4889,16 +4634,6 @@ export interface StringAggregateInput {
   shortest?: boolean
   longest?: boolean
 }
-export interface DateTimeAggregateInput {
-  min?: boolean
-  max?: boolean
-}
-export interface IntAggregateInput {
-  max?: boolean
-  min?: boolean
-  average?: boolean
-  sum?: boolean
-}
 export interface IdAggregateInput {
   shortest?: boolean
   longest?: boolean
@@ -4963,12 +4698,159 @@ export declare class SchoolModel {
   }): Promise<SchoolAggregateSelection>
 }
 
+export interface StringAggregateInput {
+  shortest?: boolean
+  longest?: boolean
+}
+export interface IdAggregateInput {
+  shortest?: boolean
+  longest?: boolean
+}
+export interface FloatAggregateInput {
+  max?: boolean
+  min?: boolean
+  average?: boolean
+  sum?: boolean
+}
+export interface DateTimeAggregateInput {
+  min?: boolean
+  max?: boolean
+}
+export interface TagAggregateInput {
+  count?: boolean
+  id?: StringAggregateInput
+  text?: StringAggregateInput
+  createdAt?: DateTimeAggregateInput
+}
+
+export declare class TagModel {
+  public find(args?: {
+    where?: TagWhere
+
+    options?: TagOptions
+    selectionSet?: string | DocumentNode | SelectionSetNode
+    args?: any
+    context?: any
+    rootValue?: any
+  }): Promise<Tag[]>
+  public count(args?: { where?: TagWhere }): Promise<number>
+  public create(args: {
+    input: TagCreateInput[]
+    selectionSet?: string | DocumentNode | SelectionSetNode
+    args?: any
+    context?: any
+    rootValue?: any
+  }): Promise<CreateTagsMutationResponse>
+  public update(args: {
+    where?: TagWhere
+    update?: TagUpdateInput
+    connect?: TagConnectInput
+    disconnect?: TagDisconnectInput
+    create?: TagCreateInput
+
+    selectionSet?: string | DocumentNode | SelectionSetNode
+    args?: any
+    context?: any
+    rootValue?: any
+  }): Promise<UpdateTagsMutationResponse>
+  public delete(args: {
+    where?: TagWhere
+    delete?: TagDeleteInput
+    context?: any
+    rootValue: any
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>
+  public aggregate(args: {
+    where?: TagWhere
+
+    aggregate: TagAggregateInput
+    context?: any
+    rootValue?: any
+  }): Promise<TagAggregateSelection>
+}
+
+export interface StringAggregateInput {
+  shortest?: boolean
+  longest?: boolean
+}
+export interface IdAggregateInput {
+  shortest?: boolean
+  longest?: boolean
+}
+export interface FloatAggregateInput {
+  max?: boolean
+  min?: boolean
+  average?: boolean
+  sum?: boolean
+}
+export interface DateTimeAggregateInput {
+  min?: boolean
+  max?: boolean
+}
+export interface IntAggregateInput {
+  max?: boolean
+  min?: boolean
+  average?: boolean
+  sum?: boolean
+}
+export interface PostAggregateInput {
+  count?: boolean
+  id?: StringAggregateInput
+  text?: StringAggregateInput
+  viewsCount?: IntAggregateInput
+  createdAt?: DateTimeAggregateInput
+}
+
+export declare class PostModel {
+  public find(args?: {
+    where?: PostWhere
+
+    options?: PostOptions
+    selectionSet?: string | DocumentNode | SelectionSetNode
+    args?: any
+    context?: any
+    rootValue?: any
+  }): Promise<Post[]>
+  public count(args?: { where?: PostWhere }): Promise<number>
+  public create(args: {
+    input: PostCreateInput[]
+    selectionSet?: string | DocumentNode | SelectionSetNode
+    args?: any
+    context?: any
+    rootValue?: any
+  }): Promise<CreatePostsMutationResponse>
+  public update(args: {
+    where?: PostWhere
+    update?: PostUpdateInput
+    connect?: PostConnectInput
+    disconnect?: PostDisconnectInput
+    create?: PostCreateInput
+
+    selectionSet?: string | DocumentNode | SelectionSetNode
+    args?: any
+    context?: any
+    rootValue?: any
+  }): Promise<UpdatePostsMutationResponse>
+  public delete(args: {
+    where?: PostWhere
+    delete?: PostDeleteInput
+    context?: any
+    rootValue: any
+  }): Promise<{ nodesDeleted: number; relationshipsDeleted: number }>
+  public aggregate(args: {
+    where?: PostWhere
+
+    aggregate: PostAggregateInput
+    context?: any
+    rootValue?: any
+  }): Promise<PostAggregateSelection>
+}
+
 export interface ModelMap {
   User: UserModel
-  Tag: TagModel
-  Post: PostModel
   Training: TrainingModel
   Country: CountryModel
   City: CityModel
   School: SchoolModel
+  Tag: TagModel
+  Post: PostModel
 }

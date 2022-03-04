@@ -38,48 +38,55 @@ export const typeDefs = `
   }
 `
 
-// type Training {
-//   id: String!
-//   name: String!
-// }
+type Training {
+  id: ID!
+  name: String!
+  users: [User!] @relationship(type: "HAS_TRAINING", direction: IN)
+}
 
-// type City {
-//   id: String!
-//   country: Country
-//   googlePlaceId: String
-//   name: String!
-//   geolocation: Point
-// }
 
-// type Country {
-//   id: String!
-//   name: String!
-// }
+type Country {
+  id: ID!
+  name: String!
+  cities: [City!] @relationship(type: "HAS_CITY", direction: IN)
+}
 
-// type School {
-//   id: String!
-//   city: City
-//   googlePlaceId: String
-//   name: String
-//   users: [User!]
-//   geolocation: Point
-// }
+type City {
+  id: ID!
+  name: String  
+  googlePlaceId: String
+  lat: Float
+  lng: Float
+  schools: [School!] @relationship(type: "HAS_SCHOOL", direction: IN)
+  country: Country @relationship(type: "HAS_CITY", direction: OUT)
+}
 
-// type Tag {
-//   id: String!
-//   author: User! @relationship(type: "CREATES_TAG", direction: IN)
-//   createdAt: DateTime
-//   isLive: Boolean!
-//   text: String!
-// }
+type School {
+  city: City @relationship(type: "HAS_SCHOOL", direction: OUT)
+  googlePlaceId: String
+  id: ID!
+  lat: Float
+  lng: Float
+  name: String
+  users: [User!] @relationship(type: "HAS_SCHOOL", direction: IN)
+}
 
-// type Post {
-//   id: String!
-//   author: User! @relationship(type: "HAS_POST", direction: IN)
-//   createdAt: DateTime!
-//   tags: [Tag!]!
-//   text: String!
-// }
+type Tag {
+  id: String!
+  author: User! @relationship(type: "CREATES_TAG", direction: IN)
+  createdAt: DateTime
+  text: String!
+  posts: [Post!]! @relationship(type: "HAS_POST", direction: OUT)
+}
+type Post {
+  id: String!
+  author: User! @relationship(type: "HAS_POST", direction: IN)
+  createdAt: DateTime
+  tags: [Tag!]!  @relationship(type: "HAS_POST", direction: IN)
+  text: String!
+  viewsCount: Int!
+}
+`
 
 export const { schema } = new Neo4jGraphQL({ typeDefs })
 
