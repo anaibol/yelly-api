@@ -1,30 +1,10 @@
-import { OGM } from '@neo4j/graphql-ogm'
 import { PrismaClient } from '@prisma/client'
-import { createDriver } from '../../src/neo/createDriver'
-import { typeDefs } from '../../src/neo'
-import { ModelMap } from '../../src/generated/ogm-types'
-
-import 'dotenv/config'
+import getNeo from './ogm'
 
 async function main() {
   const prisma = new PrismaClient()
 
-  const neoUri = process.env.NEO4J_URI as string
-  const neoUser = process.env.NEO4J_USER as string
-  const neoPassword = process.env.NEO4J_PASSWORD as string
-
-  const driver = await createDriver({
-    uri: neoUri,
-    user: neoUser,
-    password: neoPassword,
-  })
-
-  const ogm = new OGM<ModelMap>({
-    typeDefs,
-    driver: driver,
-  })
-
-  const OgmUser = ogm.model('User')
+  const { ogmUser } = await getNeo()
 
   let hasUsers = true
   let skip = 0
@@ -63,7 +43,7 @@ async function main() {
       }
     })
 
-    await OgmUser.create({
+    await ogmUser.create({
       input: usersMap,
     })
 

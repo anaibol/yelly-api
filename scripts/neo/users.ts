@@ -1,16 +1,8 @@
-import { createDriver } from '../../src/neo/createDriver'
-import 'dotenv/config'
+import { PrismaClient } from '@prisma/client'
+import getNeo from './ogm'
 
 async function main() {
-  const neoUri = process.env.NEO4J_URI as string
-  const neoUser = process.env.NEO4J_USER as string
-  const neoPassword = process.env.NEO4J_PASSWORD as string
-
-  const driver = await createDriver({
-    uri: neoUri,
-    user: neoUser,
-    password: neoPassword,
-  })
+  const { driver } = await getNeo()
 
   const session = driver.session()
   const lastName = 'Duval'

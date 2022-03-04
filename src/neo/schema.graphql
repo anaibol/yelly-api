@@ -24,7 +24,7 @@ type Training {
 
 type Country {
   id: ID!
-  name: String!
+  code: String!
   cities: [City!] @relationship(type: "HAS_CITY", direction: IN)
 }
 

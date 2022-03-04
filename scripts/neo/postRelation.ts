@@ -1,17 +1,11 @@
-import { OGM } from '@neo4j/graphql-ogm'
 import { PrismaClient } from '@prisma/client'
-import { createDriver } from '../../src/neo/createDriver'
-import { typeDefs } from '../../src/neo'
-import { ModelMap } from '../../src/generated/ogm-types'
 
-import 'dotenv/config'
+import getNeo from './ogm'
 
 async function main() {
   const prisma = new PrismaClient()
 
-  const neoUri = process.env.NEO4J_URI as string
-  const neoUser = process.env.NEO4J_USER as string
-  const neoPassword = process.env.NEO4J_PASSWORD as string
+  const { ogmPost, ogmUser, ogmTag } = await getNeo()
 
   let hasPosts = true
   let skip = 0
@@ -39,24 +33,9 @@ async function main() {
 
     console.log('in progress: ' + skip)
 
-    const driver = await createDriver({
-      uri: neoUri,
-      user: neoUser,
-      password: neoPassword,
-    })
-
-    const ogm = new OGM<ModelMap>({
-      typeDefs,
-      driver: driver,
-    })
-
-    const OgmPost = ogm.model('Post')
-    const OgmUser = ogm.model('User')
-    const OgmTag = ogm.model('Tag')
-
     const postsMap = posts.map((post) => {
       return [
-        OgmPost.update({
+        ogmPost.update({
           where: {
             id: post.id,
           },
@@ -79,7 +58,7 @@ async function main() {
             ],
           },
         }),
-        OgmUser.update({
+        ogmUser.update({
           where: {
             id: post.authorId,
           },
@@ -96,7 +75,7 @@ async function main() {
           },
         }),
 
-        OgmTag.update({
+        ogmTag.update({
           where: {
             id: post.tags[0].id,
           },

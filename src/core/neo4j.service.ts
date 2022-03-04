@@ -19,6 +19,8 @@ export class Neo4jService implements OnModuleInit {
         user: process.env.NEO4J_USER,
         password: process.env.NEO4J_PASSWORD,
       })
+
+      this.user = this.ogm.model('User')
     } catch (error) {
       console.error("Couldn't connect to server at " + process.env.NEO4J_URI)
     }
