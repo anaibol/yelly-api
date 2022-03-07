@@ -42,7 +42,9 @@ export class TagService {
         value: 1,
       },
       createdAtTimestamp: tag.createdAt.getTime(),
+      // updatedAtTimestamp: tag.updatedAt.getTime(),
       createdAt: tag.createdAt,
+      // updatedAt: post.updatedAt,
     }
 
     return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id)
@@ -154,10 +156,10 @@ export class TagService {
     return newTag
   }
 
-  async findByText(tagArgs: TagArgs) {
+  async findById(tagArgs: TagArgs) {
     return this.prismaService.tag.findUnique({
       where: {
-        text: tagArgs.text,
+        id: tagArgs.id,
       },
       select: {
         id: true,
@@ -181,7 +183,7 @@ export class TagService {
     return true
   }
 
-  async getTrends(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedTrends> {
+  async getTrends(authUser: AuthUser, skip = 0, limit = DEFAULT_LIMIT): Promise<PaginatedTrends> {
     const country = await this.prismaService.user
       .findUnique({
         where: { id: authUser.id },
@@ -192,33 +194,28 @@ export class TagService {
 
     if (!country) throw new Error('No country')
 
-    const where = {
-      isLive: false,
-      author: {
-        school: {
-          city: {
-            countryId: country.id,
+    const tags = await this.prismaService.tag.findMany({
+      where: {
+        isLive: false,
+        author: {
+          school: {
+            city: {
+              countryId: country.id,
+            },
           },
         },
       },
-    }
-
-    const [totalCount, tags] = await this.prismaService.$transaction([
-      this.prismaService.tag.count({
-        where,
-      }),
-      this.prismaService.tag.findMany({
-        where,
+      ...(skip && {
         skip,
-        orderBy: {
-          posts: {
-            _count: 'desc',
-          },
-        },
-        take: limit,
-        select: algoliaTagSelect,
       }),
-    ])
+      orderBy: {
+        posts: {
+          _count: 'desc',
+        },
+      },
+      take: limit,
+      select: algoliaTagSelect,
+    })
 
     const nextSkip = skip + limit
 
@@ -230,6 +227,6 @@ export class TagService {
       }
     })
 
-    return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    return { items: dataTags, nextSkip }
   }
 }

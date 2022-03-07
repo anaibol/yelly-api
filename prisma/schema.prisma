@@ -44,6 +44,7 @@ model School {
   googlePlaceId String?               @unique
   lat           Float?
   lng           Float?
+  coord         Unsupported("Point")?
   cityId        String
   coord         Unsupported("point")?
   city          City                  @relation(fields: [cityId], references: [id])

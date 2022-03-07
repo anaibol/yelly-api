@@ -43,7 +43,7 @@ input CreateOrUpdatePostReactionInput {
 }
 
 input CreatePostInput {
-  tags: [String!]!
+  tag: String!
   text: String!
 }
 
@@ -94,7 +94,7 @@ type Me {
   email: String
   expoPushNotificationTokens: [String!]
   firstName: String
-  friends(limit: Int = 10, skip: Int = 0): PaginatedUsers
+  friends(after: String, limit: Int = 10): PaginatedUsers
   friendsCount: Int
   id: ID!
   instagram: String
@@ -103,7 +103,7 @@ type Me {
   locale: String
   phoneNumber: String
   pictureId: String
-  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts
   school: School
   sendbirdAccessToken: String
   snapchat: String
@@ -128,7 +128,7 @@ type Mutation {
   emailSignIn(input: EmailSignInInput!): AccessToken!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
-  markNotificationAsSeen(notificationId: String!): Boolean!
+  markNotificationAsRead(notificationId: String!): Boolean!
   refreshAccessToken(refreshToken: String!): AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
@@ -147,7 +147,7 @@ type Notification {
 
 type PaginatedNotifications {
   items: [Notification!]!
-  nextSkip: Int
+  nextCursor: String!
 }
 
 type PaginatedPosts {
@@ -162,7 +162,7 @@ type PaginatedTrends {
 
 type PaginatedUsers {
   items: [User!]!
-  nextSkip: Int
+  nextCursor: String!
 }
 
 type Post {
@@ -195,11 +195,11 @@ type Query {
   getS3PresignedUploadUrl: Upload!
   liveTags: [Tag!]!
   me: Me!
-  notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
-  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts!
+  notifications(after: String, limit: Int = 10): PaginatedNotifications!
+  posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
-  tag(text: String): Tag!
-  trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
+  tag(id: String): Tag!
+  trends(limit: Int = 10, skip: Int): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
 }
@@ -211,13 +211,12 @@ input ResetPasswordInput {
 
 type School {
   city: City
-  distance: Float
   googlePlaceId: String
   id: ID!
   lat: Float
   lng: Float
   name: String
-  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts
   totalUsersCount: Int
   users: [User!]
 }
@@ -227,14 +226,13 @@ type SendbirdAccessToken {
 }
 
 type Tag {
-  authUserPosted: Boolean
   author: User
   createdAt: DateTime
   id: ID!
   isLive: Boolean
   lastUsers: [User!]
   postCount: Int
-  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts
   text: String!
 }
 
@@ -278,12 +276,10 @@ type User {
   authUserFriendRequestToUser: FriendRequest
   avatar3dId: String
   birthdate: DateTime
-  commonFriends(limit: Int = 10, skip: Int = 0): PaginatedUsers
+  commonFriends(after: String, limit: Int = 10): PaginatedUsers
   commonFriendsCount: Int
-  commonFriendsCountMultiUser: Int
-  commonFriendsMultiUser(limit: Int = 10, skip: Int = 0): PaginatedUsers
   firstName: String
-  friends(limit: Int = 10, skip: Int = 0): PaginatedUsers
+  friends(after: String, limit: Int = 10): PaginatedUsers
   friendsCount: Int
   id: ID!
   instagram: String
@@ -291,7 +287,7 @@ type User {
   lastName: String
   locale: String
   pictureId: String
-  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts
   school: School
   snapchat: String
   training: Training

@@ -16,7 +16,6 @@ import { PaginatedPosts } from '../post/paginated-posts.model'
 import dates from '../utils/dates'
 import { PaginatedTrends } from './paginated-trends.model'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
-import { UserService } from 'src/user/user.service'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -37,15 +36,10 @@ export class TagResolver {
     return this.tagService.createOrUpdateLiveTag(createOrUpdateLiveTag.text, createOrUpdateLiveTag.isLive, authUser.id)
   }
 
-  @ResolveField()
-  async authUserPosted(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.hasUserPostedOnTag(authUser.id, tag.id)
-  }
-
   @Query(() => Tag)
   @UseGuards(AuthGuard)
-  async tag(@Args() tagArgs: TagArgs): Promise<Tag | null> {
-    return this.tagService.findByText(tagArgs)
+  async tag(@Args() tagArgs: TagArgs) {
+    return this.tagService.findById(tagArgs)
   }
 
   @UseGuards(AuthGuard)

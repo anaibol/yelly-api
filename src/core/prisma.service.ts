@@ -24,21 +24,26 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     if (process.env.NODE_ENV !== 'production') {
       // this.$use(async (params, next) => {
       //   const before = Date.now()
+
       //   const result = await next(params)
+
       //   const after = Date.now()
+
       //   console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
+
       //   return result
       // })
-      // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // // @ts-ignore
-      // this.$on('query', async (e) => {
-      //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //   // @ts-ignore
-      //   console.log('Query: ' + e.query)
-      //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //   // @ts-ignore
-      //   console.log('Duration: ' + e.duration + 'ms')
-      // })
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      this.$on('query', async (e) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        console.log('Query: ' + e.query)
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        console.log('Duration: ' + e.duration + 'ms')
+      })
     }
   }
 
