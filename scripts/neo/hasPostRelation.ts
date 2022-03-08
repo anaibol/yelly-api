@@ -21,8 +21,8 @@ async function main() {
           },
         },
       },
-      take: take,
-      skip: skip,
+      take,
+      skip,
     })
 
     if (posts.length == 0) {

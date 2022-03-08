@@ -23,7 +23,7 @@ async function main() {
         },
       },
       take: 500,
-      skip: skip,
+      skip,
     })
 
     if (posts.length == 0) {

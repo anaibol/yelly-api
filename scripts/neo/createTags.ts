@@ -16,7 +16,7 @@ async function main() {
         createdAt: true,
       },
       take: 500,
-      skip: skip,
+      skip,
     })
 
     if (tags.length == 0) {

@@ -25,7 +25,7 @@ async function main() {
         isFilled: true,
       },
       take: 500,
-      skip: skip,
+      skip,
     })
 
     if (users.length == 0) {

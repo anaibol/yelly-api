@@ -21,8 +21,8 @@ async function main() {
       where: {
         isFilled: true,
       },
-      take: take,
-      skip: skip,
+      take,
+      skip,
     })
 
     if (users.length == 0) {

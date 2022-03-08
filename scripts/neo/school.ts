@@ -19,8 +19,8 @@ async function main() {
         lng: true,
         cityId: true,
       },
-      take: take,
-      skip: skip,
+      take,
+      skip,
     })
 
     if (items.length == 0) {

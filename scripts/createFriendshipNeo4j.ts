@@ -29,7 +29,7 @@ async function main() {
   while (hasUsers) {
     const friends = await prisma.friend.findMany({
       take: 500,
-      skip: skip,
+      skip,
     })
 
     if (friends.length == 0) {

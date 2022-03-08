@@ -15,7 +15,7 @@ async function main() {
         authorId: true,
       },
       take: 500,
-      skip: skip,
+      skip,
     })
 
     if (tags.length == 0) {

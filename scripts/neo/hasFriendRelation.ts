@@ -11,8 +11,8 @@ async function main() {
   const take = 50
   while (hasUsers) {
     const friends = await prisma.friend.findMany({
-      take: take,
-      skip: skip,
+      take,
+      skip,
     })
 
     if (friends.length == 0) {

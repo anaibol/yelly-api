@@ -16,8 +16,8 @@ async function main() {
         text: true,
         createdAt: true,
       },
-      take: take,
-      skip: skip,
+      take,
+      skip,
     })
 
     if (tags.length == 0) {

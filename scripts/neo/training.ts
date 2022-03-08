@@ -16,8 +16,8 @@ async function main() {
         id: true,
         name: true,
       },
-      take: take,
-      skip: skip,
+      take,
+      skip,
     })
 
     if (items.length == 0) {

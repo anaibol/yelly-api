@@ -175,6 +175,7 @@ export class MeResolver {
 
   @ResolveField()
   friendsCount(@Parent() user: Me): Promise<number> {
+    console.log({ user })
     return this.userService.getFriendsCount(user.id)
   }
 

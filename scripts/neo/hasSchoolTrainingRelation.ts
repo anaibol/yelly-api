@@ -19,8 +19,8 @@ async function main() {
         schoolId: true,
         trainingId: true,
       },
-      take: take,
-      skip: skip,
+      take,
+      skip,
     })
 
     if (users.length == 0) {

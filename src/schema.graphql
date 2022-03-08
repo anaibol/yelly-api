@@ -94,7 +94,7 @@ type Me {
   email: String
   expoPushNotificationTokens: [String!]
   firstName: String
-  friends(after: String, limit: Int = 10): PaginatedUsers
+  friends(limit: Int = 10, skip: Int): PaginatedUsers
   friendsCount: Int
   id: ID!
   instagram: String
@@ -162,7 +162,7 @@ type PaginatedTrends {
 
 type PaginatedUsers {
   items: [User!]!
-  nextCursor: String!
+  nextSkip: Int!
 }
 
 type Post {
@@ -276,10 +276,10 @@ type User {
   authUserFriendRequestToUser: FriendRequest
   avatar3dId: String
   birthdate: DateTime
-  commonFriends(after: String, limit: Int = 10): PaginatedUsers
+  commonFriends(limit: Int = 10, skip: Int): PaginatedUsers
   commonFriendsCount: Int
   firstName: String
-  friends(after: String, limit: Int = 10): PaginatedUsers
+  friends(limit: Int = 10, skip: Int): PaginatedUsers
   friendsCount: Int
   id: ID!
   instagram: String

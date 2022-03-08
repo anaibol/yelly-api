@@ -20,8 +20,8 @@ async function main() {
         lng: true,
         countryId: true,
       },
-      take: take,
-      skip: skip,
+      take,
+      skip,
     })
 
     if (items.length == 0) {
