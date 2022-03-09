@@ -30,24 +30,23 @@ model Country {
 model Notification {
   id              String         @id @default(uuid())
   isSeen          Boolean        @default(false)
-  createdAt       DateTime       @default(now())
+  createdAt       DateTime       @unique @default(now())
   postReactionId  String?        @unique
   userId          String
-  friendRequestId String?
+  friendRequestId String?        @unique
   friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id])
   postReaction    PostReaction?  @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
 }
 
 model School {
-  id            String                @id @default(uuid())
+  id            String  @id @default(uuid())
   name          String
-  googlePlaceId String?               @unique
+  googlePlaceId String? @unique
   lat           Float?
   lng           Float?
   coord         Unsupported("Point")?
   cityId        String
-  coord         Unsupported("point")?
-  city          City                  @relation(fields: [cityId], references: [id])
+  city          City    @relation(fields: [cityId], references: [id])
   posts         Post[]
   users         User[]
 
@@ -110,9 +109,10 @@ model FriendRequest {
   toUserId       String
   createdAt      DateTime            @default(now())
   status         FriendRequestStatus @default(PENDING)
+  notificationId String?
   fromUser       User                @relation("friendRequestFromUser", fields: [fromUserId], references: [id], onDelete: Cascade)
   toUser         User                @relation("friendRequestToUser", fields: [toUserId], references: [id], onDelete: Cascade)
-  notifications  Notification[]
+  notifications   Notification[]
 
   @@id([fromUserId, toUserId])
   @@index([toUserId], map: "FriendRequest_toUserId_fkey")
@@ -139,19 +139,18 @@ model Tag {
   author    User?    @relation(fields: [authorId], references: [id], onUpdate: SetNull)
   posts     Post[]
 
-  @@index([text], map: "Tag_text_idx")
   @@index([authorId], map: "Tag_authorId_fkey")
 }
 
 model Post {
-  id         String         @id @default(uuid())
-  text       String         @db.Text
-  createdAt  DateTime       @unique @default(now())
+  id         String        @id @default(uuid())
+  text       String        @db.Text
+  createdAt  DateTime      @unique @default(now())
   authorId   String
-  viewsCount Int            @default(0)
+  viewsCount Int           @default(0)
   schoolId   String?
-  author     User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  school     School?        @relation(fields: [schoolId], references: [id])
+  author     User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  school     School?       @relation(fields: [schoolId], references: [id])
   comments   PostComment[]
   reactions  PostReaction[]
   tags       Tag[]
