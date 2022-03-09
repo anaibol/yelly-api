@@ -2,7 +2,7 @@ import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 import { PaginatedNotifications } from './paginated-notifications.model'
 import { NotificationService } from './notification.service'
-import { OffsetPaginationArgs } from '../common/offset-pagination.args'
+import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 import { AuthGuard } from '../auth/auth-guard'
 import { AuthUser } from '../auth/auth.service'
 import { CurrentUser } from '../auth/user.decorator'
@@ -13,16 +13,16 @@ export class NotificationResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedNotifications)
   async notifications(
-    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @Args() cursorPaginationArgs: CursorPaginationArgs,
     @CurrentUser() authUser: AuthUser
   ): Promise<PaginatedNotifications> {
-    const { items, nextSkip } = await this.notificationService.find(
+    const { items, nextCursor } = await this.notificationService.find(
       authUser.id,
-      offsetPaginationArgs.skip,
-      offsetPaginationArgs.limit
+      cursorPaginationArgs.after,
+      cursorPaginationArgs.limit
     )
 
-    return { items, nextSkip }
+    return { items, nextCursor }
   }
 
   @UseGuards(AuthGuard)
@@ -34,6 +34,6 @@ export class NotificationResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   markNotificationAsSeen(@Args('notificationId') notificationId: string): Promise<boolean> {
-    return this.notificationService.markAsSeen(notificationId)
+    return this.notificationService.markAsRead(notificationId)
   }
 }
