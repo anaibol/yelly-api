@@ -7,67 +7,63 @@ import { PaginatedNotifications } from './paginated-notifications.model'
 export class NotificationService {
   constructor(private prismaService: PrismaService) {}
 
-  async find(userId: string, skip: number, limit: number): Promise<PaginatedNotifications> {
-    const [totalCount, items] = await this.prismaService.$transaction([
-      this.prismaService.user.count({
-        where: {
-          userId,
-        },
-      }),
-      this.prismaService.notification.findMany({
-        where: {
-          userId,
-        },
-        select: {
-          id: true,
-          createdAt: true,
-          isSeen: true,
-          postReaction: {
-            select: {
-              id: true,
-              reaction: true,
-              postId: true,
-              author: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  pictureId: true,
-                },
-              },
-            },
-          },
-          friendRequest: {
-            select: {
-              id: true,
-              status: true,
-              fromUser: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  pictureId: true,
-                },
-              },
-              toUser: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  pictureId: true,
-                },
+  async find(userId: string, skip = 0, limit = DEFAULT_LIMIT): Promise<PaginatedNotifications> {
+    const items = await this.prismaService.notification.findMany({
+      where: {
+        userId,
+      },
+
+      select: {
+        id: true,
+        createdAt: true,
+        isSeen: true,
+        postReaction: {
+          select: {
+            id: true,
+            reaction: true,
+            postId: true,
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                pictureId: true,
               },
             },
           },
         },
-        orderBy: {
-          createdAt: 'desc',
+        friendRequest: {
+          select: {
+            id: true,
+            status: true,
+            fromUser: {
+              select: {
+                id: true,
+                firstName: true,
+                pictureId: true,
+              },
+            },
+            toUser: {
+              select: {
+                id: true,
+                firstName: true,
+                pictureId: true,
+              },
+            },
+          },
         },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      ...(skip && {
         skip,
-        take: limit,
       }),
-    ])
+      take: limit,
+    })
 
     const nextSkip = skip + limit
 
-    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    return { items, nextSkip }
   }
 
   getUnreadCount(userId: string): Promise<number> {

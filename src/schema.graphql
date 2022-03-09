@@ -94,7 +94,7 @@ type Me {
   email: String
   expoPushNotificationTokens: [String!]
   firstName: String
-  friends(limit: Int = 10, skip: Int): PaginatedUsers
+  friends(limit: Int = 10, skip: Int = 0): PaginatedUsers
   friendsCount: Int
   id: ID!
   instagram: String
@@ -147,7 +147,7 @@ type Notification {
 
 type PaginatedNotifications {
   items: [Notification!]!
-  nextCursor: String!
+  nextSkip: Int!
 }
 
 type PaginatedPosts {
@@ -195,11 +195,11 @@ type Query {
   getS3PresignedUploadUrl: Upload!
   liveTags: [Tag!]!
   me: Me!
-  notifications(after: String, limit: Int = 10): PaginatedNotifications!
+  notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(id: String): Tag!
-  trends(limit: Int = 10, skip: Int): PaginatedTrends!
+  trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
 }
@@ -276,10 +276,10 @@ type User {
   authUserFriendRequestToUser: FriendRequest
   avatar3dId: String
   birthdate: DateTime
-  commonFriends(limit: Int = 10, skip: Int): PaginatedUsers
+  commonFriends(limit: Int = 10, skip: Int = 0): PaginatedUsers
   commonFriendsCount: Int
   firstName: String
-  friends(limit: Int = 10, skip: Int): PaginatedUsers
+  friends(limit: Int = 10, skip: Int = 0): PaginatedUsers
   friendsCount: Int
   id: ID!
   instagram: String
