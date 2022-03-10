@@ -194,28 +194,35 @@ export class TagService {
 
     if (!country) throw new Error('No country')
 
-    const tags = await this.prismaService.tag.findMany({
-      where: {
-        isLive: false,
-        author: {
-          school: {
-            city: {
-              countryId: country.id,
-            },
+    const where = {
+      isLive: false,
+      author: {
+        school: {
+          city: {
+            countryId: country.id,
           },
         },
       },
-      ...(skip && {
-        skip,
+    }
+
+    const [totalCount, tags] = await this.prismaService.$transaction([
+      this.prismaService.tag.count({
+        where,
       }),
-      orderBy: {
-        posts: {
-          _count: 'desc',
+      this.prismaService.tag.findMany({
+        where,
+        ...(skip && {
+          skip,
+        }),
+        orderBy: {
+          posts: {
+            _count: 'desc',
+          },
         },
-      },
-      take: limit,
-      select: algoliaTagSelect,
-    })
+        take: limit,
+        select: algoliaTagSelect,
+      }),
+    ])
 
     const nextSkip = skip + limit
 
@@ -227,6 +234,6 @@ export class TagService {
       }
     })
 
-    return { items: dataTags, nextSkip }
+    return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 }
