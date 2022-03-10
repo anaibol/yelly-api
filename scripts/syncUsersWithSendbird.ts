@@ -61,7 +61,7 @@ async function main() {
     const users = await prisma.user.findMany({
       where: { sendbirdAccessToken: null, isFilled: true },
       select: { id: true, sendbirdAccessToken: true, firstName: true, lastName: true, pictureId: true },
-      skip,
+      skip: skip,
       take: 10,
     })
 
