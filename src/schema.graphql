@@ -226,6 +226,7 @@ type SendbirdAccessToken {
 }
 
 type Tag {
+  authUserPosted: Boolean
   author: User
   createdAt: DateTime
   id: ID!

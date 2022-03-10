@@ -81,6 +81,21 @@ export class PostService {
               },
             },
             {
+              posts: {
+                some: {
+                  tags: {
+                    some: {
+                      posts: {
+                        some: {
+                          authorId: authUser.id,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
               friends: {
                 some: {
                   // his friends
