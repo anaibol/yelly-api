@@ -211,6 +211,7 @@ input ResetPasswordInput {
 
 type School {
   city: City
+  distance: Float
   googlePlaceId: String
   id: ID!
   lat: Float
