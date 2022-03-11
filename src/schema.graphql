@@ -103,7 +103,7 @@ type Me {
   locale: String
   phoneNumber: String
   pictureId: String
-  posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
   school: School
   sendbirdAccessToken: String
   snapchat: String
@@ -196,7 +196,7 @@ type Query {
   liveTags: [Tag!]!
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
-  posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts!
+  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(id: String): Tag!
   trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
@@ -216,7 +216,7 @@ type School {
   lat: Float
   lng: Float
   name: String
-  posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
   totalUsersCount: Int
   users: [User!]
 }
@@ -233,7 +233,7 @@ type Tag {
   isLive: Boolean
   lastUsers: [User!]
   postCount: Int
-  posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
   text: String!
 }
 
@@ -288,7 +288,7 @@ type User {
   lastName: String
   locale: String
   pictureId: String
-  posts(after: String, forYou: Boolean, limit: Int = 10, tag: String, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
   school: School
   snapchat: String
   training: Training

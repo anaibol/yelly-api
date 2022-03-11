@@ -39,7 +39,7 @@ export class TagResolver {
 
   @ResolveField()
   async authUserPosted(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.hasUserPostedOnTag(authUser.id, tag.text)
+    return this.userService.hasUserPostedOnTag(authUser.id, tag.id)
   }
 
   @Query(() => Tag)
