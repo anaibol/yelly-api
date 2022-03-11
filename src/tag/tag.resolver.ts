@@ -45,7 +45,7 @@ export class TagResolver {
   @Query(() => Tag)
   @UseGuards(AuthGuard)
   async tag(@Args() tagArgs: TagArgs): Promise<Tag | null> {
-    return this.tagService.findById(tagArgs)
+    return this.tagService.findByText(tagArgs)
   }
 
   @UseGuards(AuthGuard)

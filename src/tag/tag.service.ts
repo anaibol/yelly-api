@@ -42,9 +42,7 @@ export class TagService {
         value: 1,
       },
       createdAtTimestamp: tag.createdAt.getTime(),
-      // updatedAtTimestamp: tag.updatedAt.getTime(),
       createdAt: tag.createdAt,
-      // updatedAt: post.updatedAt,
     }
 
     return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id)
@@ -156,10 +154,10 @@ export class TagService {
     return newTag
   }
 
-  async findById(tagArgs: TagArgs) {
+  async findByText(tagArgs: TagArgs) {
     return this.prismaService.tag.findUnique({
       where: {
-        id: tagArgs.id,
+        text: tagArgs.text,
       },
       select: {
         id: true,

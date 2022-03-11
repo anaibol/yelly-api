@@ -43,7 +43,7 @@ input CreateOrUpdatePostReactionInput {
 }
 
 input CreatePostInput {
-  tag: String!
+  tags: [String!]!
   text: String!
 }
 
@@ -198,7 +198,7 @@ type Query {
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
-  tag(id: String): Tag!
+  tag(text: String): Tag!
   trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
