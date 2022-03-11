@@ -147,7 +147,7 @@ type Notification {
 
 type PaginatedNotifications {
   items: [Notification!]!
-  nextSkip: Int!
+  nextSkip: Int
 }
 
 type PaginatedPosts {
@@ -162,7 +162,7 @@ type PaginatedTrends {
 
 type PaginatedUsers {
   items: [User!]!
-  nextSkip: Int!
+  nextSkip: Int
 }
 
 type Post {
