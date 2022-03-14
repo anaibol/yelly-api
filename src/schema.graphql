@@ -280,6 +280,8 @@ type User {
   birthdate: DateTime
   commonFriends(limit: Int = 10, skip: Int = 0): PaginatedUsers
   commonFriendsCount: Int
+  commonFriendsCountMultiUser: Int
+  commonFriendsMultiUser(limit: Int = 10, skip: Int = 0): PaginatedUsers
   firstName: String
   friends(limit: Int = 10, skip: Int = 0): PaginatedUsers
   friendsCount: Int

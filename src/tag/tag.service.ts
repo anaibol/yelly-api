@@ -181,7 +181,7 @@ export class TagService {
     return true
   }
 
-  async getTrends(authUser: AuthUser, skip = 0, limit = DEFAULT_LIMIT): Promise<PaginatedTrends> {
+  async getTrends(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedTrends> {
     const country = await this.prismaService.user
       .findUnique({
         where: { id: authUser.id },
@@ -209,9 +209,7 @@ export class TagService {
       }),
       this.prismaService.tag.findMany({
         where,
-        ...(skip && {
-          skip,
-        }),
+        skip,
         orderBy: {
           posts: {
             _count: 'desc',

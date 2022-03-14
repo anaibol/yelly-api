@@ -24,9 +24,9 @@ export class PostResolver {
     const { forYou, after, limit } = postsArgs
 
     if (forYou) {
-      return this.postService.findForYou(authUser, after, limit)
+      return this.postService.findForYou(authUser, limit, after)
     } else {
-      return this.postService.find(authUser, after, limit)
+      return this.postService.find(authUser, limit, after)
     }
   }
 
