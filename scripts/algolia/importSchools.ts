@@ -18,7 +18,7 @@ async function main() {
 
   while (hasSchools) {
     const schools = await prisma.school.findMany({
-      skip: skip,
+      skip,
       take: CHUNK_SIZE,
       select: algoliaSchoolSelect,
     })

@@ -37,6 +37,45 @@ export type UserIndexAlgoliaInterface = {
   }
 }
 
+export type PostIndexAlgoliaInterface = {
+  id: string
+  objectID: string
+  text: string
+  author: {
+    id: string
+    firstName: string
+    lastName: string
+    birthdate: string
+    pictureId: string | null
+    school: {
+      id: string
+      name: string
+      lat: number | null
+      lng: number | null
+      city: {
+        id: string
+        name: string
+        country: {
+          id: string
+          code: string
+        }
+      }
+    }
+  }
+  tags: Array<{
+    id: string
+    createdAt: Date
+    text: string
+    author: {
+      id: string
+      firstName: string | null
+      lastName: string | null
+      pictureId: string | null
+    } | null
+  }>
+  createdAt: Date
+}
+
 export const algoliaUserSelect = {
   id: true,
   firstName: true,
@@ -141,6 +180,56 @@ export const algoliaSchoolSelect = {
   },
 }
 
+export const algoliaPostSelect = {
+  id: true,
+  text: true,
+  createdAt: true,
+  author: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      birthdate: true,
+      pictureId: true,
+      school: {
+        select: {
+          id: true,
+          name: true,
+          lat: true,
+          lng: true,
+          city: {
+            select: {
+              id: true,
+              name: true,
+              country: {
+                select: {
+                  id: true,
+                  code: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  tags: {
+    select: {
+      id: true,
+      createdAt: true,
+      text: true,
+      author: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          pictureId: true,
+        },
+      },
+    },
+  },
+}
+
 const userWithPosts = Prisma.validator<Prisma.UserArgs>()({
   select: algoliaUserSelect,
 })
@@ -183,5 +272,60 @@ export function mapAlgoliaUser(user: UserWithPosts): UserIndexAlgoliaInterface {
         lng: user.school?.lng,
       },
     },
+  }
+}
+
+const algoliaPost = Prisma.validator<Prisma.PostArgs>()({
+  select: algoliaPostSelect,
+})
+
+type AlgoliaPost = Prisma.PostGetPayload<typeof algoliaPost>
+
+export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | null {
+  const { id, firstName, lastName, birthdate, pictureId, school } = post.author
+
+  if (!firstName || !lastName || !birthdate || !lastName || !school?.city?.country) return null
+
+  return {
+    id: post.id,
+    objectID: post.id,
+    createdAt: post.createdAt,
+    text: post.text,
+    author: {
+      id,
+      firstName,
+      lastName,
+      birthdate: birthdate.toDateString(),
+      pictureId,
+      school: {
+        id: school.id,
+        name: school.name,
+        lat: school.lat,
+        lng: school.lng,
+        city: {
+          id: school.city.id,
+          name: school.city.name,
+          country: {
+            id: school.city.country.id,
+            code: school.city.country.code,
+          },
+        },
+      },
+    },
+    tags: post.tags.map((tag) => {
+      return {
+        id: tag.id,
+        createdAt: tag.createdAt,
+        text: tag.text,
+        author: tag.author
+          ? {
+              id: tag.author.id,
+              firstName: tag.author.firstName,
+              lastName: tag.author.lastName,
+              pictureId: tag.author.pictureId,
+            }
+          : null,
+      }
+    }),
   }
 }

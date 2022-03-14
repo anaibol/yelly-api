@@ -1,38 +1,31 @@
 import { OGM } from '@neo4j/graphql-ogm'
 import { PrismaClient } from '@prisma/client'
-import { createDriver } from '../../src/neo/createDriver'
-import { typeDefs } from '../../src/neo'
-import { ModelMap } from '../../src/generated/ogm-types'
-
-import 'dotenv/config'
+import { createDriver } from '../src/neo/createDriver'
+import { typeDefs } from '../src/neo'
+import { ModelMap } from 'src/generated/ogm-types'
 
 async function main() {
   const prisma = new PrismaClient()
 
-  const neoUri = process.env.NEO4J_URI as string
-  const neoUser = process.env.NEO4J_USER as string
-  const neoPassword = process.env.NEO4J_PASSWORD as string
+  const neoUri = 'neo4j+s://d6b7f265.databases.neo4j.io'
+  const neoUser = 'neo4j'
+  const neoPassword = 'XIn3Gn5e5NRRTVUmTN7dikrukr6zlNkft7CCXqsITuo'
 
   let hasUsers = true
   let skip = 0
   while (hasUsers) {
-    const date = new Date('2022-02-15T14:13:46.158Z')
     const users = await prisma.user.findMany({
       select: {
         id: true,
         firstName: true,
         lastName: true,
         pictureId: true,
-        createdAt: true,
       },
       where: {
         isFilled: true,
-        createdAt: {
-          gt: date.toISOString(),
-        },
       },
-      take: 5000,
-      skip: skip,
+      take: 500,
+      skip,
     })
 
     if (users.length == 0) {
@@ -40,7 +33,7 @@ async function main() {
       console.log('finish')
       return
     }
-    skip += 5000
+    skip += 500
 
     console.log('in progress: ' + skip)
 
@@ -57,8 +50,8 @@ async function main() {
 
     const OgmUser = ogm.model('User')
 
-    const usersMap = users.map((user) => {
-      return OgmUser.create({
+    users.forEach(async (user) => {
+      await OgmUser.create({
         input: [
           {
             id: user.id,
@@ -69,9 +62,6 @@ async function main() {
         ],
       })
     })
-
-    await Promise.all(usersMap)
-    console.log('insert ' + skip)
   }
 }
 

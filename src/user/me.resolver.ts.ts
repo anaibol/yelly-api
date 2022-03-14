@@ -26,6 +26,7 @@ import TwilioService from 'src/core/twilio.service'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
 import { NotFoundUserException } from './not-found-user.exception'
+import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
 
 function validatePhoneNumberForE164(phoneNumber: string) {
   const regEx = /^\+[1-9]\d{10,14}$/
@@ -51,8 +52,10 @@ export class MeResolver {
       throw new UnauthorizedException()
     }
 
-    const accessToken = await this.authService.getAccessToken(user.id)
-    const refreshToken = await this.authService.getRefreshToken(user.id)
+    const [accessToken, refreshToken] = await Promise.all([
+      this.authService.getAccessToken(user.id),
+      this.authService.getRefreshToken(user.id),
+    ])
 
     return {
       accessToken,
@@ -87,8 +90,10 @@ export class MeResolver {
 
     const user = await this.userService.findOrCreate(phoneNumber, locale)
 
-    const accessToken = await this.authService.getAccessToken(user.id)
-    const refreshToken = await this.authService.getRefreshToken(user.id)
+    const [accessToken, refreshToken] = await Promise.all([
+      this.authService.getAccessToken(user.id),
+      this.authService.getRefreshToken(user.id),
+    ])
 
     return { accessToken, refreshToken }
   }
@@ -130,9 +135,8 @@ export class MeResolver {
   }
 
   @Mutation(() => Boolean)
-  async forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput): Promise<boolean> {
-    await this.userService.requestResetPassword(forgotPasswordInput.email)
-    return true
+  forgotPassword(@Args('input') forgotPasswordInput: ForgotPasswordInput): Promise<boolean> {
+    return this.userService.requestResetPassword(forgotPasswordInput.email)
   }
 
   @Mutation(() => AccessToken)
@@ -141,8 +145,10 @@ export class MeResolver {
 
     if (!user) throw new NotFoundUserException()
 
-    const accessToken = await this.authService.getAccessToken(user.id)
-    const refreshToken = await this.authService.getRefreshToken(user.id)
+    const [accessToken, refreshToken] = await Promise.all([
+      this.authService.getAccessToken(user.id),
+      this.authService.getRefreshToken(user.id),
+    ])
 
     return {
       accessToken,
@@ -158,32 +164,25 @@ export class MeResolver {
 
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
-  async deleteAuthUser(@CurrentUser() authUser: AuthUser): Promise<boolean> {
+  deleteAuthUser(@CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.userService.deleteById(authUser.id)
   }
 
   @ResolveField()
-  async friends(@Parent() user: Me, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFriends(user.id, cursorPaginationArgs.after, cursorPaginationArgs.limit)
+  friends(@Parent() user: Me, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
+    return this.userService.getFriends(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
   }
 
   @ResolveField()
-  async friendsCount(@Parent() user: Me): Promise<number> {
+  friendsCount(@Parent() user: Me): Promise<number> {
     return this.userService.getFriendsCount(user.id)
   }
 
   @ResolveField()
   async posts(@Parent() me: Me, @Args() postsArgs: PostsArgs) {
-    const { schoolId, after, limit } = postsArgs
+    const { after, limit } = postsArgs
 
     const items = await this.prismaService.user.findUnique({ where: { id: me.id } }).posts({
-      ...(schoolId && {
-        where: {
-          author: {
-            schoolId,
-          },
-        },
-      }),
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),

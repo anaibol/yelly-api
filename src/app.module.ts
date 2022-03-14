@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
-import { ApolloDriver } from '@nestjs/apollo'
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { I18nModule, I18nJsonParser } from 'nestjs-i18n'
 import { join } from 'path'
 import { UserModule } from './user/user.module'
@@ -13,9 +13,13 @@ import { NotificationModule } from './notification/notification.module'
 import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
 import { SendbirdWebhookModule } from './sendbird-webhook/sendbird-webhook.module'
 import { SchoolModule } from './school/school.module'
+import { CommonFriendsLoader } from './user/common-friends.loader'
+import { IsFriendLoader } from './user/is-friend.loader'
+
 @Module({
+  providers: [UserModule, CommonFriendsLoader, IsFriendLoader],
   imports: [
-    GraphQLModule.forRoot({
+    GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       playground: false,
       plugins: [
@@ -33,7 +37,10 @@ import { SchoolModule } from './school/school.module'
       debug: process.env.NODE_ENV !== 'production',
       autoSchemaFile: join(process.cwd(), 'src/schema.graphql'),
       sortSchema: true,
-      context: ({ req, res }: { req: any; res: any }): any => ({ req, res }),
+      context: ({ req, res }: { req: any; res: any }): any => ({
+        req,
+        res,
+      }),
       buildSchemaOptions: {
         numberScalarMode: 'integer',
       },

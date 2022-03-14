@@ -19,7 +19,7 @@ async function main() {
   while (hasTags) {
     const tags = await prisma.tag.findMany({
       select: algoliaTagSelect,
-      skip: skip,
+      skip,
       take: CHUNK_SIZE,
     })
 

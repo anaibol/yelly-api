@@ -27,7 +27,7 @@ async function main() {
       },
       select: algoliaUserSelect,
       take: CHUNK_SIZE,
-      skip: skip,
+      skip,
     })
     if (users.length == 0) {
       hasUsers = false

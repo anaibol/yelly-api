@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
-import { DEFAULT_LIMIT } from '../common/pagination.constant'
 import { AlgoliaService } from '../core/algolia.service'
 import { Neo4jService } from './../core/neo4j.service'
 import { EmailService } from '../core/email.service'
@@ -18,6 +17,7 @@ import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { FriendRequest } from './friendRequest.model'
 import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { AuthUser } from 'src/auth/auth.service'
+import { PostService } from 'src/post/post.service'
 
 @Injectable()
 export class UserService {
@@ -30,7 +30,8 @@ export class UserService {
     private schoolService: SchoolService,
     private sendbirdService: SendbirdService,
     private pushNotificationService: PushNotificationService,
-    private neo4jService: Neo4jService
+    private neo4jService: Neo4jService,
+    private postService: PostService
   ) {}
 
   // async getUserLocale(userId: string): Promise<string> {
@@ -46,7 +47,7 @@ export class UserService {
   //   return user.locale ? user.locale.split('-')[0] : 'en'
   // }
 
-  async hasUserPostedOnTag(userId: string, tagText: string): Promise<boolean> {
+  async hasUserPostedOnTag(userId: string, tagId: string): Promise<boolean> {
     const post = await this.prismaService.post.findFirst({
       select: {
         id: true,
@@ -57,7 +58,7 @@ export class UserService {
         },
         tags: {
           some: {
-            text: tagText,
+            id: tagId,
           },
         },
       },
@@ -125,103 +126,254 @@ export class UserService {
     return user
   }
 
-  async getFriendsCount(userId: string): Promise<number> {
-    const OgmUser = this.neo4jService.ogm.model('User')
-
-    const result = await OgmUser.find({
+  getFriendsCount(userId: string): Promise<number> {
+    return this.prismaService.friend.count({
       where: {
-        id: userId,
+        userId,
       },
-      selectionSet: `
-        {
-          friendsAggregate {
-            count
-          }
-        }
-      `,
     })
-
-    if (!result.length) return 0
-
-    if (!result[0].friendsAggregate) throw new Error('No error')
-
-    return result[0].friendsAggregate?.count
   }
 
-  async getCommonFriendsCount(userId: string, otherUserId: string): Promise<number> {
-    const session = this.neo4jService.driver.session()
-
-    const result = await session.run(
-      `MATCH (user:User { id: $userId })-[:IS_FRIEND]->(mutualFriends)-[:IS_FRIEND]->(otherUser:User { id : $otherUserId }) RETURN count(mutualFriends) as count`,
-      { userId, otherUserId }
-    )
-
-    return result.records[0].get('count').toNumber()
-  }
-
-  // if (!result[0].friendsAggregate) throw new Error('No error')
-
-  async getFriends(userId: string, after?: string, limit = DEFAULT_LIMIT): Promise<PaginatedUsers> {
-    const OgmUser = this.neo4jService.ogm.model('User')
-
-    // sort: [
-    //   {
-    //     createdAt: DESC
-    //   }
-    // ]
-    const result = await OgmUser.find({
+  async getCommonFriendsCountMultiUser(authUser: AuthUser, otherUserIds: string[]) {
+    const users = await this.prismaService.user.findMany({
       where: {
-        id: userId,
+        id: {
+          in: otherUserIds,
+        },
+        friends: {
+          some: {
+            otherUser: {
+              friends: {
+                some: {
+                  otherUserId: authUser.id,
+                },
+              },
+            },
+          },
+        },
       },
-      selectionSet: `
-        {
-          friendsConnection(first: ${limit}) {
-            edges {
-              node {
-                id
-                firstName
-                lastName
-                pictureId
-              }
-            }
-            pageInfo {
-              endCursor
-              hasNextPage
-            }
-            totalCount
-          }
-        }
-      `,
-    })
-
-    if (!result.length)
-      return {
-        items: [],
-        nextCursor: '',
-      }
-
-    return {
-      items: result[0].friendsConnection.edges.map(({ node }) => ({
-        id: node.id,
-        firstName: node.firstName,
-        lastName: node.lastName,
-        pictureId: node.pictureId,
-      })),
-      nextCursor: result[0].friendsConnection.pageInfo.endCursor || '',
-    }
-  }
-
-  async isFriend(userId: string, otherUserId: string): Promise<boolean> {
-    const friend = await this.prismaService.friend.findUnique({
-      where: {
-        userId_otherUserId: {
-          userId,
-          otherUserId,
+      select: {
+        id: true,
+        _count: {
+          select: {
+            friends: true,
+          },
         },
       },
     })
 
-    return !!friend
+    return users.map((u) => ({ otherUserId: u.id, count: u._count.friends }))
+  }
+
+  getCommonFriendsCount(authUser: AuthUser, otherUserId: string): Promise<number> {
+    return this.prismaService.user.count({
+      where: {
+        AND: [
+          {
+            friends: {
+              some: {
+                otherUserId: authUser.id,
+              },
+            },
+          },
+          {
+            friends: {
+              some: {
+                otherUserId,
+              },
+            },
+          },
+        ],
+      },
+    })
+  }
+
+  async getCommonFriends(
+    authUser: AuthUser,
+    otherUserId: string,
+    skip: number,
+    limit: number
+  ): Promise<PaginatedUsers> {
+    const where = {
+      AND: [
+        {
+          friends: {
+            some: {
+              otherUserId: authUser.id,
+            },
+          },
+        },
+        {
+          friends: {
+            some: {
+              otherUserId,
+            },
+          },
+        },
+      ],
+    }
+
+    const [totalCount, items] = await this.prismaService.$transaction([
+      this.prismaService.user.count({
+        where,
+      }),
+      this.prismaService.user.findMany({
+        take: limit,
+        skip,
+        where,
+      }),
+    ])
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+  }
+
+  async getCommonFriendsMultiUser(
+    authUser: AuthUser,
+    otherUserIds: string[],
+    skip: number,
+    limit: number
+  ): Promise<
+    {
+      otherUserId: string
+      commonFriends: PaginatedUsers
+    }[]
+  > {
+    const where = {
+      AND: [
+        {
+          friends: {
+            some: {
+              otherUserId: authUser.id,
+            },
+          },
+        },
+        {
+          friends: {
+            some: {
+              otherUserId: {
+                in: otherUserIds,
+              },
+            },
+          },
+        },
+      ],
+    }
+
+    const [totalCount, users] = await this.prismaService.$transaction([
+      this.prismaService.user.count({
+        where,
+      }),
+      this.prismaService.user.findMany({
+        where,
+        select: {
+          id: true,
+          friends: {
+            take: limit,
+            skip,
+            select: {
+              user: true,
+            },
+          },
+        },
+      }),
+    ])
+
+    const nextSkip = skip + limit
+
+    const res = otherUserIds.map((otherUserId) => {
+      const u = users.find(({ id }) => id === otherUserId)
+
+      if (!u)
+        return {
+          otherUserId,
+          commonFriends: {
+            items: [],
+            nextSkip: 0,
+          },
+        }
+
+      return {
+        otherUserId,
+        commonFriends: {
+          items: u.friends.map(({ user }) => user),
+          nextSkip: totalCount > nextSkip ? nextSkip : 0,
+        },
+      }
+    })
+
+    return res
+  }
+
+  async getFriends(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
+    const where = {
+      friends: {
+        some: {
+          otherUserId: userId,
+        },
+      },
+    }
+
+    const [totalCount, items] = await this.prismaService.$transaction([
+      this.prismaService.user.count({
+        where,
+      }),
+      this.prismaService.user.findMany({
+        take: limit,
+        skip,
+        where,
+      }),
+    ])
+
+    if (!items.length)
+      return {
+        items: [],
+        nextSkip: 0,
+      }
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+  }
+
+  async isFriend(
+    userId: string,
+    otherUserIds: string[]
+  ): Promise<
+    {
+      otherUserId: string
+      isFriend: boolean
+    }[]
+  > {
+    if (otherUserIds.length === 1) {
+      const [otherUserId] = otherUserIds
+
+      const friend = await this.prismaService.friend.findUnique({
+        where: {
+          userId_otherUserId: {
+            userId,
+            otherUserId: otherUserId,
+          },
+        },
+      })
+
+      return [{ otherUserId, isFriend: !!friend }]
+    }
+
+    const friends = await this.prismaService.friend.findMany({
+      where: {
+        userId,
+        otherUserId: {
+          in: otherUserIds as string[],
+        },
+      },
+    })
+
+    return otherUserIds.map((otherUserId) => ({
+      otherUserId,
+      isFriend: friends.map(({ otherUserId }) => otherUserId).includes(otherUserId),
+    }))
   }
 
   async getFriendRequest(fromUserId: string, toUserId: string): Promise<FriendRequest | null> {
@@ -405,7 +557,7 @@ export class UserService {
             id: otherUserId,
           },
         },
-        notification: {
+        notifications: {
           create: {
             userId: otherUserId,
           },
@@ -419,48 +571,34 @@ export class UserService {
   }
 
   async deleteFriendRequest(authUser: AuthUser, friendRequestId: string): Promise<boolean> {
-    const exists = await this.prismaService.friendRequest.findFirst({
-      where: {
-        id: friendRequestId,
-        fromUserId: authUser.id,
-      },
-    })
+    const exists = await this.prismaService.user
+      .findUnique({
+        where: {
+          id: authUser.id,
+        },
+      })
+      .friendRequestFromUser({
+        where: {
+          id: friendRequestId,
+        },
+      })
 
     if (!exists) throw new Error("Friend request doesn't exists or is not from this user")
 
-    await this.prismaService.notification.delete({
-      where: {
-        friendRequestId,
-      },
-    })
-
-    await this.prismaService.friendRequest.delete({
-      where: {
-        id: friendRequestId,
-      },
-    })
+    await Promise.all([
+      this.prismaService.notification.deleteMany({
+        where: {
+          friendRequestId,
+        },
+      }),
+      this.prismaService.friendRequest.delete({
+        where: {
+          id: friendRequestId,
+        },
+      }),
+    ])
 
     return true
-  }
-
-  async getCommonFriends(
-    userId: string,
-    otherUserId: string,
-    after?: string,
-    limit = DEFAULT_LIMIT
-  ): Promise<PaginatedUsers> {
-    const session = this.neo4jService.driver.session()
-    // SKIP
-    // LIMIT
-    const result = await session.run(
-      `MATCH (user:User { id: $userId })-[:IS_FRIEND]->(mutualFriends)-[:IS_FRIEND]->(otherUser:User { id : $otherUserId }) RETURN mutualFriends`,
-      { userId, otherUserId }
-    )
-
-    return {
-      items: result.records.length ? result.records.map((node) => node.get('mutualFriends').properties) : [],
-      nextCursor: '',
-    }
   }
 
   async declineFriendRequest(authUser: AuthUser, friendRequestId: string): Promise<boolean> {
@@ -473,57 +611,53 @@ export class UserService {
 
     if (!exists) return false
 
-    await this.prismaService.notification.delete({
-      where: {
-        friendRequestId,
-      },
-    })
-
-    await this.prismaService.friendRequest.update({
-      where: {
-        id: friendRequestId,
-      },
-      data: {
-        status: 'DECLINED',
-      },
-    })
+    await Promise.all([
+      this.prismaService.notification.deleteMany({
+        where: {
+          friendRequestId,
+        },
+      }),
+      this.prismaService.friendRequest.update({
+        where: {
+          id: friendRequestId,
+        },
+        data: {
+          status: 'DECLINED',
+        },
+      }),
+    ])
 
     return true
   }
 
   async acceptFriendRequest(authUser: AuthUser, friendRequestId: string): Promise<boolean> {
-    const friendRequest = await this.prismaService.friendRequest.findFirst({
+    const friendRequest = await this.prismaService.friendRequest.findUnique({
       where: {
         id: friendRequestId,
-        toUserId: authUser.id,
       },
     })
 
-    if (!friendRequest) return false
+    if (friendRequest?.toUserId !== authUser.id) throw new Error('No friend request')
 
     const { fromUserId, toUserId } = friendRequest
 
-    await this.createFriendship(fromUserId, toUserId)
-
-    await this.prismaService.notification.delete({
-      where: {
-        friendRequestId,
-      },
-    })
-
-    await this.prismaService.friendRequest.update({
-      where: {
-        id: friendRequestId,
-      },
-      data: {
-        status: 'ACCEPTED',
-        notification: {
-          create: {
-            userId: fromUserId,
-          },
+    await Promise.all([
+      this.createFriendship(fromUserId, toUserId),
+      this.prismaService.friendRequest.update({
+        where: {
+          id: friendRequestId,
         },
-      },
-    })
+        data: {
+          status: 'ACCEPTED',
+        },
+      }),
+      this.prismaService.notification.create({
+        data: {
+          userId: fromUserId,
+          friendRequestId,
+        },
+      }),
+    ])
 
     this.pushNotificationService.createFriendRequestAcceptedPushNotification(friendRequest)
 
@@ -531,8 +665,6 @@ export class UserService {
   }
 
   async createFriendship(userId: string, otherUserId: string): Promise<boolean> {
-    const OgmUser = this.neo4jService.ogm.model('User')
-
     await Promise.all([
       this.prismaService.friend.createMany({
         data: [
@@ -546,7 +678,7 @@ export class UserService {
           },
         ],
       }),
-      OgmUser.update({
+      this.neo4jService.user.update({
         where: {
           id: userId,
         },
@@ -562,7 +694,7 @@ export class UserService {
           ],
         },
       }),
-      OgmUser.update({
+      this.neo4jService.user.update({
         where: {
           id: otherUserId,
         },
@@ -584,41 +716,22 @@ export class UserService {
   }
 
   async deleteFriendship(userId: string, otherUserId: string): Promise<boolean> {
-    await Promise.all([
-      this.prismaService.friend.delete({
-        where: {
-          userId_otherUserId: {
+    await this.prismaService.friend.deleteMany({
+      where: {
+        OR: [
+          {
             userId: userId,
             otherUserId: otherUserId,
           },
-        },
-      }),
-      this.prismaService.friend.delete({
-        where: {
-          userId_otherUserId: {
+          {
             userId: otherUserId,
             otherUserId: userId,
           },
-        },
-      }),
-    ])
+        ],
+      },
+    })
 
     return true
-
-    // return this.prismaService.friend.deleteMany({
-    //   where: {
-    //     OR: [
-    //       {
-    //         userId: userId,
-    //         otherUserId: otherUserId,
-    //       },
-    //       {
-    //         userId: otherUserId,
-    //         otherUserId: userId,
-    //       },
-    //     ],
-    //   },
-    // })
   }
 
   async syncUsersIndexWithAlgolia(userId: string) {
@@ -634,6 +747,14 @@ export class UserService {
     const newUserAlgoliaObject = mapAlgoliaUser(user)
 
     return this.algoliaService.partialUpdateObject(usersIndex, newUserAlgoliaObject, user.id)
+  }
+
+  async syncPostsIndexWithAlgolia(userId: string): Promise<void[]> {
+    const posts = await this.prismaService.post.findMany({ where: { authorId: userId }, select: { id: true } })
+
+    return posts.map((post) => {
+      this.postService.syncPostIndexWithAlgolia(post.id)
+    })
   }
 
   async findOrCreate(phoneNumber: string, locale: string): Promise<User> {
@@ -757,10 +878,9 @@ export class UserService {
 
       try {
         this.syncUsersIndexWithAlgolia(userId)
+        this.syncPostsIndexWithAlgolia(userId)
 
-        const OgmUser = this.neo4jService.ogm.model('User')
-
-        await OgmUser.create({
+        await this.neo4jService.user.create({
           input: [
             {
               id: updatedUser.id,
@@ -784,8 +904,7 @@ export class UserService {
 
       this.syncUsersIndexWithAlgolia(userId)
 
-      const OgmUser = this.neo4jService.ogm.model('User')
-      await OgmUser.update({
+      await this.neo4jService.user.update({
         where: { id: userId },
         update: {
           firstName: updatedUser.firstName,
@@ -802,9 +921,6 @@ export class UserService {
         schoolData &&
         (await this.prismaService.user.findUnique({
           where: { id: userId },
-          select: {
-            schoolId: true,
-          },
         }))
 
       if (previousSchool?.schoolId && previousSchool.schoolId !== schoolData.id) {

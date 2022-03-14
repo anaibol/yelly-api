@@ -4,8 +4,6 @@ import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
 
-import { UserService } from '../user/user.service'
-
 import { CreateLiveTagInput } from '../post/create-live-tag.input'
 import { LiveTagAuthUser } from '../post/live-tag-auth-user.model'
 import { PostsArgs } from '../post/posts.args'
@@ -19,6 +17,7 @@ import { PaginatedPosts } from '../post/paginated-posts.model'
 import dates from '../utils/dates'
 import { PaginatedTrends } from './paginated-trends.model'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
+import { UserService } from 'src/user/user.service'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -33,15 +32,18 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => Tag)
   createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() authUser: AuthUser): Promise<Tag> {
-    if (!authUser.countryId) throw new Error('No auth user countryId')
+    return this.tagService.createLiveTag(createLiveTag.text, authUser.id)
+  }
 
-    return this.tagService.createLiveTag(createLiveTag.text, authUser.id, authUser.countryId)
+  @ResolveField()
+  async authUserPosted(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.hasUserPostedOnTag(authUser.id, tag.id)
   }
 
   @Query(() => Tag)
   @UseGuards(AuthGuard)
-  async tag(@Args() tagArgs: TagArgs) {
-    return this.tagService.findById(tagArgs)
+  async tag(@Args() tagArgs: TagArgs): Promise<Tag | null> {
+    return this.tagService.findByText(tagArgs)
   }
 
   @UseGuards(AuthGuard)
@@ -50,10 +52,8 @@ export class TagResolver {
     @Args() offsetPaginationArgs: OffsetPaginationArgs,
     @CurrentUser() authUser: AuthUser
   ): Promise<PaginatedTrends> {
-    if (!authUser.countryId) throw new Error('No auth user countryId')
-
     const { skip, limit } = offsetPaginationArgs
-    const { items, nextSkip } = await this.tagService.getTrends(authUser.countryId, skip, limit)
+    const { items, nextSkip } = await this.tagService.getTrends(authUser, skip, limit)
 
     return { items, nextSkip }
   }

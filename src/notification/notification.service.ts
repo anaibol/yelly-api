@@ -7,65 +7,67 @@ import { PaginatedNotifications } from './paginated-notifications.model'
 export class NotificationService {
   constructor(private prismaService: PrismaService) {}
 
-  async find(userId: string, currentCursor?: string, limit = DEFAULT_LIMIT): Promise<PaginatedNotifications> {
-    const items = await this.prismaService.notification.findMany({
-      where: {
-        userId,
-      },
-      ...(currentCursor && {
-        cursor: {
-          createdAt: new Date(+currentCursor).toISOString(),
+  async find(userId: string, skip: number, limit: number): Promise<PaginatedNotifications> {
+    const [totalCount, items] = await this.prismaService.$transaction([
+      this.prismaService.user.count({
+        where: {
+          userId,
         },
-        skip: 1,
       }),
-      select: {
-        id: true,
-        createdAt: true,
-        isSeen: true,
-        postReaction: {
-          select: {
-            id: true,
-            reaction: true,
-            postId: true,
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                pictureId: true,
+      this.prismaService.notification.findMany({
+        where: {
+          userId,
+        },
+        select: {
+          id: true,
+          createdAt: true,
+          isSeen: true,
+          postReaction: {
+            select: {
+              id: true,
+              reaction: true,
+              postId: true,
+              author: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  pictureId: true,
+                },
+              },
+            },
+          },
+          friendRequest: {
+            select: {
+              id: true,
+              status: true,
+              fromUser: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  pictureId: true,
+                },
+              },
+              toUser: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  pictureId: true,
+                },
               },
             },
           },
         },
-        friendRequest: {
-          select: {
-            id: true,
-            status: true,
-            fromUser: {
-              select: {
-                id: true,
-                firstName: true,
-                pictureId: true,
-              },
-            },
-            toUser: {
-              select: {
-                id: true,
-                firstName: true,
-                pictureId: true,
-              },
-            },
-          },
+        orderBy: {
+          createdAt: 'desc',
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-    })
+        skip,
+        take: limit,
+      }),
+    ])
 
-    const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
+    const nextSkip = skip + limit
 
-    return { items, nextCursor }
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
   getUnreadCount(userId: string): Promise<number> {
@@ -77,7 +79,7 @@ export class NotificationService {
     })
   }
 
-  async markAsRead(notificationId: string): Promise<boolean> {
+  async markAsSeen(notificationId: string): Promise<boolean> {
     const update = await this.prismaService.notification.update({
       data: {
         isSeen: true,

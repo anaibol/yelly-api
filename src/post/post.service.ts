@@ -1,5 +1,4 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
-import { DEFAULT_LIMIT } from '../common/pagination.constant'
 import { PrismaService } from '../core/prisma.service'
 import { CreatePostInput } from './create-post.input'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
@@ -11,8 +10,10 @@ import { PostSelect } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { SendbirdService } from 'src/core/sendbird.service'
 import dates from 'src/utils/dates'
+import { AlgoliaService } from 'src/core/algolia.service'
 import { AuthUser } from 'src/auth/auth.service'
-import { uniqBy } from 'lodash'
+import { uniq } from 'lodash'
+import { PaginatedPosts } from './paginated-posts.model'
 
 @Injectable()
 export class PostService {
@@ -20,9 +21,10 @@ export class PostService {
     private prismaService: PrismaService,
     private tagService: TagService,
     private pushNotificationService: PushNotificationService,
-    private sendbirdService: SendbirdService
+    private sendbirdService: SendbirdService,
+    private algoliaService: AlgoliaService
   ) {}
-  async trackPostViews(postsIds: string[]) {
+  async trackPostViews(postsIds: string[]): Promise<boolean> {
     await this.prismaService.post.updateMany({
       where: { id: { in: postsIds } },
       data: { viewsCount: { increment: 1 } },
@@ -31,199 +33,157 @@ export class PostService {
     return true
   }
 
-  async findForYou(
-    authUser: AuthUser,
-    tagText?: string,
-    schoolId?: string,
-    currentCursor?: string,
-    limit = DEFAULT_LIMIT
-  ) {
+  async findForYou(authUser: AuthUser, limit: number, currentCursor?: string): Promise<PaginatedPosts> {
     const userAge = authUser.birthdate && dates.getAge(authUser.birthdate)
     const datesRanges = userAge ? dates.getDateRanges(userAge) : undefined
 
-    const defaultQuery = {
-      where: {
-        ...(tagText
-          ? {
-              tags: {
-                every: {
-                  text: tagText,
-                },
-              },
-            }
-          : {}),
-        author: {
-          ...(!schoolId && authUser.countryId
-            ? {
-                school: {
-                  city: {
-                    countryId: authUser.countryId,
-                  },
-                },
-              }
-            : {}),
-          birthdate: datesRanges,
-        },
-        ...(schoolId
-          ? {
-              author: {
-                schoolId,
-              },
-            }
-          : {}),
-      },
-      ...(currentCursor && {
-        cursor: {
-          createdAt: new Date(+currentCursor).toISOString(),
-        },
-        skip: 1,
-      }),
-      take: limit,
-      select: PostSelect,
-    }
+    if (!authUser.schoolId) throw new Error('No user school')
 
-    const friendsPosts = this.prismaService.post.findMany({
-      ...defaultQuery,
-      where: {
-        ...defaultQuery.where,
-        author: {
-          ...defaultQuery.where.author,
-          friends: {
-            some: {
-              otherUserId: authUser.id,
-            },
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+    const school = await this.prismaService.school.findUnique({
+      where: { id: authUser.schoolId },
     })
 
-    const friendsOfFriendsPosts = this.prismaService.post.findMany({
-      ...defaultQuery,
-      where: {
-        ...defaultQuery.where,
-        author: {
-          ...defaultQuery.where.author,
-          friends: {
-            some: {
-              otherUser: {
-                friends: {
-                  some: {
-                    otherUserId: authUser.id,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    if (!school) throw new Error('No user school')
 
-    const friendsReactedPosts = this.prismaService.post.findMany({
-      ...defaultQuery,
-      where: {
-        ...defaultQuery.where,
-        reactions: {
-          some: {
-            author: {
-              friends: {
-                some: {
-                  otherUserId: authUser.id,
-                },
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    const authUserCountry = await this.prismaService.city
+      .findUnique({
+        where: { id: school.cityId },
+      })
+      .country()
 
-    const sameSchoolPosts = this.prismaService.post.findMany({
-      ...defaultQuery,
-      where: {
-        ...defaultQuery.where,
-        author: {
-          ...defaultQuery.where.author,
-          schoolId: authUser.schoolId,
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    if (!authUserCountry) throw new Error('No country')
 
-    const sameCityPosts = this.prismaService.post.findMany({
-      ...defaultQuery,
-      where: {
-        ...defaultQuery.where,
-        author: {
-          ...defaultQuery.where.author,
-          school: {
-            cityId: authUser.cityId,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    if (!school) throw new Error('No school')
 
-    const results = await Promise.all([
-      sameSchoolPosts,
-      sameCityPosts,
-      friendsPosts,
-      friendsOfFriendsPosts,
-      friendsReactedPosts,
-    ])
+    const maxDistance = 50000
+    const maxSchools = 50
 
-    const posts = uniqBy(results.flat(), 'id').sort((a: any, b: any) => a.createdAt.getTime() - b.createdAt.getTime())
-
-    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
-
-    return { posts, nextCursor }
-  }
-
-  async find(authUser: AuthUser, tagText?: string, schoolId?: string, currentCursor?: string, limit = DEFAULT_LIMIT) {
-    const userAge = authUser.birthdate && dates.getAge(authUser.birthdate)
-    const datesRanges = userAge ? dates.getDateRanges(userAge) : undefined
+    const nearSchools: { id: string; distance: number }[] = await this.prismaService.$queryRaw`
+      select id, ROUND(ST_DISTANCE_SPHERE(coord, POINT(${school.lng}, ${school.lat})) / 1000, 2) AS distance
+      from School having distance < ${maxDistance}
+      order by distance asc
+      limit ${maxSchools}
+    `
 
     const posts = await this.prismaService.post.findMany({
+      take: limit,
       where: {
-        ...(tagText
-          ? {
-              tags: {
-                every: {
-                  text: tagText,
-                },
-              },
-            }
-          : {}),
         author: {
-          ...(!schoolId && authUser.countryId
-            ? {
-                school: {
-                  city: {
-                    countryId: authUser.countryId,
+          NOT: {
+            id: authUser.id,
+          },
+          OR: [
+            {
+              // Users from the around schools and on the same date range (it includes his school)
+              birthdate: datesRanges,
+              schoolId: {
+                in: nearSchools.map(({ id }) => id), // it includes his school
+              },
+            },
+            {
+              friends: {
+                some: {
+                  // his friends
+                  otherUser: {
+                    OR: [
+                      {
+                        id: authUser.id,
+                      },
+                      // {
+                      //   // and the friends of his friends
+                      //   // if the author has as a friend in common with me it means he is a friend of a friend
+                      //   school: {
+                      //     city: {
+                      //       countryId: authUserCountry.id,
+                      //     },
+                      //   },
+                      //   friends: {
+                      //     some: {
+                      //       otherUserId: authUser.id,
+                      //     },
+                      //   },
+                      // },
+                    ],
                   },
                 },
-              }
-            : {}),
+              },
+            },
+          ],
+        },
+      },
+      // reactions: {
+      //   some: {
+      //     author: {
+      //       friends: {
+      //         some: {
+      //           otherUserId: authUser.id,
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
+      ...(currentCursor && {
+        cursor: {
+          createdAt: new Date(+currentCursor).toISOString(),
+        },
+        skip: 1,
+      }),
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: PostSelect,
+    })
+
+    const items = posts.map((p) => {
+      const { school } = p.author
+
+      if (!school) return p
+
+      const nearSchool = nearSchools.find(({ id }) => id === school?.id)
+
+      if (!nearSchool) return p
+
+      return {
+        ...p,
+        author: {
+          ...p.author,
+          school: {
+            ...school,
+            distance: nearSchool.distance,
+          },
+        },
+      }
+    })
+
+    const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
+
+    return { items, nextCursor }
+  }
+
+  async find(authUser: AuthUser, limit: number, currentCursor?: string): Promise<PaginatedPosts> {
+    const userAge = authUser.birthdate && dates.getAge(authUser.birthdate)
+    const datesRanges = userAge ? dates.getDateRanges(userAge) : undefined
+
+    const authUserCountry = await this.prismaService.user
+      .findUnique({
+        where: { id: authUser.id },
+      })
+      .school()
+      .city()
+      .country()
+
+    if (!authUserCountry) throw new Error('No country')
+
+    const items = await this.prismaService.post.findMany({
+      where: {
+        author: {
+          school: {
+            city: {
+              countryId: authUserCountry.id,
+            },
+          },
           birthdate: datesRanges,
         },
-        ...(schoolId
-          ? {
-              author: {
-                schoolId,
-              },
-            }
-          : {}),
       },
       ...(currentCursor && {
         cursor: {
@@ -238,9 +198,9 @@ export class PostService {
       select: PostSelect,
     })
 
-    const nextCursor = posts.length === limit ? posts[limit - 1].createdAt.getTime().toString() : ''
+    const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
 
-    return { posts, nextCursor }
+    return { items, nextCursor }
   }
 
   // async getById(postId: string) {
@@ -272,7 +232,17 @@ export class PostService {
   // }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser) {
-    const { text, tag: tagText } = createPostInput
+    const { text, tags } = createPostInput
+    const uniqueTags = uniq(tags)
+
+    const connectOrCreateTags = uniq(tags).map((tagText) => ({
+      where: {
+        text: tagText,
+      },
+      create: {
+        text: tagText,
+      },
+    }))
 
     const { id } = await this.prismaService.post.create({
       select: {
@@ -286,26 +256,13 @@ export class PostService {
           },
         },
         tags: {
-          connectOrCreate: [
-            {
-              where: {
-                text: tagText,
-              },
-              create: {
-                text: tagText,
-                author: {
-                  connect: {
-                    id: authUser.id,
-                  },
-                },
-              },
-            },
-          ],
+          connectOrCreate: connectOrCreateTags,
         },
       },
     })
 
-    this.tagService.syncTagIndexWithAlgolia(tagText)
+    uniqueTags.map((tag) => this.tagService.syncTagIndexWithAlgolia(tag))
+    this.syncPostIndexWithAlgolia(id)
 
     return { id }
   }
@@ -343,6 +300,8 @@ export class PostService {
         id: postId,
       },
     })
+
+    this.deletePostFromAlgolia(postId)
 
     deletedPost.tags.forEach(async (tag) => {
       if (!tag.isLive && tag.posts.length == 1) this.tagService.deleteById(tag.id)
@@ -430,5 +389,34 @@ export class PostService {
     await this.pushNotificationService.postComment(comment)
 
     return !!comment
+  }
+
+  async syncPostIndexWithAlgolia(id: string) {
+    const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
+    const post = await this.prismaService.post.findUnique({
+      where: {
+        id,
+      },
+      select: PostSelect,
+    })
+
+    if (!post) throw new Error('No post found')
+
+    const objectToCreate = {
+      id: post.id,
+      objectID: post.id,
+      createdAt: post.createdAt,
+      createdAtTimestamp: Date.parse(post.createdAt.toString()),
+      text: post.text,
+      author: post.author,
+      tags: post.tags,
+    }
+
+    this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, post.id)
+  }
+
+  async deletePostFromAlgolia(id: string) {
+    const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
+    this.algoliaService.deleteObject(algoliaTagIndex, id)
   }
 }

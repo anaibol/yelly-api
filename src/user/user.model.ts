@@ -28,4 +28,6 @@ export class User {
   commonFriends?: PaginatedUsers
   friendsCount?: number
   commonFriendsCount?: number
+  commonFriendsMultiUser?: PaginatedUsers
+  commonFriendsCountMultiUser?: number
 }

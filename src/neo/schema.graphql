@@ -7,41 +7,51 @@ type User {
   instagram: String
   snapchat: String
   # birthdate: DateTime
-  # school: School
-  # training: Training
+  school: School @relationship(type: "HAS_SCHOOL", direction: OUT)
+  training: Training @relationship(type: "HAS_TRAINING", direction: OUT)
   friends: [User] @relationship (type: "IS_FRIEND", direction: OUT)
   # friends: [User] @relationship (type: "IS_FRIEND", direction: OUT)
-  # posts: [Post!]! @relation(type: "HAS_POST", direction: OUT)
-  # tags: [Tag!]! @relation(type: "CREATES_TAG", direction: OUT)
+  posts: [Post!]! @relation(type: "HAS_POST", direction: OUT)
+  tags: [Tag!]! @relation(type: "CREATES_TAG", direction: OUT)
   # recommended(first: Int = 3): [Session] @cypher(statement: """ MATCH (this)-[:HAS_THEMEI:IN_TRACK]-“)*-[:HAS_THEMEI:IN_TRACK]-(rec:Session) RETURN rec ORDER by rec DESC LIMIT $first""") 
 }
 
-# type Training {
-#   id: ID!
-#   name: String!
-# }
-# type School {
-#   city: City
-#   googlePlaceId: String
-#   id: ID!
-#   lat: String
-#   lng: String
-#   name: String
-#   users: [User!]
-# }
+type Training {
+  id: ID!
+  name: String!
+  users: [User!] @relationship(type: "HAS_TRAINING", direction: IN)
+}
 
-# type Tag {
-#   author: User! @relation(type: "CREATES_TAG", direction: IN)
-#   createdAt: DateTime
-#   id: ID!
-#   isLive: Boolean!
-#   text: String!
-# }
+type Country {
+  id: ID!
+  code: String!
+  cities: [City!] @relationship(type: "HAS_CITY", direction: IN)
+}
 
-# type Post {
-#   author: User! @relation(type: "HAS_POST", direction: IN)
-#   createdAt: DateTime!
-#   id: ID!
-#   tags: [Tag!]!
-#   text: String!
-# }
+type City {
+  id: ID!
+  name: String  
+  googlePlaceId: String
+  lat: Float
+  lng: Float
+  schools: [School!] @relationship(type: "HAS_SCHOOL", direction: IN)
+  country: Country @relationship(type: "HAS_CITY", direction: OUT)
+}
+
+type Tag {
+  author: User! @relation(type: "CREATES_TAG", direction: IN)
+  createdAt: DateTime @cypher(statement: """MATCH (n)-[r:HAS_STATE]->(this) RETURN r.createdAt""")
+  id: ID!
+  text: String!
+  posts: [Post!]! @relation(type: "HAS_POST", direction: OUT)
+
+}
+
+type Post {
+  author: User! @relation(type: "HAS_POST", direction: IN)
+  createdAt: DateTime! @cypher(statement: """MATCH (n)-[r:HAS_STATE]->(this) RETURN r.createdAt""")
+  id: ID!
+  tags: [Tag!]! @relation(type: "HAS_POST", direction: IN)
+  text: String!
+  viewsCount: Int!
+}

@@ -3,7 +3,6 @@ import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/g
 
 import { User } from './user.model'
 
-import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 import { PostsArgs } from '../post/posts.args'
 
 import { AuthGuard } from '../auth/auth-guard'
@@ -16,6 +15,12 @@ import { PostSelect } from 'src/post/post-select.constant'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { FriendRequest } from './friendRequest.model'
+import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
+import { Loader } from '@tracworx/nestjs-dataloader'
+import { CommonFriendsLoader } from './common-friends.loader'
+import { CommonFriendsCountLoader } from './common-friends-count.loader'
+import { IsFriendLoader } from './is-friend.loader'
+import DataLoader from 'dataloader'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -70,18 +75,47 @@ export class UserResolver {
   }
 
   @ResolveField()
-  async friends(@Parent() user: User, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFriends(user.id, cursorPaginationArgs.after, cursorPaginationArgs.limit)
+  friends(@Parent() user: User, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
+    return this.userService.getFriends(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
   }
 
   @ResolveField()
-  async friendsCount(@Parent() user: User): Promise<number> {
+  friendsCount(@Parent() user: User): Promise<number> {
     return this.userService.getFriendsCount(user.id)
   }
 
   @ResolveField()
-  commonFriendsCount(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<number> {
-    return this.userService.getCommonFriendsCount(authUser.id, user.id)
+  async commonFriendsCountMultiUser(
+    @Parent() user: User,
+    @CurrentUser() authUser: AuthUser,
+    @Loader(CommonFriendsCountLoader) commonFriendsCountLoader: DataLoader<string, number | undefined, string>
+  ): Promise<number> {
+    const commonFriendsCount = await commonFriendsCountLoader.load(user.id) // offsetPaginationArgs.skip, offsetPaginationArgs.limit
+
+    if (!commonFriendsCount) throw new Error('Error')
+    // return this.userService.getCommonFriendsCount(authUser, user.id)
+
+    return commonFriendsCount
+  }
+
+  @ResolveField()
+  async commonFriendsCount(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<number> {
+    return this.userService.getCommonFriendsCount(authUser, user.id)
+  }
+
+  @UseGuards(AuthGuard)
+  @ResolveField()
+  async commonFriendsMultiUser(
+    @Parent() user: User,
+    @CurrentUser() authUser: AuthUser,
+    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @Loader(CommonFriendsLoader) commonFriendsLoader: DataLoader<string, PaginatedUsers | undefined, string>
+  ): Promise<PaginatedUsers> {
+    const commonFriends = await commonFriendsLoader.load(user.id) // offsetPaginationArgs.skip, offsetPaginationArgs.limit
+
+    if (!commonFriends) throw new Error('Error')
+
+    return commonFriends
   }
 
   @UseGuards(AuthGuard)
@@ -89,20 +123,23 @@ export class UserResolver {
   async commonFriends(
     @Parent() user: User,
     @CurrentUser() authUser: AuthUser,
-    @Args() cursorPaginationArgs: CursorPaginationArgs
+    @Args() offsetPaginationArgs: OffsetPaginationArgs
   ): Promise<PaginatedUsers> {
-    return this.userService.getCommonFriends(
-      authUser.id,
-      user.id,
-      cursorPaginationArgs.after,
-      cursorPaginationArgs.limit
-    )
+    return this.userService.getCommonFriends(authUser, user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
   }
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  isAuthUserFriend(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.isFriend(authUser.id, user.id)
+  async isAuthUserFriend(
+    @Parent() user: User,
+    @CurrentUser() authUser: AuthUser,
+    @Loader(IsFriendLoader) isFriendLoader: DataLoader<string, boolean | undefined, string>
+  ): Promise<boolean> {
+    const isFriend = await isFriendLoader.load(user.id)
+
+    if (isFriend === undefined) throw new Error('isFriend undefined')
+
+    return isFriend
   }
 
   @UseGuards(AuthGuard)
@@ -125,28 +162,25 @@ export class UserResolver {
 
   @ResolveField('posts', () => PaginatedPosts)
   async posts(@Parent() user: User, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
-    const { schoolId, after, limit } = postsArgs
+    const { after, limit } = postsArgs
 
-    const items = await this.prismaService.user.findUnique({ where: { id: user.id } }).posts({
-      ...(schoolId && {
-        where: {
-          author: {
-            schoolId,
+    const items = await this.prismaService.user
+      .findUnique({
+        where: { id: user.id },
+      })
+      .posts({
+        ...(after && {
+          cursor: {
+            createdAt: new Date(+after).toISOString(),
           },
+          skip: 1,
+        }),
+        orderBy: {
+          createdAt: 'desc',
         },
-      }),
-      ...(after && {
-        cursor: {
-          createdAt: new Date(+after).toISOString(),
-        },
-        skip: 1,
-      }),
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: PostSelect,
-    })
+        take: limit,
+        select: PostSelect,
+      })
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
 

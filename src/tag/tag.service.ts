@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
 import { TagArgs } from './tag.args'
@@ -8,7 +8,6 @@ import { algoliaTagSelect } from '../utils/algolia'
 import { UserService } from '../user/user.service'
 import { DEFAULT_LIMIT } from 'src/common/pagination.constant'
 import { PaginatedTrends } from './paginated-trends.model'
-import { Tag } from './tag.model'
 import { LiveTagAuthUser } from 'src/post/live-tag-auth-user.model'
 import { AuthUser } from 'src/auth/auth.service'
 
@@ -18,6 +17,7 @@ export class TagService {
     private prismaService: PrismaService,
     private algoliaService: AlgoliaService,
     private pushNotificationService: PushNotificationService,
+    @Inject(forwardRef(() => UserService))
     private userService: UserService
   ) {}
   async syncTagIndexWithAlgolia(tagText: string) {
@@ -43,22 +43,30 @@ export class TagService {
         value: 1,
       },
       createdAtTimestamp: tag.createdAt.getTime(),
-      // updatedAtTimestamp: tag.updatedAt.getTime(),
       createdAt: tag.createdAt,
-      // updatedAt: post.updatedAt,
     }
 
     return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id)
   }
 
   async getAuthUserLiveTag(authUser: AuthUser): Promise<LiveTagAuthUser | null> {
+    const country = await this.prismaService.user
+      .findUnique({
+        where: { id: authUser.id },
+      })
+      .school()
+      .city()
+      .country()
+
+    if (!country) throw new Error('No country')
+
     const liveTag = await this.prismaService.tag.findFirst({
       where: {
         isLive: true,
         author: {
           school: {
             city: {
-              countryId: authUser.countryId,
+              countryId: country.id,
             },
           },
         },
@@ -95,7 +103,7 @@ export class TagService {
 
     const lastUsers = liveTag.posts.map((post) => post.author)
 
-    const authUserPosted = await this.userService.hasUserPostedOnTag(authUser.id, liveTag.text)
+    const authUserPosted = await this.userService.hasUserPostedOnTag(authUser.id, liveTag.id)
 
     return {
       ...liveTag,
@@ -105,14 +113,24 @@ export class TagService {
     }
   }
 
-  async createLiveTag(text: string, authorId: string, countryId: string) {
+  async createLiveTag(text: string, authorId: string) {
+    const country = await this.prismaService.user
+      .findUnique({
+        where: { id: authorId },
+      })
+      .school()
+      .city()
+      .country()
+
+    if (!country) throw new Error('No country')
+
     await this.prismaService.tag.updateMany({
       where: {
         isLive: true,
         author: {
           school: {
             city: {
-              countryId,
+              countryId: country.id,
             },
           },
         },
@@ -155,15 +173,15 @@ export class TagService {
       },
     })
 
-    this.pushNotificationService.newLiveTag(countryId)
+    this.pushNotificationService.newLiveTag(country.id)
 
     return newTag
   }
 
-  async findById(tagArgs: TagArgs) {
+  async findByText(tagArgs: TagArgs) {
     return this.prismaService.tag.findUnique({
       where: {
-        id: tagArgs.id,
+        text: tagArgs.text,
       },
       select: {
         id: true,
@@ -187,31 +205,44 @@ export class TagService {
     return true
   }
 
-  async getTrends(countryId: string, skip = 0, limit = DEFAULT_LIMIT): Promise<PaginatedTrends> {
-    const tags = await this.prismaService.tag.findMany({
-      where: {
-        isLive: false,
-        ...(countryId && {
-          author: {
-            school: {
-              city: {
-                countryId,
-              },
-            },
+  async getTrends(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedTrends> {
+    const country = await this.prismaService.user
+      .findUnique({
+        where: { id: authUser.id },
+      })
+      .school()
+      .city()
+      .country()
+
+    if (!country) throw new Error('No country')
+
+    const where = {
+      isLive: false,
+      author: {
+        school: {
+          city: {
+            countryId: country.id,
           },
-        }),
-      },
-      ...(skip && {
-        skip,
-      }),
-      orderBy: {
-        posts: {
-          _count: 'desc',
         },
       },
-      take: limit,
-      select: algoliaTagSelect,
-    })
+    }
+
+    const [totalCount, tags] = await this.prismaService.$transaction([
+      this.prismaService.tag.count({
+        where,
+      }),
+      this.prismaService.tag.findMany({
+        where,
+        skip,
+        orderBy: {
+          posts: {
+            _count: 'desc',
+          },
+        },
+        take: limit,
+        select: algoliaTagSelect,
+      }),
+    ])
 
     const nextSkip = skip + limit
 
@@ -223,6 +254,6 @@ export class TagService {
       }
     })
 
-    return { items: dataTags, nextSkip }
+    return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 }

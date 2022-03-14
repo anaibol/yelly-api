@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import { Driver } from 'neo4j-driver'
 import { OGM } from '@neo4j/graphql-ogm'
-import { ModelMap } from '../generated/ogm-types'
+import { ModelMap, UserModel } from '../generated/ogm-types'
 import { createDriver } from 'src/neo/createDriver'
 import { typeDefs } from 'src/neo'
 
@@ -10,6 +10,7 @@ export class Neo4jService implements OnModuleInit {
   config: any
   driver: Driver
   ogm: OGM<ModelMap>
+  user: UserModel
 
   async onModuleInit(): Promise<void> {
     try {
@@ -26,5 +27,7 @@ export class Neo4jService implements OnModuleInit {
       typeDefs,
       driver: this.driver,
     })
+
+    this.user = this.ogm.model('User')
   }
 }

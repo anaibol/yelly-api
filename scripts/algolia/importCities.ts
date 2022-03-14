@@ -25,7 +25,7 @@ async function main() {
         lng: true,
         country: true,
       },
-      skip: skip,
+      skip,
       take: CHUNK_SIZE,
     })
 

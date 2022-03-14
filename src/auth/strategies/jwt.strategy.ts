@@ -22,35 +22,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       where: { id },
     })
 
-    const school = await this.prismaService.user
-      .findUnique({
-        where: { id },
-        select: {
-          isActive: true,
-        },
-      })
-      .school()
-
-    const city = await this.prismaService.user
-      .findUnique({
-        where: { id },
-        select: {
-          isActive: true,
-        },
-      })
-      .school()
-      .city()
-
-    const country = await this.prismaService.user
-      .findUnique({
-        where: { id },
-      })
-      .school()
-      .city()
-      .country()
-
     if (!user?.isActive) return null
 
-    return { id, countryId: country?.id, cityId: city?.id, schoolId: school?.id, birthdate: user.birthdate }
+    return user
   }
 }

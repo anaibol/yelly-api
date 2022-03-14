@@ -88,7 +88,7 @@ export async function getGooglePlaceCityAndCountry(googlePlace: google.maps.plac
 
   const cityName = getCityName(googlePlace.address_components)
 
-  return cityName + ' ' + getCountryName(googlePlace.address_components)
+  return `${cityName} ${getCountryName(googlePlace.address_components)}`
 }
 
 export async function getGooglePlaceDetails(

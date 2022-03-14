@@ -17,4 +17,6 @@ export class School {
   totalUsersCount?: number
   posts?: PaginatedPosts
   users?: User[]
+  @Field(() => Float)
+  distance?: number
 }

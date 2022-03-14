@@ -19,7 +19,7 @@ async function main() {
         },
       },
       take: 10,
-      skip: skip,
+      skip,
     })
 
     if (schools.length == 0) {

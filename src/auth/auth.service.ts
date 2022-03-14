@@ -4,8 +4,9 @@ import { PrismaService } from '../core/prisma.service'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { AccessToken } from 'src/user/accessToken.model'
+import { User } from '@prisma/client'
 
-export type AuthUser = { id: string; countryId?: string; cityId?: string; schoolId?: string; birthdate?: Date | null }
+export type AuthUser = User
 
 const refreshRole = 'refresh'
 
@@ -15,7 +16,6 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<AuthUser | null> {
     const user = await this.prismaService.user.findUnique({
       where: { email },
-      select: { password: true, id: true, isActive: true, birthdate: true },
     })
 
     if (!user?.password || !user?.isActive) return null
@@ -36,7 +36,7 @@ export class AuthService {
     const hash = user.password.replace('$2y$', '$2b$')
     if (!(await bcrypt.compare(password, hash))) return null
 
-    return { id: user.id, countryId: country?.id, birthdate: user.birthdate }
+    return user
   }
 
   async getAccessToken(userId: string): Promise<string> {

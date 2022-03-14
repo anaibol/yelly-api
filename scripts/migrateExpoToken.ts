@@ -16,7 +16,7 @@
 //         id: true,
 //         expoPushNotificationToken: true,
 //       },
-//       skip: skip,
+//       skip,
 //       take: 500,
 //     })
 //     if (users.length == 0) {

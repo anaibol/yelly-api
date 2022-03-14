@@ -8,8 +8,10 @@ import TwilioService from './twilio.service'
 import { Neo4jService } from './neo4j.service'
 import { PushNotificationService } from './push-notification.service'
 import { AmplitudeService } from './amplitude.service'
+import { DataloaderModule } from '@tracworx/nestjs-dataloader'
 
 @Module({
+  imports: [DataloaderModule],
   providers: [
     // {
     //   provide: APP_GUARD,

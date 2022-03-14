@@ -1,8 +1,9 @@
-import { ArgsType } from '@nestjs/graphql'
-import { DEFAULT_LIMIT } from './pagination.constant'
+import { ArgsType, Field } from '@nestjs/graphql'
 
 @ArgsType()
 export class OffsetPaginationArgs {
-  limit: number = DEFAULT_LIMIT
-  skip?: number
+  @Field(() => Number)
+  skip = 0
+  @Field(() => Number)
+  limit = 10
 }

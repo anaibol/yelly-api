@@ -6,7 +6,6 @@ import { CoreModule } from '../core/core.module'
 import { AuthModule } from '../auth/auth.module'
 import { NotificationService } from '../notification/notification.service'
 import { SchoolService } from '../school/school.service'
-import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 import { UploadResolver } from './upload.resolver'
 import { PostService } from 'src/post/post.service'
 import { TagService } from 'src/tag/tag.service'
@@ -21,7 +20,6 @@ import { SendbirdWebhookModule } from 'src/sendbird-webhook/sendbird-webhook.mod
     UploadResolver,
     SchoolService,
     NotificationService,
-    ExpoPushNotificationsTokenService,
     PostService,
     TagService,
   ],
