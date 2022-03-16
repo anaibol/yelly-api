@@ -351,7 +351,7 @@ export class PushNotificationService {
               title: await this.i18n
                 .translate('notifications.NEW_LIVE_TAG_BODY', { ...(lang && { lang }) })
                 .catch((e) => null),
-              body: tag.text,
+              body: '#' + tag.text,
             }
           })
           .filter((v) => v)
