@@ -299,8 +299,25 @@ export class PushNotificationService {
     })
   }
 
-  async newLiveTag(authorCountryId: string) {
+  async newLiveTag(tagId: string) {
     if (process.env.NODE_ENV === 'development') return
+
+    const tag = await this.prismaService.tag.findUnique({
+      where: { id: tagId },
+    })
+
+    if (!tag?.authorId) throw new Error('No tag author')
+
+    // Get tag author country
+    const country = await this.prismaService.user
+      .findUnique({
+        where: { id: tag.authorId },
+      })
+      .school()
+      .city()
+      .country()
+
+    if (!country) throw new Error('No country')
 
     const allPushTokens = await this.prismaService.expoPushNotificationAccessToken.findMany({
       select: {
@@ -317,7 +334,7 @@ export class PushNotificationService {
         user: {
           school: {
             city: {
-              countryId: authorCountryId,
+              countryId: country.id,
             },
           },
         },
@@ -331,10 +348,10 @@ export class PushNotificationService {
             return {
               to: token,
               sound: 'default' as const,
-              title: 'Yelly',
-              body: await this.i18n
+              title: await this.i18n
                 .translate('notifications.NEW_LIVE_TAG_BODY', { ...(lang && { lang }) })
                 .catch((e) => null),
+              body: tag.text,
             }
           })
           .filter((v) => v)

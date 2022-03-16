@@ -1,6 +1,7 @@
 import { InputType } from '@nestjs/graphql'
 
 @InputType()
-export class CreateLiveTagInput {
+export class CreateOrUpdateLiveTagInput {
   text: string
+  isLive: boolean
 }

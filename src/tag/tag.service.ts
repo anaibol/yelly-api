@@ -6,10 +6,9 @@ import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
 import { algoliaTagSelect } from '../utils/algolia'
 import { UserService } from '../user/user.service'
-import { DEFAULT_LIMIT } from 'src/common/pagination.constant'
 import { PaginatedTrends } from './paginated-trends.model'
-import { LiveTagAuthUser } from 'src/post/live-tag-auth-user.model'
 import { AuthUser } from 'src/auth/auth.service'
+import { Tag } from './tag.model'
 
 @Injectable()
 export class TagService {
@@ -49,18 +48,19 @@ export class TagService {
     return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id)
   }
 
-  async getAuthUserLiveTag(authUser: AuthUser): Promise<LiveTagAuthUser | null> {
-    const country = await this.prismaService.user
+  async getLiveTags(authUser: AuthUser): Promise<Tag[]> {
+    if (!authUser.schoolId) throw new Error('No school')
+
+    const country = await this.prismaService.school
       .findUnique({
-        where: { id: authUser.id },
+        where: { id: authUser.schoolId },
       })
-      .school()
       .city()
       .country()
 
     if (!country) throw new Error('No country')
 
-    const liveTag = await this.prismaService.tag.findFirst({
+    const liveTags = await this.prismaService.tag.findMany({
       where: {
         isLive: true,
         author: {
@@ -74,6 +74,7 @@ export class TagService {
       select: {
         id: true,
         text: true,
+        createdAt: true,
         posts: {
           select: {
             createdAt: true,
@@ -99,72 +100,16 @@ export class TagService {
       },
     })
 
-    if (!liveTag) return null
-
-    const lastUsers = liveTag.posts.map((post) => post.author)
-
-    const authUserPosted = await this.userService.hasUserPostedOnTag(authUser.id, liveTag.id)
-
-    return {
-      ...liveTag,
-      ...lastUsers,
-      authUserPosted,
-      postCount: liveTag._count.posts,
-    }
+    return liveTags.map(({ posts, ...tag }) => ({
+      ...tag,
+      lastUsers: posts.map((post) => post.author),
+      postCount: tag._count.posts,
+    }))
   }
 
-  async createLiveTag(text: string, authorId: string) {
-    const country = await this.prismaService.user
-      .findUnique({
-        where: { id: authorId },
-      })
-      .school()
-      .city()
-      .country()
-
-    if (!country) throw new Error('No country')
-
-    await this.prismaService.tag.updateMany({
-      where: {
-        isLive: true,
-        author: {
-          school: {
-            city: {
-              countryId: country.id,
-            },
-          },
-        },
-      },
-      data: {
-        isLive: false,
-      },
-    })
-
-    const previousTag = await this.prismaService.tag.findFirst({
-      where: {
-        text,
-      },
-    })
-
-    const newTag = previousTag
-      ? await this.prismaService.tag.update({
-          where: {
-            id: previousTag.id,
-          },
-          data: {
-            isLive: true,
-            authorId,
-          },
-        })
-      : await this.prismaService.tag.create({
-          data: {
-            text,
-            isLive: true,
-            authorId,
-          },
-        })
-
-    await this.prismaService.tag.deleteMany({
+  deleteEmptyNonLiveTags() {
+    // Delete all tags without posts and isLive: false
+    return this.prismaService.tag.deleteMany({
       where: {
         isLive: false,
         posts: {
@@ -172,8 +117,39 @@ export class TagService {
         },
       },
     })
+  }
 
-    this.pushNotificationService.newLiveTag(country.id)
+  async createOrUpdateLiveTag(text: string, isLive: boolean, authorId: string): Promise<Tag> {
+    // Get tag from text
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        text,
+      },
+    })
+
+    const newTag = tag
+      ? // If tag exists update isLive
+        await this.prismaService.tag.update({
+          where: {
+            id: tag.id,
+          },
+          data: {
+            isLive,
+            authorId,
+          },
+        })
+      : // Else create it with isLive: true
+        await this.prismaService.tag.create({
+          data: {
+            text,
+            isLive,
+            authorId,
+          },
+        })
+
+    await this.deleteEmptyNonLiveTags()
+
+    this.pushNotificationService.newLiveTag(newTag.id)
 
     return newTag
   }

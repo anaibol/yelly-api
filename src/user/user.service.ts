@@ -641,8 +641,19 @@ export class UserService {
 
     const { fromUserId, toUserId } = friendRequest
 
-    await Promise.all([
-      this.createFriendship(fromUserId, toUserId),
+    await this.prismaService.$transaction([
+      this.prismaService.friend.createMany({
+        data: [
+          {
+            userId: fromUserId,
+            otherUserId: toUserId,
+          },
+          {
+            userId: toUserId,
+            otherUserId: fromUserId,
+          },
+        ],
+      }),
       this.prismaService.friendRequest.update({
         where: {
           id: friendRequestId,
@@ -664,72 +675,37 @@ export class UserService {
     return true
   }
 
-  async createFriendship(userId: string, otherUserId: string): Promise<boolean> {
-    await Promise.all([
-      this.prismaService.friend.createMany({
-        data: [
-          {
-            userId,
-            otherUserId,
-          },
-          {
-            userId: otherUserId,
-            otherUserId: userId,
-          },
-        ],
-      }),
-      this.neo4jService.user.update({
+  async unfriend(userId: string, otherUserId: string): Promise<boolean> {
+    await this.prismaService.$transaction([
+      this.prismaService.friend.deleteMany({
         where: {
-          id: userId,
-        },
-        connect: {
-          friends: [
+          OR: [
             {
-              where: {
-                node: {
-                  id: otherUserId,
-                },
-              },
+              userId: userId,
+              otherUserId: otherUserId,
+            },
+            {
+              userId: otherUserId,
+              otherUserId: userId,
             },
           ],
         },
       }),
-      this.neo4jService.user.update({
+      this.prismaService.friendRequest.deleteMany({
         where: {
-          id: otherUserId,
-        },
-        connect: {
-          friends: [
+          OR: [
             {
-              where: {
-                node: {
-                  id: userId,
-                },
-              },
+              fromUserId: userId,
+              toUserId: otherUserId,
+            },
+            {
+              fromUserId: otherUserId,
+              toUserId: userId,
             },
           ],
         },
       }),
     ])
-
-    return true
-  }
-
-  async deleteFriendship(userId: string, otherUserId: string): Promise<boolean> {
-    await this.prismaService.friend.deleteMany({
-      where: {
-        OR: [
-          {
-            userId: userId,
-            otherUserId: otherUserId,
-          },
-          {
-            userId: otherUserId,
-            otherUserId: userId,
-          },
-        ],
-      },
-    })
 
     return true
   }

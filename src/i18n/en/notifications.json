@@ -3,5 +3,5 @@
   "POST_REACTION_BODY": "{firstName} sends you {postReaction}",
   "FRIENDSHIP_REQUEST_BODY": "{firstName} sent you a friend request",
   "FRIENDSHIP_ACCEPTED_BODY": "{firstName} accepted your friend request",
-  "NEW_LIVE_TAG_BODY": "Come and discover the new # of the day 👀⚡️"
+  "NEW_LIVE_TAG_BODY": "Yelly trend live"
 }

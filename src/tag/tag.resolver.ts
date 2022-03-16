@@ -4,8 +4,7 @@ import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
 
-import { CreateLiveTagInput } from '../post/create-live-tag.input'
-import { LiveTagAuthUser } from '../post/live-tag-auth-user.model'
+import { CreateOrUpdateLiveTagInput } from '../post/create-or-update-live-tag.input'
 import { PostsArgs } from '../post/posts.args'
 
 import { Tag } from './tag.model'
@@ -24,15 +23,18 @@ export class TagResolver {
   constructor(private tagService: TagService, private userService: UserService, private prismaService: PrismaService) {}
 
   @UseGuards(AuthGuard)
-  @Query(() => LiveTagAuthUser, { name: 'liveTag', nullable: true })
-  async getLiveTag(@CurrentUser() authUser: AuthUser): Promise<LiveTagAuthUser | null> {
-    return this.tagService.getAuthUserLiveTag(authUser)
+  @Query(() => [Tag])
+  async liveTags(@CurrentUser() authUser: AuthUser): Promise<Tag[]> {
+    return this.tagService.getLiveTags(authUser)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Tag)
-  createLiveTag(@Args('input') createLiveTag: CreateLiveTagInput, @CurrentUser() authUser: AuthUser): Promise<Tag> {
-    return this.tagService.createLiveTag(createLiveTag.text, authUser.id)
+  createOrUpdateLiveTag(
+    @Args('input') createOrUpdateLiveTag: CreateOrUpdateLiveTagInput,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<Tag> {
+    return this.tagService.createOrUpdateLiveTag(createOrUpdateLiveTag.text, createOrUpdateLiveTag.isLive, authUser.id)
   }
 
   @ResolveField()

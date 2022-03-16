@@ -3,5 +3,5 @@
   "POST_REACTION_BODY": "{firstName} te envía {postReaction}",
   "FRIENDSHIP_REQUEST_BODY": "{firstName} te envió una solicitud de amistad",
   "FRIENDSHIP_ACCEPTED_BODY": "{firstName} aceptó tu solicitud de amistad",
-  "NEW_LIVE_TAG_BODY": "Ven y descubre el nuevo # del día 👀⚡️"
+  "NEW_LIVE_TAG_BODY": "Tendencia Yelly live"
 }
