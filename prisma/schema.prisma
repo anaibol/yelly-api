@@ -31,10 +31,10 @@ model Notification {
   id              String         @id @default(uuid())
   isSeen          Boolean        @default(false)
   createdAt       DateTime       @default(now())
-  postReactionId  String?        @unique
+  postReactionId  String?
   userId          String
   friendRequestId String?
-  friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id])
+  friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
   postReaction    PostReaction?  @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
 }
 
@@ -104,7 +104,7 @@ model User {
 }
 
 model FriendRequest {
-  id             String              @unique @default(uuid())
+  id             String              @id @default(uuid())
   fromUserId     String
   toUserId       String
   createdAt      DateTime            @default(now())
@@ -113,7 +113,6 @@ model FriendRequest {
   toUser         User                @relation("friendRequestToUser", fields: [toUserId], references: [id], onDelete: Cascade)
   notifications  Notification[]
 
-  @@id([fromUserId, toUserId])
   @@index([toUserId], map: "FriendRequest_toUserId_fkey")
 }
 

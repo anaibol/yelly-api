@@ -377,7 +377,7 @@ export class UserService {
   }
 
   async getFriendRequest(fromUserId: string, toUserId: string): Promise<FriendRequest | null> {
-    return this.prismaService.friendRequest.findUnique({
+    return this.prismaService.friendRequest.findFirst({
       select: {
         id: true,
         status: true,
@@ -391,10 +391,11 @@ export class UserService {
         },
       },
       where: {
-        fromUserId_toUserId: {
-          fromUserId,
-          toUserId,
-        },
+        fromUserId,
+        toUserId,
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     })
   }
@@ -591,11 +592,6 @@ export class UserService {
           friendRequestId,
         },
       }),
-      this.prismaService.friendRequest.delete({
-        where: {
-          id: friendRequestId,
-        },
-      }),
     ])
 
     return true
@@ -676,36 +672,20 @@ export class UserService {
   }
 
   async unfriend(userId: string, otherUserId: string): Promise<boolean> {
-    await this.prismaService.$transaction([
-      this.prismaService.friend.deleteMany({
-        where: {
-          OR: [
-            {
-              userId: userId,
-              otherUserId: otherUserId,
-            },
-            {
-              userId: otherUserId,
-              otherUserId: userId,
-            },
-          ],
-        },
-      }),
-      this.prismaService.friendRequest.deleteMany({
-        where: {
-          OR: [
-            {
-              fromUserId: userId,
-              toUserId: otherUserId,
-            },
-            {
-              fromUserId: otherUserId,
-              toUserId: userId,
-            },
-          ],
-        },
-      }),
-    ])
+    await this.prismaService.friend.deleteMany({
+      where: {
+        OR: [
+          {
+            userId: userId,
+            otherUserId: otherUserId,
+          },
+          {
+            userId: otherUserId,
+            otherUserId: userId,
+          },
+        ],
+      },
+    })
 
     return true
   }
