@@ -172,23 +172,38 @@ export class TagService {
 
     if (!country) throw new Error('No country')
 
-    const where = {
-      isLive: false,
-      author: {
-        school: {
-          city: {
-            countryId: country.id,
-          },
-        },
-      },
-    }
-
     const [totalCount, tags] = await this.prismaService.$transaction([
       this.prismaService.tag.count({
-        where,
+        where: {
+          isLive: false,
+          posts: {
+            some: {
+              author: {
+                school: {
+                  city: {
+                    countryId: country.id,
+                  },
+                },
+              },
+            },
+          },
+        },
       }),
       this.prismaService.tag.findMany({
-        where,
+        where: {
+          isLive: false,
+          posts: {
+            some: {
+              author: {
+                school: {
+                  city: {
+                    countryId: country.id,
+                  },
+                },
+              },
+            },
+          },
+        },
         skip,
         orderBy: {
           posts: {
