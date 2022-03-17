@@ -307,18 +307,7 @@ export class PushNotificationService {
       where: { id: tagId },
     })
 
-    if (!tag) throw new Error('No tag')
-
-    // Get tag author country
-    const country = await this.prismaService.user
-      .findUnique({
-        where: { id: authUser.id },
-      })
-      .school()
-      .city()
-      .country()
-
-    if (!country) throw new Error('No country')
+    if (!tag?.countryId) throw new Error('No tag')
 
     const allPushTokens = await this.prismaService.expoPushNotificationAccessToken.findMany({
       select: {
@@ -335,7 +324,7 @@ export class PushNotificationService {
         user: {
           school: {
             city: {
-              countryId: country.id,
+              countryId: tag.countryId,
             },
           },
         },
