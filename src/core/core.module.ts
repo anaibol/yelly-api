@@ -3,15 +3,16 @@ import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotification
 import { AlgoliaService } from './algolia.service'
 import { EmailService } from './email.service'
 import { PrismaService } from './prisma.service'
-import { SendbirdService } from './sendbird.service'
+import { SendbirdService } from '../sendbird/sendbird.service'
 import TwilioService from './twilio.service'
 import { Neo4jService } from './neo4j.service'
 import { PushNotificationService } from './push-notification.service'
 import { AmplitudeService } from './amplitude.service'
+import { SendbirdModule } from 'src/sendbird/sendbird.module'
 import { DataloaderModule } from '@tracworx/nestjs-dataloader'
 
 @Module({
-  imports: [DataloaderModule],
+  imports: [DataloaderModule, SendbirdModule],
   providers: [
     // {
     //   provide: APP_GUARD,

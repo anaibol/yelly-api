@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import axios, { Axios } from 'axios'
-import { PrismaService } from './prisma.service'
+import { HttpService } from 'nestjs-http-promise'
+import { PrismaService } from '../core/prisma.service'
+import { GroupChannel } from './types'
 
 const buildChannelUrl = (userIds: string[]): string => {
   return userIds.sort().join('_')
@@ -25,24 +26,12 @@ type IncomingUser = {
   pictureId: string | null
 }
 
-const SAMUEL_ADMIN_ID = process.env.SAMUEL_ADMIN_ID
-
 const cleanUndefinedFromObj = (obj: any) =>
   Object.entries(obj).reduce((a: any, [k, v]) => (v === undefined || v === null ? a : ((a[k] = v), a)), {})
 
 @Injectable()
 export class SendbirdService {
-  client: Axios
-
-  constructor(private prismaService: PrismaService) {
-    this.client = axios.create({
-      baseURL: process.env.SENDBIRD_BASE_URL,
-      headers: {
-        'Content-Type': 'application/json; charset=utf8',
-        'Api-Token': process.env.SENDBIRD_TOKEN,
-      },
-    })
-  }
+  constructor(private prismaService: PrismaService, private httpService: HttpService) {}
 
   async createUser(user: IncomingUser): Promise<string> {
     const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}?format=auto`
@@ -59,9 +48,8 @@ export class SendbirdService {
       },
     }
 
-    const { data } = await this.client.post('/v3/users', sendbirdUser)
+    const { data } = await this.httpService.post('/v3/users', sendbirdUser)
 
-    // this.welcomeMessage(user.id, user.firstName)
     return data.access_token
   }
 
@@ -82,47 +70,31 @@ export class SendbirdService {
     })
 
     await Promise.all([
-      this.client.put(`/v3/users/${user.id}`, updatedUserData),
-      Object.keys(metadata).length && this.client.put(`/v3/users/${user.id}/metadata`, { metadata, upsert: true }),
+      this.httpService.put(`/v3/users/${user.id}`, updatedUserData),
+      Object.keys(metadata).length && this.httpService.put(`/v3/users/${user.id}/metadata`, { metadata, upsert: true }),
     ])
   }
 
   async getAccessToken(userId: string): Promise<string> {
-    const response = await this.client.put(`/v3/users/${userId}`, { issue_access_token: true })
-    return response.data.access_token
+    const { data } = await this.httpService.put(`/v3/users/${userId}`, { issue_access_token: true })
+    return data.access_token
   }
 
   async deleteUser(userId: string): Promise<boolean> {
-    await this.client.delete(`/v3/users/${userId}`)
+    await this.httpService.delete(`/v3/users/${userId}`)
     return true
   }
 
-  async welcomeMessage(userId: string, userFirstName: string | null) {
-    const userIds = [userId, SAMUEL_ADMIN_ID]
-    const channelUrl = `${userId}_${SAMUEL_ADMIN_ID}`
-
-    try {
-      const channel = await this.client.post('/v3/group_channels', {
-        user_ids: userIds,
-        channel_url: channelUrl,
-        name: 'welcome chat',
-        custom_type: '1-1',
-        is_distinct: true,
-        inviter_id: SAMUEL_ADMIN_ID,
-      })
-
-      if (channel) {
-        await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
-          message_type: 'MESG',
-          user_id: SAMUEL_ADMIN_ID,
-          message: `Hello ${userFirstName},
-          En tant que fondateur de l’app ça m’aiderait de ouf si tu pouvais me donner ton avis sur l’app. Tu aimes bien ?`,
+  async getGroupChannel(channelUrl: string): Promise<GroupChannel | null> {
+    return (
+      this.httpService
+        .get<GroupChannel>(`/v3/group_channels/${channelUrl}`)
+        // .catch(() => Promise.resolve(null))
+        .then((response) => {
+          if (!response) return null
+          return response.data
         })
-      }
-    } catch (error) {
-      console.log('error:', error)
-    }
-    return true
+    )
   }
 
   async sendPostReactionMessage(postReactionId: string) {
@@ -156,13 +128,10 @@ export class SendbirdService {
     const channelUrl = buildChannelUrl(userIds)
 
     try {
-      const channelExists = await this.client
-        .get(`/v3/group_channels/${userIds}`)
-        .then(() => Promise.resolve(true))
-        .catch(() => Promise.resolve(false))
+      const groupChannel = await this.getGroupChannel(channelUrl)
 
-      if (!channelExists) {
-        await this.client.post('/v3/group_channels', {
+      if (!groupChannel) {
+        await this.httpService.post('/v3/group_channels', {
           user_ids: userIds,
           channel_url: channelUrl,
           custom_type: '1-1',
@@ -171,7 +140,7 @@ export class SendbirdService {
         })
       }
 
-      await this.client.post(`/v3/group_channels/${channelUrl}/messages`, {
+      await this.httpService.post(`/v3/group_channels/${channelUrl}/messages`, {
         message_type: 'MESG',
         custom_type: 'post_reaction',
         user_id: authorId,
@@ -183,7 +152,7 @@ export class SendbirdService {
         }),
       })
     } catch (error) {
-      console.log('error:', error)
+      return new Error('Was not able to create or send message to the channel')
     }
     return true
   }
