@@ -1586,7 +1586,7 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.16.7"
 
-"@babel/runtime@^7.0.0", "@babel/runtime@^7.5.5":
+"@babel/runtime@^7.0.0", "@babel/runtime@^7.15.4", "@babel/runtime@^7.5.5":
   version "7.17.2"
   resolved "https://registry.npmjs.org/@babel/runtime/-/runtime-7.17.2.tgz"
   integrity sha512-hzeyJyMA1YGdJTuWU0e/j4wKXrU4OMFvY2MSlaI9B7VQb0r5cxTE3EAIS2Q7Tn2RIcDkRvTA/v2JsAEhxe99uw==
@@ -3582,6 +3582,19 @@ aws-crt@^1.9.7:
     tar "^6.1.11"
     ws "^7.5.5"
 
+axios-better-stacktrace@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/axios-better-stacktrace/-/axios-better-stacktrace-2.1.2.tgz#f38677dea96443a5de662c61f26fa8956e356a43"
+  integrity sha512-/ikpK5W7UhCAdl9pQss1vpTfLtOQpbv8edRZ2a9wWSux2dnGmqjVHkFsMKnyllysxm046C016lqGjUgGNECcag==
+
+axios-retry@^3.2.4:
+  version "3.2.4"
+  resolved "https://registry.yarnpkg.com/axios-retry/-/axios-retry-3.2.4.tgz#f447a53c3456f5bfeca18f20c3a3272207d082ae"
+  integrity sha512-Co3UXiv4npi6lM963mfnuH90/YFLKWWDmoBYfxkHT5xtkSSWNqK9zdG3fw5/CP/dsoKB5aMMJCsgab+tp1OxLQ==
+  dependencies:
+    "@babel/runtime" "^7.15.4"
+    is-retry-allowed "^2.2.0"
+
 axios@0.26.0:
   version "0.26.0"
   resolved "https://registry.npmjs.org/axios/-/axios-0.26.0.tgz"
@@ -3596,7 +3609,7 @@ axios@^0.21.1, axios@^0.21.4:
   dependencies:
     follow-redirects "^1.14.0"
 
-axios@^0.24.0:
+axios@^0.24.0, axios@~0.24.0:
   version "0.24.0"
   resolved "https://registry.npmjs.org/axios/-/axios-0.24.0.tgz"
   integrity sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==
@@ -6191,6 +6204,11 @@ is-relative@^1.0.0:
   dependencies:
     is-unc-path "^1.0.0"
 
+is-retry-allowed@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/is-retry-allowed/-/is-retry-allowed-2.2.0.tgz#88f34cbd236e043e71b6932d09b0c65fb7b4d71d"
+  integrity sha512-XVm7LOeLpTW4jV19QSH38vkswxoLud8sQ57YwJVTPWdiaI9I8keEhGFpBlslyVsgdQy4Opg8QOLb8YRgsyZiQg==
+
 is-set@^2.0.1, is-set@^2.0.2:
   version "2.0.2"
   resolved "https://registry.npmjs.org/is-set/-/is-set-2.0.2.tgz"
@@ -7535,6 +7553,15 @@ neo4j-driver@4.4.0-beta02:
     neo4j-driver-bolt-connection "^4.4.0-beta02"
     neo4j-driver-core "^4.4.0-beta02"
     rxjs "^6.6.3"
+
+nestjs-http-promise@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/nestjs-http-promise/-/nestjs-http-promise-1.2.1.tgz#9f1c2b270129d5d8ca54a735e9c4907694757371"
+  integrity sha512-EdhpTg4EsZbgeJE/uOKhlYhvOGfviHsJxdagePGfl9/3j8GGnlWtN22Kpx7lcAbN2aoSiBi/k1DRd+nHQGIxBw==
+  dependencies:
+    axios "~0.24.0"
+    axios-better-stacktrace "^2.1.2"
+    axios-retry "^3.2.4"
 
 nestjs-i18n@^8.2.2:
   version "8.2.2"
