@@ -73,7 +73,7 @@ model User {
   resetToken                   String?
   isVerified                   Boolean                           @default(true)
   createdAt                    DateTime                          @default(now())
-  updatedAt                    DateTime?
+  updatedAt                    DateTime?                          @updatedAt
   isActive                     Boolean                           @default(true)
   isFilled                     Boolean                           @default(false)
   androidPushnotificationToken String?
@@ -96,7 +96,6 @@ model User {
   posts                        Post[]
   postComments                 PostComment[]
   postReactions                PostReaction[]
-  tags                         Tag[]
 
   @@index([birthdate], map: "User_birthdate")
   @@index([schoolId], map: "User_schoolId_fkey")
@@ -132,13 +131,11 @@ model Tag {
   id        String   @id @default(uuid())
   text      String   @unique
   createdAt DateTime @default(now())
-  authorId  String?
+  updatedAt DateTime? @updatedAt
   isLive    Boolean  @default(false)
-  author    User?    @relation(fields: [authorId], references: [id], onUpdate: SetNull)
   posts     Post[]
 
   @@index([text], map: "Tag_text_idx")
-  @@index([authorId], map: "Tag_authorId_fkey")
 }
 
 model Post {

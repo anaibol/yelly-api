@@ -66,12 +66,6 @@ export type PostIndexAlgoliaInterface = {
     id: string
     createdAt: Date
     text: string
-    author: {
-      id: string
-      firstName: string | null
-      lastName: string | null
-      pictureId: string | null
-    } | null
   }>
   createdAt: Date
 }
@@ -116,39 +110,14 @@ export const algoliaUserSelect = {
   },
 }
 
-export const algoliaTagSelect = {
+export const trendsTagSelect = {
   id: true,
   text: true,
   createdAt: true,
+  updatedAt: true,
   _count: {
     select: {
       posts: true,
-    },
-  },
-  author: {
-    select: {
-      id: true,
-      pictureId: true,
-      firstName: true,
-      lastName: true,
-    },
-  },
-  posts: {
-    select: {
-      createdAt: true,
-      author: {
-        select: {
-          id: true,
-          pictureId: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-    },
-    take: 5,
-    distinct: 'authorId' as const,
-    orderBy: {
-      createdAt: 'desc' as const,
     },
   },
 }
@@ -218,14 +187,6 @@ export const algoliaPostSelect = {
       id: true,
       createdAt: true,
       text: true,
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          pictureId: true,
-        },
-      },
     },
   },
 }
@@ -317,14 +278,6 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
         id: tag.id,
         createdAt: tag.createdAt,
         text: tag.text,
-        author: tag.author
-          ? {
-              id: tag.author.id,
-              firstName: tag.author.firstName,
-              lastName: tag.author.lastName,
-              pictureId: tag.author.pictureId,
-            }
-          : null,
       }
     }),
   }

@@ -8,5 +8,4 @@ export class Trend {
   text: string
   author?: User | null
   postCount?: number
-  lastUsers?: User[]
 }

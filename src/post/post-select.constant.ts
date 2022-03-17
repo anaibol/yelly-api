@@ -38,14 +38,6 @@ export const PostSelect = {
       createdAt: true,
       text: true,
       isLive: true,
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          pictureId: true,
-        },
-      },
     },
   },
 }

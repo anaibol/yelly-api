@@ -4,7 +4,7 @@ import { PrismaService } from '../core/prisma.service'
 import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
-import { algoliaTagSelect } from '../utils/algolia'
+import { trendsTagSelect } from '../utils/algolia'
 import { UserService } from '../user/user.service'
 import { PaginatedTrends } from './paginated-trends.model'
 import { AuthUser } from 'src/auth/auth.service'
@@ -23,7 +23,7 @@ export class TagService {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
 
     const tag = await this.prismaService.tag.findUnique({
-      select: algoliaTagSelect,
+      select: trendsTagSelect,
       where: {
         text: tagText,
       },
@@ -31,12 +31,9 @@ export class TagService {
 
     if (!tag) throw new Error('Tag not found')
 
-    const lastUsers = tag.posts.map((post) => post.author)
-
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       id: tag.id,
       text: tagText,
-      lastUsers: [...lastUsers],
       postCount: {
         _operation: 'Increment',
         value: 1,
@@ -63,13 +60,6 @@ export class TagService {
     const liveTags = await this.prismaService.tag.findMany({
       where: {
         isLive: true,
-        author: {
-          school: {
-            city: {
-              countryId: country.id,
-            },
-          },
-        },
       },
       select: {
         id: true,
@@ -102,7 +92,6 @@ export class TagService {
 
     return liveTags.map(({ posts, ...tag }) => ({
       ...tag,
-      lastUsers: posts.map((post) => post.author),
       postCount: tag._count.posts,
     }))
   }
@@ -119,7 +108,7 @@ export class TagService {
     })
   }
 
-  async createOrUpdateLiveTag(text: string, isLive: boolean, authorId: string): Promise<Tag> {
+  async createOrUpdateLiveTag(text: string, isLive: boolean, authUser: AuthUser): Promise<Tag> {
     // Get tag from text
     const tag = await this.prismaService.tag.findUnique({
       where: {
@@ -135,7 +124,6 @@ export class TagService {
           },
           data: {
             isLive,
-            authorId,
           },
         })
       : // Else create it with isLive: true
@@ -143,13 +131,12 @@ export class TagService {
           data: {
             text,
             isLive,
-            authorId,
           },
         })
 
     await this.deleteEmptyNonLiveTags()
 
-    if (isLive) this.pushNotificationService.newLiveTag(newTag.id)
+    if (isLive) this.pushNotificationService.newLiveTag(newTag.id, authUser)
 
     return newTag
   }
@@ -164,13 +151,6 @@ export class TagService {
         text: true,
         createdAt: true,
         isLive: true,
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
       },
     })
   }
@@ -216,7 +196,7 @@ export class TagService {
           },
         },
         take: limit,
-        select: algoliaTagSelect,
+        select: trendsTagSelect,
       }),
     ])
 
@@ -225,7 +205,6 @@ export class TagService {
     const dataTags = tags.map((tag) => {
       return {
         ...tag,
-        lastUsers: tag.posts.map((post) => post.author),
         postCount: tag._count.posts,
       }
     })

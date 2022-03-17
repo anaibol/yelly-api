@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { ExpoPushNotificationAccessToken, FriendRequest, PostComment, PostReaction } from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
+import { AuthUser } from 'src/auth/auth.service'
 import { PrismaService } from 'src/core/prisma.service'
 import { TRACK_EVENT } from 'src/types/trackEvent'
 import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotificationsToken.service'
@@ -71,7 +72,7 @@ export class PushNotificationService {
         : 'CHAT_MESSAGE_PUSH_NOTIFICATION_SENT'
 
     const messages = receiverUsersTokens.map((expoPushNotificationToken) => {
-      const url = `${process.env.APP_BASE_URL}/chat/user/${senderUser.id}`
+      const url = `${process.env.APP_BASE_URL}/chats/${senderUser.id}`
 
       return {
         to: expoPushNotificationToken.token,
@@ -140,7 +141,7 @@ export class PushNotificationService {
   // }
 
   async createFriendRequestPushNotification(friendRequest: FriendRequest) {
-    const url = `${process.env.APP_BASE_URL}/user/${friendRequest.fromUserId}`
+    const url = `${process.env.APP_BASE_URL}/users/${friendRequest.fromUserId}`
 
     const receiverUser = await this.prismaService.user.findUnique({
       select: {
@@ -266,7 +267,7 @@ export class PushNotificationService {
       return {
         to: expoPushNotificationToken.token,
         body: `${commenterFirstName} a commenté ton post`,
-        data: { url: `${process.env.APP_BASE_URL}/post/${postComment.postId}` },
+        data: { url: `${process.env.APP_BASE_URL}/posts/${postComment.postId}` },
         sound: 'default' as const,
       }
     })
@@ -299,19 +300,19 @@ export class PushNotificationService {
     })
   }
 
-  async newLiveTag(tagId: string) {
+  async newLiveTag(tagId: string, authUser: AuthUser): Promise<void> {
     if (process.env.NODE_ENV === 'development') return
 
     const tag = await this.prismaService.tag.findUnique({
       where: { id: tagId },
     })
 
-    if (!tag?.authorId) throw new Error('No tag author')
+    if (!tag) throw new Error('No tag')
 
     // Get tag author country
     const country = await this.prismaService.user
       .findUnique({
-        where: { id: tag.authorId },
+        where: { id: authUser.id },
       })
       .school()
       .city()
@@ -341,7 +342,7 @@ export class PushNotificationService {
       },
     })
 
-    const url = `${process.env.APP_BASE_URL}/tag/${tag.text}`
+    const url = `${process.env.APP_BASE_URL}/tags/${tag.text}`
 
     try {
       const messages = await Promise.all(
