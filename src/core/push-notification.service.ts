@@ -72,7 +72,7 @@ export class PushNotificationService {
         : 'CHAT_MESSAGE_PUSH_NOTIFICATION_SENT'
 
     const messages = receiverUsersTokens.map((expoPushNotificationToken) => {
-      const url = `${process.env.APP_BASE_URL}/chat/user/${senderUser.id}`
+      const url = `${process.env.APP_BASE_URL}/chats/${senderUser.id}`
 
       return {
         to: expoPushNotificationToken.token,
@@ -141,7 +141,7 @@ export class PushNotificationService {
   // }
 
   async createFriendRequestPushNotification(friendRequest: FriendRequest) {
-    const url = `${process.env.APP_BASE_URL}/user/${friendRequest.fromUserId}`
+    const url = `${process.env.APP_BASE_URL}/users/${friendRequest.fromUserId}`
 
     const receiverUser = await this.prismaService.user.findUnique({
       select: {
@@ -267,7 +267,7 @@ export class PushNotificationService {
       return {
         to: expoPushNotificationToken.token,
         body: `${commenterFirstName} a commenté ton post`,
-        data: { url: `${process.env.APP_BASE_URL}/post/${postComment.postId}` },
+        data: { url: `${process.env.APP_BASE_URL}/posts/${postComment.postId}` },
         sound: 'default' as const,
       }
     })
@@ -342,7 +342,7 @@ export class PushNotificationService {
       },
     })
 
-    const url = `${process.env.APP_BASE_URL}/tag/${tag.text}`
+    const url = `${process.env.APP_BASE_URL}/tags/${tag.text}`
 
     try {
       const messages = await Promise.all(
