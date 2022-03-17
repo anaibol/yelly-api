@@ -96,7 +96,6 @@ model User {
   posts                        Post[]
   postComments                 PostComment[]
   postReactions                PostReaction[]
-  tags                         Tag[]
 
   @@index([birthdate], map: "User_birthdate")
   @@index([schoolId], map: "User_schoolId_fkey")
@@ -133,13 +132,10 @@ model Tag {
   text      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime? @updatedAt
-  authorId  String?
   isLive    Boolean  @default(false)
-  author    User?    @relation(fields: [authorId], references: [id], onUpdate: SetNull)
   posts     Post[]
 
   @@index([text], map: "Tag_text_idx")
-  @@index([authorId], map: "Tag_authorId_fkey")
 }
 
 model Post {

@@ -60,13 +60,6 @@ export class TagService {
     const liveTags = await this.prismaService.tag.findMany({
       where: {
         isLive: true,
-        author: {
-          school: {
-            city: {
-              countryId: country.id,
-            },
-          },
-        },
       },
       select: {
         id: true,
@@ -115,7 +108,7 @@ export class TagService {
     })
   }
 
-  async createOrUpdateLiveTag(text: string, isLive: boolean, authorId: string): Promise<Tag> {
+  async createOrUpdateLiveTag(text: string, isLive: boolean, authUser: AuthUser): Promise<Tag> {
     // Get tag from text
     const tag = await this.prismaService.tag.findUnique({
       where: {
@@ -131,7 +124,6 @@ export class TagService {
           },
           data: {
             isLive,
-            authorId,
           },
         })
       : // Else create it with isLive: true
@@ -139,13 +131,12 @@ export class TagService {
           data: {
             text,
             isLive,
-            authorId,
           },
         })
 
     await this.deleteEmptyNonLiveTags()
 
-    if (isLive) this.pushNotificationService.newLiveTag(newTag.id)
+    if (isLive) this.pushNotificationService.newLiveTag(newTag.id, authUser)
 
     return newTag
   }
@@ -160,13 +151,6 @@ export class TagService {
         text: true,
         createdAt: true,
         isLive: true,
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
       },
     })
   }

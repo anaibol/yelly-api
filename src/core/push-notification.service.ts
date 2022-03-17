@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { ExpoPushNotificationAccessToken, FriendRequest, PostComment, PostReaction } from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
+import { AuthUser } from 'src/auth/auth.service'
 import { PrismaService } from 'src/core/prisma.service'
 import { TRACK_EVENT } from 'src/types/trackEvent'
 import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotificationsToken.service'
@@ -299,19 +300,19 @@ export class PushNotificationService {
     })
   }
 
-  async newLiveTag(tagId: string) {
+  async newLiveTag(tagId: string, authUser: AuthUser): Promise<void> {
     if (process.env.NODE_ENV === 'development') return
 
     const tag = await this.prismaService.tag.findUnique({
       where: { id: tagId },
     })
 
-    if (!tag?.authorId) throw new Error('No tag author')
+    if (!tag) throw new Error('No tag')
 
     // Get tag author country
     const country = await this.prismaService.user
       .findUnique({
-        where: { id: tag.authorId },
+        where: { id: authUser.id },
       })
       .school()
       .city()

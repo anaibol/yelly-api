@@ -34,7 +34,7 @@ export class TagResolver {
     @Args('input') createOrUpdateLiveTag: CreateOrUpdateLiveTagInput,
     @CurrentUser() authUser: AuthUser
   ): Promise<Tag> {
-    return this.tagService.createOrUpdateLiveTag(createOrUpdateLiveTag.text, createOrUpdateLiveTag.isLive, authUser.id)
+    return this.tagService.createOrUpdateLiveTag(createOrUpdateLiveTag.text, createOrUpdateLiveTag.isLive, authUser)
   }
 
   @ResolveField()
