@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { AlgoliaService } from '../core/algolia.service'
-import { Neo4jService } from './../core/neo4j.service'
+// import { Neo4jService } from './../core/neo4j.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { SendbirdService } from '../sendbird/sendbird.service'
@@ -30,7 +30,7 @@ export class UserService {
     private schoolService: SchoolService,
     private sendbirdService: SendbirdService,
     private pushNotificationService: PushNotificationService,
-    private neo4jService: Neo4jService,
+    // private neo4jService: Neo4jService,
     private postService: PostService
   ) {}
 
@@ -836,16 +836,16 @@ export class UserService {
         this.syncUsersIndexWithAlgolia(userId)
         this.syncPostsIndexWithAlgolia(userId)
 
-        await this.neo4jService.user.create({
-          input: [
-            {
-              id: updatedUser.id,
-              firstName: updatedUser.firstName,
-              lastName: updatedUser.lastName,
-              pictureId: updatedUser.pictureId,
-            },
-          ],
-        })
+        // await this.neo4jService.user.create({
+        //   input: [
+        //     {
+        //       id: updatedUser.id,
+        //       firstName: updatedUser.firstName,
+        //       lastName: updatedUser.lastName,
+        //       pictureId: updatedUser.pictureId,
+        //     },
+        //   ],
+        // })
       } catch (error) {
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
@@ -860,14 +860,14 @@ export class UserService {
 
       this.syncUsersIndexWithAlgolia(userId)
 
-      await this.neo4jService.user.update({
-        where: { id: userId },
-        update: {
-          firstName: updatedUser.firstName,
-          lastName: updatedUser.lastName,
-          pictureId: updatedUser.pictureId,
-        },
-      })
+      // await this.neo4jService.user.update({
+      //   where: { id: userId },
+      //   update: {
+      //     firstName: updatedUser.firstName,
+      //     lastName: updatedUser.lastName,
+      //     pictureId: updatedUser.pictureId,
+      //   },
+      // })
     }
 
     if (schoolData) {

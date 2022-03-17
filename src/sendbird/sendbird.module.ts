@@ -5,7 +5,6 @@ import { SendbirdService } from './sendbird.service'
 
 @Module({
   imports: [
-    PrismaService,
     HttpModule.register({
       baseURL: process.env.SENDBIRD_BASE_URL,
       headers: {
