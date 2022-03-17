@@ -12,6 +12,5 @@ export class Tag {
   author?: User | null
   posts?: PaginatedPosts
   postCount?: number
-  lastUsers?: User[]
   authUserPosted?: boolean
 }

@@ -116,10 +116,11 @@ export const algoliaUserSelect = {
   },
 }
 
-export const algoliaTagSelect = {
+export const trendsTagSelect = {
   id: true,
   text: true,
   createdAt: true,
+  updatedAt: true,
   _count: {
     select: {
       posts: true,
@@ -131,24 +132,6 @@ export const algoliaTagSelect = {
       pictureId: true,
       firstName: true,
       lastName: true,
-    },
-  },
-  posts: {
-    select: {
-      createdAt: true,
-      author: {
-        select: {
-          id: true,
-          pictureId: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-    },
-    take: 5,
-    distinct: 'authorId' as const,
-    orderBy: {
-      createdAt: 'desc' as const,
     },
   },
 }

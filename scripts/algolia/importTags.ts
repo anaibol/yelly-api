@@ -1,6 +1,6 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
-import { algoliaTagSelect } from '../../src/utils/algolia'
+import { trendsTagSelect } from '../../src/utils/algolia'
 
 const INDEX_NAME = 'dev_TAGS'
 const CHUNK_SIZE = 5000
@@ -18,7 +18,7 @@ async function main() {
 
   while (hasTags) {
     const tags = await prisma.tag.findMany({
-      select: algoliaTagSelect,
+      select: trendsTagSelect,
       skip,
       take: CHUNK_SIZE,
     })
@@ -33,19 +33,15 @@ async function main() {
 
     console.log('insert ' + skip)
     const algoliaTags = tags.map((tag) => {
-      const lastPost = tag.posts[0]
-
-      const lastUsers = tag.posts.map((post) => post.author)
       return {
         id: tag.id,
         objectID: tag.id,
         text: tag.text,
-        lastUsers: [...lastUsers],
         postCount: tag._count.posts,
         createdAtTimestamp: Date.parse(tag.createdAt.toString()),
-        updatedAtTimestamp: Date.parse(lastPost.createdAt.toString()),
+        updatedAtTimestamp: Date.parse(tag.updatedAt.toString()),
         createdAt: tag.createdAt,
-        updatedAt: lastPost.createdAt,
+        updatedAt: tag.updatedAt,
       }
     })
 
