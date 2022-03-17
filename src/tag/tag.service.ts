@@ -5,7 +5,6 @@ import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
 import { trendsTagSelect } from '../utils/algolia'
-import { UserService } from '../user/user.service'
 import { PaginatedTrends } from './paginated-trends.model'
 import { AuthUser } from 'src/auth/auth.service'
 import { Tag } from './tag.model'
@@ -15,9 +14,7 @@ export class TagService {
   constructor(
     private prismaService: PrismaService,
     private algoliaService: AlgoliaService,
-    private pushNotificationService: PushNotificationService,
-    @Inject(forwardRef(() => UserService))
-    private userService: UserService
+    private pushNotificationService: PushNotificationService
   ) {}
   async syncTagIndexWithAlgolia(tagText: string) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
@@ -120,6 +117,15 @@ export class TagService {
   }
 
   async createOrUpdateLiveTag(text: string, isLive: boolean, authUser: AuthUser): Promise<Tag> {
+    if (!authUser.schoolId) throw new Error('No school')
+
+    const authUserCountry = await this.prismaService.school
+      .findUnique({
+        where: { id: authUser.schoolId },
+      })
+      .city()
+      .country()
+
     // Get tag from text
     const tag = await this.prismaService.tag.findUnique({
       where: {
@@ -135,6 +141,7 @@ export class TagService {
           },
           data: {
             isLive,
+            countryId: authUserCountry?.id,
           },
         })
       : // Else create it with isLive: true
@@ -142,6 +149,7 @@ export class TagService {
           data: {
             text,
             isLive,
+            countryId: authUserCountry?.id,
           },
         })
 
@@ -173,11 +181,12 @@ export class TagService {
   }
 
   async getTrends(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedTrends> {
-    const country = await this.prismaService.user
+    if (!authUser.schoolId) throw new Error('No school')
+
+    const country = await this.prismaService.school
       .findUnique({
-        where: { id: authUser.id },
+        where: { id: authUser.schoolId },
       })
-      .school()
       .city()
       .country()
 
@@ -187,33 +196,13 @@ export class TagService {
       this.prismaService.tag.count({
         where: {
           isLive: false,
-          posts: {
-            some: {
-              author: {
-                school: {
-                  city: {
-                    countryId: country.id,
-                  },
-                },
-              },
-            },
-          },
+          countryId: country.id,
         },
       }),
       this.prismaService.tag.findMany({
         where: {
           isLive: false,
-          posts: {
-            some: {
-              author: {
-                school: {
-                  city: {
-                    countryId: country.id,
-                  },
-                },
-              },
-            },
-          },
+          countryId: country.id,
         },
         skip,
         orderBy: {

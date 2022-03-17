@@ -164,11 +164,12 @@ export class PostService {
     const userAge = authUser.birthdate && dates.getAge(authUser.birthdate)
     const datesRanges = userAge ? dates.getDateRanges(userAge) : undefined
 
-    const authUserCountry = await this.prismaService.user
+    if (!authUser.schoolId) throw new Error('No school')
+
+    const authUserCountry = await this.prismaService.school
       .findUnique({
-        where: { id: authUser.id },
+        where: { id: authUser.schoolId },
       })
-      .school()
       .city()
       .country()
 
@@ -235,12 +236,22 @@ export class PostService {
     const { text, tags } = createPostInput
     const uniqueTags = uniq(tags)
 
+    const authUserCountry = await this.prismaService.user
+      .findUnique({
+        where: { id: authUser.id },
+      })
+      .school()
+      .city()
+      .country()
+
     const connectOrCreateTags = uniq(tags).map((tagText) => ({
       where: {
         text: tagText,
+        countryId: authUserCountry?.id,
       },
       create: {
         text: tagText,
+        countryId: authUserCountry?.id,
       },
     }))
 
