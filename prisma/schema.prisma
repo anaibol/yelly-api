@@ -25,13 +25,14 @@ model Country {
   id   String @id @default(uuid())
   code String @unique
   city City[]
+  Tag  Tag[]
 }
 
 model Notification {
   id              String         @id @default(uuid())
   isSeen          Boolean        @default(false)
   createdAt       DateTime       @default(now())
-  postReactionId  String?
+  postReactionId  String?        @unique
   userId          String
   friendRequestId String?
   friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
@@ -73,7 +74,7 @@ model User {
   resetToken                   String?
   isVerified                   Boolean                           @default(true)
   createdAt                    DateTime                          @default(now())
-  updatedAt                    DateTime                          @updatedAt @default(now())
+  updatedAt                    DateTime                          @default(now()) @updatedAt
   isActive                     Boolean                           @default(true)
   isFilled                     Boolean                           @default(false)
   androidPushnotificationToken String?
@@ -103,14 +104,14 @@ model User {
 }
 
 model FriendRequest {
-  id             String              @id @default(uuid())
-  fromUserId     String
-  toUserId       String
-  createdAt      DateTime            @default(now())
-  status         FriendRequestStatus @default(PENDING)
-  fromUser       User                @relation("friendRequestFromUser", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser         User                @relation("friendRequestToUser", fields: [toUserId], references: [id], onDelete: Cascade)
-  notifications  Notification[]
+  id            String              @id @default(uuid())
+  fromUserId    String
+  toUserId      String
+  createdAt     DateTime            @default(now())
+  status        FriendRequestStatus @default(PENDING)
+  fromUser      User                @relation("friendRequestFromUser", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser        User                @relation("friendRequestToUser", fields: [toUserId], references: [id], onDelete: Cascade)
+  notifications Notification[]
 
   @@index([toUserId], map: "FriendRequest_toUserId_fkey")
 }
@@ -131,9 +132,11 @@ model Tag {
   id        String   @id @default(uuid())
   text      String   @unique
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
   isLive    Boolean  @default(false)
   posts     Post[]
+  countryId String?
+  country   Country?  @relation(fields: [countryId], references: [id])
 
   @@index([text], map: "Tag_text_idx")
 }
