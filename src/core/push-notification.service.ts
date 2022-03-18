@@ -331,8 +331,6 @@ export class PushNotificationService {
       },
     })
 
-    const url = `${process.env.APP_BASE_URL}/tags/${tag.text}`
-
     try {
       const messages = await Promise.all(
         allPushTokens
@@ -344,7 +342,6 @@ export class PushNotificationService {
                 .translate('notifications.NEW_LIVE_TAG_BODY', { ...(lang && { lang }) })
                 .catch((e) => null),
               body: '#' + tag.text,
-              data: { url },
             }
           })
           .filter((v) => v)
