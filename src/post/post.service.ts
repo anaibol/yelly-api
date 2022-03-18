@@ -247,7 +247,6 @@ export class PostService {
     const connectOrCreateTags = uniq(tags).map((tagText) => ({
       where: {
         text: tagText,
-        countryId: authUserCountry?.id,
       },
       create: {
         text: tagText,
