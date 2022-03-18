@@ -25,7 +25,7 @@ model Country {
   id   String @id @default(uuid())
   code String @unique
   city City[]
-  Tag  Tag[]
+  tag  Tag[]
 }
 
 model Notification {
