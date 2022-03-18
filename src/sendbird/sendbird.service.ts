@@ -86,15 +86,13 @@ export class SendbirdService {
   }
 
   async getGroupChannel(channelUrl: string): Promise<GroupChannel | null> {
-    return (
-      this.httpService
-        .get<GroupChannel>(`/v3/group_channels/${channelUrl}`)
-        // .catch(() => Promise.resolve(null))
-        .then((response) => {
-          if (!response) return null
-          return response.data
-        })
-    )
+    return this.httpService
+      .get<GroupChannel>(`/v3/group_channels/${channelUrl}`)
+      .catch(() => Promise.resolve(null))
+      .then((response) => {
+        if (!response) return null
+        return response.data
+      })
   }
 
   async sendPostReactionMessage(postReactionId: string) {
