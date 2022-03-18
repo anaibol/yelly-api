@@ -43,6 +43,7 @@ input CreateOrUpdatePostReactionInput {
 }
 
 input CreatePostInput {
+  pollOptions: [String!]
   tags: [String!]!
   text: String!
 }
@@ -166,13 +167,14 @@ type PaginatedUsers {
 }
 
 type Post {
-  author: User!
+  author: User
   comments: [PostComment!]
-  createdAt: DateTime!
+  createdAt: DateTime
   id: ID!
-  tags: [Tag!]!
-  text: String!
-  viewsCount: Int!
+  poll: PostPoll
+  tags: [Tag!]
+  text: String
+  viewsCount: Int
 }
 
 type PostComment {
@@ -181,6 +183,18 @@ type PostComment {
   createdAt: DateTime
   id: ID!
   text: String!
+}
+
+type PostPoll {
+  id: ID!
+  options: [PostPollOption!]!
+}
+
+type PostPollOption {
+  id: ID!
+  isAuthUserVote: Boolean
+  text: String!
+  votesCount: Int!
 }
 
 type PostReaction {

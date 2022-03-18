@@ -97,6 +97,7 @@ model User {
   posts                        Post[]
   postComments                 PostComment[]
   postReactions                PostReaction[]
+  postPollVotes                PostPollVote[]
 
   @@index([birthdate], map: "User_birthdate")
   @@index([schoolId], map: "User_schoolId_fkey")
@@ -136,7 +137,7 @@ model Tag {
   isLive    Boolean  @default(false)
   posts     Post[]
   countryId String?
-  country   Country?  @relation(fields: [countryId], references: [id])
+  country   Country? @relation(fields: [countryId], references: [id])
 
   @@index([text], map: "Tag_text_idx")
 }
@@ -153,9 +154,33 @@ model Post {
   comments   PostComment[]
   reactions  PostReaction[]
   tags       Tag[]
+  poll       PostPoll?
 
   @@unique([authorId, id], map: "author_post_id_fkey")
   @@index([schoolId], map: "Post_schoolId_fkey")
+}
+
+model PostPoll {
+  id      String           @id @default(uuid())
+  postId  String           @unique
+  post    Post             @relation(fields: [postId], references: [id])
+  options PostPollOption[]
+}
+
+model PostPollOption {
+  id         String         @id @default(uuid())
+  text       String
+  PostPoll   PostPoll       @relation(fields: [postPollId], references: [id])
+  postPollId String
+  votes      PostPollVote[]
+}
+
+model PostPollVote {
+  id               String         @id @default(uuid())
+  option           PostPollOption @relation(fields: [postPollOptionId], references: [id])
+  postPollOptionId String
+  authorId         String
+  author           User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model PostComment {

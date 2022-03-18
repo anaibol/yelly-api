@@ -78,7 +78,7 @@ export class TagResolver {
     const userAge = user && user.birthdate && dates.getAge(user.birthdate)
     const datesRanges = userAge && dates.getDateRanges(userAge)
 
-    const items = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
+    const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),
@@ -100,6 +100,19 @@ export class TagResolver {
       take: limit,
       select: PostSelect,
     })
+
+    const items = posts.map(({ poll, ...post }) => ({
+      ...post,
+      ...(poll && {
+        id: poll.id,
+        options: poll.options.map((o) => ({
+          id: o.id,
+          text: o.text,
+          votesCount: o._count.votes,
+          // isAuthUserVote: !!o.votes.length,
+        })),
+      }),
+    }))
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
 

@@ -300,7 +300,7 @@ export class PushNotificationService {
     })
   }
 
-  async newLiveTag(tagId: string, authUser: AuthUser): Promise<void> {
+  async newLiveTag(tagId: string): Promise<void> {
     if (process.env.NODE_ENV === 'development') return
 
     const tag = await this.prismaService.tag.findUnique({

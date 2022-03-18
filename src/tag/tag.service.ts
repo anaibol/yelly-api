@@ -145,7 +145,7 @@ export class TagService {
 
     await this.deleteEmptyNonLiveTags()
 
-    if (isLive) this.pushNotificationService.newLiveTag(newTag.id, authUser)
+    if (isLive) this.pushNotificationService.newLiveTag(newTag.id)
 
     return newTag
   }

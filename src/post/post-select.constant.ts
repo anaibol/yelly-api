@@ -3,6 +3,22 @@ export const PostSelect = {
   createdAt: true,
   viewsCount: true,
   text: true,
+  poll: {
+    select: {
+      id: true,
+      options: {
+        select: {
+          id: true,
+          text: true,
+          _count: {
+            select: {
+              votes: true,
+            },
+          },
+        },
+      },
+    },
+  },
   author: {
     select: {
       id: true,

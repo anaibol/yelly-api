@@ -5,6 +5,8 @@ import { PostsArgs } from '../post/posts.args'
 import { SchoolArgs } from './school.args'
 import { PrismaService } from 'src/core/prisma.service'
 import { PostSelect } from '../post/post-select.constant'
+import { AuthUser } from 'src/auth/auth.service'
+import { CurrentUser } from 'src/auth/user.decorator'
 
 @Resolver(School)
 export class SchoolResolver {
@@ -18,7 +20,7 @@ export class SchoolResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() school: School, @Args() postsArgs: PostsArgs) {
+  async posts(@CurrentUser() authUser: AuthUser, @Parent() school: School, @Args() postsArgs: PostsArgs) {
     const { after, limit } = postsArgs
 
     const items = await this.prismaService.school.findUnique({ where: { id: school.id } }).posts({

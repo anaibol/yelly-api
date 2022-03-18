@@ -78,3 +78,14 @@ export class PostResolver {
     return this.postService.createComment(createPostCommentData, authUser)
   }
 }
+
+@Resolver()
+export class PostPollResolver {
+  constructor(private postService: PostService) {}
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async createPostPollVote(@Args('optionId') optionId: string, @CurrentUser() authUser: AuthUser) {
+    return this.postService.createPollVote(optionId, authUser)
+  }
+}

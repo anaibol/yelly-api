@@ -27,6 +27,7 @@ import { InitPhoneNumberVerificationInput } from './init-phone-number-verificati
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
 import { NotFoundUserException } from './not-found-user.exception'
 import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
+import { PaginatedPosts } from 'src/post/paginated-posts.model'
 
 function validatePhoneNumberForE164(phoneNumber: string) {
   const regEx = /^\+[1-9]\d{10,14}$/
@@ -179,10 +180,14 @@ export class MeResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() me: Me, @Args() postsArgs: PostsArgs) {
+  async posts(
+    @CurrentUser() authUser: AuthUser,
+    @Parent() me: Me,
+    @Args() postsArgs: PostsArgs
+  ): Promise<PaginatedPosts> {
     const { after, limit } = postsArgs
 
-    const items = await this.prismaService.user.findUnique({ where: { id: me.id } }).posts({
+    const posts = await this.prismaService.user.findUnique({ where: { id: me.id } }).posts({
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),
@@ -195,6 +200,19 @@ export class MeResolver {
       take: limit,
       select: PostSelect,
     })
+
+    const items = posts.map(({ poll, ...post }) => ({
+      ...post,
+      ...(poll && {
+        id: poll.id,
+        options: poll.options.map((o) => ({
+          id: o.id,
+          text: o.text,
+          votesCount: o._count.votes,
+          // isAuthUserVote: !!o.votes.length,
+        })),
+      }),
+    }))
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
 

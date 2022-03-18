@@ -132,7 +132,6 @@ export class UserResolver {
   @ResolveField()
   async isAuthUserFriend(
     @Parent() user: User,
-    @CurrentUser() authUser: AuthUser,
     @Loader(IsFriendLoader) isFriendLoader: DataLoader<string, boolean | undefined, string>
   ): Promise<boolean> {
     const isFriend = await isFriendLoader.load(user.id)
@@ -161,10 +160,14 @@ export class UserResolver {
   }
 
   @ResolveField('posts', () => PaginatedPosts)
-  async posts(@Parent() user: User, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
+  async posts(
+    @CurrentUser() authUser: AuthUser,
+    @Parent() user: User,
+    @Args() postsArgs: PostsArgs
+  ): Promise<PaginatedPosts> {
     const { after, limit } = postsArgs
 
-    const items = await this.prismaService.user
+    const posts = await this.prismaService.user
       .findUnique({
         where: { id: user.id },
       })
@@ -181,6 +184,19 @@ export class UserResolver {
         take: limit,
         select: PostSelect,
       })
+
+    const items = posts.map(({ poll, ...post }) => ({
+      ...post,
+      ...(poll && {
+        id: poll.id,
+        options: poll.options.map((o) => ({
+          id: o.id,
+          text: o.text,
+          votesCount: o._count.votes,
+          // isAuthUserVote: !!o.votes.length,
+        })),
+      }),
+    }))
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
 
