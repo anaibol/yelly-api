@@ -57,17 +57,7 @@ export class TagService {
     const liveTags = await this.prismaService.tag.findMany({
       where: {
         isLive: true,
-        posts: {
-          some: {
-            author: {
-              school: {
-                city: {
-                  countryId: country.id,
-                },
-              },
-            },
-          },
-        },
+        countryId: country.id,
       },
       select: {
         id: true,
