@@ -20,7 +20,7 @@ export class PushNotificationService {
   constructor(
     private prismaService: PrismaService,
     private expoPushNotificationTokenService: ExpoPushNotificationsTokenService,
-    private readonly i18n: I18nService,
+    private i18n: I18nService,
     private amplitudeService: AmplitudeService
   ) {}
 
@@ -64,7 +64,7 @@ export class PushNotificationService {
       where: { id: sender.user_id },
     })
 
-    if (!senderUser?.firstName) throw new Error('Sender not found or without firsrtName')
+    if (!senderUser?.firstName) return Promise.reject(new Error('Sender not found or without firsrtName'))
 
     const logEvent: TRACK_EVENT =
       payload.message_type === 'post_reaction'
@@ -107,7 +107,7 @@ export class PushNotificationService {
   //     },
   //   })
 
-  //   if (!author) throw new Error('Author not found')
+  //   if (!author) return Promise.reject(new Error('Author not found')
 
   //   const {
   //     authorId: postAuthorID,
@@ -117,7 +117,7 @@ export class PushNotificationService {
   //   const pushTokens = await this.getPushTokensByUsersIds([postAuthorID])
   //   const reaction = await this.prismaService.user.findUnique({ where: { id: postReaction.authorId } })
 
-  //   if (!reaction) throw new Error('Reaction not found')
+  //   if (!reaction) return Promise.reject(new Error('Reaction not found')
 
   //   // TODO: ask for text and setup translations file
   //   const message = {
@@ -167,7 +167,8 @@ export class PushNotificationService {
       where: { id: friendRequest.fromUserId },
     })
 
-    if (!receiverUser || !friendRequestFromUser) throw new Error('receiverUser or friendRequestFromUser not found')
+    if (!receiverUser || !friendRequestFromUser)
+      return Promise.reject(new Error('receiverUser or friendRequestFromUser not found'))
 
     const lang = receiverUser.locale
     const expoPushNotificationTokens = receiverUser.expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
@@ -215,7 +216,8 @@ export class PushNotificationService {
       where: { id: friendRequest.fromUserId },
     })
 
-    if (!friendRequestToUser || !receiverUser) throw new Error('friendRequestToUser or receiverUser not found')
+    if (!friendRequestToUser || !receiverUser)
+      return Promise.reject(new Error('friendRequestToUser or receiverUser not found'))
 
     const url = `${process.env.APP_BASE_URL}/user/${friendRequestToUser.id}`
     const lang = receiverUser.locale
@@ -249,7 +251,7 @@ export class PushNotificationService {
       },
     })
 
-    if (!post) throw new Error('Post not found')
+    if (!post) return Promise.reject(new Error('Post not found'))
 
     const { authorId: postAuthorID } = post
 
@@ -259,7 +261,7 @@ export class PushNotificationService {
       where: { id: postComment.authorId },
     })
 
-    if (!commentAuthor) throw new Error('User not found')
+    if (!commentAuthor) return Promise.reject(new Error('User not found'))
 
     const { firstName: commenterFirstName } = commentAuthor
 
@@ -307,7 +309,7 @@ export class PushNotificationService {
       where: { id: tagId },
     })
 
-    if (!tag?.countryId) throw new Error('No tag')
+    if (!tag?.countryId) return Promise.reject(new Error('No tag'))
 
     const allPushTokens = await this.prismaService.expoPushNotificationAccessToken.findMany({
       select: {
@@ -333,6 +335,7 @@ export class PushNotificationService {
 
     const url = `${process.env.APP_BASE_URL}/tags/${tag.text}`
 
+    // eslint-disable-next-line functional/no-try-statement
     try {
       const messages = await Promise.all(
         allPushTokens
@@ -342,7 +345,7 @@ export class PushNotificationService {
               sound: 'default' as const,
               title: await this.i18n
                 .translate('notifications.NEW_LIVE_TAG_BODY', { ...(lang && { lang }) })
-                .catch((e) => null),
+                .catch(() => null),
               body: '#' + tag.text,
               data: { url },
             }
@@ -353,6 +356,7 @@ export class PushNotificationService {
       // Typescript is not smart to recognize it will never be undefined
       await this.sendNotifications(messages, allPushTokens, 'NEW_LIVE_TAG_PUSH_NOTIFICATION_SENT')
     } catch (e) {
+      // eslint-disable-next-line functional/no-throw-statement
       throw e
     }
   }

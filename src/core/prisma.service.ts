@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client'
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
+    // eslint-disable-next-line functional/no-expression-statement
     super({
       log:
         process.env.NODE_ENV !== 'production'

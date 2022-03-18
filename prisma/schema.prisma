@@ -48,7 +48,6 @@ model School {
   cityId        String
   coord         Unsupported("point")?
   city          City                  @relation(fields: [cityId], references: [id])
-  posts         Post[]
   users         User[]
 
   @@index([cityId], map: "School_cityId_fkey")
@@ -148,16 +147,13 @@ model Post {
   createdAt  DateTime       @unique @default(now())
   authorId   String
   viewsCount Int            @default(0)
-  schoolId   String?
   author     User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  school     School?        @relation(fields: [schoolId], references: [id])
   comments   PostComment[]
   reactions  PostReaction[]
   tags       Tag[]
   poll       PostPoll?
 
   @@unique([authorId, id], map: "author_post_id_fkey")
-  @@index([schoolId], map: "Post_schoolId_fkey")
 }
 
 model PostPoll {
@@ -165,6 +161,7 @@ model PostPoll {
   postId  String           @unique
   post    Post             @relation(fields: [postId], references: [id])
   options PostPollOption[]
+  createdAt  DateTime      @default(now())
 }
 
 model PostPollOption {

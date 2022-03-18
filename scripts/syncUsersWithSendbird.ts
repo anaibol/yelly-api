@@ -1,3 +1,5 @@
+/* eslint-disable functional/no-let */
+/* eslint-disable functional/no-loop-statement */
 import { PrismaClient, User } from '@prisma/client'
 import axios from 'axios'
 
@@ -33,6 +35,7 @@ async function main() {
       pictureId: user.pictureId || '',
     }
 
+    // eslint-disable-next-line functional/no-try-statement
     try {
       const updatedUser = await client.put(`/v3/users/${user.id}`, sendbirdUser)
 

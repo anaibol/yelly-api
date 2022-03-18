@@ -92,7 +92,7 @@ export class UserResolver {
   ): Promise<number> {
     const commonFriendsCount = await commonFriendsCountLoader.load(user.id) // offsetPaginationArgs.skip, offsetPaginationArgs.limit
 
-    if (!commonFriendsCount) throw new Error('Error')
+    if (!commonFriendsCount) return Promise.reject(new Error('Error'))
     // return this.userService.getCommonFriendsCount(authUser, user.id)
 
     return commonFriendsCount
@@ -113,7 +113,7 @@ export class UserResolver {
   ): Promise<PaginatedUsers> {
     const commonFriends = await commonFriendsLoader.load(user.id) // offsetPaginationArgs.skip, offsetPaginationArgs.limit
 
-    if (!commonFriends) throw new Error('Error')
+    if (!commonFriends) return Promise.reject(new Error('Error'))
 
     return commonFriends
   }
@@ -136,7 +136,7 @@ export class UserResolver {
   ): Promise<boolean> {
     const isFriend = await isFriendLoader.load(user.id)
 
-    if (isFriend === undefined) throw new Error('isFriend undefined')
+    if (isFriend === undefined) return Promise.reject(new Error('isFriend undefined'))
 
     return isFriend
   }

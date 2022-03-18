@@ -1,13 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { Twilio } from 'twilio'
 import { VerificationInstance } from 'twilio/lib/rest/verify/v2/service/verification'
-import { PrismaService } from './prisma.service'
 
 @Injectable()
 export default class TwilioService {
   private twilioClient: Twilio
 
-  constructor(private prismaService: PrismaService) {
+  constructor() {
     this.twilioClient = new Twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
   }
 
@@ -24,9 +23,7 @@ export default class TwilioService {
       .services(process.env.TWILIO_VERIFICATION_SERVICE_SID)
       .verificationChecks.create({ to: phoneNumber, code: verificationCode })
 
-    if (!result.valid || result.status !== 'approved') {
-      throw new BadRequestException('Wrong code provided')
-    }
+    if (!result.valid || result.status !== 'approved') return Promise.reject(new Error('Wrong code provided'))
 
     return true
   }

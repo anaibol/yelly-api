@@ -12,7 +12,7 @@ const refreshRole = 'refresh'
 
 @Injectable()
 export class AuthService {
-  constructor(private prismaService: PrismaService, private readonly jwtService: JwtService) {}
+  constructor(private prismaService: PrismaService, private jwtService: JwtService) {}
   async validateUser(email: string, password: string): Promise<AuthUser | null> {
     const user = await this.prismaService.user.findUnique({
       where: { email },
@@ -56,19 +56,21 @@ export class AuthService {
   }
 
   async refreshAccessToken(refreshToken: string): Promise<AccessToken> {
+    // eslint-disable-next-line functional/no-try-statement
     try {
       const { sub: userId, role } = await this.jwtService.verify(refreshToken, {
         ignoreExpiration: true,
       })
 
       // TODO: uncomment when front supports refresh access token
-      // if (role !== refreshRole) throw new Error('Invalid refresh token role')
+      // if (role !== refreshRole) return Promise.reject(new Error('Invalid refresh token role')
 
       return {
         accessToken: this.jwtService.sign({ sub: userId, role: 'user' }),
         refreshToken: this.jwtService.sign({ sub: userId, role: refreshRole }),
       }
     } catch (error) {
+      // eslint-disable-next-line functional/no-throw-statement
       throw new UnauthorizedException(
         JSON.stringify({
           refreshToken,

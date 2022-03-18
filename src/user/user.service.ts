@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { AlgoliaService } from '../core/algolia.service'
@@ -8,7 +8,6 @@ import { PrismaService } from '../core/prisma.service'
 import { SendbirdService } from '../sendbird/sendbird.service'
 import { SchoolService } from '../school/school.service'
 import { UpdateUserInput } from './update-user.input'
-import { NotFoundUserException } from './not-found-user.exception'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
 import { PushNotificationService } from 'src/core/push-notification.service'
@@ -42,7 +41,7 @@ export class UserService {
   //     },
   //   })
 
-  //   if (!user) throw new Error('USER not found')
+  //   if (!user) return Promise.reject(new Error('USER not found'))
 
   //   return user.locale ? user.locale.split('-')[0] : 'en'
   // }
@@ -121,7 +120,7 @@ export class UserService {
       },
     })
 
-    if (!user) throw new NotFoundUserException()
+    if (!user) return Promise.reject(new Error('not found'))
 
     return user
   }
@@ -449,9 +448,7 @@ export class UserService {
       },
     })
 
-    if (!user) {
-      throw new NotFoundUserException()
-    }
+    if (!user) return Promise.reject(new Error('not found'))
 
     return {
       ...user,
@@ -488,7 +485,7 @@ export class UserService {
       },
     })
 
-    if (!user) throw new NotFoundUserException()
+    if (!user) return Promise.reject(new Error('not found'))
 
     const saltOrRounds = 10
     const hash = await bcrypt.hash(password, saltOrRounds)
@@ -503,12 +500,13 @@ export class UserService {
       },
     })
 
-    if (!userUpdated) throw new NotFoundUserException()
+    if (!userUpdated) return Promise.reject(new Error('not found'))
 
     return user
   }
 
   async refreshSendbirdAccessToken(userId: string): Promise<SendbirdAccessToken> {
+    // eslint-disable-next-line functional/no-try-statement
     try {
       const sendbirdAccessToken = await this.sendbirdService.getAccessToken(userId)
 
@@ -523,7 +521,7 @@ export class UserService {
 
       return { sendbirdAccessToken }
     } catch {
-      throw new BadRequestException('Sendbird error')
+      return Promise.reject(new Error('Sendbird error'))
     }
   }
 
@@ -532,16 +530,17 @@ export class UserService {
   }
 
   async deleteById(userId: string): Promise<boolean> {
+    // eslint-disable-next-line functional/no-try-statement
     try {
       await this.prismaService.user.delete({ where: { id: userId } })
-      const algoliaUserIndex = await this.algoliaService.initIndex('USERS')
+      const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
       this.algoliaService.deleteObject(algoliaUserIndex, userId)
       this.sendbirdService.deleteUser(userId)
 
       return true
     } catch {
-      throw new NotFoundUserException()
+      return Promise.reject(new Error('not found'))
     }
   }
 
@@ -584,7 +583,7 @@ export class UserService {
         },
       })
 
-    if (!exists) throw new Error("Friend request doesn't exists or is not from this user")
+    if (!exists) return Promise.reject(new Error("Friend request doesn't exists or is not from this user"))
 
     await Promise.all([
       this.prismaService.notification.deleteMany({
@@ -633,7 +632,7 @@ export class UserService {
       },
     })
 
-    if (friendRequest?.toUserId !== authUser.id) throw new Error('No friend request')
+    if (friendRequest?.toUserId !== authUser.id) return Promise.reject(new Error('No friend request'))
 
     const { fromUserId, toUserId } = friendRequest
 
@@ -696,7 +695,7 @@ export class UserService {
       select: algoliaUserSelect,
     })
 
-    if (!user) throw new Error('No user')
+    if (!user) return Promise.reject(new Error('No user'))
 
     const usersIndex = this.algoliaService.initIndex('USERS')
 
@@ -705,12 +704,10 @@ export class UserService {
     return this.algoliaService.partialUpdateObject(usersIndex, newUserAlgoliaObject, user.id)
   }
 
-  async syncPostsIndexWithAlgolia(userId: string): Promise<void[]> {
+  async syncPostsIndexWithAlgolia(userId: string): Promise<Promise<undefined>[]> {
     const posts = await this.prismaService.post.findMany({ where: { authorId: userId }, select: { id: true } })
 
-    return posts.map((post) => {
-      this.postService.syncPostIndexWithAlgolia(post.id)
-    })
+    return posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id))
   }
 
   async findOrCreate(phoneNumber: string, locale: string): Promise<User> {
@@ -811,9 +808,10 @@ export class UserService {
       },
     })
 
-    if (!updatedUser) throw new NotFoundUserException()
+    if (!updatedUser) return Promise.reject(new Error('not found'))
 
     if (data.isFilled) {
+      // eslint-disable-next-line functional/no-try-statement
       try {
         const sendbirdAccessToken = updatedUser && (await this.sendbirdService.createUser(updatedUser))
 
@@ -826,12 +824,14 @@ export class UserService {
           },
         })
 
+        // eslint-disable-next-line functional/immutable-data
         updatedUser.sendbirdAccessToken = sendbirdAccessToken
       } catch (error) {
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
 
+      // eslint-disable-next-line functional/no-try-statement
       try {
         this.syncUsersIndexWithAlgolia(userId)
         this.syncPostsIndexWithAlgolia(userId)
@@ -851,6 +851,7 @@ export class UserService {
         // CATCH ERROR SO IT CONTINUES
       }
     } else if (updatedUser.isFilled) {
+      // eslint-disable-next-line functional/no-try-statement
       try {
         await this.updateSenbirdUser(updatedUser)
       } catch (error) {

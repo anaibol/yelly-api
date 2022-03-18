@@ -12,6 +12,7 @@ export const createDriver = async (config: Neo4jConfig) => {
     // disableLosslessIntegers: true,
   })
   // Verify the connection details or throw an Error
+  // eslint-disable-next-line functional/no-expression-statement
   await driver.verifyConnectivity()
   // If everything is OK, return the driver
   return driver

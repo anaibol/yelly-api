@@ -1,3 +1,5 @@
+/* eslint-disable functional/no-let */
+/* eslint-disable functional/no-loop-statement */
 import { PrismaClient } from '@prisma/client'
 import { getGooglePlaceDetails, getGooglePlaceCityAndCountry, getGoogleCityByName } from '../src/utils/googlePlaces'
 
@@ -34,17 +36,17 @@ async function main() {
       if (school.googlePlaceId) {
         const googlePlaceDetail = await getGooglePlaceDetails(school.googlePlaceId, 'fr-FR')
         if (!googlePlaceDetail?.geometry?.location || !googlePlaceDetail.address_components)
-          throw new Error('No googlePlaceDetail')
+          return Promise.reject(new Error('No googlePlaceDetail'))
 
         const cityName = await getGooglePlaceCityAndCountry(googlePlaceDetail)
 
         const googleCity = await getGoogleCityByName(cityName)
 
-        if (!googleCity) throw new Error('No CITY google ' + cityName)
+        if (!googleCity) return Promise.reject(new Error('No CITY google ' + cityName))
 
         const city = await getInfosCity(googleCity.place_id)
 
-        if (!city) throw new Error('No CITY INFOS')
+        if (!city) return Promise.reject(new Error('No CITY INFOS'))
 
         // find country
         let country = await prisma.country.findFirst({
@@ -119,13 +121,13 @@ async function getInfosCity(googlePlaceId: string) {
   const cityGooglePlaceDetail = await getGooglePlaceDetails(googlePlaceId, 'fr-FR')
 
   if (!cityGooglePlaceDetail?.address_components || !cityGooglePlaceDetail?.geometry?.location)
-    throw new Error('No cityGooglePlaceDetail')
+    return Promise.reject(new Error('No cityGooglePlaceDetail'))
 
   const { lat: cityLat, lng: cityLng } = cityGooglePlaceDetail.geometry.location
 
   const country = cityGooglePlaceDetail.address_components.find((component) => component.types.includes('country'))
 
-  if (!country) throw new Error('No country')
+  if (!country) return Promise.reject(new Error('No country'))
 
   return {
     name: cityGooglePlaceDetail.name,

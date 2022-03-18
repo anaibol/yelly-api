@@ -15,6 +15,7 @@ import { SendbirdWebhookModule } from './sendbird-webhook/sendbird-webhook.modul
 import { SchoolModule } from './school/school.module'
 import { CommonFriendsLoader } from './user/common-friends.loader'
 import { IsFriendLoader } from './user/is-friend.loader'
+import { GraphQLError, GraphQLFormattedError } from 'graphql'
 
 @Module({
   providers: [UserModule, CommonFriendsLoader, IsFriendLoader],
@@ -35,6 +36,12 @@ import { IsFriendLoader } from './user/is-friend.loader'
           : []),
       ],
       debug: process.env.NODE_ENV !== 'production',
+      formatError: (error: GraphQLError) => {
+        const graphQLFormattedError: GraphQLFormattedError = {
+          message: error?.extensions?.exception?.response?.message || error?.message,
+        }
+        return graphQLFormattedError
+      },
       autoSchemaFile: join(process.cwd(), 'src/schema.graphql'),
       sortSchema: true,
       context: ({ req, res }: { req: any; res: any }): any => ({

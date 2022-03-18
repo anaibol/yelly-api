@@ -47,7 +47,7 @@ export function getAddressComponents(addressComponents: google.maps.GeocoderAddr
   }
 }
 
-export function getCityName(addressComponents: google.maps.GeocoderAddressComponent[]): string {
+export function getCityName(addressComponents: google.maps.GeocoderAddressComponent[]): string | undefined {
   const {
     locality,
     postal_town,
@@ -62,29 +62,23 @@ export function getCityName(addressComponents: google.maps.GeocoderAddressCompon
 
   if (postal_town) return postal_town + ' ' + administrativeArea
 
-  if (!administrativeArea) throw new Error('No administrativeArea')
-
   return administrativeArea
 }
 
-export function getCountryName(addressComponents: google.maps.GeocoderAddressComponent[]): string {
-  const { country } = getAddressComponents(addressComponents)
-
-  if (!country) throw new Error('No country')
-
-  return country
+export function getCountryName(addressComponents: google.maps.GeocoderAddressComponent[]): string | undefined {
+  return getAddressComponents(addressComponents).country
 }
 
-export function getCountryLanguageCode(addressComponents: google.maps.GeocoderAddressComponent[]): string {
+export function getCountryLanguageCode(addressComponents: google.maps.GeocoderAddressComponent[]): string | undefined {
   const { short_name } = getAddressComponents(addressComponents)
 
-  if (!short_name) throw new Error('No short_name')
+  if (!short_name) return undefined
 
-  return languageCodes[short_name.toUpperCase()] || ''
+  return languageCodes[short_name.toUpperCase()]
 }
 
 export async function getGooglePlaceCityAndCountry(googlePlace: google.maps.places.PlaceResult): Promise<string> {
-  if (!googlePlace?.address_components) throw new Error('No google place')
+  if (!googlePlace?.address_components) return Promise.reject(new Error('No google place'))
 
   const cityName = getCityName(googlePlace.address_components)
 
@@ -103,7 +97,8 @@ export async function getGooglePlaceDetails(
     },
   })
 
-  if (response.data.status !== 'OK' || typeof response.data.result == 'undefined') throw new Error('Place not found')
+  if (response.data.status !== 'OK' || typeof response.data.result == 'undefined')
+    return Promise.reject(new Error('Place not found'))
 
   return response.data.result
 }

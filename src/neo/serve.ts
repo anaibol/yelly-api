@@ -19,9 +19,8 @@ const init = async () => {
     schema,
   })
 
-  server.listen().then(({ url }) => {
-    console.log(`Neo4j GraphQL server ready on ${url}`)
-  })
+  // eslint-disable-next-line functional/no-return-void
+  server.listen().then(({ url }) => console.log(`Neo4j GraphQL server ready on ${url}`))
 }
 
 init()

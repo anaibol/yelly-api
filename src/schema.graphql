@@ -231,7 +231,7 @@ type School {
   lat: Float
   lng: Float
   name: String
-  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
+  posts: PaginatedPosts
   totalUsersCount: Int
   users: [User!]
 }

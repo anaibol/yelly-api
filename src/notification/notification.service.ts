@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
-import { DEFAULT_LIMIT } from '../common/pagination.constant'
 import { PaginatedNotifications } from './paginated-notifications.model'
 
 @Injectable()

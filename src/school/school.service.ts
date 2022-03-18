@@ -108,7 +108,8 @@ export class SchoolService {
 
     const schoolPlace = await getGooglePlaceDetails(googlePlaceId)
 
-    if (!schoolPlace?.geometry?.location || !schoolPlace.address_components) throw new Error('No schoolPlace')
+    if (!schoolPlace?.geometry?.location || !schoolPlace.address_components)
+      return Promise.reject(new Error('No schoolPlace'))
 
     const cityNameWithCountry = await getGooglePlaceCityAndCountry(schoolPlace)
     const googleCity = await getGoogleCityByName(cityNameWithCountry)
@@ -117,7 +118,7 @@ export class SchoolService {
     const countryLanguageCode = await getCountryLanguageCode(schoolPlace.address_components)
     const googlePlaceDetailTranslated = await getGooglePlaceDetails(googlePlaceId, countryLanguageCode)
 
-    if (!googlePlaceDetailTranslated) throw new Error('No schoolPlace')
+    if (!googlePlaceDetailTranslated) return Promise.reject(new Error('No schoolPlace'))
 
     const { lat, lng } = schoolPlace.geometry.location
 
@@ -129,7 +130,7 @@ export class SchoolService {
       cityId: city.id,
     }
 
-    if (!schoolPlace.name || !schoolData.name) throw new Error('No school google place data')
+    if (!schoolPlace.name || !schoolData.name) return Promise.reject(new Error('No school google place data'))
 
     return this.prismaService.school.create({
       data: {
@@ -158,13 +159,13 @@ export class SchoolService {
       !cityGooglePlaceDetail?.geometry?.location ||
       !cityGooglePlaceDetail?.name
     )
-      throw new Error('No cityGooglePlaceDetail')
+      return Promise.reject(new Error('No cityGooglePlaceDetail'))
 
     const { lat: cityLat, lng: cityLng } = cityGooglePlaceDetail.geometry.location
 
     const country = cityGooglePlaceDetail.address_components.find((component) => component.types.includes('country'))
 
-    if (!country) throw new Error('No country')
+    if (!country) return Promise.reject(new Error('No country'))
 
     return this.prismaService.city.create({
       data: {
