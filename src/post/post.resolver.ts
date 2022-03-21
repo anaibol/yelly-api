@@ -80,7 +80,7 @@ export class PostResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
+  @Mutation(() => Post)
   async createPostPollVote(
     @Args('input') createPostPollVoteInput: CreatePostPollVoteInput,
     @CurrentUser() authUser: AuthUser

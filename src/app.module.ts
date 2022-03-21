@@ -36,12 +36,14 @@ import { GraphQLError, GraphQLFormattedError } from 'graphql'
           : []),
       ],
       debug: process.env.NODE_ENV !== 'production',
-      formatError: (error: GraphQLError) => {
-        const graphQLFormattedError: GraphQLFormattedError = {
-          message: error?.extensions?.exception?.response?.message || error?.message,
-        }
-        return graphQLFormattedError
-      },
+      // formatError: (error: GraphQLError) => {
+      //   const graphQLFormattedError: GraphQLFormattedError = {
+      //     message: error?.extensions?.exception?.response?.message || error?.message,
+      //     code: error.extensions?.code || 'SERVER_ERROR',
+      //     name: error.extensions?.exception?.name || error.name,
+      //   }
+      //   return graphQLFormattedError
+      // },
       autoSchemaFile: join(process.cwd(), 'src/schema.graphql'),
       sortSchema: true,
       context: ({ req, res }: { req: any; res: any }): any => ({
