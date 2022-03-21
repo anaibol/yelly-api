@@ -75,6 +75,7 @@ model User {
   createdAt                    DateTime                          @default(now())
   updatedAt                    DateTime                          @default(now()) @updatedAt
   isActive                     Boolean                           @default(true)
+  isBanned                     Boolean                           @default(false)
   isFilled                     Boolean                           @default(false)
   androidPushnotificationToken String?
   sendbirdAccessToken          String?
@@ -160,7 +161,7 @@ model Post {
 model PostPollOption {
   id       String         @id @default(uuid())
   text     String
-  post     Post           @relation(fields: [postId], references: [id])
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId   String
   position Int
   votes    PostPollVote[]
@@ -170,7 +171,7 @@ model PostPollVote {
   id        String         @id @default(uuid())
   option    PostPollOption @relation(fields: [optionId], references: [id])
   optionId  String
-  post      Post           @relation(fields: [postId], references: [id])
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String
   authorId  String
   author    User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
