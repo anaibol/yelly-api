@@ -90,6 +90,6 @@ export class PostResolver {
 
   @ResolveField()
   async authUserPollVote(@Parent() post: Post, @CurrentUser() authUser: AuthUser): Promise<PostPollVote | null> {
-    return this.postService.getPollAuthUserVote(post.id, authUser)
+    return this.postService.getAuthUserPollVote(post.id, authUser)
   }
 }

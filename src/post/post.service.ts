@@ -480,7 +480,7 @@ export class PostService {
     return post
   }
 
-  async getPollAuthUserVote(postId: string, authUser: AuthUser): Promise<PostPollVote | null> {
+  async getAuthUserPollVote(postId: string, authUser: AuthUser): Promise<PostPollVote | null> {
     const authUserVotes = await this.prismaService.user
       .findUnique({
         where: {
@@ -490,6 +490,14 @@ export class PostService {
       .postPollVotes({
         where: {
           postId,
+        },
+        select: {
+          id: true,
+          option: {
+            select: {
+              id: true,
+            },
+          },
         },
       })
 
