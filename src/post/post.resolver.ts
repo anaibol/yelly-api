@@ -11,7 +11,7 @@ import { DeletePostInput } from './delete-post.input'
 import { PostsArgs } from './posts.args'
 // import { PostArgs } from './post.args'
 import { PaginatedPosts } from './paginated-posts.model'
-import { Post } from './post.model'
+import { Post, PostPollVote } from './post.model'
 import { CreateCommentInput } from './create-comment.input'
 import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
 
