@@ -477,7 +477,14 @@ export class PostService {
 
     if (!post) return Promise.reject(new Error('No post'))
 
-    return post
+    return {
+      ...post,
+      pollOptions: post.pollOptions.map((o) => ({
+        id: o.id,
+        text: o.text,
+        votesCount: o._count.votes,
+      })),
+    }
   }
 
   async getAuthUserPollVote(postId: string, authUser: AuthUser): Promise<PostPollVote | null> {
@@ -501,9 +508,9 @@ export class PostService {
         },
       })
 
-    if (authUserVotes.length) return authUserVotes[0]
+    if (!authUserVotes.length) return null
 
-    return null
+    return authUserVotes[0]
   }
 
   async syncPostIndexWithAlgolia(id: string): Promise<undefined> {
