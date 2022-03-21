@@ -147,7 +147,7 @@ export class TagService {
     })
   }
 
-  async deleteById(id: string) {
+  async delete(id: string) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
     this.algoliaService.deleteObject(algoliaTagIndex, id)
     return true

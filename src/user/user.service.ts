@@ -529,10 +529,40 @@ export class UserService {
     return randomBytes(25).toString('hex')
   }
 
-  async deleteById(userId: string): Promise<boolean> {
+  async delete(userId: string): Promise<boolean> {
     // eslint-disable-next-line functional/no-try-statement
     try {
       await this.prismaService.user.delete({ where: { id: userId } })
+      const algoliaUserIndex = this.algoliaService.initIndex('USERS')
+
+      this.algoliaService.deleteObject(algoliaUserIndex, userId)
+      this.sendbirdService.deleteUser(userId)
+
+      return true
+    } catch {
+      return Promise.reject(new Error('not found'))
+    }
+  }
+
+  async deactivate(userId: string): Promise<boolean> {
+    // eslint-disable-next-line functional/no-try-statement
+    try {
+      await this.prismaService.user.update({ where: { id: userId }, data: { isActive: false } })
+      const algoliaUserIndex = this.algoliaService.initIndex('USERS')
+
+      this.algoliaService.deleteObject(algoliaUserIndex, userId)
+      this.sendbirdService.deleteUser(userId)
+
+      return true
+    } catch {
+      return Promise.reject(new Error('not found'))
+    }
+  }
+
+  async ban(userId: string): Promise<boolean> {
+    // eslint-disable-next-line functional/no-try-statement
+    try {
+      await this.prismaService.user.update({ where: { id: userId }, data: { isActive: false, isBanned: true } })
       const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
       this.algoliaService.deleteObject(algoliaUserIndex, userId)
@@ -721,7 +751,6 @@ export class UserService {
       create: {
         phoneNumber,
         locale,
-        roles: '[]',
       },
       update: {},
     })

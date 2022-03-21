@@ -316,9 +316,7 @@ export class PostService {
     return { id }
   }
 
-  async delete(deletePostInput: DeletePostInput, authUser: AuthUser): Promise<boolean> {
-    const postId = deletePostInput.id
-
+  async delete(postId: string, authUser: AuthUser): Promise<boolean> {
     const post = await this.prismaService.post.findUnique({
       where: {
         id: postId,
@@ -328,7 +326,8 @@ export class PostService {
       },
     })
 
-    if (!post || post.authorId !== authUser.id) return Promise.reject(new Error('No author'))
+    if (!post) return Promise.reject(new Error('No post'))
+    if (post.authorId !== authUser.id && authUser.isNotAdmin) return Promise.reject(new Error('No permission'))
 
     const deletedPost = await this.prismaService.post.delete({
       select: {
@@ -353,7 +352,7 @@ export class PostService {
     this.deletePostFromAlgolia(postId)
 
     deletedPost.tags.forEach(async (tag) => {
-      if (!tag.isLive && tag.posts.length == 1) this.tagService.deleteById(tag.id)
+      if (!tag.isLive && tag.posts.length == 1) this.tagService.delete(tag.id)
     })
 
     return true

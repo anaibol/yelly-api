@@ -6,7 +6,10 @@ import * as bcrypt from 'bcrypt'
 import { AccessToken } from 'src/user/accessToken.model'
 import { User } from '@prisma/client'
 
-export type AuthUser = User
+export type AuthUser = User & {
+  isAdmin: boolean
+  isNotAdmin: boolean
+}
 
 const refreshRole = 'refresh'
 
@@ -20,23 +23,14 @@ export class AuthService {
 
     if (!user?.password || !user?.isActive) return null
 
-    const country = await this.prismaService.user
-      .findUnique({
-        where: { id: user.id },
-        select: {
-          isActive: true,
-        },
-      })
-      .school()
-      .city()
-      .country({
-        select: { id: true },
-      })
-
     const hash = user.password.replace('$2y$', '$2b$')
     if (!(await bcrypt.compare(password, hash))) return null
 
-    return user
+    return {
+      ...user,
+      isAdmin: user.role === 'ADMIN',
+      isNotAdmin: user.role !== 'ADMIN',
+    }
   }
 
   async getAccessToken(userId: string): Promise<string> {

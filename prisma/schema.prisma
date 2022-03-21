@@ -64,7 +64,7 @@ model User {
   firstName                    String?
   lastName                     String?
   email                        String?                           @unique
-  roles                        String                            @db.LongText
+  role                         Role                              @default(USER)
   password                     String?
   birthdate                    DateTime?                         @db.Date
   pictureId                    String?
@@ -220,4 +220,9 @@ enum FriendRequestStatus {
   PENDING
   ACCEPTED
   DECLINED
+}
+
+enum Role {
+  USER
+  ADMIN
 }

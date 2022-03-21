@@ -162,7 +162,7 @@ export class MeResolver {
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
   deleteAuthUser(@CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.deleteById(authUser.id)
+    return this.userService.delete(authUser.id)
   }
 
   @ResolveField()

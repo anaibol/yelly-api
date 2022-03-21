@@ -24,6 +24,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!user?.isActive) return null
 
-    return user
+    return {
+      ...user,
+      isAdmin: user.role === 'ADMIN',
+      isNotAdmin: user.role !== 'ADMIN',
+    }
   }
 }
