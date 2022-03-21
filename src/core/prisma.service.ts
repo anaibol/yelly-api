@@ -23,13 +23,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     await this.$connect()
 
     if (process.env.NODE_ENV !== 'production') {
-      // this.$use(async (params, next) => {
-      //   const before = Date.now()
-      //   const result = await next(params)
-      //   const after = Date.now()
-      //   console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
-      //   return result
-      // })
+      this.$use(async (params, next) => {
+        const before = Date.now()
+        const result = await next(params)
+        const after = Date.now()
+        console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
+        return result
+      })
       // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // // @ts-ignore
       // this.$on('query', async (e) => {

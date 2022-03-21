@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { PostService } from '../post/post.service'
@@ -13,8 +13,9 @@ import { PostsArgs } from './posts.args'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Post } from './post.model'
 import { CreateCommentInput } from './create-comment.input'
+import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
 
-@Resolver()
+@Resolver(() => Post)
 export class PostResolver {
   constructor(private postService: PostService) {}
 
@@ -77,15 +78,18 @@ export class PostResolver {
   async createPostComment(@Args('input') createPostCommentData: CreateCommentInput, @CurrentUser() authUser: AuthUser) {
     return this.postService.createComment(createPostCommentData, authUser)
   }
-}
-
-@Resolver()
-export class PostPollResolver {
-  constructor(private postService: PostService) {}
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async createPostPollVote(@Args('optionId') optionId: string, @CurrentUser() authUser: AuthUser) {
-    return this.postService.createPollVote(optionId, authUser)
+  async createPostPollVote(
+    @Args('input') createPostPollVoteInput: CreatePostPollVoteInput,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<Post> {
+    return this.postService.createPollVote(createPostPollVoteInput.postId, createPostPollVoteInput.optionId, authUser)
+  }
+
+  @ResolveField()
+  async authUserPollVote(@Parent() post: Post, @CurrentUser() authUser: AuthUser): Promise<PostPollVote | null> {
+    return this.postService.getPollAuthUserVote(post.id, authUser)
   }
 }

@@ -48,6 +48,11 @@ input CreatePostInput {
   text: String!
 }
 
+input CreatePostPollVoteInput {
+  optionId: String!
+  postId: String!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -104,7 +109,7 @@ type Me {
   locale: String
   phoneNumber: String
   pictureId: String
-  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
   school: School
   sendbirdAccessToken: String
   snapchat: String
@@ -120,6 +125,7 @@ type Mutation {
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Boolean!
   createPost(input: CreatePostInput!): Post!
   createPostComment(input: CreateCommentInput!): Boolean!
+  createPostPollVote(input: CreatePostPollVoteInput!): Boolean!
   declineFriendRequest(friendRequestId: String!): Boolean!
   deleteAuthUser: Boolean!
   deleteExpoPushNotificationsToken(input: String!): Boolean!
@@ -167,11 +173,12 @@ type PaginatedUsers {
 }
 
 type Post {
+  authUserPollVote: PostPollVote
   author: User
   comments: [PostComment!]
   createdAt: DateTime
   id: ID!
-  poll: PostPoll
+  pollOptions: [PostPollOption!]
   tags: [Tag!]
   text: String
   viewsCount: Int
@@ -185,16 +192,16 @@ type PostComment {
   text: String!
 }
 
-type PostPoll {
-  id: ID!
-  options: [PostPollOption!]!
-}
-
 type PostPollOption {
   id: ID!
-  isAuthUserVote: Boolean
-  text: String!
-  votesCount: Int!
+  text: String
+  votesCount: Int
+}
+
+type PostPollVote {
+  id: ID!
+  option: PostPollOption
+  post: Post
 }
 
 type PostReaction {
@@ -210,7 +217,7 @@ type Query {
   liveTags: [Tag!]!
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
-  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts!
+  posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String): Tag!
   trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
@@ -246,7 +253,7 @@ type Tag {
   id: ID!
   isLive: Boolean
   postCount: Int
-  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
   text: String!
 }
 
@@ -302,7 +309,7 @@ type User {
   lastName: String
   locale: String
   pictureId: String
-  posts(after: String, forYou: Boolean, limit: Int = 10, userId: String): PaginatedPosts
+  posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
   school: School
   snapchat: String
   training: Training

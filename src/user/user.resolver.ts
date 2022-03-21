@@ -160,11 +160,7 @@ export class UserResolver {
   }
 
   @ResolveField('posts', () => PaginatedPosts)
-  async posts(
-    @CurrentUser() authUser: AuthUser,
-    @Parent() user: User,
-    @Args() postsArgs: PostsArgs
-  ): Promise<PaginatedPosts> {
+  async posts(@Parent() user: User, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
     const { after, limit } = postsArgs
 
     const posts = await this.prismaService.user
@@ -185,18 +181,18 @@ export class UserResolver {
         select: PostSelect,
       })
 
-    const items = posts.map(({ poll, ...post }) => ({
-      ...post,
-      ...(poll && {
-        id: poll.id,
-        options: poll.options.map((o) => ({
-          id: o.id,
-          text: o.text,
-          votesCount: o._count.votes,
-          // isAuthUserVote: !!o.votes.length,
-        })),
-      }),
-    }))
+    const items = posts.map((post) => {
+      const pollOptions = post.pollOptions.map((o) => ({
+        id: o.id,
+        text: o.text,
+        votesCount: o._count.votes,
+      }))
+
+      return {
+        ...post,
+        ...(pollOptions.length && { pollOptions }),
+      }
+    })
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
 

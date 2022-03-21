@@ -1,23 +1,24 @@
+// import { Prisma } from '@prisma/client'
+
+// export const PostSelect: Prisma.PostSelect = {
 export const PostSelect = {
   id: true,
   createdAt: true,
   viewsCount: true,
   text: true,
-  poll: {
+  pollOptions: {
     select: {
       id: true,
-      options: {
+      text: true,
+      _count: {
         select: {
-          id: true,
-          text: true,
-          _count: {
-            select: {
-              votes: true,
-            },
-          },
+          votes: true,
         },
       },
     },
+    // orderBy: {
+    //   position: 'asc',
+    // },
   },
   author: {
     select: {

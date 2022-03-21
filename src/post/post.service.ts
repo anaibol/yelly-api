@@ -15,6 +15,7 @@ import { AuthUser } from 'src/auth/auth.service'
 import { uniq } from 'lodash'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Post } from './post.model'
+import { PostPollVote } from './post.model'
 
 @Injectable()
 export class PostService {
@@ -135,7 +136,7 @@ export class PostService {
       select: PostSelect,
     })
 
-    const items = posts.map(({ poll, ...post }) => {
+    const items = posts.map((post) => {
       const { school } = post.author
 
       if (!school) return post
@@ -144,17 +145,15 @@ export class PostService {
 
       if (!nearSchool) return post
 
+      const pollOptions = post.pollOptions.map((o) => ({
+        id: o.id,
+        text: o.text,
+        votesCount: o._count.votes,
+      }))
+
       return {
         ...post,
-        ...(poll && {
-          id: poll.id,
-          options: poll.options.map((o) => ({
-            id: o.id,
-            text: o.text,
-            votesCount: o._count.votes,
-            // isAuthUserVote: !!o.votes.length,
-          })),
-        }),
+        ...(pollOptions.length && { pollOptions }),
         author: {
           ...post.author,
           school: {
@@ -187,6 +186,11 @@ export class PostService {
 
     const posts = await this.prismaService.post.findMany({
       where: {
+        // tags: {
+        //   some: {
+        //     countryId: authUserCountry.id
+        //   }
+        // },
         author: {
           school: {
             city: {
@@ -209,19 +213,16 @@ export class PostService {
       select: PostSelect,
     })
 
-    const items = posts.map(({ poll, ...post }) => ({
+    const items = posts.map(({ pollOptions, ...post }) => ({
       ...post,
-      ...(poll && {
-        poll: {
-          id: poll.id,
-          options: poll.options.map((o) => ({
-            id: o.id,
-            text: o.text,
-            votesCount: o._count.votes,
-            // isAuthUserVote: !!o.votes.length,
-          })),
-        },
-      }),
+      pollOptions:
+        pollOptions.length > 0
+          ? pollOptions.map((o) => ({
+              id: o.id,
+              text: o.text,
+              votesCount: o._count.votes,
+            }))
+          : undefined,
     }))
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
@@ -284,13 +285,9 @@ export class PostService {
         text,
         ...(pollOptions &&
           pollOptions.length > 0 && {
-            poll: {
-              create: {
-                options: {
-                  createMany: {
-                    data: pollOptions.map((text) => ({ text })),
-                  },
-                },
+            pollOptions: {
+              createMany: {
+                data: pollOptions.map((text, i) => ({ text, position: i })),
               },
             },
           }),
@@ -311,8 +308,8 @@ export class PostService {
     return { id }
   }
 
-  async delete(createPostInput: DeletePostInput, authUser: AuthUser): Promise<boolean> {
-    const postId = createPostInput.id
+  async delete(deletePostInput: DeletePostInput, authUser: AuthUser): Promise<boolean> {
+    const postId = deletePostInput.id
 
     const post = await this.prismaService.post.findUnique({
       where: {
@@ -357,7 +354,7 @@ export class PostService {
   async createOrUpdatePostReaction(
     createOrUpdatePostReactionInput: CreateOrUpdatePostReactionInput,
     authUser: AuthUser
-  ) {
+  ): Promise<boolean> {
     const { reaction, postId } = createOrUpdatePostReactionInput
     const authorId = authUser.id
 
@@ -419,7 +416,7 @@ export class PostService {
     return true
   }
 
-  async createComment(createCommentInput: CreateCommentInput, authUser: AuthUser) {
+  async createComment(createCommentInput: CreateCommentInput, authUser: AuthUser): Promise<boolean> {
     const { postId, text } = createCommentInput
 
     const comment = await this.prismaService.postComment.create({
@@ -435,9 +432,23 @@ export class PostService {
     return !!comment
   }
 
-  async createPollVote(optionId: string, authUser: AuthUser): Promise<boolean> {
+  async createPollVote(postId: string, optionId: string, authUser: AuthUser): Promise<Post> {
+    const pollWithOption = this.prismaService.postPollOption.findFirst({
+      where: {
+        id: optionId,
+        postId,
+      },
+    })
+
+    if (!pollWithOption) return Promise.reject(new Error('No poll with option'))
+
     await this.prismaService.postPollVote.create({
       data: {
+        post: {
+          connect: {
+            id: postId,
+          },
+        },
         option: {
           connect: {
             id: optionId,
@@ -451,10 +462,35 @@ export class PostService {
       },
     })
 
-    return true
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+      select: PostSelect,
+    })
+
+    if (!post) return Promise.reject(new Error('No post'))
+
+    return post
   }
 
-  async syncPostIndexWithAlgolia(id: string) {
+  async getPollAuthUserVote(postId: string, authUser: AuthUser): Promise<PostPollVote | null> {
+    const authUserVotes = await this.prismaService.user
+      .findUnique({
+        where: {
+          id: authUser.id,
+        },
+      })
+      .postPollVotes({
+        where: {
+          postId,
+        },
+      })
+
+    if (authUserVotes.length) return authUserVotes[0]
+
+    return null
+  }
+
+  async syncPostIndexWithAlgolia(id: string): Promise<undefined> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
     const post = await this.prismaService.post.findUnique({
       where: {
@@ -478,7 +514,7 @@ export class PostService {
     this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, post.id)
   }
 
-  async deletePostFromAlgolia(id: string) {
+  async deletePostFromAlgolia(id: string): Promise<void> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
     this.algoliaService.deleteObject(algoliaTagIndex, id)
   }
