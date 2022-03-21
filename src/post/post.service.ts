@@ -210,7 +210,15 @@ export class PostService {
         createdAt: 'desc',
       },
       take: limit,
-      select: PostSelect,
+      select: {
+        ...PostSelect,
+        pollOptions: {
+          ...PostSelect.pollOptions,
+          orderBy: {
+            position: 'asc',
+          },
+        },
+      },
     })
 
     const items = posts.map(({ pollOptions, ...post }) => ({

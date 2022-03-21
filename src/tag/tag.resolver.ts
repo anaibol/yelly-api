@@ -98,7 +98,15 @@ export class TagResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: PostSelect,
+      select: {
+        ...PostSelect,
+        pollOptions: {
+          ...PostSelect.pollOptions,
+          orderBy: {
+            position: 'asc',
+          },
+        },
+      },
     })
 
     const items = posts.map((post) => {

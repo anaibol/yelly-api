@@ -1,6 +1,5 @@
 // import { Prisma } from '@prisma/client'
 
-// export const PostSelect: Prisma.PostSelect = {
 export const PostSelect = {
   id: true,
   createdAt: true,
@@ -16,6 +15,7 @@ export const PostSelect = {
         },
       },
     },
+    // THIS DOESN'T WORK IN A VARIABLE
     // orderBy: {
     //   position: 'asc',
     // },
