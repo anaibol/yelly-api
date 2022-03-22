@@ -169,7 +169,7 @@ model PostPollOption {
 
 model PostPollVote {
   id        String         @id @default(uuid())
-  option    PostPollOption @relation(fields: [optionId], references: [id])
+  option    PostPollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
   optionId  String
   post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String

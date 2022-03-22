@@ -220,6 +220,9 @@ export class UserService {
         take: limit,
         skip,
         where,
+        include: {
+          school: true,
+        },
       }),
     ])
 
@@ -322,6 +325,9 @@ export class UserService {
         take: limit,
         skip,
         where,
+        include: {
+          school: true,
+        },
       }),
     ])
 
