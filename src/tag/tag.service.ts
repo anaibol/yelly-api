@@ -77,18 +77,6 @@ export class TagService {
     }))
   }
 
-  deleteEmptyNonLiveTags() {
-    // Delete all tags without posts and isLive: false
-    return this.prismaService.tag.deleteMany({
-      where: {
-        isLive: false,
-        posts: {
-          none: {},
-        },
-      },
-    })
-  }
-
   async createOrUpdateLiveTag(text: string, isLive: boolean, authUser: AuthUser): Promise<Tag> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
@@ -126,7 +114,19 @@ export class TagService {
           },
         })
 
-    await this.deleteEmptyNonLiveTags()
+    // Delete all tags without posts and isLive: false
+    await this.prismaService.tag.deleteMany({
+      where: {
+        isLive: false,
+        posts: {
+          every: {
+            id: {
+              in: [],
+            },
+          },
+        },
+      },
+    })
 
     if (isLive) this.pushNotificationService.newLiveTag(newTag.id)
 
