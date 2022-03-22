@@ -3,18 +3,18 @@ import { School } from '../school/school.model'
 import { Training } from './training.model'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { Role } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 
-registerEnumType(Role, {
-  name: 'Role',
+registerEnumType(UserRole, {
+  name: 'UserRole',
 })
 
 @ObjectType()
 export class Me {
   @Field(() => ID)
   id: string
-  @Field(() => Role)
-  role: Role
+  @Field(() => UserRole)
+  role: UserRole
   email?: string | null
   phoneNumber?: string | null
   firstName?: string | null

@@ -4,6 +4,13 @@ import { PostComment } from './post-comment.model'
 import { Tag } from '../tag/tag.model'
 
 @ObjectType()
+export class PostPollOption {
+  @Field(() => ID)
+  id: string
+  text?: string
+  votesCount?: number
+}
+@ObjectType()
 export class Post {
   @Field(() => ID)
   id: string
@@ -16,13 +23,7 @@ export class Post {
   pollOptions?: PostPollOption[]
   authUserPollVote?: PostPollVote
 }
-@ObjectType()
-export class PostPollOption {
-  @Field(() => ID)
-  id: string
-  text?: string
-  votesCount?: number
-}
+
 @ObjectType()
 export class PostPollVote {
   @Field(() => ID)

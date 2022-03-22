@@ -110,7 +110,7 @@ type Me {
   phoneNumber: String
   pictureId: String
   posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
-  role: Role!
+  role: UserRole!
   school: School
   sendbirdAccessToken: String
   snapchat: String
@@ -231,11 +231,6 @@ input ResetPasswordInput {
   resetToken: String!
 }
 
-enum Role {
-  ADMIN
-  USER
-}
-
 type School {
   city: City
   distance: Float
@@ -319,4 +314,9 @@ type User {
   school: School
   snapchat: String
   training: Training
+}
+
+enum UserRole {
+  ADMIN
+  USER
 }
