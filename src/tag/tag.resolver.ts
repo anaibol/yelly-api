@@ -44,8 +44,12 @@ export class TagResolver {
 
   @Query(() => Tag)
   @UseGuards(AuthGuard)
-  async tag(@Args() tagArgs: TagArgs): Promise<Tag | null> {
-    return this.tagService.findByText(tagArgs)
+  async tag(@Args() tagArgs: TagArgs): Promise<Tag> {
+    const tag = await this.tagService.findByText(tagArgs)
+
+    if (!tag) return Promise.reject(new Error('No tag'))
+
+    return tag
   }
 
   @UseGuards(AuthGuard)
@@ -68,17 +72,10 @@ export class TagResolver {
   ): Promise<PaginatedPosts> {
     const { limit, after } = postsArgs
 
-    const user = await this.prismaService.user.findFirst({
-      where: { id: authUser.id },
-      select: {
-        birthdate: true,
-      },
-    })
-
-    const userAge = user && user.birthdate && dates.getAge(user.birthdate)
+    const userAge = authUser?.birthdate && dates.getAge(authUser.birthdate)
     const datesRanges = userAge && dates.getDateRanges(userAge)
 
-    const items = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
+    const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),
@@ -98,7 +95,28 @@ export class TagResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: PostSelect,
+      select: {
+        ...PostSelect,
+        pollOptions: {
+          ...PostSelect.pollOptions,
+          orderBy: {
+            position: 'asc',
+          },
+        },
+      },
+    })
+
+    const items = posts.map((post) => {
+      const pollOptions = post.pollOptions.map((o) => ({
+        id: o.id,
+        text: o.text,
+        votesCount: o._count.votes,
+      }))
+
+      return {
+        ...post,
+        ...(pollOptions.length && { pollOptions }),
+      }
     })
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''

@@ -1,3 +1,5 @@
+/* eslint-disable functional/no-let */
+/* eslint-disable functional/no-loop-statement */
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 import { PostSelect } from '../../src/post/post-select.constant'
@@ -17,7 +19,7 @@ async function main() {
       skip,
     })
 
-    if (!posts) throw new Error('No post found')
+    if (!posts) return Promise.reject(new Error('No post found'))
 
     if (posts.length == 0) {
       hasPosts = false
@@ -30,7 +32,7 @@ async function main() {
     const postIndex = await algoliaClient.initIndex(INDEX_NAME)
     console.log('insert ' + skip)
 
-    const algoliaPosts = posts.map((post) => mapAlgoliaPost(post)).filter((v) => v)
+    const algoliaPosts = posts.map(mapAlgoliaPost).filter((v) => v)
     postIndex.partialUpdateObjects(algoliaPosts as PostIndexAlgoliaInterface[], { createIfNotExists: true })
   }
 }

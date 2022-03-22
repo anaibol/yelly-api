@@ -26,7 +26,7 @@ export class TagService {
       },
     })
 
-    if (!tag) throw new Error('Tag not found')
+    if (!tag) return Promise.reject(new Error('Tag not found'))
 
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       id: tag.id,
@@ -43,7 +43,7 @@ export class TagService {
   }
 
   async getLiveTags(authUser: AuthUser): Promise<Tag[]> {
-    if (!authUser.schoolId) throw new Error('No school')
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
       .findUnique({
@@ -52,7 +52,7 @@ export class TagService {
       .city()
       .country()
 
-    if (!country) throw new Error('No country')
+    if (!country) return Promise.reject(new Error('No country'))
 
     const liveTags = await this.prismaService.tag.findMany({
       where: {
@@ -63,23 +63,6 @@ export class TagService {
         id: true,
         text: true,
         createdAt: true,
-        posts: {
-          select: {
-            createdAt: true,
-            author: {
-              select: {
-                id: true,
-                pictureId: true,
-                firstName: true,
-              },
-            },
-          },
-          take: 5,
-          distinct: 'authorId',
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
         _count: {
           select: {
             posts: true,
@@ -88,9 +71,9 @@ export class TagService {
       },
     })
 
-    return liveTags.map(({ posts, ...tag }) => ({
+    return liveTags.map(({ _count, ...tag }) => ({
       ...tag,
-      postCount: tag._count.posts,
+      postCount: _count.posts,
     }))
   }
 
@@ -107,7 +90,7 @@ export class TagService {
   }
 
   async createOrUpdateLiveTag(text: string, isLive: boolean, authUser: AuthUser): Promise<Tag> {
-    if (!authUser.schoolId) throw new Error('No school')
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const authUserCountry = await this.prismaService.school
       .findUnique({
@@ -145,7 +128,7 @@ export class TagService {
 
     await this.deleteEmptyNonLiveTags()
 
-    if (isLive) this.pushNotificationService.newLiveTag(newTag.id, authUser)
+    if (isLive) this.pushNotificationService.newLiveTag(newTag.id)
 
     return newTag
   }
@@ -164,14 +147,14 @@ export class TagService {
     })
   }
 
-  async deleteById(id: string) {
+  async delete(id: string) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
     this.algoliaService.deleteObject(algoliaTagIndex, id)
     return true
   }
 
   async getTrends(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedTrends> {
-    if (!authUser.schoolId) throw new Error('No school')
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
       .findUnique({
@@ -180,7 +163,7 @@ export class TagService {
       .city()
       .country()
 
-    if (!country) throw new Error('No country')
+    if (!country) return Promise.reject(new Error('No country'))
 
     const [totalCount, tags] = await this.prismaService.$transaction([
       this.prismaService.tag.count({

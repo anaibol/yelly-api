@@ -48,7 +48,6 @@ model School {
   cityId        String
   coord         Unsupported("point")?
   city          City                  @relation(fields: [cityId], references: [id])
-  posts         Post[]
   users         User[]
 
   @@index([cityId], map: "School_cityId_fkey")
@@ -65,7 +64,7 @@ model User {
   firstName                    String?
   lastName                     String?
   email                        String?                           @unique
-  roles                        String                            @db.LongText
+  role                         UserRole                              @default(USER)
   password                     String?
   birthdate                    DateTime?                         @db.Date
   pictureId                    String?
@@ -76,6 +75,7 @@ model User {
   createdAt                    DateTime                          @default(now())
   updatedAt                    DateTime                          @default(now()) @updatedAt
   isActive                     Boolean                           @default(true)
+  isBanned                     Boolean                           @default(false)
   isFilled                     Boolean                           @default(false)
   androidPushnotificationToken String?
   sendbirdAccessToken          String?
@@ -97,6 +97,7 @@ model User {
   posts                        Post[]
   postComments                 PostComment[]
   postReactions                PostReaction[]
+  postPollVotes                PostPollVote[]
 
   @@index([birthdate], map: "User_birthdate")
   @@index([schoolId], map: "User_schoolId_fkey")
@@ -136,26 +137,47 @@ model Tag {
   isLive    Boolean  @default(false)
   posts     Post[]
   countryId String?
-  country   Country?  @relation(fields: [countryId], references: [id])
+  country   Country? @relation(fields: [countryId], references: [id])
 
   @@index([text], map: "Tag_text_idx")
 }
 
 model Post {
-  id         String         @id @default(uuid())
-  text       String         @db.Text
-  createdAt  DateTime       @unique @default(now())
-  authorId   String
-  viewsCount Int            @default(0)
-  schoolId   String?
-  author     User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  school     School?        @relation(fields: [schoolId], references: [id])
-  comments   PostComment[]
-  reactions  PostReaction[]
-  tags       Tag[]
+  id          String           @id @default(uuid())
+  text        String           @db.Text
+  createdAt   DateTime         @unique @default(now())
+  authorId    String
+  viewsCount  Int              @default(0)
+  author      User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments    PostComment[]
+  reactions   PostReaction[]
+  tags        Tag[]
+  pollOptions PostPollOption[]
+  pollVotes   PostPollVote[]
 
   @@unique([authorId, id], map: "author_post_id_fkey")
-  @@index([schoolId], map: "Post_schoolId_fkey")
+}
+
+model PostPollOption {
+  id       String         @id @default(uuid())
+  text     String
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId   String
+  position Int
+  votes    PostPollVote[]
+}
+
+model PostPollVote {
+  id        String         @id @default(uuid())
+  option    PostPollOption @relation(fields: [optionId], references: [id])
+  optionId  String
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  authorId  String
+  author    User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+
+  @@unique([authorId, postId], map: "author_post_id_fkey")
 }
 
 model PostComment {
@@ -198,4 +220,9 @@ enum FriendRequestStatus {
   PENDING
   ACCEPTED
   DECLINED
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }

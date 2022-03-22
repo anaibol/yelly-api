@@ -92,7 +92,7 @@ export class UserResolver {
   ): Promise<number> {
     const commonFriendsCount = await commonFriendsCountLoader.load(user.id) // offsetPaginationArgs.skip, offsetPaginationArgs.limit
 
-    if (!commonFriendsCount) throw new Error('Error')
+    if (!commonFriendsCount) return Promise.reject(new Error('Error'))
     // return this.userService.getCommonFriendsCount(authUser, user.id)
 
     return commonFriendsCount
@@ -113,7 +113,7 @@ export class UserResolver {
   ): Promise<PaginatedUsers> {
     const commonFriends = await commonFriendsLoader.load(user.id) // offsetPaginationArgs.skip, offsetPaginationArgs.limit
 
-    if (!commonFriends) throw new Error('Error')
+    if (!commonFriends) return Promise.reject(new Error('Error'))
 
     return commonFriends
   }
@@ -132,12 +132,11 @@ export class UserResolver {
   @ResolveField()
   async isAuthUserFriend(
     @Parent() user: User,
-    @CurrentUser() authUser: AuthUser,
     @Loader(IsFriendLoader) isFriendLoader: DataLoader<string, boolean | undefined, string>
   ): Promise<boolean> {
     const isFriend = await isFriendLoader.load(user.id)
 
-    if (isFriend === undefined) throw new Error('isFriend undefined')
+    if (isFriend === undefined) return Promise.reject(new Error('isFriend undefined'))
 
     return isFriend
   }
@@ -164,7 +163,7 @@ export class UserResolver {
   async posts(@Parent() user: User, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
     const { after, limit } = postsArgs
 
-    const items = await this.prismaService.user
+    const posts = await this.prismaService.user
       .findUnique({
         where: { id: user.id },
       })
@@ -179,8 +178,29 @@ export class UserResolver {
           createdAt: 'desc',
         },
         take: limit,
-        select: PostSelect,
+        select: {
+          ...PostSelect,
+          pollOptions: {
+            ...PostSelect.pollOptions,
+            orderBy: {
+              position: 'asc',
+            },
+          },
+        },
       })
+
+    const items = posts.map((post) => {
+      const pollOptions = post.pollOptions.map((o) => ({
+        id: o.id,
+        text: o.text,
+        votesCount: o._count.votes,
+      }))
+
+      return {
+        ...post,
+        ...(pollOptions.length && { pollOptions }),
+      }
+    })
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
 

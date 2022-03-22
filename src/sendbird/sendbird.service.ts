@@ -4,7 +4,7 @@ import { PrismaService } from '../core/prisma.service'
 import { GroupChannel } from './types'
 
 const buildChannelUrl = (userIds: string[]): string => {
-  return userIds.sort().join('_')
+  return [...userIds].sort().join('_')
 }
 
 type SendbirdUser = {
@@ -27,6 +27,7 @@ type IncomingUser = {
 }
 
 const cleanUndefinedFromObj = (obj: any) =>
+  // eslint-disable-next-line functional/immutable-data
   Object.entries(obj).reduce((a: any, [k, v]) => (v === undefined || v === null ? a : ((a[k] = v), a)), {})
 
 @Injectable()
@@ -53,7 +54,7 @@ export class SendbirdService {
     return data.access_token
   }
 
-  async updateUser(user: Partial<IncomingUser>) {
+  async updateUser(user: Partial<IncomingUser>): Promise<boolean> {
     const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}?format=auto`
 
     const updatedUserData: Partial<SendbirdUser> = {
@@ -69,10 +70,12 @@ export class SendbirdService {
       pictureId: user.pictureId,
     })
 
-    await Promise.all([
+    const updated = await Promise.all([
       this.httpService.put(`/v3/users/${user.id}`, updatedUserData),
       Object.keys(metadata).length && this.httpService.put(`/v3/users/${user.id}/metadata`, { metadata, upsert: true }),
     ])
+
+    return !!updated
   }
 
   async getAccessToken(userId: string): Promise<string> {
@@ -81,8 +84,8 @@ export class SendbirdService {
   }
 
   async deleteUser(userId: string): Promise<boolean> {
-    await this.httpService.delete(`/v3/users/${userId}`)
-    return true
+    const deleted = await this.httpService.delete(`/v3/users/${userId}`)
+    return !!deleted
   }
 
   async getGroupChannel(channelUrl: string): Promise<GroupChannel | null> {
@@ -95,7 +98,7 @@ export class SendbirdService {
       })
   }
 
-  async sendPostReactionMessage(postReactionId: string) {
+  async sendPostReactionMessage(postReactionId: string): Promise<true | Error> {
     const postReaction = await this.prismaService.postReaction.findUnique({
       where: { id: postReactionId },
       select: {
@@ -118,17 +121,19 @@ export class SendbirdService {
       },
     })
 
-    if (!postReaction) throw new Error('No post reaction')
+    if (!postReaction) return Promise.reject(new Error('No post reaction'))
 
     const { authorId, post, reaction } = postReaction
 
     const userIds = [authorId, post.authorId]
     const channelUrl = buildChannelUrl(userIds)
 
+    // eslint-disable-next-line functional/no-try-statement
     try {
       const groupChannel = await this.getGroupChannel(channelUrl)
 
       if (!groupChannel) {
+        // eslint-disable-next-line functional/no-expression-statement
         await this.httpService.post('/v3/group_channels', {
           user_ids: userIds,
           channel_url: channelUrl,
@@ -138,6 +143,7 @@ export class SendbirdService {
         })
       }
 
+      // eslint-disable-next-line functional/no-expression-statement
       await this.httpService.post(`/v3/group_channels/${channelUrl}/messages`, {
         message_type: 'MESG',
         custom_type: 'post_reaction',

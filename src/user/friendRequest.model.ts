@@ -2,6 +2,7 @@ import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { FriendRequestStatus } from '@prisma/client'
 import { User } from './user.model'
 
+// eslint-disable-next-line functional/no-expression-statement
 registerEnumType(FriendRequestStatus, {
   name: 'FriendRequestStatus',
 })

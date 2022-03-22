@@ -1,3 +1,5 @@
+/* eslint-disable functional/no-let */
+/* eslint-disable functional/no-loop-statement */
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
@@ -38,7 +40,7 @@ async function main() {
 
     console.log('insert ' + skip)
 
-    const algoliaUsers = users.map((user) => mapAlgoliaUser(user))
+    const algoliaUsers = users.map(mapAlgoliaUser)
 
     await userIndex.partialUpdateObjects(algoliaUsers, { createIfNotExists: true })
   }

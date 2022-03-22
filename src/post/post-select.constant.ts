@@ -1,8 +1,25 @@
+// import { Prisma } from '@prisma/client'
+
 export const PostSelect = {
   id: true,
   createdAt: true,
   viewsCount: true,
   text: true,
+  pollOptions: {
+    select: {
+      id: true,
+      text: true,
+      _count: {
+        select: {
+          votes: true,
+        },
+      },
+    },
+    // THIS DOESN'T WORK IN A VARIABLE
+    // orderBy: {
+    //   position: 'asc',
+    // },
+  },
   author: {
     select: {
       id: true,

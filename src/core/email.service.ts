@@ -12,7 +12,8 @@ export class EmailService {
   }
 
   private testConnection() {
-    this.emailProvider.users.ping().then(() => {
+    // eslint-disable-next-line functional/no-return-void
+    return this.emailProvider.users.ping().then(() => {
       console.log('EMAIL Server is working as expected')
     })
   }
@@ -32,6 +33,7 @@ export class EmailService {
         return this._message
       },
       set message(value) {
+        // eslint-disable-next-line functional/immutable-data
         this._message = value
       },
     })

@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { PostService } from '../post/post.service'
@@ -11,10 +11,11 @@ import { DeletePostInput } from './delete-post.input'
 import { PostsArgs } from './posts.args'
 // import { PostArgs } from './post.args'
 import { PaginatedPosts } from './paginated-posts.model'
-import { Post } from './post.model'
+import { Post, PostPollVote } from './post.model'
 import { CreateCommentInput } from './create-comment.input'
+import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
 
-@Resolver()
+@Resolver(() => Post)
 export class PostResolver {
   constructor(private postService: PostService) {}
 
@@ -50,8 +51,8 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async deletePost(@Args('input') deletePostData: DeletePostInput, @CurrentUser() authUser: AuthUser) {
-    return this.postService.delete(deletePostData, authUser)
+  async deletePost(@Args('input') deletePostInput: DeletePostInput, @CurrentUser() authUser: AuthUser) {
+    return this.postService.delete(deletePostInput.id, authUser)
   }
 
   @UseGuards(AuthGuard)
@@ -76,5 +77,19 @@ export class PostResolver {
   @Mutation(() => Boolean)
   async createPostComment(@Args('input') createPostCommentData: CreateCommentInput, @CurrentUser() authUser: AuthUser) {
     return this.postService.createComment(createPostCommentData, authUser)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Post)
+  async createPostPollVote(
+    @Args('input') createPostPollVoteInput: CreatePostPollVoteInput,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<Post> {
+    return this.postService.createPollVote(createPostPollVoteInput.postId, createPostPollVoteInput.optionId, authUser)
+  }
+
+  @ResolveField()
+  async authUserPollVote(@Parent() post: Post, @CurrentUser() authUser: AuthUser): Promise<PostPollVote | null> {
+    return this.postService.getAuthUserPollVote(post.id, authUser)
   }
 }

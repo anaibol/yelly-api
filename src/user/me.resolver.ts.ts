@@ -1,11 +1,10 @@
-import { UnauthorizedException, UseGuards } from '@nestjs/common'
+import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
 import { SendbirdAccessToken } from './sendbirdAccessToken'
 
 import { Me } from './me.model'
 import { AccessToken } from './accessToken.model'
 
-import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 import { PostsArgs } from '../post/posts.args'
 
 import { AuthGuard } from '../auth/auth-guard'
@@ -25,14 +24,14 @@ import { PaginatedUsers } from 'src/post/paginated-users.model'
 import TwilioService from 'src/core/twilio.service'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
-import { NotFoundUserException } from './not-found-user.exception'
 import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
+import { PaginatedPosts } from 'src/post/paginated-posts.model'
 
-function validatePhoneNumberForE164(phoneNumber: string) {
-  const regEx = /^\+[1-9]\d{10,14}$/
+// function validatePhoneNumberForE164(phoneNumber: string) {
+//   const regEx = /^\+[1-9]\d{10,14}$/
 
-  return regEx.test(phoneNumber)
-}
+//   return regEx.test(phoneNumber)
+// }
 
 @Resolver(() => Me)
 export class MeResolver {
@@ -48,9 +47,7 @@ export class MeResolver {
   async emailSignIn(@Args('input') signInInput: EmailSignInInput): Promise<AccessToken> {
     const user = await this.authService.validateUser(signInInput.email, signInInput.password)
 
-    if (!user) {
-      throw new UnauthorizedException()
-    }
+    if (!user) return Promise.reject(new Error('not found'))
 
     const [accessToken, refreshToken] = await Promise.all([
       this.authService.getAccessToken(user.id),
@@ -84,7 +81,7 @@ export class MeResolver {
   ): Promise<AccessToken> {
     const { phoneNumber, verificationCode, locale } = checkPhoneNumberVerificationCodeInput
 
-    // if (!validatePhoneNumberForE164(phoneNumber)) throw new Error('Invalid phone number')
+    // if (!validatePhoneNumberForE164(phoneNumber)) return Promise.reject(new Error('Invalid phone number')
 
     await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
 
@@ -103,7 +100,7 @@ export class MeResolver {
   async me(@CurrentUser() authUser: AuthUser): Promise<Me> {
     const user = await this.userService.findMe(authUser.id)
 
-    if (!user) throw new UnauthorizedException()
+    if (!user) return Promise.reject(new Error('not found'))
 
     return user
   }
@@ -143,7 +140,7 @@ export class MeResolver {
   async resetPassword(@Args('input') resetPasswordInput: ResetPasswordInput): Promise<AccessToken> {
     const user = await this.userService.resetPassword(resetPasswordInput.password, resetPasswordInput.resetToken)
 
-    if (!user) throw new NotFoundUserException()
+    if (!user) return Promise.reject(new Error('not found'))
 
     const [accessToken, refreshToken] = await Promise.all([
       this.authService.getAccessToken(user.id),
@@ -165,7 +162,7 @@ export class MeResolver {
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
   deleteAuthUser(@CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.deleteById(authUser.id)
+    return this.userService.delete(authUser.id)
   }
 
   @ResolveField()
@@ -179,10 +176,10 @@ export class MeResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() me: Me, @Args() postsArgs: PostsArgs) {
+  async posts(@Parent() me: Me, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
     const { after, limit } = postsArgs
 
-    const items = await this.prismaService.user.findUnique({ where: { id: me.id } }).posts({
+    const posts = await this.prismaService.user.findUnique({ where: { id: me.id } }).posts({
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),
@@ -193,7 +190,28 @@ export class MeResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: PostSelect,
+      select: {
+        ...PostSelect,
+        pollOptions: {
+          ...PostSelect.pollOptions,
+          orderBy: {
+            position: 'asc',
+          },
+        },
+      },
+    })
+
+    const items = posts.map((post) => {
+      const pollOptions = post.pollOptions.map((o) => ({
+        id: o.id,
+        text: o.text,
+        votesCount: o._count.votes,
+      }))
+
+      return {
+        ...post,
+        ...(pollOptions.length && { pollOptions }),
+      }
     })
 
     const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''

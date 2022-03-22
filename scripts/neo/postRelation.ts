@@ -1,3 +1,5 @@
+/* eslint-disable functional/no-let */
+/* eslint-disable functional/no-loop-statement */
 import { PrismaClient } from '@prisma/client'
 
 import getNeo from './ogm'
