@@ -406,6 +406,7 @@ export class UserService {
       },
       select: {
         id: true,
+        role: true,
         email: true,
         firstName: true,
         lastName: true,
@@ -767,6 +768,7 @@ export class UserService {
       },
       select: {
         id: true,
+        role: true,
         isFilled: true,
         email: true,
         firstName: true,

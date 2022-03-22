@@ -1,13 +1,20 @@
-import { ID, Field, ObjectType } from '@nestjs/graphql'
+import { ID, Field, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { School } from '../school/school.model'
 import { Training } from './training.model'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
+import { Role } from '@prisma/client'
+
+registerEnumType(Role, {
+  name: 'Role',
+})
 
 @ObjectType()
 export class Me {
   @Field(() => ID)
   id: string
+  @Field(() => Role)
+  role: Role
   email?: string | null
   phoneNumber?: string | null
   firstName?: string | null
