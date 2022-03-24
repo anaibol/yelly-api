@@ -120,6 +120,7 @@ type Me {
 type Mutation {
   acceptFriendRequest(friendRequestId: String!): Boolean!
   addExpoPushNotificationsToken(input: String!): Boolean!
+  banUser(userId: String!): Boolean!
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createFriendRequest(otherUserId: String!): FriendRequest!
   createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!

@@ -167,6 +167,14 @@ export class UserResolver {
     return this.userService.delete(userId)
   }
 
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  banUser(@CurrentUser() authUser: AuthUser, @Args('userId') userId: string): Promise<boolean> {
+    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
+
+    return this.userService.ban(userId)
+  }
+
   @ResolveField('posts', () => PaginatedPosts)
   async posts(@Parent() user: User, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
     const { after, limit } = postsArgs
