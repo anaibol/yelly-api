@@ -133,6 +133,7 @@ type Mutation {
   deleteFriendRequest(friendRequestId: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
+  deleteUser(userId: String!): Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
