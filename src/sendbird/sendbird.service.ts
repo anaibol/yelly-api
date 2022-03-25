@@ -49,7 +49,7 @@ export class SendbirdService {
       },
     }
 
-    const { data } = await this.httpService.post('/v3/users', sendbirdUser)
+    const { data } = await this.httpService.post('users', sendbirdUser)
 
     return data.access_token
   }
@@ -71,26 +71,31 @@ export class SendbirdService {
     })
 
     const updated = await Promise.all([
-      this.httpService.put(`/v3/users/${user.id}`, updatedUserData),
-      Object.keys(metadata).length && this.httpService.put(`/v3/users/${user.id}/metadata`, { metadata, upsert: true }),
+      this.httpService.put(`users/${user.id}`, updatedUserData),
+      Object.keys(metadata).length && this.httpService.put(`users/${user.id}/metadata`, { metadata, upsert: true }),
     ])
 
     return !!updated
   }
 
   async getAccessToken(userId: string): Promise<string> {
-    const { data } = await this.httpService.put(`/v3/users/${userId}`, { issue_access_token: true })
+    const { data } = await this.httpService.put(`users/${userId}`, { issue_access_token: true })
     return data.access_token
   }
 
   async deleteUser(userId: string): Promise<boolean> {
-    const deleted = await this.httpService.delete(`/v3/users/${userId}`)
+    const deleted = await this.httpService.delete(`users/${userId}`)
     return !!deleted
+  }
+
+  async revokeAccessTokens(userId: string): Promise<boolean> {
+    const banned = await this.httpService.delete(`users/${userId}/token`)
+    return !!banned
   }
 
   async getGroupChannel(channelUrl: string): Promise<GroupChannel | null> {
     return this.httpService
-      .get<GroupChannel>(`/v3/group_channels/${channelUrl}`)
+      .get<GroupChannel>(`group_channels/${channelUrl}`)
       .catch(() => Promise.resolve(null))
       .then((response) => {
         if (!response) return null
@@ -134,7 +139,7 @@ export class SendbirdService {
 
       if (!groupChannel) {
         // eslint-disable-next-line functional/no-expression-statement
-        await this.httpService.post('/v3/group_channels', {
+        await this.httpService.post('group_channels', {
           user_ids: userIds,
           channel_url: channelUrl,
           custom_type: '1-1',
@@ -144,7 +149,7 @@ export class SendbirdService {
       }
 
       // eslint-disable-next-line functional/no-expression-statement
-      await this.httpService.post(`/v3/group_channels/${channelUrl}/messages`, {
+      await this.httpService.post(`group_channels/${channelUrl}/messages`, {
         message_type: 'MESG',
         custom_type: 'post_reaction',
         user_id: authorId,

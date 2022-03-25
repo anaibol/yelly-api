@@ -6,7 +6,7 @@ import { SendbirdService } from './sendbird.service'
 @Module({
   imports: [
     HttpModule.register({
-      baseURL: process.env.SENDBIRD_BASE_URL,
+      baseURL: process.env.SENDBIRD_BASE_URL + '/v3/',
       headers: {
         'Content-Type': 'application/json; charset=utf8',
         'Api-Token': process.env.SENDBIRD_TOKEN,
