@@ -76,6 +76,21 @@ export class TagResolver {
     const datesRanges = userAge && dates.getDateRanges(userAge)
 
     const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
+      where: {
+        author: {
+          isActive: true,
+        },
+        OR: [
+          {
+            expiresAt: {
+              gte: new Date(),
+            },
+          },
+          {
+            expiresAt: null,
+          },
+        ],
+      },
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),

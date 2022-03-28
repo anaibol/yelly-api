@@ -201,6 +201,7 @@ export class PostService {
         //   }
         // },
         author: {
+          isActive: true,
           school: {
             city: {
               countryId: authUserCountry.id,
