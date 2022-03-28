@@ -154,6 +154,8 @@ model Post {
   tags        Tag[]
   pollOptions PostPollOption[]
   pollVotes   PostPollVote[]
+  expiresIn   Int?
+  expiresAt   DateTime?
 
   @@unique([authorId, id], map: "author_post_id_fkey")
 }

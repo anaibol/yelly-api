@@ -78,6 +78,11 @@ export class SendbirdService {
     return !!updated
   }
 
+  async deactivateUser(userId: string): Promise<boolean> {
+    const deactivated = await this.httpService.put(`users/${userId}`, { is_active: false })
+    return !!deactivated
+  }
+
   async getAccessToken(userId: string): Promise<string> {
     const { data } = await this.httpService.put(`users/${userId}`, { issue_access_token: true })
     return data.access_token
