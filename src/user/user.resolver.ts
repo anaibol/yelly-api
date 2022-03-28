@@ -184,6 +184,18 @@ export class UserResolver {
         where: { id: user.id },
       })
       .posts({
+        where: {
+          OR: [
+            {
+              expiresAt: {
+                gte: new Date(),
+              },
+            },
+            {
+              expiresAt: null,
+            },
+          ],
+        },
         ...(after && {
           cursor: {
             createdAt: new Date(+after).toISOString(),
