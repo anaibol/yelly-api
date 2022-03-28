@@ -180,6 +180,18 @@ export class MeResolver {
     const { after, limit } = postsArgs
 
     const posts = await this.prismaService.user.findUnique({ where: { id: me.id } }).posts({
+      where: {
+        OR: [
+          {
+            expiresAt: {
+              gte: new Date(),
+            },
+          },
+          {
+            expiresAt: null,
+          },
+        ],
+      },
       ...(after && {
         cursor: {
           createdAt: new Date(+after).toISOString(),
