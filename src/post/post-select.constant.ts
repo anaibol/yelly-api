@@ -3,6 +3,8 @@
 export const PostSelect = {
   id: true,
   createdAt: true,
+  expiresAt: true,
+  expiresIn: true,
   viewsCount: true,
   text: true,
   pollOptions: {

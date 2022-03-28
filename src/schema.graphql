@@ -43,8 +43,10 @@ input CreateOrUpdatePostReactionInput {
 }
 
 input CreatePostInput {
+  expiresAt: DateTime
+  expiresIn: Int
   pollOptions: [String!]
-  tags: [String!]!
+  tags: [String!]
   text: String!
 }
 
@@ -180,6 +182,8 @@ type Post {
   author: User
   comments: [PostComment!]
   createdAt: DateTime
+  expiresAt: DateTime
+  expiresIn: Int
   id: ID!
   pollOptions: [PostPollOption!]
   tags: [Tag!]

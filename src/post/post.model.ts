@@ -22,6 +22,8 @@ export class Post {
   comments?: PostComment[]
   pollOptions?: PostPollOption[]
   authUserPollVote?: PostPollVote
+  expiresIn?: number | null
+  expiresAt?: Date | null
 }
 
 @ObjectType()

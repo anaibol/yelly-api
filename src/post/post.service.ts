@@ -3,7 +3,6 @@ import { PrismaService } from '../core/prisma.service'
 import { CreatePostInput } from './create-post.input'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
-import { DeletePostInput } from './delete-post.input'
 import { TagService } from 'src/tag/tag.service'
 import { CreateCommentInput } from './create-comment.input'
 import { PostSelect } from './post-select.constant'
@@ -186,6 +185,16 @@ export class PostService {
 
     const posts = await this.prismaService.post.findMany({
       where: {
+        OR: [
+          {
+            expiresAt: {
+              gte: new Date(),
+            },
+          },
+          {
+            expiresAt: null,
+          },
+        ],
         // tags: {
         //   some: {
         //     countryId: authUserCountry.id
@@ -267,14 +276,16 @@ export class PostService {
   // }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
-    const { text, tags, pollOptions } = createPostInput
+    const { text, expiresAt, expiresIn, tags, pollOptions } = createPostInput
+
     const uniqueTags = uniq(tags)
 
-    const authUserCountry = await this.prismaService.user
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+
+    const authUserCountry = await this.prismaService.school
       .findUnique({
-        where: { id: authUser.id },
+        where: { id: authUser.schoolId },
       })
-      .school()
       .city()
       .country()
 
@@ -291,6 +302,8 @@ export class PostService {
     const { id } = await this.prismaService.post.create({
       data: {
         text,
+        expiresAt,
+        expiresIn,
         ...(pollOptions &&
           pollOptions.length > 0 && {
             pollOptions: {
