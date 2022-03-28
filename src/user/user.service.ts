@@ -552,18 +552,14 @@ export class UserService {
   }
 
   async ban(userId: string): Promise<boolean> {
-    // eslint-disable-next-line functional/no-try-statement
-    try {
-      await this.prismaService.user.update({ where: { id: userId }, data: { isActive: false, isBanned: true } })
-      const algoliaUserIndex = this.algoliaService.initIndex('USERS')
+    await this.prismaService.user.update({ where: { id: userId }, data: { isActive: false, isBanned: true } })
 
-      this.algoliaService.deleteObject(algoliaUserIndex, userId)
-      this.sendbirdService.deactivateUser(userId)
+    const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
-      return true
-    } catch {
-      return Promise.reject(new Error('not found'))
-    }
+    this.algoliaService.deleteObject(algoliaUserIndex, userId)
+    this.sendbirdService.deactivateUser(userId)
+
+    return true
   }
 
   async createFriendRequest(authUser: AuthUser, otherUserId: string): Promise<FriendRequest> {

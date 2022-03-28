@@ -93,6 +93,11 @@ export class SendbirdService {
     return !!deleted
   }
 
+  async revokeAccessTokens(userId: string): Promise<boolean> {
+    const banned = await this.httpService.delete(`users/${userId}/token`)
+    return !!banned
+  }
+
   async getGroupChannel(channelUrl: string): Promise<GroupChannel | null> {
     return this.httpService
       .get<GroupChannel>(`group_channels/${channelUrl}`)
