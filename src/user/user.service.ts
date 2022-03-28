@@ -558,7 +558,7 @@ export class UserService {
       const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
       this.algoliaService.deleteObject(algoliaUserIndex, userId)
-      this.sendbirdService.revokeAccessTokens(userId)
+      this.sendbirdService.deactivateUser(userId)
 
       return true
     } catch {
