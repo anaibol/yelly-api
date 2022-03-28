@@ -551,21 +551,6 @@ export class UserService {
     }
   }
 
-  async deactivate(userId: string): Promise<boolean> {
-    // eslint-disable-next-line functional/no-try-statement
-    try {
-      await this.prismaService.user.update({ where: { id: userId }, data: { isActive: false } })
-      const algoliaUserIndex = this.algoliaService.initIndex('USERS')
-
-      this.algoliaService.deleteObject(algoliaUserIndex, userId)
-      this.sendbirdService.deactivateUser(userId)
-
-      return true
-    } catch {
-      return Promise.reject(new Error('not found'))
-    }
-  }
-
   async ban(userId: string): Promise<boolean> {
     // eslint-disable-next-line functional/no-try-statement
     try {
@@ -573,7 +558,7 @@ export class UserService {
       const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
       this.algoliaService.deleteObject(algoliaUserIndex, userId)
-      this.sendbirdService.deleteUser(userId)
+      this.sendbirdService.deactivateUser(userId)
 
       return true
     } catch {
