@@ -37,6 +37,8 @@ model Notification {
   friendRequestId String?
   friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
   postReaction    PostReaction?  @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt], map: "Notification_createdAt")
 }
 
 model School {
@@ -139,6 +141,7 @@ model Tag {
   country   Country? @relation(fields: [countryId], references: [id])
 
   @@index([text], map: "Tag_text_idx")
+  @@index([createdAt], map: "Tag_createdAt")
 }
 
 model Post {
@@ -160,6 +163,7 @@ model Post {
   parentId    String?
   
   @@unique([authorId, id], map: "author_post_id_fkey")
+  @@index([createdAt], map: "Post_createdAt")
 }
 
 model PostPollOption {
