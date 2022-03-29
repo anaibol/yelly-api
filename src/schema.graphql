@@ -45,6 +45,7 @@ input CreateOrUpdatePostReactionInput {
 input CreatePostInput {
   expiresAt: DateTime
   expiresIn: Int
+  parentId: ID
   pollOptions: [String!]
   tags: [String!]
   text: String!
@@ -180,11 +181,16 @@ type PaginatedUsers {
 type Post {
   authUserPollVote: PostPollVote
   author: User
+  authorId: String
+  children: [Post!]
+  childrenCount: Int
   comments: [PostComment!]
   createdAt: DateTime
   expiresAt: DateTime
   expiresIn: Int
   id: ID!
+  parent: Post
+  parentId: ID
   pollOptions: [PostPollOption!]
   tags: [Tag!]
   text: String
@@ -224,6 +230,7 @@ type Query {
   liveTags: [Tag!]!
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
+  post(after: String, id: String!, limit: Int = 10): Post!
   posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String): Tag!

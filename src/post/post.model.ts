@@ -14,16 +14,22 @@ export class PostPollOption {
 export class Post {
   @Field(() => ID)
   id: string
+  @Field(() => ID)
+  parentId?: string | null
   text?: string
   createdAt?: Date
   viewsCount?: number
   tags?: Tag[]
   author?: User
+  authorId?: string | null
   comments?: PostComment[]
   pollOptions?: PostPollOption[]
   authUserPollVote?: PostPollVote
   expiresIn?: number | null
   expiresAt?: Date | null
+  parent?: Post | null
+  children?: Post[]
+  childrenCount?: number
 }
 
 @ObjectType()

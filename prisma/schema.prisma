@@ -46,7 +46,6 @@ model School {
   lat           Float?
   lng           Float?
   cityId        String
-  coord         Unsupported("point")?
   city          City                  @relation(fields: [cityId], references: [id])
   users         User[]
 
@@ -64,7 +63,7 @@ model User {
   firstName                    String?
   lastName                     String?
   email                        String?                           @unique
-  role                         UserRole                              @default(USER)
+  role                         UserRole                          @default(USER)
   password                     String?
   birthdate                    DateTime?                         @db.Date
   pictureId                    String?
@@ -156,14 +155,17 @@ model Post {
   pollVotes   PostPollVote[]
   expiresIn   Int?
   expiresAt   DateTime?
-
+  children    Post[]           @relation("postThreads")
+  parent      Post?            @relation("postThreads", fields: [parentId], references: [id])
+  parentId    String?
+  
   @@unique([authorId, id], map: "author_post_id_fkey")
 }
 
 model PostPollOption {
   id       String         @id @default(uuid())
   text     String
-  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post     Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId   String
   position Int
   votes    PostPollVote[]
@@ -173,7 +175,7 @@ model PostPollVote {
   id        String         @id @default(uuid())
   option    PostPollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
   optionId  String
-  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post      Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String
   authorId  String
   author    User           @relation(fields: [authorId], references: [id], onDelete: Cascade)

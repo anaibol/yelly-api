@@ -19,7 +19,7 @@ import { ForgotPasswordInput } from './forgot-password.input'
 import { EmailSignInInput } from './email-sign-in.input'
 import { UpdateUserInput } from './update-user.input'
 import { ResetPasswordInput } from './reset-password.input'
-import { PostSelect } from 'src/post/post-select.constant'
+import { PostSelectWithParent, mapPosts } from 'src/post/post-select.constant'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import TwilioService from 'src/core/twilio.service'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
@@ -202,31 +202,16 @@ export class MeResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: {
-        ...PostSelect,
-        pollOptions: {
-          ...PostSelect.pollOptions,
-          orderBy: {
-            position: 'asc',
-          },
-        },
-      },
+      select: PostSelectWithParent,
     })
 
-    const items = posts.map((post) => {
-      const pollOptions = post.pollOptions.map((o) => ({
-        id: o.id,
-        text: o.text,
-        votesCount: o._count.votes,
-      }))
+    const items = mapPosts(posts)
 
-      return {
-        ...post,
-        ...(pollOptions.length && { pollOptions }),
-      }
-    })
+    const lastItem = items.length === limit && items[limit - 1]
 
-    const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
+    const lastCreatedAt = lastItem && lastItem.createdAt
+
+    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
 
     return { items, nextCursor }
   }

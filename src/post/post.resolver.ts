@@ -9,7 +9,7 @@ import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reactio
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { PostsArgs } from './posts.args'
-// import { PostArgs } from './post.args'
+import { PostArgs } from './post.args'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Post, PostPollVote } from './post.model'
 import { CreateCommentInput } from './create-comment.input'
@@ -22,20 +22,18 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
   posts(@Args() postsArgs: PostsArgs, @CurrentUser() authUser: AuthUser) {
-    const { forYou, after, limit } = postsArgs
+    const { after, limit } = postsArgs
 
-    if (forYou) {
-      return this.postService.findForYou(authUser, limit, after)
-    } else {
-      return this.postService.find(authUser, limit, after)
-    }
+    return this.postService.find(authUser, limit, after)
   }
 
-  // @UseGuards(AuthGuard)
-  // @Query(() => Post)
-  // async post(@Args() PostArgs: PostArgs) {
-  //   return this.postService.getById(PostArgs.id)
-  // }
+  @UseGuards(AuthGuard)
+  @Query(() => Post)
+  async post(@Args() postArgs: PostArgs) {
+    const { id, after, limit } = postArgs
+
+    return this.postService.getById(id, limit, after)
+  }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Post)

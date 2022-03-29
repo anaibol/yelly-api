@@ -1,7 +1,10 @@
-// import { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
+import { Post } from './post.model'
 
+// Prisma.PostSelect
 export const PostSelect = {
   id: true,
+  parentId: true,
   createdAt: true,
   expiresAt: true,
   expiresIn: true,
@@ -17,10 +20,9 @@ export const PostSelect = {
         },
       },
     },
-    // THIS DOESN'T WORK IN A VARIABLE
-    // orderBy: {
-    //   position: 'asc',
-    // },
+    orderBy: {
+      position: 'asc' as Prisma.SortOrder,
+    },
   },
   author: {
     select: {
@@ -59,4 +61,74 @@ export const PostSelect = {
       isLive: true,
     },
   },
+  _count: {
+    select: {
+      children: true,
+    },
+  },
+}
+
+export const PostSelectWithParent = {
+  ...PostSelect,
+  parent: {
+    select: PostSelect,
+  },
+}
+
+export const PostSelectT = {
+  select: {
+    ...PostSelect,
+    pollOptions: {
+      select: {
+        id: true,
+        text: true,
+        _count: true,
+      },
+    },
+  },
+}
+
+export const PostSelectWithParentT = {
+  select: {
+    ...PostSelectT.select,
+    parent: {
+      select: {
+        ...PostSelectWithParent.parent.select,
+        pollOptions: {
+          select: {
+            id: true,
+            text: true,
+            _count: true,
+          },
+        },
+      },
+    },
+  },
+}
+
+export function mapPosts(posts: Prisma.PostGetPayload<typeof PostSelectWithParentT>[]): Post[] {
+  return posts.map(({ pollOptions, parent, _count, ...post }) => ({
+    ...post,
+    ...(parent && {
+      parent: {
+        ...parent,
+        pollOptions:
+          parent.pollOptions.length > 0
+            ? parent.pollOptions.map((o) => ({
+                id: o.id,
+                text: o.text,
+                votesCount: o._count.votes,
+              }))
+            : undefined,
+      },
+    }),
+    childrenCount: _count.children,
+    ...(pollOptions.length > 0 && {
+      pollOptions: pollOptions.map((o) => ({
+        id: o.id,
+        text: o.text,
+        votesCount: o._count.votes,
+      })),
+    }),
+  }))
 }
