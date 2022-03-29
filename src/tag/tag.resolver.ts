@@ -72,13 +72,16 @@ export class TagResolver {
   ): Promise<PaginatedPosts> {
     const { limit, after } = postsArgs
 
-    const userAge = authUser?.birthdate && dates.getAge(authUser.birthdate)
-    const datesRanges = userAge && dates.getDateRanges(userAge)
+    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
+
+    const userAge = dates.getAge(authUser.birthdate)
+    const datesRanges = dates.getDateRanges(userAge)
 
     const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
       where: {
         author: {
           isActive: true,
+          birthdate: datesRanges,
         },
         OR: [
           {
@@ -96,15 +99,6 @@ export class TagResolver {
           createdAt: new Date(+after).toISOString(),
         },
         skip: 1,
-      }),
-      ...(datesRanges && {
-        where: {
-          author: {
-            is: {
-              birthdate: datesRanges,
-            },
-          },
-        },
       }),
       orderBy: {
         createdAt: 'desc',
