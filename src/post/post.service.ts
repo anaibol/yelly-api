@@ -195,11 +195,6 @@ export class PostService {
             expiresAt: null,
           },
         ],
-        // tags: {
-        //   some: {
-        //     countryId: authUserCountry.id
-        //   }
-        // },
         author: {
           isActive: true,
           school: {
