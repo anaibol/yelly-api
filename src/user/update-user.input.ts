@@ -1,10 +1,13 @@
 import { InputType } from '@nestjs/graphql'
+import { IsEmail, MinLength } from 'class-validator'
 
 @InputType()
 export class UpdateUserInput {
   firstName?: string
   lastName?: string
+  @IsEmail()
   email?: string
+  @MinLength(6)
   password?: string
   birthdate?: Date
   instagram?: string

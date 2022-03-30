@@ -45,7 +45,7 @@ input CreateOrUpdatePostReactionInput {
 input CreatePostInput {
   expiresAt: DateTime
   expiresIn: Int
-  parentId: ID
+  parentId: String
   pollOptions: [String!]
   tags: [String!]
   text: String!
