@@ -29,7 +29,7 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => Post)
-  async post(@Args() postArgs: PostArgs) {
+  post(@Args() postArgs: PostArgs) {
     const { id, after, limit } = postArgs
 
     return this.postService.getById(id, limit, after)

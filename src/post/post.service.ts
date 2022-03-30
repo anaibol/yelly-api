@@ -5,7 +5,7 @@ import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reactio
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { TagService } from 'src/tag/tag.service'
 import { CreateCommentInput } from './create-comment.input'
-import { PostSelectWithParent, mapPosts, PostSelect } from './post-select.constant'
+import { PostSelectWithParent, mapPost, mapPostChild, PostChildSelect } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { SendbirdService } from 'src/sendbird/sendbird.service'
 import dates from 'src/utils/dates'
@@ -217,7 +217,7 @@ export class PostService {
       select: PostSelectWithParent,
     })
 
-    const items = mapPosts(posts)
+    const items = posts.map(mapPost)
 
     const lastItem = items.length === limit && items[limit - 1]
 
@@ -229,12 +229,12 @@ export class PostService {
   }
 
   async getById(postId: string, limit: number, currentCursor?: string): Promise<Post | null> {
-    return this.prismaService.post.findUnique({
+    const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
         ...PostSelectWithParent,
         children: {
-          select: PostSelect,
+          ...PostChildSelect,
           orderBy: {
             createdAt: 'desc',
           },
@@ -243,10 +243,18 @@ export class PostService {
               createdAt: new Date(+currentCursor).toISOString(),
             },
             skip: 1,
+            take: limit,
           }),
         },
       },
     })
+
+    if (!post) return Promise.reject(new Error('No post'))
+
+    return {
+      ...mapPost(post),
+      children: post.children.map(mapPostChild),
+    }
   }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
@@ -470,9 +478,7 @@ export class PostService {
 
     if (!post) return Promise.reject(new Error('No post'))
 
-    const [item] = mapPosts([post])
-
-    return item
+    return mapPost(post)
   }
 
   async getAuthUserPollVote(postId: string, authUser: AuthUser): Promise<PostPollVote | null> {

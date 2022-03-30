@@ -11,7 +11,7 @@ import { CurrentUser } from '../auth/user.decorator'
 import { UserService } from './user.service'
 import { AuthUser } from '../auth/auth.service'
 import { PrismaService } from 'src/core/prisma.service'
-import { PostSelectWithParent, mapPosts } from 'src/post/post-select.constant'
+import { PostSelectWithParent, mapPost } from 'src/post/post-select.constant'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { FriendRequest } from './friendRequest.model'
@@ -209,7 +209,7 @@ export class UserResolver {
         select: PostSelectWithParent,
       })
 
-    const items = mapPosts(posts)
+    const items = posts.map(mapPost)
 
     const lastItem = items.length === limit && items[limit - 1]
 

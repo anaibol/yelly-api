@@ -19,7 +19,7 @@ import { ForgotPasswordInput } from './forgot-password.input'
 import { EmailSignInInput } from './email-sign-in.input'
 import { UpdateUserInput } from './update-user.input'
 import { ResetPasswordInput } from './reset-password.input'
-import { PostSelectWithParent, mapPosts } from 'src/post/post-select.constant'
+import { PostSelectWithParent, mapPost } from 'src/post/post-select.constant'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import TwilioService from 'src/core/twilio.service'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
@@ -205,7 +205,7 @@ export class MeResolver {
       select: PostSelectWithParent,
     })
 
-    const items = mapPosts(posts)
+    const items = posts.map(mapPost)
 
     const lastItem = items.length === limit && items[limit - 1]
 
