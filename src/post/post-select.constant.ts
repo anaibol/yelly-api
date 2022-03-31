@@ -135,3 +135,37 @@ export function mapPostChild(child: Prisma.PostGetPayload<typeof PostChildSelect
     childrenCount: _count.children,
   }
 }
+
+export const notExpiredCondition = {
+  OR: [
+    {
+      expiresAt: {
+        gte: new Date(),
+      },
+    },
+    {
+      AND: [
+        {
+          expiresAt: null,
+        },
+        {
+          parent: null,
+        },
+      ],
+    },
+    {
+      AND: [
+        {
+          expiresAt: null,
+        },
+        {
+          parent: {
+            expiresAt: {
+              gte: new Date(),
+            },
+          },
+        },
+      ],
+    },
+  ],
+}

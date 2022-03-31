@@ -11,7 +11,7 @@ import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
-import { PostSelectWithParent, mapPost } from '../post/post-select.constant'
+import { PostSelectWithParent, mapPost, notExpiredCondition } from '../post/post-select.constant'
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import dates from '../utils/dates'
 import { PaginatedTrends } from './paginated-trends.model'
@@ -83,16 +83,7 @@ export class TagResolver {
           isActive: true,
           birthdate: datesRanges,
         },
-        OR: [
-          {
-            expiresAt: {
-              gte: new Date(),
-            },
-          },
-          {
-            expiresAt: null,
-          },
-        ],
+        ...notExpiredCondition,
       },
       ...(after && {
         cursor: {

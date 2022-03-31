@@ -11,7 +11,7 @@ import { CurrentUser } from '../auth/user.decorator'
 import { UserService } from './user.service'
 import { AuthUser } from '../auth/auth.service'
 import { PrismaService } from 'src/core/prisma.service'
-import { PostSelectWithParent, mapPost } from 'src/post/post-select.constant'
+import { PostSelectWithParent, mapPost, notExpiredCondition } from 'src/post/post-select.constant'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { FriendRequest } from './friendRequest.model'
@@ -185,16 +185,7 @@ export class UserResolver {
       })
       .posts({
         where: {
-          OR: [
-            {
-              expiresAt: {
-                gte: new Date(),
-              },
-            },
-            {
-              expiresAt: null,
-            },
-          ],
+          ...notExpiredCondition,
         },
         ...(after && {
           cursor: {

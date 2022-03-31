@@ -4,7 +4,13 @@ import { CreatePostInput } from './create-post.input'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { TagService } from 'src/tag/tag.service'
-import { PostSelectWithParent, mapPost, mapPostChild, PostChildSelect } from './post-select.constant'
+import {
+  PostSelectWithParent,
+  mapPost,
+  mapPostChild,
+  PostChildSelect,
+  notExpiredCondition,
+} from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { SendbirdService } from 'src/sendbird/sendbird.service'
 import dates from 'src/utils/dates'
@@ -183,16 +189,7 @@ export class PostService {
 
     const posts = await this.prismaService.post.findMany({
       where: {
-        OR: [
-          {
-            expiresAt: {
-              gte: new Date(),
-            },
-          },
-          {
-            expiresAt: null,
-          },
-        ],
+        ...notExpiredCondition,
         author: {
           isActive: true,
           school: {
