@@ -96,7 +96,6 @@ model User {
   friendRequestFromUser        FriendRequest[]                   @relation("friendRequestFromUser")
   friendRequestToUser          FriendRequest[]                   @relation("friendRequestToUser")
   posts                        Post[]
-  postComments                 PostComment[]
   postReactions                PostReaction[]
   postPollVotes                PostPollVote[]
 
@@ -151,7 +150,6 @@ model Post {
   authorId    String
   viewsCount  Int              @default(0)
   author      User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  comments    PostComment[]
   reactions   PostReaction[]
   tags        Tag[]
   pollOptions PostPollOption[]
@@ -186,19 +184,6 @@ model PostPollVote {
   createdAt DateTime       @default(now())
 
   @@unique([authorId, postId], map: "author_post_id_fkey")
-}
-
-model PostComment {
-  id        String   @id @default(uuid())
-  text      String   @db.Text
-  createdAt DateTime @unique @default(now())
-  authorId  String
-  postId    String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  @@index([authorId], map: "PostComment_authorId_fkey")
-  @@index([postId], map: "PostComment_postId_fkey")
 }
 
 model PostReaction {

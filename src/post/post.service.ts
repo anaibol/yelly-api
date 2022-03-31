@@ -291,7 +291,7 @@ export class PostService {
       },
     }))
 
-    const { id } = await this.prismaService.post.create({
+    const post = await this.prismaService.post.create({
       data: {
         text,
         expiresAt,
@@ -323,9 +323,11 @@ export class PostService {
     })
 
     uniqueTags.map((tag) => this.tagService.syncTagIndexWithAlgolia(tag))
-    this.syncPostIndexWithAlgolia(id)
+    this.syncPostIndexWithAlgolia(post.id)
 
-    return { id }
+    if (parentId) this.pushNotificationService.postReplied(post)
+
+    return post
   }
 
   async delete(postId: string, authUser: AuthUser): Promise<boolean> {

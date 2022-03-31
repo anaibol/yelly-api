@@ -178,7 +178,6 @@ type Post {
   authorId: String
   children: PaginatedPosts
   childrenCount: Int
-  comments: [PostComment!]
   createdAt: DateTime
   expiresAt: DateTime
   expiresIn: Int
@@ -189,14 +188,6 @@ type Post {
   tags: [Tag!]
   text: String
   viewsCount: Int
-}
-
-type PostComment {
-  author: User!
-  authorId: String!
-  createdAt: DateTime
-  id: ID!
-  text: String!
 }
 
 type PostPollOption {
