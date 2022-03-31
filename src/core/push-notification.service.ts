@@ -7,6 +7,7 @@ import { TRACK_EVENT } from 'src/types/trackEvent'
 import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotificationsToken.service'
 import expo from '../utils/expo'
 import { AmplitudeService } from './amplitude.service'
+import { Cron } from '@nestjs/schedule'
 
 type SendbirdMessageWebhookBody = {
   sender: any
@@ -90,16 +91,59 @@ export class PushNotificationService {
     }
   }
 
+  @Cron('* * * * *')
   async vanishingPosts() {
-    const posts = await this.prismaService.post.findMany({
-      where: {
-        expiresAt: {
-          gte: new Date(+new Date() + 60000 * 5), // In five minutes
-        },
-      },
+    // const posts = await this.prismaService.post.findMany({
+    //   where: {
+    //     expiresAt: {
+    //       gte: new Date(+new Date() + 60000 * 5), // In five minutes
+    //     },
+    //   },
+    //   select: {
+    //     author: {
+    //       select: {
+    //         locale: true,
+    //         expoPushNotificationTokens: {
+    //           select: {
+    //             id: true,
+    //             userId: true,
+    //             token: true,
+    //           },
+    //         },
+    //       },
+    //     },
+    //   },
+    // })
+    // const tokens = posts.map((p) => p.author.expoPushNotificationTokens).flat()
+    // const notifications = posts.map(async ({ author }) => {
+    //   const lang = author.locale
+    //   return {
+    //     to: author.expoPushNotificationTokens.map(({ token }) => token),
+    //     body: await this.i18n.translate('notifications.YOUR_POST_WILL_VANISH', {
+    //       ...(lang && { lang }),
+    //     }),
+    //     sound: 'default' as const,
+    //   }
+    // })
+    // const notificationsToSend = await Promise.all(notifications)
+    // await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION_SENT')
+  }
+
+  async postReplied(postReply: Post) {
+    if (!postReply.parentId) return Promise.reject(new Error('Parent not found'))
+
+    const author = await this.prismaService.user.findUnique({
+      where: { id: postReply.authorId },
+    })
+
+    if (!author) return Promise.reject(new Error('Author not found'))
+
+    const parent = await this.prismaService.post.findUnique({
+      where: { id: postReply.parentId },
       select: {
         author: {
           select: {
+            firstName: true,
             locale: true,
             expoPushNotificationTokens: {
               select: {
@@ -113,43 +157,21 @@ export class PushNotificationService {
       },
     })
 
-    const tokens = posts.map((p) => p.author.expoPushNotificationTokens).flat()
-
-    const notifications = posts.map(async ({ author }) => {
-      const lang = author.locale
-
-      const url = `${process.env.APP_BASE_URL}/posts/create`
-
-      return {
-        to: author.expoPushNotificationTokens.map(({ token }) => token),
-        body: await this.i18n.translate('notifications.FRIENDSHIP_REQUEST_BODY', {
-          ...(lang && { lang }),
-        }),
-        data: { url },
-        sound: 'default' as const,
-      }
-    })
-
-    const notificationsToSend = await Promise.all(notifications)
-
-    await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION_SENT')
-  }
-
-  async postReplied(postReply: Post) {
-    if (!postReply.parentId) return Promise.reject(new Error('Parent not found'))
-
-    const parent = await this.prismaService.post.findUnique({
-      where: { id: postReply.parentId },
-      select: {
-        author: {
-          select: {
-            firstName: true,
-          },
-        },
-      },
-    })
-
     if (!parent) return Promise.reject(new Error('Parent not found'))
+
+    const lang = parent.author.locale
+    const expoPushNotificationTokens = parent.author.expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
+
+    const message = {
+      to: expoPushNotificationTokens.map(({ token }) => token),
+      body: await this.i18n.translate('notifications.POST_REPLIED', {
+        ...(lang && { lang }),
+        args: { firstName: parent.author.firstName },
+      }),
+      sound: 'default' as const,
+    }
+
+    await this.sendNotifications([message], expoPushNotificationTokens, 'POST_REPLIED_PUSH_NOTIFICATION_SENT')
 
     const authors = await this.prismaService.post
       .findUnique({
@@ -189,9 +211,9 @@ export class PushNotificationService {
 
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
-        body: await this.i18n.translate('notifications.FRIENDSHIP_REQUEST_BODY', {
+        body: await this.i18n.translate('notifications.SAME_POST_REPLIED', {
           ...(lang && { lang }),
-          args: { firstName: parent.author.firstName },
+          args: { firstName: author.firstName, parentPostAuthorFirstName: parent.author.firstName },
         }),
         data: { postId: postReply.id, url },
         sound: 'default' as const,
@@ -200,7 +222,7 @@ export class PushNotificationService {
 
     const notificationsToSend = await Promise.all(notifications)
 
-    await this.sendNotifications(notificationsToSend, tokens, 'POST_REPLY_PUSH_NOTIFICATION_SENT')
+    await this.sendNotifications(notificationsToSend, tokens, 'SAME_POST_REPLIED_PUSH_NOTIFICATION_SENT')
   }
 
   // NOTE: When user send a reaction currently we send a chat message with sendbird.
