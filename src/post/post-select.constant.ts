@@ -120,7 +120,10 @@ export function mapPost(post: Prisma.PostGetPayload<typeof PostSelectWithParentT
   }
 }
 
-export function mapPostChild(child: Prisma.PostGetPayload<typeof PostChildSelect>): Post {
+export function mapPostChild(
+  child: Prisma.PostGetPayload<typeof PostChildSelect>,
+  parent: Prisma.PostGetPayload<typeof PostSelectWithParentT>
+): Post {
   const { _count, pollOptions, ...rest } = child
 
   return {
@@ -133,6 +136,8 @@ export function mapPostChild(child: Prisma.PostGetPayload<typeof PostChildSelect
       })),
     }),
     childrenCount: _count.children,
+    expiresIn: parent.expiresIn,
+    expiresAt: parent.expiresAt,
   }
 }
 
@@ -144,28 +149,7 @@ export const notExpiredCondition = {
       },
     },
     {
-      AND: [
-        {
-          expiresAt: null,
-        },
-        {
-          parent: null,
-        },
-      ],
-    },
-    {
-      AND: [
-        {
-          expiresAt: null,
-        },
-        {
-          parent: {
-            expiresAt: {
-              gte: new Date(),
-            },
-          },
-        },
-      ],
+      expiresAt: null,
     },
   ],
 }

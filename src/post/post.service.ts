@@ -247,7 +247,7 @@ export class PostService {
 
     if (!post) return Promise.reject(new Error('No post'))
 
-    const items = post.children.map(mapPostChild)
+    const items = post.children.map((child) => mapPostChild(child, post))
 
     const lastItem = items.length === limit && items[limit - 1]
 
@@ -278,6 +278,12 @@ export class PostService {
       .city()
       .country()
 
+    const parent =
+      parentId &&
+      (await this.prismaService.post.findUnique({
+        where: { id: parentId },
+      }))
+
     const connectOrCreateTags = uniq(tags).map((tagText) => ({
       where: {
         text: tagText,
@@ -291,8 +297,8 @@ export class PostService {
     const post = await this.prismaService.post.create({
       data: {
         text,
-        expiresAt,
-        expiresIn,
+        expiresAt: parent ? parent.expiresAt : expiresAt,
+        expiresIn: parent ? parent.expiresIn : expiresIn,
         ...(pollOptions &&
           pollOptions.length > 0 && {
             pollOptions: {
