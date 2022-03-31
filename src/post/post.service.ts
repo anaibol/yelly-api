@@ -243,17 +243,28 @@ export class PostService {
               createdAt: new Date(+currentCursor).toISOString(),
             },
             skip: 1,
-            take: limit,
           }),
+          take: limit,
         },
       },
     })
 
     if (!post) return Promise.reject(new Error('No post'))
 
+    const items = post.children.map(mapPostChild)
+
+    const lastItem = items.length === limit && items[limit - 1]
+
+    const lastCreatedAt = lastItem && lastItem.createdAt
+
+    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
+
     return {
       ...mapPost(post),
-      children: post.children.map(mapPostChild),
+      children: {
+        items,
+        nextCursor,
+      },
     }
   }
 

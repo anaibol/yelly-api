@@ -2,6 +2,7 @@ import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { User } from '../user/user.model'
 import { PostComment } from './post-comment.model'
 import { Tag } from '../tag/tag.model'
+import { PaginatedPosts } from './paginated-posts.model'
 
 @ObjectType()
 export class PostPollOption {
@@ -28,7 +29,7 @@ export class Post {
   expiresIn?: number | null
   expiresAt?: Date | null
   parent?: Post | null
-  children?: Post[]
+  children?: PaginatedPosts
   childrenCount?: number
 }
 

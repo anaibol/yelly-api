@@ -182,7 +182,7 @@ type Post {
   authUserPollVote: PostPollVote
   author: User
   authorId: String
-  children: [Post!]
+  children: PaginatedPosts
   childrenCount: Int
   comments: [PostComment!]
   createdAt: DateTime
