@@ -121,10 +121,17 @@ export function mapPost(post: Prisma.PostGetPayload<typeof PostSelectWithParentT
 }
 
 export function mapPostChild(child: Prisma.PostGetPayload<typeof PostChildSelect>): Post {
-  const { _count, ...rest } = child
+  const { _count, pollOptions, ...rest } = child
 
   return {
     ...rest,
+    ...(pollOptions.length > 0 && {
+      pollOptions: pollOptions.map((o) => ({
+        id: o.id,
+        text: o.text,
+        votesCount: o._count.votes,
+      })),
+    }),
     childrenCount: _count.children,
   }
 }
