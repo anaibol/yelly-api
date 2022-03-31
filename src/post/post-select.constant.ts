@@ -75,40 +75,8 @@ export const PostSelectWithParent = {
   },
 }
 
-export const PostSelectT = {
-  select: {
-    ...PostSelect,
-    pollOptions: {
-      select: {
-        id: true,
-        text: true,
-        _count: true,
-      },
-    },
-  },
-}
-
-export const PostSelectWithParentT = {
-  select: {
-    ...PostSelectT.select,
-    parent: {
-      select: {
-        ...PostSelectWithParent.parent.select,
-        pollOptions: {
-          select: {
-            id: true,
-            text: true,
-            _count: true,
-          },
-        },
-        _count: {
-          select: {
-            children: true,
-          },
-        },
-      },
-    },
-  },
+const PostSelectWithParentT = {
+  select: PostSelectWithParent,
 }
 
 export const PostChildSelect = {
@@ -130,7 +98,6 @@ export function mapPost(post: Prisma.PostGetPayload<typeof PostSelectWithParentT
     ...(parent && {
       parent: {
         ...parent,
-        childrenCount: parent._count.children,
         pollOptions:
           parent.pollOptions.length > 0
             ? parent.pollOptions.map((o) => ({
@@ -139,6 +106,7 @@ export function mapPost(post: Prisma.PostGetPayload<typeof PostSelectWithParentT
                 votesCount: o._count.votes,
               }))
             : undefined,
+        childrenCount: parent._count.children,
       },
     }),
     ...(pollOptions.length > 0 && {

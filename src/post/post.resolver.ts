@@ -12,7 +12,6 @@ import { PostsArgs } from './posts.args'
 import { PostArgs } from './post.args'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Post, PostPollVote } from './post.model'
-import { CreateCommentInput } from './create-comment.input'
 import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
 
 @Resolver(() => Post)
@@ -69,12 +68,6 @@ export class PostResolver {
     @CurrentUser() authUser: AuthUser
   ) {
     return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser)
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
-  async createPostComment(@Args('input') createPostCommentData: CreateCommentInput, @CurrentUser() authUser: AuthUser) {
-    return this.postService.createComment(createPostCommentData, authUser)
   }
 
   @UseGuards(AuthGuard)

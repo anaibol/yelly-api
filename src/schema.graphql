@@ -27,11 +27,6 @@ type Country {
   id: ID!
 }
 
-input CreateCommentInput {
-  postId: String!
-  text: String!
-}
-
 input CreateOrUpdateLiveTagInput {
   isLive: Boolean!
   text: String!
@@ -129,7 +124,6 @@ type Mutation {
   createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Boolean!
   createPost(input: CreatePostInput!): Post!
-  createPostComment(input: CreateCommentInput!): Boolean!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   declineFriendRequest(friendRequestId: String!): Boolean!
   deleteAuthUser: Boolean!

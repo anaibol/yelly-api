@@ -4,7 +4,6 @@ import { CreatePostInput } from './create-post.input'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { TagService } from 'src/tag/tag.service'
-import { CreateCommentInput } from './create-comment.input'
 import { PostSelectWithParent, mapPost, mapPostChild, PostChildSelect } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { SendbirdService } from 'src/sendbird/sendbird.service'
@@ -434,22 +433,6 @@ export class PostService {
     })
 
     return true
-  }
-
-  async createComment(createCommentInput: CreateCommentInput, authUser: AuthUser): Promise<boolean> {
-    const { postId, text } = createCommentInput
-
-    const comment = await this.prismaService.postComment.create({
-      data: {
-        text,
-        postId,
-        authorId: authUser.id,
-      },
-    })
-
-    await this.pushNotificationService.postComment(comment)
-
-    return !!comment
   }
 
   async createPollVote(postId: string, optionId: string, authUser: AuthUser): Promise<Post> {
