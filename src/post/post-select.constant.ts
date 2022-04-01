@@ -145,7 +145,7 @@ export const notExpiredCondition = {
   OR: [
     {
       expiresAt: {
-        gte: new Date(),
+        gte: new Date(new Date().toUTCString()), // Get UTC date from new Date() and convert to ISO
       },
     },
     {
