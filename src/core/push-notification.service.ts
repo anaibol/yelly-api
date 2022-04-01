@@ -98,8 +98,8 @@ export class PushNotificationService {
         posts: {
           some: {
             expiresAt: {
-              lte: new Date(+new Date() + 60000 * 4), // In more than four minutes
-              gte: new Date(+new Date() + 60000 * 5), // In less than five minutes
+              lte: new Date(new Date(+new Date() + 60000 * 4).toUTCString()), // In more than four minutes
+              gte: new Date(new Date(+new Date() + 60000 * 5).toUTCString()), // Get UTC date from new Date() and convert to ISO
             },
           },
         },
