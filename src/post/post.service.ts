@@ -20,6 +20,16 @@ import { uniq } from 'lodash'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Post } from './post.model'
 import { PostPollVote } from './post.model'
+
+const getExpiredAt = (expiresIn?: number | null): Date | undefined => {
+  if (!expiresIn) return
+
+  const now = new Date()
+
+  const expiresAtTimestamp = now.setSeconds(now.getSeconds() + expiresIn)
+
+  return new Date(expiresAtTimestamp)
+}
 @Injectable()
 export class PostService {
   constructor(
@@ -297,7 +307,7 @@ export class PostService {
     const post = await this.prismaService.post.create({
       data: {
         text,
-        expiresAt: parent ? parent.expiresAt : expiresAt,
+        expiresAt: getExpiredAt(parent ? parent.expiresIn : expiresIn),
         expiresIn: parent ? parent.expiresIn : expiresIn,
         ...(pollOptions &&
           pollOptions.length > 0 && {
@@ -328,7 +338,7 @@ export class PostService {
     uniqueTags.map((tag) => this.tagService.syncTagIndexWithAlgolia(tag))
     this.syncPostIndexWithAlgolia(post.id)
 
-    if (parentId) this.pushNotificationService.postReplied(post)
+    if (parentId) this.pushNotificationService.postReplied(post.id)
 
     return post
   }
