@@ -117,7 +117,6 @@ export class PushNotificationService {
     })
 
     const tokens = users.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat()
-    console.log(JSON.stringify(users))
 
     const notifications = users.map(async ({ locale, expoPushNotificationTokens }) => {
       const lang = locale
@@ -130,9 +129,8 @@ export class PushNotificationService {
       }
     })
     const notificationsToSend = await Promise.all(notifications)
-    console.log(JSON.stringify(notificationsToSend))
 
-    // await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION_SENT')
+    await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION_SENT')
   }
 
   async postReplied(postId: string) {
