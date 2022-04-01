@@ -93,59 +93,56 @@ export class PushNotificationService {
 
   @Cron('* * * * *')
   async vanishingPosts() {
-    // const posts = await this.prismaService.post.findMany({
-    //   where: {
-    //     expiresAt: {
-    //       gte: new Date(+new Date() + 60000 * 5), // In five minutes
-    //     },
-    //   },
-    //   select: {
-    //     author: {
-    //       select: {
-    //         locale: true,
-    //         expoPushNotificationTokens: {
-    //           select: {
-    //             id: true,
-    //             userId: true,
-    //             token: true,
-    //           },
-    //         },
-    //       },
-    //     },
-    //   },
-    // })
-    // const tokens = posts.map((p) => p.author.expoPushNotificationTokens).flat()
-    // const notifications = posts.map(async ({ author }) => {
-    //   const lang = author.locale
-    //   return {
-    //     to: author.expoPushNotificationTokens.map(({ token }) => token),
-    //     body: await this.i18n.translate('notifications.YOUR_POST_WILL_VANISH', {
-    //       ...(lang && { lang }),
-    //     }),
-    //     sound: 'default' as const,
-    //   }
-    // })
-    // const notificationsToSend = await Promise.all(notifications)
+    const users = await this.prismaService.user.findMany({
+      where: {
+        posts: {
+          some: {
+            expiresAt: {
+              lte: new Date(+new Date() + 60000 * 4), // In more than four minutes
+              gte: new Date(+new Date() + 60000 * 5), // In less than five minutes
+            },
+          },
+        },
+      },
+      select: {
+        locale: true,
+        expoPushNotificationTokens: {
+          select: {
+            id: true,
+            userId: true,
+            token: true,
+          },
+        },
+      },
+    })
+
+    const tokens = users.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat()
+    console.log(JSON.stringify(users))
+
+    const notifications = users.map(async ({ locale, expoPushNotificationTokens }) => {
+      const lang = locale
+      return {
+        to: expoPushNotificationTokens.map(({ token }) => token),
+        body: await this.i18n.translate('notifications.YOUR_POST_WILL_VANISH', {
+          ...(lang && { lang }),
+        }),
+        sound: 'default' as const,
+      }
+    })
+    const notificationsToSend = await Promise.all(notifications)
+    console.log(JSON.stringify(notificationsToSend))
+
     // await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION_SENT')
   }
 
-  async postReplied(postReply: Post) {
-    if (!postReply.parentId) return Promise.reject(new Error('Parent not found'))
-
-    const author = await this.prismaService.user.findUnique({
-      where: { id: postReply.authorId },
-    })
-
-    if (!author) return Promise.reject(new Error('Author not found'))
-
-    const parent = await this.prismaService.post.findUnique({
-      where: { id: postReply.parentId },
+  async postReplied(postId: string) {
+    const postReply = await this.prismaService.post.findUnique({
+      where: { id: postId },
       select: {
         author: {
           select: {
             id: true,
             firstName: true,
-            locale: true,
             expoPushNotificationTokens: {
               select: {
                 id: true,
@@ -155,10 +152,30 @@ export class PushNotificationService {
             },
           },
         },
+        parent: {
+          select: {
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                locale: true,
+                expoPushNotificationTokens: {
+                  select: {
+                    id: true,
+                    userId: true,
+                    token: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     })
 
-    if (!parent?.author) return Promise.reject(new Error('Parent not found'))
+    if (!postReply?.parent?.author) return Promise.reject(new Error('Parent not found'))
+
+    const { parent, author } = postReply
 
     if (parent.author.id === author.id) return
 
@@ -176,33 +193,28 @@ export class PushNotificationService {
 
     await this.sendNotifications([message], expoPushNotificationTokens, 'POST_REPLIED_PUSH_NOTIFICATION_SENT')
 
-    const authors = await this.prismaService.post
-      .findUnique({
-        where: {
-          id: postReply.parentId,
+    const authors = await this.prismaService.post.findMany({
+      where: {
+        parentId: postId,
+        authorId: {
+          not: author.id,
         },
-      })
-      .children({
-        where: {
-          authorId: {
-            not: postReply.parentId,
-          },
-        },
-        select: {
-          author: {
-            select: {
-              locale: true,
-              expoPushNotificationTokens: {
-                select: {
-                  id: true,
-                  userId: true,
-                  token: true,
-                },
+      },
+      select: {
+        author: {
+          select: {
+            locale: true,
+            expoPushNotificationTokens: {
+              select: {
+                id: true,
+                userId: true,
+                token: true,
               },
             },
           },
         },
-      })
+      },
+    })
 
     const users = authors.map((p) => p.author)
     const tokens = authors.map((p) => p.author.expoPushNotificationTokens).flat()
@@ -210,7 +222,7 @@ export class PushNotificationService {
     const notifications = users.map(async (user) => {
       const lang = user.locale
 
-      const url = `${process.env.APP_BASE_URL}/posts/${postReply.id}`
+      const url = `${process.env.APP_BASE_URL}/posts/${postId}`
 
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
@@ -218,7 +230,7 @@ export class PushNotificationService {
           ...(lang && { lang }),
           args: { firstName: author.firstName, parentPostAuthorFirstName: parent.author.firstName },
         }),
-        data: { postId: postReply.id, url },
+        data: { postId, url },
         sound: 'default' as const,
       }
     })
@@ -376,42 +388,6 @@ export class PushNotificationService {
       statusCode: 200,
       body: JSON.stringify({}),
     }
-  }
-
-  async postReply(postReply: Partial<Post>) {
-    const post = await this.prismaService.post.findUnique({
-      where: {
-        id: postReply.id,
-      },
-      select: {
-        authorId: true,
-      },
-    })
-
-    if (!post) return Promise.reject(new Error('Post not found'))
-
-    const { authorId: postAuthorID } = post
-
-    const pushTokens = await this.getPushTokensByUsersIds([postAuthorID])
-
-    const commentAuthor = await this.prismaService.user.findUnique({
-      where: { id: postReply.authorId },
-    })
-
-    if (!commentAuthor) return Promise.reject(new Error('User not found'))
-
-    const { firstName: commenterFirstName } = commentAuthor
-
-    const messages = pushTokens.map((expoPushNotificationToken) => {
-      return {
-        to: expoPushNotificationToken.token,
-        body: `${commenterFirstName} a commenté ton post`,
-        data: { url: `${process.env.APP_BASE_URL}/posts/${postReply.id}` },
-        sound: 'default' as const,
-      }
-    })
-
-    await expo.sendNotifications(messages)
   }
 
   async sendNotifications(
