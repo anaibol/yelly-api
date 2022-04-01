@@ -6,7 +6,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     // eslint-disable-next-line functional/no-expression-statement
     super({
-      rejectOnNotFound: true,
       log:
         process.env.NODE_ENV !== 'production'
           ? [

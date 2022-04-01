@@ -143,7 +143,7 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async authUserFriendRequestFromUser(
+  authUserFriendRequestFromUser(
     @Parent() user: User,
     @CurrentUser() authUser: AuthUser
   ): Promise<FriendRequest | null> {
@@ -152,10 +152,7 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async authUserFriendRequestToUser(
-    @Parent() user: User,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<FriendRequest | null> {
+  authUserFriendRequestToUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FriendRequest | null> {
     return this.userService.getFriendRequest(authUser.id, user.id)
   }
 
