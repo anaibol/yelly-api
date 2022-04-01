@@ -143,6 +143,7 @@ export class PushNotificationService {
       select: {
         author: {
           select: {
+            id: true,
             firstName: true,
             locale: true,
             expoPushNotificationTokens: {
@@ -157,7 +158,9 @@ export class PushNotificationService {
       },
     })
 
-    if (!parent) return Promise.reject(new Error('Parent not found'))
+    if (!parent?.author) return Promise.reject(new Error('Parent not found'))
+
+    if (parent.author.id === author.id) return
 
     const lang = parent.author.locale
     const expoPushNotificationTokens = parent.author.expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
@@ -166,7 +169,7 @@ export class PushNotificationService {
       to: expoPushNotificationTokens.map(({ token }) => token),
       body: await this.i18n.translate('notifications.POST_REPLIED', {
         ...(lang && { lang }),
-        args: { firstName: parent.author.firstName },
+        args: { firstName: author.firstName },
       }),
       sound: 'default' as const,
     }
