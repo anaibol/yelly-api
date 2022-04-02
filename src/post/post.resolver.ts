@@ -23,7 +23,7 @@ export class PostResolver {
   posts(@Args() postsArgs: PostsArgs, @CurrentUser() authUser: AuthUser) {
     const { after, limit } = postsArgs
 
-    return this.postService.find(authUser, limit, after)
+    return this.postService.getPostFeed(authUser, limit, after)
   }
 
   @UseGuards(AuthGuard)
@@ -31,7 +31,7 @@ export class PostResolver {
   post(@Args() postArgs: PostArgs) {
     const { id, after, limit } = postArgs
 
-    return this.postService.getById(id, limit, after)
+    return this.postService.getPost(id, limit, after)
   }
 
   @UseGuards(AuthGuard)

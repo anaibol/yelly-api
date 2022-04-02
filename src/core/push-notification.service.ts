@@ -118,10 +118,11 @@ export class PushNotificationService {
 
     const tokens = users.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat()
 
-    const notifications = users.map(async ({ locale, expoPushNotificationTokens }) => {
-      const lang = locale
+    const notifications = users.map(async (user) => {
+      const lang = user.locale
+
       return {
-        to: expoPushNotificationTokens.map(({ token }) => token),
+        to: user.expoPushNotificationTokens.map(({ token }) => token),
         body: await this.i18n.translate('notifications.YOUR_POST_WILL_VANISH', {
           ...(lang && { lang }),
         }),

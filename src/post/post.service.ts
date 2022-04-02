@@ -182,7 +182,7 @@ export class PostService {
   //   return { items, nextCursor }
   // }
 
-  async find(authUser: AuthUser, limit: number, currentCursor?: string): Promise<PaginatedPosts> {
+  async getPostFeed(authUser: AuthUser, limit: number, currentCursor?: string): Promise<PaginatedPosts> {
     const userAge = authUser.birthdate && dates.getAge(authUser.birthdate)
     const datesRanges = userAge ? dates.getDateRanges(userAge) : undefined
 
@@ -234,7 +234,7 @@ export class PostService {
     return { items, nextCursor }
   }
 
-  async getById(postId: string, limit: number, currentCursor?: string): Promise<Post | null> {
+  async getPost(postId: string, limit: number, currentCursor?: string): Promise<Post | null> {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
@@ -307,7 +307,7 @@ export class PostService {
     const post = await this.prismaService.post.create({
       data: {
         text,
-        expiresAt: getExpiredAt(parent ? parent.expiresIn : expiresIn),
+        expiresAt: parent ? parent.expiresAt : getExpiredAt(expiresIn),
         expiresIn: parent ? parent.expiresIn : expiresIn,
         ...(pollOptions &&
           pollOptions.length > 0 && {
