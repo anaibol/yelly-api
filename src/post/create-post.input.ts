@@ -7,4 +7,5 @@ export class CreatePostInput {
   pollOptions?: string[]
   expiresIn?: number
   expiresAt?: Date
+  parentId?: string
 }

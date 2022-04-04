@@ -11,7 +11,7 @@ import { CurrentUser } from '../auth/user.decorator'
 import { UserService } from './user.service'
 import { AuthUser } from '../auth/auth.service'
 import { PrismaService } from 'src/core/prisma.service'
-import { PostSelect } from 'src/post/post-select.constant'
+import { PostSelectWithParent, mapPost, notExpiredCondition } from 'src/post/post-select.constant'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { FriendRequest } from './friendRequest.model'
@@ -143,7 +143,7 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async authUserFriendRequestFromUser(
+  authUserFriendRequestFromUser(
     @Parent() user: User,
     @CurrentUser() authUser: AuthUser
   ): Promise<FriendRequest | null> {
@@ -152,10 +152,7 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async authUserFriendRequestToUser(
-    @Parent() user: User,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<FriendRequest | null> {
+  authUserFriendRequestToUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FriendRequest | null> {
     return this.userService.getFriendRequest(authUser.id, user.id)
   }
 
@@ -185,16 +182,7 @@ export class UserResolver {
       })
       .posts({
         where: {
-          OR: [
-            {
-              expiresAt: {
-                gte: new Date(),
-              },
-            },
-            {
-              expiresAt: null,
-            },
-          ],
+          ...notExpiredCondition,
         },
         ...(after && {
           cursor: {
@@ -206,31 +194,16 @@ export class UserResolver {
           createdAt: 'desc',
         },
         take: limit,
-        select: {
-          ...PostSelect,
-          pollOptions: {
-            ...PostSelect.pollOptions,
-            orderBy: {
-              position: 'asc',
-            },
-          },
-        },
+        select: PostSelectWithParent,
       })
 
-    const items = posts.map((post) => {
-      const pollOptions = post.pollOptions.map((o) => ({
-        id: o.id,
-        text: o.text,
-        votesCount: o._count.votes,
-      }))
+    const items = posts.map(mapPost)
 
-      return {
-        ...post,
-        ...(pollOptions.length && { pollOptions }),
-      }
-    })
+    const lastItem = items.length === limit && items[limit - 1]
 
-    const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
+    const lastCreatedAt = lastItem && lastItem.createdAt
+
+    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
 
     return { items, nextCursor }
   }

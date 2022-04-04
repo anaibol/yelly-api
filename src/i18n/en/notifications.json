@@ -3,5 +3,8 @@
   "POST_REACTION_BODY": "{firstName} sends you {postReaction}",
   "FRIENDSHIP_REQUEST_BODY": "{firstName} sent you a friend request",
   "FRIENDSHIP_ACCEPTED_BODY": "{firstName} accepted your friend request",
-  "NEW_LIVE_TAG_BODY": "Yelly trend live"
+  "NEW_LIVE_TAG_BODY": "Yelly trend live",
+  "POST_REPLIED": "{firstName} replied to your post 💬",
+  "SAME_POST_REPLIED": "{firstName} replied to {parentPostAuthorFirstName} 💬",
+  "YOUR_POST_WILL_VANISH": "Your post will vanish in 5 minutes ⚡ Come and share what you're doing 💬"
 }

@@ -2395,6 +2395,14 @@
     path-to-regexp "3.2.0"
     tslib "2.3.1"
 
+"@nestjs/schedule@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@nestjs/schedule/-/schedule-1.1.0.tgz#7c8e937399bf5da3d6895e7179ae4bdc4377906e"
+  integrity sha512-0QpbwClUildXqlyoaygG+aIQZNNMv31XDyQxX+Ob1zw/3I8+AVrDlBwZHQ+tlhIcJFR8aG+VTH8xwIjXwtS1UA==
+  dependencies:
+    cron "1.8.2"
+    uuid "8.3.2"
+
 "@nestjs/schematics@^8.0.0", "@nestjs/schematics@^8.0.3":
   version "8.0.7"
   resolved "https://registry.npmjs.org/@nestjs/schematics/-/schematics-8.0.7.tgz"
@@ -2443,20 +2451,6 @@
     chalk "^4.1.0"
     consola "^2.15.0"
     node-fetch "^2.6.1"
-
-"@paljs/plugins@4.0.13":
-  version "4.0.13"
-  resolved "https://registry.npmjs.org/@paljs/plugins/-/plugins-4.0.13.tgz"
-  integrity sha512-GqgKUhrHvTH37oll16a2xm2lAHbwl61xngD+LzuRrxfKreasXtxEDMMxIX82248znioNQsrJbkN6genTykJCWg==
-  dependencies:
-    "@paljs/types" "^4.0.13"
-    graphql-fields "2.0.3"
-    graphql-tag "2.12.6"
-
-"@paljs/types@^4.0.13":
-  version "4.0.14"
-  resolved "https://registry.npmjs.org/@paljs/types/-/types-4.0.14.tgz"
-  integrity sha512-jfGLqmoL0xAhJamKeQ+l4G8vGJcGAiS/OSSqSwMPmCrX2DASRWYFhKN+5CDXZFNK2QCZd1mTQP1FCKGMs0wEkw==
 
 "@panva/asn1.js@^1.0.0":
   version "1.0.0"
@@ -2652,6 +2646,14 @@
   version "2.8.12"
   resolved "https://registry.npmjs.org/@types/cors/-/cors-2.8.12.tgz"
   integrity sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==
+
+"@types/cron@^1.7.3":
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/@types/cron/-/cron-1.7.3.tgz#993db7d54646f61128c851607b64ba4495deae93"
+  integrity sha512-iPmUXyIJG1Js+ldPYhOQcYU3kCAQ2FWrSkm1FJPoii2eYSn6wEW6onPukNTT0bfiflexNSRPl6KWmAIqS+36YA==
+  dependencies:
+    "@types/node" "*"
+    moment ">=2.14.0"
 
 "@types/date-fns@^2.6.0":
   version "2.6.0"
@@ -4200,14 +4202,14 @@ cjs-module-lexer@^1.0.0:
   resolved "https://registry.npmjs.org/cjs-module-lexer/-/cjs-module-lexer-1.2.2.tgz"
   integrity sha512-cOU9usZw8/dXIXKtwa8pM0OTJQuJkxMN6w30csNRUerHfeQ5R6U3kkU/FtJeIf3M202OHfY2U8ccInBG7/xogA==
 
-class-transformer@^0.4.0:
-  version "0.4.1"
-  resolved "https://registry.npmjs.org/class-transformer/-/class-transformer-0.4.1.tgz"
-  integrity sha512-mbBtth1BFa+pN2fmx6/NmMNxxyu9Mw9rx3rzKWBH7yoG+bfSoJOnEJ3qmB6yEKvoO502zUxSV2AqN7EUypC2Tg==
+class-transformer@^0.5.1:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/class-transformer/-/class-transformer-0.5.1.tgz#24147d5dffd2a6cea930a3250a677addf96ab336"
+  integrity sha512-SQa1Ws6hUbfC98vKGxZH3KFY0Y1lm5Zm0SY8XX9zbK7FJCyVEac3ATW0RIpwzW+oOfmHE5PMPufDG9hCfoEOMw==
 
-class-validator@0.13.2:
+class-validator@^0.13.2:
   version "0.13.2"
-  resolved "https://registry.npmjs.org/class-validator/-/class-validator-0.13.2.tgz"
+  resolved "https://registry.yarnpkg.com/class-validator/-/class-validator-0.13.2.tgz#64b031e9f3f81a1e1dcd04a5d604734608b24143"
   integrity sha512-yBUcQy07FPlGzUjoLuUfIOXzgynnQPPruyK1Ge2B74k9ROwnle1E+NxLWnUv5OLU8hA/qL5leAE9XnXq3byaBw==
   dependencies:
     libphonenumber-js "^1.9.43"
@@ -4563,6 +4565,13 @@ create-require@^1.1.0:
   version "1.1.1"
   resolved "https://registry.npmjs.org/create-require/-/create-require-1.1.1.tgz"
   integrity sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==
+
+cron@1.8.2:
+  version "1.8.2"
+  resolved "https://registry.yarnpkg.com/cron/-/cron-1.8.2.tgz#4ac5e3c55ba8c163d84f3407bde94632da8370ce"
+  integrity sha512-Gk2c4y6xKEO8FSAUTklqtfSr7oTq0CiPQeLBG5Fl0qoXpZyMcj1SG59YL+hqq04bu6/IuEA7lMkYDAplQNKkyg==
+  dependencies:
+    moment-timezone "^0.5.x"
 
 cross-env@^7.0.3:
   version "7.0.3"
@@ -5820,11 +5829,6 @@ graphql-compose@9.0.4:
     "@types/object-path" "0.11.1"
     graphql-type-json "0.3.2"
     object-path "0.11.8"
-
-graphql-fields@2.0.3:
-  version "2.0.3"
-  resolved "https://registry.npmjs.org/graphql-fields/-/graphql-fields-2.0.3.tgz"
-  integrity sha512-x3VE5lUcR4XCOxPIqaO4CE+bTK8u6gVouOdpQX9+EKHr+scqtK5Pp/l8nIGqIpN1TUlkKE6jDCCycm/WtLRAwA==
 
 graphql-parse-resolve-info@^4.12.0:
   version "4.12.0"
@@ -7594,6 +7598,18 @@ mkdirp@^1.0.3:
   version "1.0.4"
   resolved "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
+
+moment-timezone@^0.5.x:
+  version "0.5.34"
+  resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.34.tgz#a75938f7476b88f155d3504a9343f7519d9a405c"
+  integrity sha512-3zAEHh2hKUs3EXLESx/wsgw6IQdusOT8Bxm3D9UrHPQR7zlMmzwybC8zHEM1tQ4LJwP7fcxrWr8tuBg05fFCbg==
+  dependencies:
+    moment ">= 2.9.0"
+
+"moment@>= 2.9.0", moment@>=2.14.0:
+  version "2.29.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
+  integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
 
 mqtt-packet@^6.8.0:
   version "6.10.0"

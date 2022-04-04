@@ -9,10 +9,9 @@ import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reactio
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { PostsArgs } from './posts.args'
-// import { PostArgs } from './post.args'
+import { PostArgs } from './post.args'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Post, PostPollVote } from './post.model'
-import { CreateCommentInput } from './create-comment.input'
 import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
 
 @Resolver(() => Post)
@@ -22,20 +21,18 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
   posts(@Args() postsArgs: PostsArgs, @CurrentUser() authUser: AuthUser) {
-    const { forYou, after, limit } = postsArgs
+    const { after, limit } = postsArgs
 
-    if (forYou) {
-      return this.postService.findForYou(authUser, limit, after)
-    } else {
-      return this.postService.find(authUser, limit, after)
-    }
+    return this.postService.getPostFeed(authUser, limit, after)
   }
 
-  // @UseGuards(AuthGuard)
-  // @Query(() => Post)
-  // async post(@Args() PostArgs: PostArgs) {
-  //   return this.postService.getById(PostArgs.id)
-  // }
+  @UseGuards(AuthGuard)
+  @Query(() => Post)
+  post(@Args() postArgs: PostArgs) {
+    const { id, after, limit } = postArgs
+
+    return this.postService.getPost(id, limit, after)
+  }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Post)
@@ -71,12 +68,6 @@ export class PostResolver {
     @CurrentUser() authUser: AuthUser
   ) {
     return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser)
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
-  async createPostComment(@Args('input') createPostCommentData: CreateCommentInput, @CurrentUser() authUser: AuthUser) {
-    return this.postService.createComment(createPostCommentData, authUser)
   }
 
   @UseGuards(AuthGuard)

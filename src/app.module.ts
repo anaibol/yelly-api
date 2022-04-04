@@ -15,11 +15,13 @@ import { SendbirdWebhookModule } from './sendbird-webhook/sendbird-webhook.modul
 import { SchoolModule } from './school/school.module'
 import { CommonFriendsLoader } from './user/common-friends.loader'
 import { IsFriendLoader } from './user/is-friend.loader'
-import { GraphQLError, GraphQLFormattedError } from 'graphql'
+import { ScheduleModule } from '@nestjs/schedule'
+// import { GraphQLError, GraphQLFormattedError } from 'graphql'
 
 @Module({
   providers: [UserModule, CommonFriendsLoader, IsFriendLoader],
   imports: [
+    ScheduleModule.forRoot(),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       playground: false,

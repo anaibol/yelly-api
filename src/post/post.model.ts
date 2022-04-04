@@ -1,7 +1,7 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { User } from '../user/user.model'
-import { PostComment } from './post-comment.model'
 import { Tag } from '../tag/tag.model'
+import { PaginatedPosts } from './paginated-posts.model'
 
 @ObjectType()
 export class PostPollOption {
@@ -14,16 +14,21 @@ export class PostPollOption {
 export class Post {
   @Field(() => ID)
   id: string
+  @Field(() => ID)
+  parentId?: string | null
   text?: string
   createdAt?: Date
   viewsCount?: number
   tags?: Tag[]
   author?: User
-  comments?: PostComment[]
+  authorId?: string | null
   pollOptions?: PostPollOption[]
   authUserPollVote?: PostPollVote
   expiresIn?: number | null
   expiresAt?: Date | null
+  parent?: Post | null
+  children?: PaginatedPosts
+  childrenCount?: number
 }
 
 @ObjectType()

@@ -11,7 +11,7 @@ import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
-import { PostSelect } from '../post/post-select.constant'
+import { PostSelectWithParent, mapPost, notExpiredCondition } from '../post/post-select.constant'
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import dates from '../utils/dates'
 import { PaginatedTrends } from './paginated-trends.model'
@@ -83,16 +83,7 @@ export class TagResolver {
           isActive: true,
           birthdate: datesRanges,
         },
-        OR: [
-          {
-            expiresAt: {
-              gte: new Date(),
-            },
-          },
-          {
-            expiresAt: null,
-          },
-        ],
+        ...notExpiredCondition,
       },
       ...(after && {
         cursor: {
@@ -104,31 +95,16 @@ export class TagResolver {
         createdAt: 'desc',
       },
       take: limit,
-      select: {
-        ...PostSelect,
-        pollOptions: {
-          ...PostSelect.pollOptions,
-          orderBy: {
-            position: 'asc',
-          },
-        },
-      },
+      select: PostSelectWithParent,
     })
 
-    const items = posts.map((post) => {
-      const pollOptions = post.pollOptions.map((o) => ({
-        id: o.id,
-        text: o.text,
-        votesCount: o._count.votes,
-      }))
+    const items = posts.map(mapPost)
 
-      return {
-        ...post,
-        ...(pollOptions.length && { pollOptions }),
-      }
-    })
+    const lastItem = items.length === limit && items[limit - 1]
 
-    const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
+    const lastCreatedAt = lastItem && lastItem.createdAt
+
+    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
 
     return { items, nextCursor }
   }

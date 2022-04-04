@@ -27,11 +27,6 @@ type Country {
   id: ID!
 }
 
-input CreateCommentInput {
-  postId: String!
-  text: String!
-}
-
 input CreateOrUpdateLiveTagInput {
   isLive: Boolean!
   text: String!
@@ -45,6 +40,7 @@ input CreateOrUpdatePostReactionInput {
 input CreatePostInput {
   expiresAt: DateTime
   expiresIn: Int
+  parentId: String
   pollOptions: [String!]
   tags: [String!]
   text: String!
@@ -128,7 +124,6 @@ type Mutation {
   createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Boolean!
   createPost(input: CreatePostInput!): Post!
-  createPostComment(input: CreateCommentInput!): Boolean!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   declineFriendRequest(friendRequestId: String!): Boolean!
   deleteAuthUser: Boolean!
@@ -180,23 +175,19 @@ type PaginatedUsers {
 type Post {
   authUserPollVote: PostPollVote
   author: User
-  comments: [PostComment!]
+  authorId: String
+  children: PaginatedPosts
+  childrenCount: Int
   createdAt: DateTime
   expiresAt: DateTime
   expiresIn: Int
   id: ID!
+  parent: Post
+  parentId: ID
   pollOptions: [PostPollOption!]
   tags: [Tag!]
   text: String
   viewsCount: Int
-}
-
-type PostComment {
-  author: User!
-  authorId: String!
-  createdAt: DateTime
-  id: ID!
-  text: String!
 }
 
 type PostPollOption {
@@ -224,6 +215,7 @@ type Query {
   liveTags: [Tag!]!
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
+  post(after: String, id: String!, limit: Int = 10): Post!
   posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String): Tag!
