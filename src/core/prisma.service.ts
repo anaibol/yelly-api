@@ -31,17 +31,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
         return result
       })
-      if (process.env.NODE_ENV === 'development' && process.env.ENABLE_SQL_LOGS === 'true') {
+      // if (process.env.NODE_ENV === 'development' && process.env.ENABLE_SQL_LOGS === 'true') {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      this.$on('query', async (e) => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        this.$on('query', async (e) => {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          const { query, params, duration } = e
-          console.log(Date.now(), { params, duration })
-          console.log(format(query))
-        })
-      }
+        const { query, params, duration } = e
+        console.log(Date.now(), { params, duration })
+        console.log(format(query))
+      })
+      // }
     }
   }
 
