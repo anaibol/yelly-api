@@ -93,45 +93,44 @@ export class PushNotificationService {
 
   @Cron('* * * * *')
   async vanishingPosts() {
-    const users = await this.prismaService.user.findMany({
-      where: {
-        posts: {
-          some: {
-            expiresAt: {
-              gt: new Date(new Date(+new Date() + 60000 * 4).toUTCString()), // In more than four minutes
-              lte: new Date(new Date(+new Date() + 60000 * 5).toUTCString()), // Get UTC date from new Date() and convert to ISO
-            },
-          },
-        },
-      },
-      select: {
-        locale: true,
-        expoPushNotificationTokens: {
-          select: {
-            id: true,
-            userId: true,
-            token: true,
-          },
-        },
-      },
-    })
-
-    const tokens = users.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat()
-
-    const notifications = users.map(async (user) => {
-      const lang = user.locale
-
-      return {
-        to: user.expoPushNotificationTokens.map(({ token }) => token),
-        body: await this.i18n.translate('notifications.YOUR_POST_WILL_VANISH', {
-          ...(lang && { lang }),
-        }),
-        sound: 'default' as const,
-      }
-    })
-    const notificationsToSend = await Promise.all(notifications)
-
-    await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION_SENT')
+    // const users = await this.prismaService.user.findMany({
+    //   where: {
+    //     isActive: true,
+    //     isBanned: false,
+    //     posts: {
+    //       some: {
+    //         expiresAt: {
+    //           gt: new Date(new Date(+new Date() + 60000 * 4).toUTCString()), // In more than four minutes
+    //           lte: new Date(new Date(+new Date() + 60000 * 5).toUTCString()), // Get UTC date from new Date() and convert to ISO
+    //         },
+    //       },
+    //     },
+    //   },
+    //   select: {
+    //     locale: true,
+    //     expoPushNotificationTokens: {
+    //       select: {
+    //         id: true,
+    //         userId: true,
+    //         token: true,
+    //       },
+    //     },
+    //   },
+    // })
+    // const tokens = users.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat()
+    // const notifications = users.map(async (user) => {
+    //   const lang = user.locale
+    //   const to = user.expoPushNotificationTokens.map(({ token }) => token)
+    //   return {
+    //     to: to,
+    //     body: await this.i18n.translate('notifications.YOUR_POST_WILL_VANISH', {
+    //       ...(lang && { lang }),
+    //     }),
+    //     sound: 'default' as const,
+    //   }
+    // })
+    // const notificationsToSend = await Promise.all(notifications)
+    // await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION_SENT')
   }
 
   async postReplied(postId: string) {
@@ -192,33 +191,32 @@ export class PushNotificationService {
 
     await this.sendNotifications([message], expoPushNotificationTokens, 'POST_REPLIED_PUSH_NOTIFICATION_SENT')
 
-    const authors = await this.prismaService.post.findMany({
+    const samePostRepliedUsers = await this.prismaService.user.findMany({
       where: {
-        parentId: postId,
-        authorId: {
+        id: {
           not: author.id,
+        },
+        posts: {
+          some: {
+            parentId: postId,
+          },
         },
       },
       select: {
-        author: {
+        locale: true,
+        expoPushNotificationTokens: {
           select: {
-            locale: true,
-            expoPushNotificationTokens: {
-              select: {
-                id: true,
-                userId: true,
-                token: true,
-              },
-            },
+            id: true,
+            userId: true,
+            token: true,
           },
         },
       },
     })
 
-    const users = authors.map((p) => p.author)
-    const tokens = authors.map((p) => p.author.expoPushNotificationTokens).flat()
+    const tokens = samePostRepliedUsers.map((u) => u.expoPushNotificationTokens).flat()
 
-    const notifications = users.map(async (user) => {
+    const notifications = samePostRepliedUsers.map(async (user) => {
       const lang = user.locale
 
       const url = `${process.env.APP_BASE_URL}/posts/${postId}`
