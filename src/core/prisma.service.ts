@@ -1,5 +1,6 @@
 import { INestApplication, Injectable, OnModuleInit } from '@nestjs/common'
 import { PrismaClient } from '@prisma/client'
+import { format } from 'sql-formatter'
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -30,16 +31,22 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
         return result
       })
-      // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // // @ts-ignore
-      // this.$on('query', async (e) => {
-      //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //   // @ts-ignore
-      //   console.log('Query: ' + e.query)
-      //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //   // @ts-ignore
-      //   console.log('Duration: ' + e.duration + 'ms')
-      // })
+      if (process.env.NODE_ENV === 'development' && process.env.ENABLE_SQL_LOGS === 'true') {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.$on('query', async (e) => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          const { query, params, duration } = e
+
+          if (process.env.FORMAT_SQL_LOGS === 'true') {
+            console.log(Date.now(), { params, duration })
+            console.log(format(query))
+          } else {
+            console.log({ params, duration, query })
+          }
+        })
+      }
     }
   }
 

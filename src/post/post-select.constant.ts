@@ -141,15 +141,15 @@ export function mapPostChild(
   }
 }
 
-export const notExpiredCondition = {
+export const getNotExpiredCondition = () => ({
   OR: [
     {
       expiresAt: {
-        gte: new Date(), // Get UTC date from new Date() and convert to ISO
+        gte: new Date(),
       },
     },
     {
       expiresAt: null,
     },
   ],
-}
+})
