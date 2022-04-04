@@ -38,8 +38,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           const { query, params, duration } = e
-          console.log(Date.now(), { params, duration })
-          console.log(format(query))
+
+          if (process.env.FORMAT_SQL_LOGS === 'true') {
+            console.log(Date.now(), { params, duration })
+            console.log(format(query))
+          } else {
+            console.log({ params, duration, query })
+          }
         })
       }
     }
