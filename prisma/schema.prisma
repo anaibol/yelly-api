@@ -162,6 +162,8 @@ model Post {
   
   @@unique([authorId, id], map: "author_post_id_fkey")
   @@index([createdAt], map: "Post_createdAt")
+  @@index([expiresAt], map: "Post_expiresAt")
+
 }
 
 model PostPollOption {

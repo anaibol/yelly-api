@@ -9,7 +9,7 @@ import {
   mapPost,
   mapPostChild,
   PostChildSelect,
-  notExpiredCondition,
+  getNotExpiredCondition,
 } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { SendbirdService } from 'src/sendbird/sendbird.service'
@@ -199,7 +199,7 @@ export class PostService {
 
     const posts = await this.prismaService.post.findMany({
       where: {
-        ...notExpiredCondition,
+        ...getNotExpiredCondition(),
         author: {
           isActive: true,
           school: {
