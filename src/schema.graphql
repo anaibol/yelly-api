@@ -149,6 +149,7 @@ type Notification {
   friendRequest: FriendRequest
   id: ID!
   isSeen: Boolean
+  post: Post
   postReaction: PostReaction
   type: NotificationType
 }

@@ -29,6 +29,8 @@ export class NotificationService {
                 select: {
                   id: true,
                   firstName: true,
+                  lastName: true,
+                  pictureId: true,
                 },
               },
             },
