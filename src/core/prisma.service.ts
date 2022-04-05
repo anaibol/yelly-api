@@ -1,9 +1,12 @@
 import { INestApplication, Injectable, OnModuleInit } from '@nestjs/common'
 import { PrismaClient } from '@prisma/client'
 import { format } from 'sql-formatter'
+import { camelCase } from 'lodash'
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
+  private readonlyInstance?: PrismaClient
+
   constructor() {
     // eslint-disable-next-line functional/no-expression-statement
     super({
@@ -17,36 +20,53 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             ]
           : [],
     })
+
+    this.readonlyInstance = process.env.DATABASE_READ_URL
+      ? new PrismaClient({
+          datasources: { db: { url: process.env.DATABASE_READ_URL } },
+        })
+      : undefined
   }
 
-  // INFO: The onModuleInit is optional — if you leave it out, Prisma will connect lazily on its first call to the database. We don't bother with onModuleDestroy, since Prisma has its own shutdown hooks where it will destroy the connection. For more info on enableShutdownHooks, please see Issues with enableShutdownHooks
   async onModuleInit(): Promise<void> {
-    await this.$connect()
+    await Promise.all([this.$connect(), this.readonlyInstance?.$connect()])
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (this.readonlyInstance) {
       this.$use(async (params, next) => {
-        const before = Date.now()
-        const result = await next(params)
-        const after = Date.now()
-        console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
-        return result
-      })
-      if (process.env.NODE_ENV === 'development' && process.env.ENABLE_SQL_LOGS === 'true') {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.$on('query', async (e) => {
+        if (params.action.includes('find')) {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          const { query, params, duration } = e
+          const res = await this.readonlyInstance[camelCase(params.model)][params.action](params.args)
+          return res
+        }
+        const result = await next(params)
+        return result
+      })
+    }
 
-          if (process.env.FORMAT_SQL_LOGS === 'true') {
-            console.log(Date.now(), { params, duration })
-            console.log(format(query))
-          } else {
-            console.log({ params, duration, query })
-          }
-        })
-      }
+    if (process.env.ENABLE_SQL_LOGS === 'true') {
+      // this.$use(async (params, next) => {
+      //   const before = Date.now()
+      //   const result = await next(params)
+      //   const after = Date.now()
+      //   console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
+      //   return result
+      // })
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      this.$on('query', async (e) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const { query, params, duration } = e
+
+        if (process.env.FORMAT_SQL_LOGS === 'true') {
+          console.log(Date.now(), { params, duration })
+          console.log(format(query))
+        } else {
+          console.log({ params, duration, query })
+        }
+      })
     }
   }
 
