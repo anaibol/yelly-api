@@ -57,8 +57,20 @@ export class PostService {
   //   const school = await this.prismaService.school.findUnique({
   //     where: { id: authUser.schoolId },
   //   })
+  // if (!school) return Promise.reject(new Error('No school'))
 
-  //   if (!school) return Promise.reject(new Error('No user school'))
+  // const maxDistance = 5 // 5Km
+  // const maxSchools = 50
+
+  // const nearSchools: { id: string; distance: number }[] = await this.prismaService.$queryRaw`
+  //   select * from (
+  //     select id, round(cast(ST_DistanceSphere(ST_SetSRID(ST_MakePoint(lng,lat),4326), ST_SetSRID(ST_MakePoint(${school.lng}, ${school.lat}),4326)) / 1000 as Numeric), 2) as distance
+  //     from public."School"
+  //   ) as schools
+  //   where distance < ${maxDistance}
+  //   order by distance asc
+  //   limit ${maxSchools}
+  // `
 
   //   const authUserCountry = await this.prismaService.city
   //     .findUnique({
@@ -70,15 +82,18 @@ export class PostService {
 
   //   if (!school) return Promise.reject(new Error('No school'))
 
-  //   const maxDistance = 50000
-  //   const maxSchools = 50
+  // const maxDistance = 5 // 5Km
+  // const maxSchools = 50
 
-  //   const nearSchools: { id: string; distance: number }[] = await this.prismaService.$queryRaw`
-  //     select id, ROUND(ST_DISTANCE_SPHERE(coord, POINT(${school.lng}, ${school.lat})) / 1000, 2) AS distance
-  //     from School having distance < ${maxDistance}
-  //     order by distance asc
-  //     limit ${maxSchools}
-  //   `
+  // const nearSchools: { id: string; distance: number }[] = await this.prismaService.$queryRaw`
+  //   select * from (
+  //     select id, round(cast(ST_Distance(ST_MakePoint(lng,lat)::geography, ST_MakePoint(${school.lng}, ${school.lat})::geography) / 1000 as Numeric), 2) as distance
+  //     from public."School"
+  //   ) as schools
+  //   where distance < ${maxDistance}
+  //   order by distance asc
+  //   limit ${maxSchools}
+  // `
 
   //   const posts = await this.prismaService.post.findMany({
   //     take: limit,
