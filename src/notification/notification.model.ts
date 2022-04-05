@@ -1,6 +1,11 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql'
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
+import { NotificationType } from '@prisma/client'
 import { PostReaction } from 'src/post/post-reaction.model'
 import { FriendRequest } from 'src/user/friendRequest.model'
+
+registerEnumType(NotificationType, {
+  name: 'NotificationType',
+})
 
 @ObjectType()
 export class Notification {
@@ -10,4 +15,6 @@ export class Notification {
   createdAt: Date
   postReaction?: PostReaction | null
   friendRequest?: FriendRequest | null
+  @Field(() => NotificationType)
+  type?: NotificationType
 }

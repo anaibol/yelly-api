@@ -34,9 +34,10 @@ model Notification {
   postReactionId  String?          @unique
   userId          String
   friendRequestId String?
+  post            Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
   friendRequest   FriendRequest?   @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
   postReaction    PostReaction?    @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
-  type            NotificationType
+  type            NotificationType?
 
   @@index([createdAt], map: "Notification_createdAt")
 }
@@ -137,22 +138,23 @@ model Tag {
 }
 
 model Post {
-  id          String           @id @default(uuid())
-  text        String           @db.Text
-  createdAt   DateTime         @unique @default(now())
-  authorId    String
-  viewsCount  Int              @default(0)
-  author      User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  reactions   PostReaction[]
-  tags        Tag[]
-  pollOptions PostPollOption[]
-  pollVotes   PostPollVote[]
-  expiresIn   Int?
-  expiresAt   DateTime?
-  children    Post[]           @relation("postThreads")
-  parent      Post?            @relation("postThreads", fields: [parentId], references: [id])
-  parentId    String?
-  
+  id           String           @id @default(uuid())
+  text         String           @db.Text
+  createdAt    DateTime         @unique @default(now())
+  authorId     String
+  viewsCount   Int              @default(0)
+  author       User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions    PostReaction[]
+  tags         Tag[]
+  pollOptions  PostPollOption[]
+  pollVotes    PostPollVote[]
+  expiresIn    Int?
+  expiresAt    DateTime?
+  children     Post[]           @relation("postThreads")
+  parent       Post?            @relation("postThreads", fields: [parentId], references: [id])
+  parentId     String?
+  notification Notification[]
+
   @@unique([authorId, id])
   @@index([createdAt], map: "Post_createdAt")
   @@index([expiresAt], map: "Post_expiresAt")

@@ -150,6 +150,15 @@ type Notification {
   id: ID!
   isSeen: Boolean
   postReaction: PostReaction
+  type: NotificationType
+}
+
+enum NotificationType {
+  FRIEND_POSTED
+  FRIEND_REQUEST
+  FRIEND_REQUEST_ACCEPTED
+  POST_REPLIED
+  SAME_POST_REPLIED
 }
 
 type PaginatedNotifications {
