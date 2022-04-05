@@ -577,6 +577,7 @@ export class UserService {
         },
         notifications: {
           create: {
+            type: 'FRIEND_REQUEST',
             userId: otherUserId,
           },
         },
@@ -679,6 +680,7 @@ export class UserService {
         data: {
           userId: fromUserId,
           friendRequestId,
+          type: 'FRIEND_REQUEST_ACCEPTED',
         },
       }),
     ])

@@ -27,14 +27,16 @@ model Country {
 }
 
 model Notification {
-  id              String         @id @default(uuid())
-  isSeen          Boolean        @default(false)
-  createdAt       DateTime       @default(now())
-  postReactionId  String?        @unique
+  id              String           @id @default(uuid())
+  isSeen          Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  postId          String?
+  postReactionId  String?          @unique
   userId          String
   friendRequestId String?
-  friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
-  postReaction    PostReaction?  @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  friendRequest   FriendRequest?   @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
+  postReaction    PostReaction?    @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  type            NotificationType
 
   @@index([createdAt], map: "Notification_createdAt")
 }
@@ -46,7 +48,7 @@ model School {
   lat           Float?
   lng           Float?
   cityId        String
-  city          City                  @relation(fields: [cityId], references: [id])
+  city          City    @relation(fields: [cityId], references: [id])
   users         User[]
 }
 
@@ -154,7 +156,6 @@ model Post {
   @@unique([authorId, id])
   @@index([createdAt], map: "Post_createdAt")
   @@index([expiresAt], map: "Post_expiresAt")
-
 }
 
 model PostPollOption {
@@ -208,4 +209,12 @@ enum FriendRequestStatus {
 enum UserRole {
   USER
   ADMIN
+}
+
+enum NotificationType {
+  FRIEND_POSTED
+  POST_REPLIED
+  SAME_POST_REPLIED
+  FRIEND_REQUEST
+  FRIEND_REQUEST_ACCEPTED
 }
