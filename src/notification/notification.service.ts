@@ -8,7 +8,7 @@ export class NotificationService {
 
   async find(userId: string, skip: number, limit: number): Promise<PaginatedNotifications> {
     const [totalCount, items] = await this.prismaService.$transaction([
-      this.prismaService.user.count({
+      this.prismaService.notification.count({
         where: {
           userId,
         },
