@@ -20,6 +20,7 @@ export class Post {
   createdAt?: Date
   viewsCount?: number
   tags?: Tag[]
+  emojis?: string[]
   author?: User
   authorId?: string | null
   pollOptions?: PostPollOption[]

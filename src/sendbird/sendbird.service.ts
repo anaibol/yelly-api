@@ -108,66 +108,66 @@ export class SendbirdService {
       })
   }
 
-  async sendPostReactionMessage(postReactionId: string): Promise<true | Error> {
-    const postReaction = await this.prismaService.postReaction.findUnique({
-      where: { id: postReactionId },
-      select: {
-        authorId: true,
-        reaction: true,
-        post: {
-          select: {
-            id: true,
-            text: true,
-            authorId: true,
-            tags: {
-              select: {
-                id: true,
-                text: true,
-                isLive: true,
-              },
-            },
-          },
-        },
-      },
-    })
+  // async sendPostReactionMessage(postReactionId: string): Promise<true | Error> {
+  //   const postReaction = await this.prismaService.postReaction.findUnique({
+  //     where: { id: postReactionId },
+  //     select: {
+  //       authorId: true,
+  //       reaction: true,
+  //       post: {
+  //         select: {
+  //           id: true,
+  //           text: true,
+  //           authorId: true,
+  //           tags: {
+  //             select: {
+  //               id: true,
+  //               text: true,
+  //               isLive: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   })
 
-    if (!postReaction) return Promise.reject(new Error('No post reaction'))
+  //   if (!postReaction) return Promise.reject(new Error('No post reaction'))
 
-    const { authorId, post, reaction } = postReaction
+  //   const { authorId, post, reaction } = postReaction
 
-    const userIds = [authorId, post.authorId]
-    const channelUrl = buildChannelUrl(userIds)
+  //   const userIds = [authorId, post.authorId]
+  //   const channelUrl = buildChannelUrl(userIds)
 
-    // eslint-disable-next-line functional/no-try-statement
-    try {
-      const groupChannel = await this.getGroupChannel(channelUrl)
+  //   // eslint-disable-next-line functional/no-try-statement
+  //   try {
+  //     const groupChannel = await this.getGroupChannel(channelUrl)
 
-      if (!groupChannel) {
-        // eslint-disable-next-line functional/no-expression-statement
-        await this.httpService.post('group_channels', {
-          user_ids: userIds,
-          channel_url: channelUrl,
-          custom_type: '1-1',
-          is_distinct: true,
-          inviter_id: authorId,
-        })
-      }
+  //     if (!groupChannel) {
+  //       // eslint-disable-next-line functional/no-expression-statement
+  //       await this.httpService.post('group_channels', {
+  //         user_ids: userIds,
+  //         channel_url: channelUrl,
+  //         custom_type: '1-1',
+  //         is_distinct: true,
+  //         inviter_id: authorId,
+  //       })
+  //     }
 
-      // eslint-disable-next-line functional/no-expression-statement
-      await this.httpService.post(`group_channels/${channelUrl}/messages`, {
-        message_type: 'MESG',
-        custom_type: 'post_reaction',
-        user_id: authorId,
-        message: reaction,
-        data: JSON.stringify({
-          postId: post.id,
-          text: post.text,
-          tags: post.tags,
-        }),
-      })
-    } catch (error) {
-      return new Error('Was not able to create or send message to the channel')
-    }
-    return true
-  }
+  //     // eslint-disable-next-line functional/no-expression-statement
+  //     await this.httpService.post(`group_channels/${channelUrl}/messages`, {
+  //       message_type: 'MESG',
+  //       custom_type: 'post_reaction',
+  //       user_id: authorId,
+  //       message: reaction,
+  //       data: JSON.stringify({
+  //         postId: post.id,
+  //         text: post.text,
+  //         tags: post.tags,
+  //       }),
+  //     })
+  //   } catch (error) {
+  //     return new Error('Was not able to create or send message to the channel')
+  //   }
+  //   return true
+  // }
 }

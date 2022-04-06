@@ -61,6 +61,7 @@ export const PostSelect = {
       isLive: true,
     },
   },
+  emojis: true,
   _count: {
     select: {
       children: true,

@@ -4,8 +4,8 @@ import { InputType } from '@nestjs/graphql'
 export class CreatePostInput {
   text: string
   tags?: string[]
+  emojis?: string[]
   pollOptions?: string[]
   expiresIn?: number
-  expiresAt?: Date
   parentId?: string
 }

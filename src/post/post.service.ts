@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
 import { CreatePostInput } from './create-post.input'
-import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
+// import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { TagService } from 'src/tag/tag.service'
 import {
@@ -36,7 +36,6 @@ export class PostService {
     private prismaService: PrismaService,
     private tagService: TagService,
     private pushNotificationService: PushNotificationService,
-    private sendbirdService: SendbirdService,
     private algoliaService: AlgoliaService
   ) {}
   async trackPostViews(postsIds: string[]): Promise<boolean> {
@@ -290,7 +289,7 @@ export class PostService {
   }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
-    const { text, expiresAt, expiresIn, tags, pollOptions, parentId } = createPostInput
+    const { text, emojis, expiresIn, tags, pollOptions, parentId } = createPostInput
 
     const uniqueTags = uniq(tags)
 
@@ -347,10 +346,12 @@ export class PostService {
         tags: {
           connectOrCreate: connectOrCreateTags,
         },
+        emojis,
       },
     })
 
     uniqueTags.map((tag) => this.tagService.syncTagIndexWithAlgolia(tag))
+
     this.syncPostIndexWithAlgolia(post.id)
 
     if (parentId) this.pushNotificationService.postReplied(post.id)
@@ -400,57 +401,57 @@ export class PostService {
     return true
   }
 
-  async createOrUpdatePostReaction(
-    createOrUpdatePostReactionInput: CreateOrUpdatePostReactionInput,
-    authUser: AuthUser
-  ): Promise<boolean> {
-    const { reaction, postId } = createOrUpdatePostReactionInput
-    const authorId = authUser.id
+  // async createOrUpdatePostReaction(
+  //   createOrUpdatePostReactionInput: CreateOrUpdatePostReactionInput,
+  //   authUser: AuthUser
+  // ): Promise<boolean> {
+  //   const { reaction, postId } = createOrUpdatePostReactionInput
+  //   const authorId = authUser.id
 
-    const reactionData = {
-      reaction,
-      authorId,
-      postId,
-    }
+  //   const reactionData = {
+  //     reaction,
+  //     authorId,
+  //     postId,
+  //   }
 
-    const postReaction = await this.prismaService.postReaction.upsert({
-      where: {
-        authorId_postId: {
-          authorId,
-          postId,
-        },
-      },
-      select: {
-        authorId: true,
-        id: true,
-        postId: true,
-        reaction: true,
-        post: {
-          select: {
-            authorId: true,
-          },
-        },
-      },
-      create: {
-        author: {
-          connect: {
-            id: authUser.id,
-          },
-        },
-        reaction,
-        post: {
-          connect: {
-            id: postId,
-          },
-        },
-      },
-      update: reactionData,
-    })
+  //   const postReaction = await this.prismaService.postReaction.upsert({
+  //     where: {
+  //       authorId_postId: {
+  //         authorId,
+  //         postId,
+  //       },
+  //     },
+  //     select: {
+  //       authorId: true,
+  //       id: true,
+  //       postId: true,
+  //       reaction: true,
+  //       post: {
+  //         select: {
+  //           authorId: true,
+  //         },
+  //       },
+  //     },
+  //     create: {
+  //       author: {
+  //         connect: {
+  //           id: authUser.id,
+  //         },
+  //       },
+  //       reaction,
+  //       post: {
+  //         connect: {
+  //           id: postId,
+  //         },
+  //       },
+  //     },
+  //     update: reactionData,
+  //   })
 
-    if (postReaction.post.authorId !== authUser.id) this.sendbirdService.sendPostReactionMessage(postReaction.id)
+  //   if (postReaction.post.authorId !== authUser.id) this.sendbirdService.sendPostReactionMessage(postReaction.id)
 
-    return !!postReaction
-  }
+  //   return !!postReaction
+  // }
 
   async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUser: AuthUser): Promise<boolean> {
     const { postId } = deletePostReactionInput
@@ -540,7 +541,7 @@ export class PostService {
       select: PostSelectWithParent,
     })
 
-    if (!post) return Promise.reject(new Error('No post found'))
+    if (!post || !post.expiresAt) return
 
     const objectToCreate = {
       id: post.id,

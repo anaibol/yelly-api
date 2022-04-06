@@ -32,13 +32,8 @@ input CreateOrUpdateLiveTagInput {
   text: String!
 }
 
-input CreateOrUpdatePostReactionInput {
-  postId: String!
-  reaction: String!
-}
-
 input CreatePostInput {
-  expiresAt: DateTime
+  emojis: [String!]
   expiresIn: Int
   parentId: String
   pollOptions: [String!]
@@ -122,7 +117,6 @@ type Mutation {
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createFriendRequest(otherUserId: String!): FriendRequest!
   createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!
-  createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Boolean!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   declineFriendRequest(friendRequestId: String!): Boolean!
@@ -189,6 +183,7 @@ type Post {
   children: PaginatedPosts
   childrenCount: Int
   createdAt: DateTime
+  emojis: [String!]
   expiresAt: DateTime
   expiresIn: Int
   id: ID!

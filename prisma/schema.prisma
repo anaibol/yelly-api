@@ -146,6 +146,7 @@ model Post {
   author       User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
   reactions    PostReaction[]
   tags         Tag[]
+  emojis       String[]
   pollOptions  PostPollOption[]
   pollVotes    PostPollVote[]
   expiresIn    Int?
