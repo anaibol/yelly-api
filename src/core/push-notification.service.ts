@@ -146,6 +146,7 @@ export class PushNotificationService {
         },
         parent: {
           select: {
+            id: true,
             author: {
               select: UserPushTokenSelect,
             },
@@ -190,7 +191,7 @@ export class PushNotificationService {
           },
           posts: {
             some: {
-              parentId: postId,
+              parentId: parent.id,
             },
           },
         },
