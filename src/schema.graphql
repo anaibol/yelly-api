@@ -189,7 +189,7 @@ type Post {
   parent: Post
   pollOptions: [PostPollOption!]
   tags: [Tag!]
-  text: ID
+  text: String
   viewsCount: Int
 }
 

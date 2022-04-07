@@ -14,7 +14,6 @@ export class PostPollOption {
 export class Post {
   @Field(() => ID)
   id: string
-  @Field(() => ID)
   text?: string
   createdAt?: Date
   viewsCount?: number
