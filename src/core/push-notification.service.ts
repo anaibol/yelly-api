@@ -163,7 +163,7 @@ export class PushNotificationService {
     const lang = parent.author.locale
     const expoPushNotificationTokens = parent.author.expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
 
-    this.prismaService.notification.create({
+    await this.prismaService.notification.create({
       data: {
         userId: parent.author.id,
         type: 'POST_REPLIED',
@@ -313,11 +313,10 @@ export class PushNotificationService {
     if (!receiverUser || !friendRequestFromUser)
       return Promise.reject(new Error('receiverUser or friendRequestFromUser not found'))
 
-    const lang = receiverUser.locale
-    const expoPushNotificationTokens = receiverUser.expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
+    const { locale: lang, expoPushNotificationTokens } = receiverUser
 
     const message = {
-      to: receiverUser.expoPushNotificationTokens.map(({ token }) => token),
+      to: expoPushNotificationTokens.map(({ token }) => token),
       body: await this.i18n.translate('notifications.FRIENDSHIP_REQUEST_BODY', {
         ...(lang && { lang }),
         args: { firstName: friendRequestFromUser.firstName },
@@ -352,16 +351,16 @@ export class PushNotificationService {
       return Promise.reject(new Error('friendRequestToUser or receiverUser not found'))
 
     const url = `${process.env.APP_BASE_URL}/user/${friendRequestToUser.id}`
-    const lang = receiverUser.locale
-    const expoPushNotificationTokens = receiverUser.expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
+
+    const { locale: lang, expoPushNotificationTokens, id: userId } = receiverUser
 
     const message = {
-      to: receiverUser.expoPushNotificationTokens.map(({ token }) => token),
+      to: expoPushNotificationTokens.map(({ token }) => token),
       body: await this.i18n.translate('notifications.FRIENDSHIP_ACCEPTED_BODY', {
         ...(lang && { lang }),
         args: { firstName: friendRequestToUser.firstName },
       }),
-      data: { userId: receiverUser.id, url },
+      data: { userId, url },
       sound: 'default' as const,
     }
 
@@ -377,25 +376,32 @@ export class PushNotificationService {
     messages: ExpoPushMessage[],
     tokens: ExpoPushNotificationAccessToken[],
     trackEvent?: TRACK_EVENT
-  ): Promise<(boolean[] | undefined)[]> {
+  ): Promise<(boolean | undefined)[]> {
     const res = await expo.sendNotifications(messages)
 
-    return res.map((result, index) => {
-      if (result.status !== 'fulfilled') return
+    const promises = res
+      .map((result, index) => {
+        if (result.status !== 'fulfilled') return
 
-      const expoPushTickets = result.value
-      return expoPushTickets.map((ticket) => {
-        if (ticket.status == 'ok') {
-          if (trackEvent) this.amplitudeService.logEvent(trackEvent, tokens[index].userId)
-          return true
-        } else {
-          const errorType = ticket.details?.error
-          if (errorType === 'DeviceNotRegistered')
-            this.expoPushNotificationTokenService.deleteByUserAndToken(tokens[index].userId, tokens[index].token)
-          return false
-        }
+        const expoPushTickets = result.value
+        return expoPushTickets.map(async (ticket) => {
+          if (ticket.status == 'ok') {
+            if (trackEvent) await this.amplitudeService.logEvent(trackEvent, tokens[index].userId)
+            return true
+          } else {
+            const errorType = ticket.details?.error
+            if (errorType === 'DeviceNotRegistered')
+              await this.expoPushNotificationTokenService.deleteByUserAndToken(
+                tokens[index].userId,
+                tokens[index].token
+              )
+            return false
+          }
+        })
       })
-    })
+      .flat()
+
+    return await Promise.all(promises)
   }
 
   async newLiveTag(tagId: string): Promise<void> {
