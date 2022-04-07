@@ -25,6 +25,17 @@ export class NotificationService {
           post: {
             select: {
               id: true,
+              parent: {
+                select: {
+                  id: true,
+                  author: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                    },
+                  },
+                },
+              },
               author: {
                 select: {
                   id: true,

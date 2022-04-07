@@ -4,6 +4,7 @@
   "FRIENDSHIP_REQUEST_BODY": "{firstName} sent you a friend request",
   "FRIENDSHIP_ACCEPTED_BODY": "{firstName} accepted your friend request",
   "NEW_LIVE_TAG_BODY": "Yelly trend live",
+  "FRIEND_POSTED": "{firstName} published a new post 💬",
   "POST_REPLIED": "{firstName} replied your post 💬",
   "SAME_POST_REPLIED": "{firstName} replied to {parentPostAuthorFirstName} 💬",
   "YOUR_POST_WILL_VANISH": "Your post will vanish in 5 minutes ⚡ Come and share what you're doing 💬"

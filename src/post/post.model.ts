@@ -15,14 +15,12 @@ export class Post {
   @Field(() => ID)
   id: string
   @Field(() => ID)
-  parentId?: string | null
   text?: string
   createdAt?: Date
   viewsCount?: number
   tags?: Tag[]
   emojis?: string[]
   author?: User
-  authorId?: string | null
   pollOptions?: PostPollOption[]
   authUserPollVote?: PostPollVote
   expiresIn?: number | null

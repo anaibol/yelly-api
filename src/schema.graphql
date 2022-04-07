@@ -179,7 +179,6 @@ type PaginatedUsers {
 type Post {
   authUserPollVote: PostPollVote
   author: User
-  authorId: String
   children: PaginatedPosts
   childrenCount: Int
   createdAt: DateTime
@@ -188,10 +187,9 @@ type Post {
   expiresIn: Int
   id: ID!
   parent: Post
-  parentId: ID
   pollOptions: [PostPollOption!]
   tags: [Tag!]
-  text: String
+  text: ID
   viewsCount: Int
 }
 
