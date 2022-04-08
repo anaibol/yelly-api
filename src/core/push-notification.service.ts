@@ -211,23 +211,21 @@ export class PushNotificationService {
       select: UserPushTokenSelect,
     })
 
-    const samePostRepliedNotifications = this.prismaService.notification.createMany({
-      data: samePostRepliedUsers.map((user) => ({
-        userId: user.id,
-        postId,
-        type: NotificationType.SAME_POST_REPLIED,
-      })),
-    })
+    const samePostRepliedNotifications = samePostRepliedUsers.map((user) => ({
+      userId: user.id,
+      postId,
+      type: NotificationType.SAME_POST_REPLIED,
+    }))
 
-    const friendsNotifications = this.prismaService.notification.createMany({
-      data: friends.map((user) => ({
-        userId: user.id,
-        postId,
-        type: NotificationType.FRIEND_POSTED,
-      })),
-    })
+    const friendsNotifications = friends.map((user) => ({
+      userId: user.id,
+      postId,
+      type: NotificationType.FRIEND_POSTED,
+    }))
 
-    await Promise.all([samePostRepliedNotifications, friendsNotifications])
+    await this.prismaService.notification.createMany({
+      data: [...samePostRepliedNotifications, ...friendsNotifications],
+    })
 
     const friendPostedPushNotifications = samePostRepliedUsers.map(async (user) => {
       const lang = user.locale
