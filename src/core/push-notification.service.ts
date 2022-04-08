@@ -233,7 +233,7 @@ export class PushNotificationService {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
         body: await this.i18n.translate('notifications.SAME_POST_REPLIED', {
           ...(lang && { lang }),
-          args: { firstName: author.firstName, parentPostAuthorFirstName: parent.author.firstName },
+          args: { firstName: author.firstName },
         }),
         data: { postId, url },
         sound: 'default' as const,

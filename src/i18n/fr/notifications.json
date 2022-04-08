@@ -6,6 +6,6 @@
   "NEW_LIVE_TAG_BODY": "Tendance Yelly live",
   "FRIEND_POSTED": "{firstName} a publié un nouveau post 💬",
   "POST_REPLIED": "{firstName} a répondu à ton post 💬",
-  "SAME_POST_REPLIED": "{firstName} a répondu au post de {parentPostAuthorFirstName} 💬",
+  "SAME_POST_REPLIED": "{firstName} a répondu au même post que toi 💬",
   "YOUR_POST_WILL_VANISH": "Ton post disparaît dans 5 minutes ⚡ Post à nouveau pour dire ce que tu fais ! 💬"
 }
