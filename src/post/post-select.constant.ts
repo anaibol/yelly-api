@@ -59,9 +59,9 @@ export const PostSelect = {
       createdAt: true,
       text: true,
       isLive: true,
+      isEmoji: true,
     },
   },
-  emojis: true,
   _count: {
     select: {
       children: true,

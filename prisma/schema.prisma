@@ -132,6 +132,7 @@ model Tag {
   posts     Post[]
   countryId String?
   country   Country? @relation(fields: [countryId], references: [id])
+  isEmoji   Boolean                           @default(false)
 
   @@index([text], map: "Tag_text_idx")
   @@index([createdAt], map: "Tag_createdAt")
@@ -146,7 +147,6 @@ model Post {
   author       User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
   reactions    PostReaction[]
   tags         Tag[]
-  emojis       String[]
   pollOptions  PostPollOption[]
   pollVotes    PostPollVote[]
   expiresIn    Int?

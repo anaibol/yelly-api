@@ -20,6 +20,7 @@ import { uniq } from 'lodash'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Post } from './post.model'
 import { PostPollVote } from './post.model'
+import { Prisma } from '@prisma/client'
 
 const getExpiredAt = (expiresIn?: number | null): Date | undefined => {
   if (!expiresIn) return
@@ -308,15 +309,30 @@ export class PostService {
         where: { id: parentId },
       }))
 
-    const connectOrCreateTags = uniq(tags).map((tagText) => ({
-      where: {
-        text: tagText,
-      },
-      create: {
-        text: tagText,
-        countryId: authUserCountry?.id,
-      },
-    }))
+    const connectOrCreateTags = uniq(tags).map(
+      (tagText): Prisma.TagCreateOrConnectWithoutPostsInput => ({
+        where: {
+          text: tagText,
+        },
+        create: {
+          text: tagText,
+          countryId: authUserCountry?.id,
+        },
+      })
+    )
+
+    const connectOrCreateEmojis = uniq(emojis).map(
+      (emoji): Prisma.TagCreateOrConnectWithoutPostsInput => ({
+        where: {
+          text: emoji,
+        },
+        create: {
+          text: emoji,
+          countryId: authUserCountry?.id,
+          isEmoji: true,
+        },
+      })
+    )
 
     const post = await this.prismaService.post.create({
       data: {
@@ -344,9 +360,8 @@ export class PostService {
           },
         }),
         tags: {
-          connectOrCreate: connectOrCreateTags,
+          connectOrCreate: [...connectOrCreateTags, ...connectOrCreateEmojis],
         },
-        emojis,
       },
     })
 

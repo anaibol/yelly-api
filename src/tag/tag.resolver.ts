@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
+import { Args, ArgsType, Field, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
@@ -15,8 +15,8 @@ import { PostSelectWithParent, mapPost, getNotExpiredCondition } from '../post/p
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import dates from '../utils/dates'
 import { PaginatedTrends } from './paginated-trends.model'
-import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { UserService } from 'src/user/user.service'
+import { TrendsArgs } from './trends'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -54,12 +54,10 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTrends)
-  async trends(
-    @Args() offsetPaginationArgs: OffsetPaginationArgs,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<PaginatedTrends> {
-    const { skip, limit } = offsetPaginationArgs
-    const { items, nextSkip } = await this.tagService.getTrends(authUser, skip, limit)
+  async trends(@Args() trendsArgs: TrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTrends> {
+    const { skip, limit, isEmoji } = trendsArgs
+
+    const { items, nextSkip } = await this.tagService.getTrends(authUser, isEmoji, skip, limit)
 
     return { items, nextSkip }
   }

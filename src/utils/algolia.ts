@@ -66,8 +66,8 @@ export type PostIndexAlgoliaInterface = {
     id: string
     createdAt: Date
     text: string
+    isEmoji: boolean
   }[]
-  emojis: string[]
   createdAt: Date
 }
 
@@ -188,9 +188,9 @@ export const algoliaPostSelect = {
       id: true,
       createdAt: true,
       text: true,
+      isEmoji: true,
     },
   },
-  emojis: true,
 }
 
 const userWithPosts = Prisma.validator<Prisma.UserArgs>()({
@@ -280,8 +280,8 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
         id: tag.id,
         createdAt: tag.createdAt,
         text: tag.text,
+        isEmoji: tag.isEmoji,
       }
     }),
-    emojis: post.emojis,
   }
 }
