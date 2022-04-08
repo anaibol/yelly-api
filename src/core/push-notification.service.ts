@@ -8,6 +8,7 @@ import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotification
 import expo from '../utils/expo'
 import { AmplitudeService } from './amplitude.service'
 import { Cron } from '@nestjs/schedule'
+import { uniqBy } from 'lodash'
 
 type SendbirdMessageWebhookBody = {
   sender: any
@@ -209,7 +210,9 @@ export class PushNotificationService {
       }),
     ])
 
-    const bellNotifications = [...friends, ...samePostRepliedUsers].map(async (user) => {
+    const bellNotificationUsers = uniqBy([...friends, ...samePostRepliedUsers], 'id')
+
+    const bellNotifications = bellNotificationUsers.map(async (user) => {
       return this.prismaService.notification.create({
         data: {
           userId: user.id,
