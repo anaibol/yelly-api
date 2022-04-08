@@ -212,7 +212,7 @@ export class PushNotificationService {
     })
 
     const samePostRepliedNotifications = this.prismaService.notification.createMany({
-      data: friends.map((user) => ({
+      data: samePostRepliedUsers.map((user) => ({
         userId: user.id,
         postId,
         type: NotificationType.SAME_POST_REPLIED,
