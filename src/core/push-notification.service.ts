@@ -233,7 +233,23 @@ export class PushNotificationService {
 
     await Promise.all([samePostRepliedNotifications, friendsNotifications])
 
-    const notifications = samePostRepliedUsers.map(async (user) => {
+    const friendPostedPushNotifications = samePostRepliedUsers.map(async (user) => {
+      const lang = user.locale
+
+      const url = `${process.env.APP_BASE_URL}/posts/${postId}`
+
+      return {
+        to: user.expoPushNotificationTokens.map(({ token }) => token),
+        body: await this.i18n.translate('notifications.FRIEND_POSTED', {
+          ...(lang && { lang }),
+          args: { firstName: author.firstName },
+        }),
+        data: { postId, url },
+        sound: 'default' as const,
+      }
+    })
+
+    const samePostRepliedUsersPushNotifications = samePostRepliedUsers.map(async (user) => {
       const lang = user.locale
 
       const url = `${process.env.APP_BASE_URL}/posts/${postId}`
@@ -249,7 +265,10 @@ export class PushNotificationService {
       }
     })
 
-    const notificationsToSend = await Promise.all(notifications)
+    const notificationsToSend = await Promise.all([
+      ...friendPostedPushNotifications,
+      ...samePostRepliedUsersPushNotifications,
+    ])
 
     await this.sendNotifications(
       notificationsToSend,
