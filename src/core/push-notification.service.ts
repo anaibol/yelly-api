@@ -231,7 +231,9 @@ export class PushNotificationService {
       })
     )
 
-    await Promise.all([samePostRepliedNotifications, friendsNotifications])
+    const bellNotifications = [...samePostRepliedNotifications, ...friendsNotifications]
+
+    await Promise.all(bellNotifications)
 
     const friendPostedPushNotifications = samePostRepliedUsers.map(async (user) => {
       const lang = user.locale
