@@ -143,6 +143,7 @@ export class TagService {
         text: true,
         createdAt: true,
         isLive: true,
+        isEmoji: true,
       },
     })
   }
