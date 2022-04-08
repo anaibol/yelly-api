@@ -221,7 +221,7 @@ type Query {
   posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String): Tag!
-  trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
+  trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
 }

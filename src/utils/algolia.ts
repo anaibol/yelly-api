@@ -116,6 +116,7 @@ export const trendsTagSelect = {
   text: true,
   createdAt: true,
   updatedAt: true,
+  isEmoji: true,
   _count: {
     select: {
       posts: true,
