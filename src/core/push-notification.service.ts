@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { ExpoPushNotificationAccessToken, FriendRequest } from '@prisma/client'
+import { ExpoPushNotificationAccessToken, FriendRequest, NotificationType } from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
 import { PrismaService } from 'src/core/prisma.service'
@@ -8,7 +8,6 @@ import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotification
 import expo from '../utils/expo'
 import { AmplitudeService } from './amplitude.service'
 import { Cron } from '@nestjs/schedule'
-import { uniqBy } from 'lodash'
 
 type SendbirdMessageWebhookBody = {
   sender: any
@@ -168,7 +167,7 @@ export class PushNotificationService {
     await this.prismaService.notification.create({
       data: {
         userId: parent.author.id,
-        type: 'POST_REPLIED',
+        type: NotificationType.POST_REPLIED,
         postId,
       },
     })
@@ -184,45 +183,55 @@ export class PushNotificationService {
 
     await this.sendNotifications([message], expoPushNotificationTokens, 'POST_REPLIED_PUSH_NOTIFICATION_SENT')
 
-    const [samePostRepliedUsers, friends] = await this.prismaService.$transaction([
-      this.prismaService.user.findMany({
-        where: {
-          id: {
-            not: author.id,
-          },
-          posts: {
-            some: {
-              parentId: parent.id,
-            },
+    const samePostRepliedUsers = await this.prismaService.user.findMany({
+      where: {
+        id: {
+          not: author.id,
+        },
+        posts: {
+          some: {
+            parentId: parent.id,
           },
         },
-        select: UserPushTokenSelect,
-      }),
-      this.prismaService.user.findMany({
-        where: {
-          friends: {
-            some: {
-              otherUserId: postReply.author.id,
-            },
-          },
-        },
-        select: UserPushTokenSelect,
-      }),
-    ])
-
-    const bellNotificationUsers = uniqBy([...friends, ...samePostRepliedUsers], 'id')
-
-    const bellNotifications = bellNotificationUsers.map(async (user) => {
-      return this.prismaService.notification.create({
-        data: {
-          userId: user.id,
-          postId,
-          type: 'SAME_POST_REPLIED',
-        },
-      })
+      },
+      select: UserPushTokenSelect,
     })
 
-    await Promise.all(bellNotifications)
+    const friends = await this.prismaService.user.findMany({
+      where: {
+        id: {
+          notIn: samePostRepliedUsers.map((u) => u.id),
+        },
+        friends: {
+          some: {
+            otherUserId: postReply.author.id,
+          },
+        },
+      },
+      select: UserPushTokenSelect,
+    })
+
+    const samePostRepliedNotifications = samePostRepliedUsers.map((user) =>
+      this.prismaService.notification.createMany({
+        data: friends.map((user) => ({
+          userId: user.id,
+          postId,
+          type: NotificationType.SAME_POST_REPLIED,
+        })),
+      })
+    )
+
+    const friendsNotifications = friends.map((user) =>
+      this.prismaService.notification.createMany({
+        data: friends.map((user) => ({
+          userId: user.id,
+          postId,
+          type: NotificationType.FRIEND_POSTED,
+        })),
+      })
+    )
+
+    await Promise.all([samePostRepliedNotifications, friendsNotifications])
 
     const notifications = samePostRepliedUsers.map(async (user) => {
       const lang = user.locale
