@@ -577,7 +577,7 @@ export class UserService {
         },
         notifications: {
           create: {
-            type: 'FRIEND_REQUEST',
+            type: 'FRIEND_REQUEST_PENDING',
             userId: otherUserId,
           },
         },
@@ -674,6 +674,14 @@ export class UserService {
         },
         data: {
           status: 'ACCEPTED',
+        },
+      }),
+      this.prismaService.notification.updateMany({
+        where: {
+          friendRequestId,
+        },
+        data: {
+          type: 'FRIEND_REQUEST_ACCEPTED',
         },
       }),
       this.prismaService.notification.create({
