@@ -144,18 +144,10 @@ export class PushNotificationService {
         author: {
           select: UserPushTokenSelect,
         },
-        parent: {
-          select: {
-            id: true,
-            author: {
-              select: UserPushTokenSelect,
-            },
-          },
-        },
       },
     })
 
-    if (!post?.parent?.author) return Promise.reject(new Error('Parent not found'))
+    if (!post) return Promise.reject(new Error('Parent not found'))
 
     const friends = await this.prismaService.user.findMany({
       where: {
