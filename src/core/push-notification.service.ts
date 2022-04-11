@@ -147,7 +147,7 @@ export class PushNotificationService {
       },
     })
 
-    if (!post) return Promise.reject(new Error('Parent not found'))
+    if (!post) return Promise.reject(new Error('Post not found'))
 
     const friends = await this.prismaService.user.findMany({
       where: {
