@@ -168,8 +168,6 @@ export class PushNotificationService {
       select: UserPushTokenSelect,
     })
 
-    console.log({ friends })
-
     await this.prismaService.notification.createMany({
       data: friends.map((user) => ({
         userId: user.id,
@@ -193,6 +191,14 @@ export class PushNotificationService {
         sound: 'default' as const,
       }
     })
+
+    const notificationsToSend = await Promise.all(friendPostedPushNotifications)
+
+    await this.sendNotifications(
+      notificationsToSend,
+      friends.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
+      'FRIEND_POSTED_PUSH_NOTIFICATION_SENT'
+    )
   }
 
   async postReplied(postId: string) {
@@ -261,8 +267,6 @@ export class PushNotificationService {
       type: NotificationType.SAME_POST_REPLIED,
     }))
 
-    console.log({ samePostRepliedNotifications })
-
     await this.prismaService.notification.createMany({
       data: samePostRepliedNotifications,
     })
@@ -284,8 +288,6 @@ export class PushNotificationService {
     })
 
     const notificationsToSend = await Promise.all(samePostRepliedUsersPushNotifications)
-
-    console.log({ samePostRepliedUsersPushNotifications })
 
     await this.sendNotifications(
       notificationsToSend,
