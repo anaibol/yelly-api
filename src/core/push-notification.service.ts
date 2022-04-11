@@ -137,6 +137,64 @@ export class PushNotificationService {
     // await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION_SENT')
   }
 
+  async friendPosted(postId: string) {
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+      select: {
+        author: {
+          select: UserPushTokenSelect,
+        },
+        parent: {
+          select: {
+            id: true,
+            author: {
+              select: UserPushTokenSelect,
+            },
+          },
+        },
+      },
+    })
+
+    if (!post?.parent?.author) return Promise.reject(new Error('Parent not found'))
+
+    const friends = await this.prismaService.user.findMany({
+      where: {
+        friends: {
+          some: {
+            otherUserId: post.author.id,
+          },
+        },
+      },
+      select: UserPushTokenSelect,
+    })
+
+    console.log({ friends })
+
+    await this.prismaService.notification.createMany({
+      data: friends.map((user) => ({
+        userId: user.id,
+        postId,
+        type: NotificationType.FRIEND_POSTED,
+      })),
+    })
+
+    const friendPostedPushNotifications = friends.map(async (user) => {
+      const lang = user.locale
+
+      const url = `${process.env.APP_BASE_URL}/posts/${postId}`
+
+      return {
+        to: user.expoPushNotificationTokens.map(({ token }) => token),
+        body: await this.i18n.translate('notifications.FRIEND_POSTED', {
+          ...(lang && { lang }),
+          args: { firstName: post.author.firstName },
+        }),
+        data: { postId, url },
+        sound: 'default' as const,
+      }
+    })
+  }
+
   async postReplied(postId: string) {
     const postReply = await this.prismaService.post.findUnique({
       where: { id: postId },
@@ -197,50 +255,16 @@ export class PushNotificationService {
       select: UserPushTokenSelect,
     })
 
-    const friends = await this.prismaService.user.findMany({
-      where: {
-        id: {
-          notIn: samePostRepliedUsers.map((u) => u.id),
-        },
-        friends: {
-          some: {
-            otherUserId: postReply.author.id,
-          },
-        },
-      },
-      select: UserPushTokenSelect,
-    })
-
     const samePostRepliedNotifications = samePostRepliedUsers.map((user) => ({
       userId: user.id,
       postId,
       type: NotificationType.SAME_POST_REPLIED,
     }))
 
-    const friendsNotifications = friends.map((user) => ({
-      userId: user.id,
-      postId,
-      type: NotificationType.FRIEND_POSTED,
-    }))
+    console.log({ samePostRepliedNotifications })
 
     await this.prismaService.notification.createMany({
-      data: [...samePostRepliedNotifications, ...friendsNotifications],
-    })
-
-    const friendPostedPushNotifications = samePostRepliedUsers.map(async (user) => {
-      const lang = user.locale
-
-      const url = `${process.env.APP_BASE_URL}/posts/${postId}`
-
-      return {
-        to: user.expoPushNotificationTokens.map(({ token }) => token),
-        body: await this.i18n.translate('notifications.FRIEND_POSTED', {
-          ...(lang && { lang }),
-          args: { firstName: author.firstName },
-        }),
-        data: { postId, url },
-        sound: 'default' as const,
-      }
+      data: samePostRepliedNotifications,
     })
 
     const samePostRepliedUsersPushNotifications = samePostRepliedUsers.map(async (user) => {
@@ -259,10 +283,9 @@ export class PushNotificationService {
       }
     })
 
-    const notificationsToSend = await Promise.all([
-      ...friendPostedPushNotifications,
-      ...samePostRepliedUsersPushNotifications,
-    ])
+    const notificationsToSend = await Promise.all(samePostRepliedUsersPushNotifications)
+
+    console.log({ samePostRepliedUsersPushNotifications })
 
     await this.sendNotifications(
       notificationsToSend,

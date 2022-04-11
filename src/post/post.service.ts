@@ -369,7 +369,11 @@ export class PostService {
 
     this.syncPostIndexWithAlgolia(post.id)
 
-    if (parentId) this.pushNotificationService.postReplied(post.id)
+    if (parentId) {
+      this.pushNotificationService.postReplied(post.id)
+    } else {
+      this.pushNotificationService.friendPosted(post.id)
+    }
 
     return post
   }
