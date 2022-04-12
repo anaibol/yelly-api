@@ -171,11 +171,6 @@ export class MeResolver {
   }
 
   @ResolveField()
-  friendsCount(@Parent() user: Me): Promise<number> {
-    return this.userService.getFriendsCount(user.id)
-  }
-
-  @ResolveField()
   async posts(@Parent() me: Me, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
     const { after, limit } = postsArgs
 

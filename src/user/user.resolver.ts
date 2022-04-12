@@ -80,11 +80,6 @@ export class UserResolver {
   }
 
   @ResolveField()
-  friendsCount(@Parent() user: User): Promise<number> {
-    return this.userService.getFriendsCount(user.id)
-  }
-
-  @ResolveField()
   async commonFriendsCountMultiUser(
     @Parent() user: User,
     @CurrentUser() authUser: AuthUser,
