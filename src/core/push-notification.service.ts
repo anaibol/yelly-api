@@ -419,7 +419,7 @@ export class PushNotificationService {
     messages: ExpoPushMessage[],
     tokens: ExpoPushNotificationAccessToken[],
     trackEvent?: TRACK_EVENT
-  ): Promise<(boolean | undefined)[]> {
+  ): Promise<PromiseSettledResult<boolean | undefined>[]> {
     const res = await expo.sendNotifications(messages)
 
     const promises = res
@@ -444,7 +444,7 @@ export class PushNotificationService {
       })
       .flat()
 
-    return await Promise.all(promises)
+    return Promise.allSettled(promises)
   }
 
   async newLiveTag(tagId: string): Promise<void> {
