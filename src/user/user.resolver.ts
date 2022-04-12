@@ -186,7 +186,7 @@ export class UserResolver {
         },
         ...(after && {
           cursor: {
-            createdAt: new Date(+after).toISOString(),
+            createdAt: new Date(+after),
           },
           skip: 1,
         }),

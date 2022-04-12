@@ -85,7 +85,7 @@ export class TagResolver {
       },
       ...(after && {
         cursor: {
-          createdAt: new Date(+after).toISOString(),
+          createdAt: new Date(+after),
         },
         skip: 1,
       }),

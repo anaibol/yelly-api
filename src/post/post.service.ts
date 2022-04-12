@@ -154,7 +154,7 @@ export class PostService {
   //     // },
   //     ...(currentCursor && {
   //       cursor: {
-  //         createdAt: new Date(+currentCursor).toISOString(),
+  //         createdAt: new Date(+currentCursor),
   //       },
   //       skip: 1,
   //     }),
@@ -227,7 +227,7 @@ export class PostService {
       },
       ...(currentCursor && {
         cursor: {
-          createdAt: new Date(+currentCursor).toISOString(),
+          createdAt: new Date(+currentCursor),
         },
         skip: 1,
       }),
@@ -261,7 +261,7 @@ export class PostService {
           },
           ...(currentCursor && {
             cursor: {
-              createdAt: new Date(+currentCursor).toISOString(),
+              createdAt: new Date(+currentCursor),
             },
             skip: 1,
           }),
