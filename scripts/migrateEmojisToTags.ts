@@ -71,21 +71,37 @@ async function main() {
       const emoji = uniqEmojis[j]
 
       const existingTag = await prisma.tag.findUnique({ where: { text: emoji } })
+      if (!existingTag) continue
 
-      if (existingTag) {
-        continue
-      }
-
-      await prisma.tag.create({
+      await prisma.tag.update({
+        where: {
+          id: existingTag.id,
+        },
         data: {
-          text: emoji,
-          isLive: false,
-          isEmoji: true,
-          countryId,
+          posts: {
+            connect: {
+              id,
+            },
+          },
         },
       })
 
-      console.log('emoji:created', { emoji })
+      // if (existingTag) {
+      //   continue
+      // }
+
+      // await prisma.tag.create({
+      //   data: {
+      //     text: emoji,
+      //     isLive: false,
+      //     isEmoji: true,
+      //     countryId,
+      //   },
+      // })
+
+      //console.log('emoji:created', { emoji })
+
+      console.log('tag:post:updated', { id, tagId: existingTag.id, emoji })
       emojiCreatedCount++
     }
   }
