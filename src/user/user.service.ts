@@ -79,7 +79,7 @@ export class UserService {
   }
 
   async findOne(userId: string): Promise<User> {
-    const user = await this.prismaService.user.findUnique({
+    const res = await this.prismaService.user.findUnique({
       where: {
         id: userId,
       },
@@ -117,12 +117,22 @@ export class UserService {
             name: true,
           },
         },
+        _count: {
+          select: {
+            friends: true,
+          },
+        },
       },
     })
 
-    if (!user) return Promise.reject(new Error('not found'))
+    if (!res) return Promise.reject(new Error('not found'))
 
-    return user
+    const { _count, ...user } = res
+
+    return {
+      ...user,
+      friendsCount: _count.friends,
+    }
   }
 
   getFriendsCount(userId: string): Promise<number> {
@@ -406,7 +416,7 @@ export class UserService {
   }
 
   async findMe(userId: string): Promise<Me> {
-    const user = await this.prismaService.user.findUnique({
+    const res = await this.prismaService.user.findUnique({
       where: {
         id: userId,
       },
@@ -452,14 +462,22 @@ export class UserService {
             name: true,
           },
         },
+        _count: {
+          select: {
+            friends: true,
+          },
+        },
       },
     })
 
-    if (!user) return Promise.reject(new Error('not found'))
+    if (!res) return Promise.reject(new Error('not found'))
+
+    const { expoPushNotificationTokens, _count, ...user } = res
 
     return {
       ...user,
-      expoPushNotificationTokens: user.expoPushNotificationTokens.map(({ token }) => token),
+      expoPushNotificationTokens: expoPushNotificationTokens.map(({ token }) => token),
+      friendsCount: _count.friends,
     }
   }
 
