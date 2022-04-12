@@ -32,13 +32,8 @@ input CreateOrUpdateLiveTagInput {
   text: String!
 }
 
-input CreateOrUpdatePostReactionInput {
-  postId: String!
-  reaction: String!
-}
-
 input CreatePostInput {
-  expiresAt: DateTime
+  emojis: [String!]
   expiresIn: Int
   parentId: String
   pollOptions: [String!]
@@ -122,7 +117,6 @@ type Mutation {
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createFriendRequest(otherUserId: String!): FriendRequest!
   createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!
-  createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Boolean!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   declineFriendRequest(friendRequestId: String!): Boolean!
@@ -149,7 +143,17 @@ type Notification {
   friendRequest: FriendRequest
   id: ID!
   isSeen: Boolean
+  post: Post
   postReaction: PostReaction
+  type: NotificationType
+}
+
+enum NotificationType {
+  FRIEND_POSTED
+  FRIEND_REQUEST_ACCEPTED
+  FRIEND_REQUEST_PENDING
+  POST_REPLIED
+  SAME_POST_REPLIED
 }
 
 type PaginatedNotifications {
@@ -163,7 +167,7 @@ type PaginatedPosts {
 }
 
 type PaginatedTrends {
-  items: [Trend!]!
+  items: [Tag!]!
   nextSkip: Int!
 }
 
@@ -175,7 +179,6 @@ type PaginatedUsers {
 type Post {
   authUserPollVote: PostPollVote
   author: User
-  authorId: String
   children: PaginatedPosts
   childrenCount: Int
   createdAt: DateTime
@@ -183,7 +186,6 @@ type Post {
   expiresIn: Int
   id: ID!
   parent: Post
-  parentId: ID
   pollOptions: [PostPollOption!]
   tags: [Tag!]
   text: String
@@ -219,7 +221,7 @@ type Query {
   posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String): Tag!
-  trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
+  trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
 }
@@ -250,6 +252,7 @@ type Tag {
   authUserPosted: Boolean
   createdAt: DateTime
   id: ID!
+  isEmoji: Boolean
   isLive: Boolean
   postCount: Int
   posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
@@ -259,13 +262,6 @@ type Tag {
 type Training {
   id: ID!
   name: String!
-}
-
-type Trend {
-  author: User
-  id: ID!
-  postCount: Int
-  text: String!
 }
 
 input UpdateUserInput {

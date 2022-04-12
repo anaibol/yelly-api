@@ -19,8 +19,33 @@ export class NotificationService {
         },
         select: {
           id: true,
+          type: true,
           createdAt: true,
           isSeen: true,
+          post: {
+            select: {
+              id: true,
+              parent: {
+                select: {
+                  id: true,
+                  author: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                    },
+                  },
+                },
+              },
+              author: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  pictureId: true,
+                },
+              },
+            },
+          },
           postReaction: {
             select: {
               id: true,

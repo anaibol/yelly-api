@@ -1,7 +1,7 @@
-import { InputType } from '@nestjs/graphql'
+// import { InputType } from '@nestjs/graphql'
 
-@InputType()
-export class CreateOrUpdatePostReactionInput {
-  postId: string
-  reaction: string
-}
+// @InputType()
+// export class CreateOrUpdatePostReactionInput {
+//   postId: string
+//   reaction: string
+// }

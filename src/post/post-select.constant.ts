@@ -59,6 +59,7 @@ export const PostSelect = {
       createdAt: true,
       text: true,
       isLive: true,
+      isEmoji: true,
     },
   },
   _count: {

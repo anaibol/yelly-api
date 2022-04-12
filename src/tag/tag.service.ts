@@ -143,6 +143,7 @@ export class TagService {
         text: true,
         createdAt: true,
         isLive: true,
+        isEmoji: true,
       },
     })
   }
@@ -153,7 +154,7 @@ export class TagService {
     return true
   }
 
-  async getTrends(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedTrends> {
+  async getTrends(authUser: AuthUser, isEmoji: boolean, skip: number, limit: number): Promise<PaginatedTrends> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
@@ -176,6 +177,7 @@ export class TagService {
         where: {
           isLive: false,
           countryId: country.id,
+          isEmoji,
         },
         skip,
         orderBy: {

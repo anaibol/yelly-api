@@ -5,7 +5,7 @@ import { CurrentUser } from '../auth/user.decorator'
 import { PostService } from '../post/post.service'
 import { AuthUser } from '../auth/auth.service'
 import { CreatePostInput } from './create-post.input'
-import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
+// import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { DeletePostInput } from './delete-post.input'
 import { PostsArgs } from './posts.args'
@@ -61,14 +61,14 @@ export class PostResolver {
     return this.postService.deletePostReaction(deletePostReactionData, authUser)
   }
 
-  @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
-  async createOrUpdatePostReaction(
-    @Args('input') createPostReactionData: CreateOrUpdatePostReactionInput,
-    @CurrentUser() authUser: AuthUser
-  ) {
-    return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser)
-  }
+  // @UseGuards(AuthGuard)
+  // @Mutation(() => Boolean)
+  // async createOrUpdatePostReaction(
+  //   @Args('input') createPostReactionData: CreateOrUpdatePostReactionInput,
+  //   @CurrentUser() authUser: AuthUser
+  // ) {
+  //   return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser)
+  // }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Post)

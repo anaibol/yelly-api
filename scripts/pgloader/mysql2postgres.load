@@ -1,0 +1,11 @@
+LOAD DATABASE
+     FROM {{MYSQL_URL}}
+     INTO {{POSTGRES_URL}}
+
+WITH truncate, data only, quote identifiers
+
+excluding table names matching '_prisma_migrations'
+
+CAST type date to date using zero-dates-to-null
+
+ALTER SCHEMA 'yelly' RENAME TO 'public';

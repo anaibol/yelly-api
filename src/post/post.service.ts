@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
 import { CreatePostInput } from './create-post.input'
-import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
+// import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { TagService } from 'src/tag/tag.service'
 import {
@@ -20,6 +20,7 @@ import { uniq } from 'lodash'
 import { PaginatedPosts } from './paginated-posts.model'
 import { Post } from './post.model'
 import { PostPollVote } from './post.model'
+import { Prisma } from '@prisma/client'
 
 const getExpiredAt = (expiresIn?: number | null): Date | undefined => {
   if (!expiresIn) return
@@ -36,7 +37,6 @@ export class PostService {
     private prismaService: PrismaService,
     private tagService: TagService,
     private pushNotificationService: PushNotificationService,
-    private sendbirdService: SendbirdService,
     private algoliaService: AlgoliaService
   ) {}
   async trackPostViews(postsIds: string[]): Promise<boolean> {
@@ -57,8 +57,20 @@ export class PostService {
   //   const school = await this.prismaService.school.findUnique({
   //     where: { id: authUser.schoolId },
   //   })
+  // if (!school) return Promise.reject(new Error('No school'))
 
-  //   if (!school) return Promise.reject(new Error('No user school'))
+  // const maxDistance = 5 // 5Km
+  // const maxSchools = 50
+
+  // const nearSchools: { id: string; distance: number }[] = await this.prismaService.$queryRaw`
+  //   select * from (
+  //     select id, round(cast(ST_DistanceSphere(ST_SetSRID(ST_MakePoint(lng,lat),4326), ST_SetSRID(ST_MakePoint(${school.lng}, ${school.lat}),4326)) / 1000 as Numeric), 2) as distance
+  //     from public."School"
+  //   ) as schools
+  //   where distance < ${maxDistance}
+  //   order by distance asc
+  //   limit ${maxSchools}
+  // `
 
   //   const authUserCountry = await this.prismaService.city
   //     .findUnique({
@@ -70,15 +82,18 @@ export class PostService {
 
   //   if (!school) return Promise.reject(new Error('No school'))
 
-  //   const maxDistance = 50000
-  //   const maxSchools = 50
+  // const maxDistance = 5 // 5Km
+  // const maxSchools = 50
 
-  //   const nearSchools: { id: string; distance: number }[] = await this.prismaService.$queryRaw`
-  //     select id, ROUND(ST_DISTANCE_SPHERE(coord, POINT(${school.lng}, ${school.lat})) / 1000, 2) AS distance
-  //     from School having distance < ${maxDistance}
-  //     order by distance asc
-  //     limit ${maxSchools}
-  //   `
+  // const nearSchools: { id: string; distance: number }[] = await this.prismaService.$queryRaw`
+  //   select * from (
+  //     select id, round(cast(ST_Distance(ST_MakePoint(lng,lat)::geography, ST_MakePoint(${school.lng}, ${school.lat})::geography) / 1000 as Numeric), 2) as distance
+  //     from public."School"
+  //   ) as schools
+  //   where distance < ${maxDistance}
+  //   order by distance asc
+  //   limit ${maxSchools}
+  // `
 
   //   const posts = await this.prismaService.post.findMany({
   //     take: limit,
@@ -275,7 +290,7 @@ export class PostService {
   }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
-    const { text, expiresAt, expiresIn, tags, pollOptions, parentId } = createPostInput
+    const { text, emojis, expiresIn, tags, pollOptions, parentId } = createPostInput
 
     const uniqueTags = uniq(tags)
 
@@ -294,15 +309,30 @@ export class PostService {
         where: { id: parentId },
       }))
 
-    const connectOrCreateTags = uniq(tags).map((tagText) => ({
-      where: {
-        text: tagText,
-      },
-      create: {
-        text: tagText,
-        countryId: authUserCountry?.id,
-      },
-    }))
+    const connectOrCreateTags = uniq(tags).map(
+      (tagText): Prisma.TagCreateOrConnectWithoutPostsInput => ({
+        where: {
+          text: tagText,
+        },
+        create: {
+          text: tagText,
+          countryId: authUserCountry?.id,
+        },
+      })
+    )
+
+    const connectOrCreateEmojis = uniq(emojis).map(
+      (emoji): Prisma.TagCreateOrConnectWithoutPostsInput => ({
+        where: {
+          text: emoji,
+        },
+        create: {
+          text: emoji,
+          countryId: authUserCountry?.id,
+          isEmoji: true,
+        },
+      })
+    )
 
     const post = await this.prismaService.post.create({
       data: {
@@ -330,15 +360,20 @@ export class PostService {
           },
         }),
         tags: {
-          connectOrCreate: connectOrCreateTags,
+          connectOrCreate: [...connectOrCreateTags, ...connectOrCreateEmojis],
         },
       },
     })
 
     uniqueTags.map((tag) => this.tagService.syncTagIndexWithAlgolia(tag))
+
     this.syncPostIndexWithAlgolia(post.id)
 
-    if (parentId) this.pushNotificationService.postReplied(post.id)
+    if (parentId) {
+      this.pushNotificationService.postReplied(post.id)
+    } else {
+      this.pushNotificationService.friendPosted(post.id)
+    }
 
     return post
   }
@@ -385,57 +420,57 @@ export class PostService {
     return true
   }
 
-  async createOrUpdatePostReaction(
-    createOrUpdatePostReactionInput: CreateOrUpdatePostReactionInput,
-    authUser: AuthUser
-  ): Promise<boolean> {
-    const { reaction, postId } = createOrUpdatePostReactionInput
-    const authorId = authUser.id
+  // async createOrUpdatePostReaction(
+  //   createOrUpdatePostReactionInput: CreateOrUpdatePostReactionInput,
+  //   authUser: AuthUser
+  // ): Promise<boolean> {
+  //   const { reaction, postId } = createOrUpdatePostReactionInput
+  //   const authorId = authUser.id
 
-    const reactionData = {
-      reaction,
-      authorId,
-      postId,
-    }
+  //   const reactionData = {
+  //     reaction,
+  //     authorId,
+  //     postId,
+  //   }
 
-    const postReaction = await this.prismaService.postReaction.upsert({
-      where: {
-        authorId_postId: {
-          authorId,
-          postId,
-        },
-      },
-      select: {
-        authorId: true,
-        id: true,
-        postId: true,
-        reaction: true,
-        post: {
-          select: {
-            authorId: true,
-          },
-        },
-      },
-      create: {
-        author: {
-          connect: {
-            id: authUser.id,
-          },
-        },
-        reaction,
-        post: {
-          connect: {
-            id: postId,
-          },
-        },
-      },
-      update: reactionData,
-    })
+  //   const postReaction = await this.prismaService.postReaction.upsert({
+  //     where: {
+  //       authorId_postId: {
+  //         authorId,
+  //         postId,
+  //       },
+  //     },
+  //     select: {
+  //       authorId: true,
+  //       id: true,
+  //       postId: true,
+  //       reaction: true,
+  //       post: {
+  //         select: {
+  //           authorId: true,
+  //         },
+  //       },
+  //     },
+  //     create: {
+  //       author: {
+  //         connect: {
+  //           id: authUser.id,
+  //         },
+  //       },
+  //       reaction,
+  //       post: {
+  //         connect: {
+  //           id: postId,
+  //         },
+  //       },
+  //     },
+  //     update: reactionData,
+  //   })
 
-    if (postReaction.post.authorId !== authUser.id) this.sendbirdService.sendPostReactionMessage(postReaction.id)
+  //   if (postReaction.post.authorId !== authUser.id) this.sendbirdService.sendPostReactionMessage(postReaction.id)
 
-    return !!postReaction
-  }
+  //   return !!postReaction
+  // }
 
   async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUser: AuthUser): Promise<boolean> {
     const { postId } = deletePostReactionInput
@@ -525,7 +560,7 @@ export class PostService {
       select: PostSelectWithParent,
     })
 
-    if (!post) return Promise.reject(new Error('No post found'))
+    if (!post || !post.expiresAt) return
 
     const objectToCreate = {
       id: post.id,

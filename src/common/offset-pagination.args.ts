@@ -1,9 +1,11 @@
-import { ArgsType, Field } from '@nestjs/graphql'
+import { ArgsType } from '@nestjs/graphql'
+import { Max } from 'class-validator'
+import { DEFAULT_LIMIT, MAX_LIMIT } from './pagination.constant'
 
 @ArgsType()
 export class OffsetPaginationArgs {
-  @Field(() => Number)
-  skip = 0
-  @Field(() => Number)
-  limit = 10
+  skip: number = 0
+
+  @Max(MAX_LIMIT)
+  limit: number = DEFAULT_LIMIT
 }

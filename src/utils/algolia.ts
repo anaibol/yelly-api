@@ -62,11 +62,12 @@ export type PostIndexAlgoliaInterface = {
       }
     }
   }
-  tags: Array<{
+  tags: {
     id: string
     createdAt: Date
     text: string
-  }>
+    isEmoji: boolean
+  }[]
   createdAt: Date
 }
 
@@ -115,6 +116,7 @@ export const trendsTagSelect = {
   text: true,
   createdAt: true,
   updatedAt: true,
+  isEmoji: true,
   _count: {
     select: {
       posts: true,
@@ -187,6 +189,7 @@ export const algoliaPostSelect = {
       id: true,
       createdAt: true,
       text: true,
+      isEmoji: true,
     },
   },
 }
@@ -278,6 +281,7 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
         id: tag.id,
         createdAt: tag.createdAt,
         text: tag.text,
+        isEmoji: tag.isEmoji,
       }
     }),
   }

@@ -577,6 +577,7 @@ export class UserService {
         },
         notifications: {
           create: {
+            type: 'FRIEND_REQUEST_PENDING',
             userId: otherUserId,
           },
         },
@@ -624,7 +625,7 @@ export class UserService {
 
     if (!exists) return false
 
-    await Promise.all([
+    await this.prismaService.$transaction([
       this.prismaService.notification.deleteMany({
         where: {
           friendRequestId,
@@ -675,10 +676,19 @@ export class UserService {
           status: 'ACCEPTED',
         },
       }),
+      this.prismaService.notification.updateMany({
+        where: {
+          friendRequestId,
+        },
+        data: {
+          type: 'FRIEND_REQUEST_ACCEPTED',
+        },
+      }),
       this.prismaService.notification.create({
         data: {
           userId: fromUserId,
           friendRequestId,
+          type: 'FRIEND_REQUEST_ACCEPTED',
         },
       }),
     ])

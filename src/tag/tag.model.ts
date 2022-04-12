@@ -8,6 +8,7 @@ export class Tag {
   text: string
   createdAt?: Date
   isLive?: boolean
+  isEmoji?: boolean
   posts?: PaginatedPosts
   postCount?: number
   authUserPosted?: boolean

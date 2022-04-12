@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -17,8 +17,6 @@ model City {
   lng           Float?
   country       Country  @relation(fields: [countryId], references: [id])
   schools       School[]
-
-  @@index([countryId], map: "City_countryId_fkey")
 }
 
 model Country {
@@ -29,29 +27,30 @@ model Country {
 }
 
 model Notification {
-  id              String         @id @default(uuid())
-  isSeen          Boolean        @default(false)
-  createdAt       DateTime       @default(now())
-  postReactionId  String?        @unique
+  id              String           @id @default(uuid())
+  isSeen          Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  postId          String?
+  postReactionId  String?          @unique
   userId          String
   friendRequestId String?
-  friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
-  postReaction    PostReaction?  @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  post            Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  friendRequest   FriendRequest?   @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
+  postReaction    PostReaction?    @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  type            NotificationType?
 
   @@index([createdAt], map: "Notification_createdAt")
 }
 
 model School {
-  id            String                @id @default(uuid())
+  id            String  @id @default(uuid())
   name          String
-  googlePlaceId String?               @unique
+  googlePlaceId String? @unique
   lat           Float?
   lng           Float?
   cityId        String
-  city          City                  @relation(fields: [cityId], references: [id])
+  city          City    @relation(fields: [cityId], references: [id])
   users         User[]
-
-  @@index([cityId], map: "School_cityId_fkey")
 }
 
 model Training {
@@ -100,8 +99,6 @@ model User {
   postPollVotes                PostPollVote[]
 
   @@index([birthdate], map: "User_birthdate")
-  @@index([schoolId], map: "User_schoolId_fkey")
-  @@index([trainingId], map: "User_trainingId_fkey")
 }
 
 model FriendRequest {
@@ -113,8 +110,6 @@ model FriendRequest {
   fromUser      User                @relation("friendRequestFromUser", fields: [fromUserId], references: [id], onDelete: Cascade)
   toUser        User                @relation("friendRequestToUser", fields: [toUserId], references: [id], onDelete: Cascade)
   notifications Notification[]
-
-  @@index([toUserId], map: "FriendRequest_toUserId_fkey")
 }
 
 model Friend {
@@ -126,7 +121,6 @@ model Friend {
   user        User     @relation("userFriends", fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, otherUserId])
-  @@index([otherUserId], map: "Friend_otherUserId_fkey")
 }
 
 model Tag {
@@ -138,32 +132,33 @@ model Tag {
   posts     Post[]
   countryId String?
   country   Country? @relation(fields: [countryId], references: [id])
+  isEmoji   Boolean                           @default(false)
 
   @@index([text], map: "Tag_text_idx")
   @@index([createdAt], map: "Tag_createdAt")
 }
 
 model Post {
-  id          String           @id @default(uuid())
-  text        String           @db.Text
-  createdAt   DateTime         @unique @default(now())
-  authorId    String
-  viewsCount  Int              @default(0)
-  author      User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  reactions   PostReaction[]
-  tags        Tag[]
-  pollOptions PostPollOption[]
-  pollVotes   PostPollVote[]
-  expiresIn   Int?
-  expiresAt   DateTime?
-  children    Post[]           @relation("postThreads")
-  parent      Post?            @relation("postThreads", fields: [parentId], references: [id])
-  parentId    String?
-  
-  @@unique([authorId, id], map: "author_post_id_fkey")
+  id           String           @id @default(uuid())
+  text         String           @db.Text
+  createdAt    DateTime         @unique @default(now())
+  authorId     String
+  viewsCount   Int              @default(0)
+  author       User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions    PostReaction[]
+  tags         Tag[]
+  pollOptions  PostPollOption[]
+  pollVotes    PostPollVote[]
+  expiresIn    Int?
+  expiresAt    DateTime?
+  children     Post[]           @relation("postThreads")
+  parent       Post?            @relation("postThreads", fields: [parentId], references: [id])
+  parentId     String?
+  notification Notification[]
+
+  @@unique([authorId, id])
   @@index([createdAt], map: "Post_createdAt")
   @@index([expiresAt], map: "Post_expiresAt")
-
 }
 
 model PostPollOption {
@@ -185,7 +180,7 @@ model PostPollVote {
   author    User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt DateTime       @default(now())
 
-  @@unique([authorId, postId], map: "author_post_id_fkey")
+  @@unique([authorId, postId])
 }
 
 model PostReaction {
@@ -198,8 +193,7 @@ model PostReaction {
   post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   notification Notification?
 
-  @@unique([authorId, postId], map: "author_post_id_fkey")
-  @@index([postId], map: "PostReaction_postId_fkey")
+  @@unique([authorId, postId])
 }
 
 model ExpoPushNotificationAccessToken {
@@ -207,8 +201,6 @@ model ExpoPushNotificationAccessToken {
   userId String
   token  String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId], map: "ExpoPushNotificationAccessToken_userId_fkey")
 }
 
 enum FriendRequestStatus {
@@ -220,4 +212,12 @@ enum FriendRequestStatus {
 enum UserRole {
   USER
   ADMIN
+}
+
+enum NotificationType {
+  FRIEND_POSTED
+  POST_REPLIED
+  SAME_POST_REPLIED
+  FRIEND_REQUEST_PENDING
+  FRIEND_REQUEST_ACCEPTED
 }
