@@ -163,8 +163,8 @@ export class PushNotificationService {
     await this.prismaService.notification.createMany({
       data: friends.map((user) => ({
         userId: user.id,
-        postId,
         type: NotificationType.FRIEND_POSTED,
+        postId,
       })),
     })
 
@@ -253,14 +253,12 @@ export class PushNotificationService {
       select: UserPushTokenSelect,
     })
 
-    const samePostRepliedNotifications = samePostRepliedUsers.map((user) => ({
-      userId: user.id,
-      postId,
-      type: NotificationType.SAME_POST_REPLIED,
-    }))
-
     await this.prismaService.notification.createMany({
-      data: samePostRepliedNotifications,
+      data: samePostRepliedUsers.map((user) => ({
+        userId: user.id,
+        postId,
+        type: NotificationType.SAME_POST_REPLIED,
+      })),
     })
 
     const samePostRepliedUsersPushNotifications = samePostRepliedUsers.map(async (user) => {

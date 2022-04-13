@@ -5,12 +5,11 @@ import algoliasearch from 'algoliasearch'
 import { PostSelect } from '../../src/post/post-select.constant'
 import { mapAlgoliaPost, PostIndexAlgoliaInterface } from '../../src/utils/algolia'
 
-import 'dotenv/config'
+const INDEX_NAME = process.env.ALGOLIA_INDEX_PREFIX + 'POSTS'
+
+const prisma = new PrismaClient()
 
 async function main() {
-  const prisma = new PrismaClient()
-  const INDEX_NAME = 'dev_POSTS'
-
   let hasPosts = true
   let skip = 0
 

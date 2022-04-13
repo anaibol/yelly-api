@@ -4,9 +4,8 @@ import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 
-import 'dotenv/config'
+const INDEX_NAME = process.env.ALGOLIA_INDEX_PREFIX + 'USERS'
 
-const INDEX_NAME = 'dev_USERS'
 const CHUNK_SIZE = 5000
 
 const algoliaKey = process.env.ALGOLIA_API_KEY as string
