@@ -4,6 +4,8 @@ import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 import { algoliaSchoolSelect } from '../../src/utils/algolia'
 
+import 'dotenv/config'
+
 const INDEX_NAME = 'dev_SCHOOLS'
 const CHUNK_SIZE = 5000
 
