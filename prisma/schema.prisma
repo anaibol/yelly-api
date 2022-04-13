@@ -17,6 +17,8 @@ model City {
   lng           Float?
   country       Country  @relation(fields: [countryId], references: [id])
   schools       School[]
+
+  @@index([countryId])
 }
 
 model Country {
@@ -27,19 +29,20 @@ model Country {
 }
 
 model Notification {
-  id              String           @id @default(uuid())
-  isSeen          Boolean          @default(false)
-  createdAt       DateTime         @default(now())
+  id              String            @id @default(uuid())
+  isSeen          Boolean           @default(false)
+  createdAt       DateTime          @default(now())
   postId          String?
-  postReactionId  String?          @unique
+  postReactionId  String?           @unique
   userId          String
   friendRequestId String?
-  post            Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
-  friendRequest   FriendRequest?   @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
-  postReaction    PostReaction?    @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  post            Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  friendRequest   FriendRequest?    @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
+  postReaction    PostReaction?     @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
   type            NotificationType?
 
   @@index([createdAt], map: "Notification_createdAt")
+  @@index([userId])
 }
 
 model School {
@@ -110,6 +113,8 @@ model FriendRequest {
   fromUser      User                @relation("friendRequestFromUser", fields: [fromUserId], references: [id], onDelete: Cascade)
   toUser        User                @relation("friendRequestToUser", fields: [toUserId], references: [id], onDelete: Cascade)
   notifications Notification[]
+
+  @@index([fromUserId,toUserId])
 }
 
 model Friend {
@@ -121,6 +126,7 @@ model Friend {
   user        User     @relation("userFriends", fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, otherUserId])
+  @@index([userId])
 }
 
 model Tag {
@@ -132,10 +138,10 @@ model Tag {
   posts     Post[]
   countryId String?
   country   Country? @relation(fields: [countryId], references: [id])
-  isEmoji   Boolean                           @default(false)
+  isEmoji   Boolean  @default(false)
 
-  @@index([text], map: "Tag_text_idx")
-  @@index([createdAt], map: "Tag_createdAt")
+  @@index([createdAt])
+  @@index([isLive,countryId])
 }
 
 model Post {
@@ -156,9 +162,8 @@ model Post {
   parentId     String?
   notification Notification[]
 
-  @@unique([authorId, id])
-  @@index([createdAt], map: "Post_createdAt")
-  @@index([expiresAt], map: "Post_expiresAt")
+  @@index([authorId])
+  @@index([expiresAt])
 }
 
 model PostPollOption {
@@ -168,6 +173,8 @@ model PostPollOption {
   postId   String
   position Int
   votes    PostPollVote[]
+
+  @@index([postId])
 }
 
 model PostPollVote {
@@ -181,6 +188,8 @@ model PostPollVote {
   createdAt DateTime       @default(now())
 
   @@unique([authorId, postId])
+  @@index([optionId])
+  @@index([postId])
 }
 
 model PostReaction {
@@ -201,6 +210,8 @@ model ExpoPushNotificationAccessToken {
   userId String
   token  String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum FriendRequestStatus {
