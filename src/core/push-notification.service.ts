@@ -456,33 +456,19 @@ export class PushNotificationService {
 
     if (!tag?.countryId) return Promise.reject(new Error('No tag'))
 
-    const allPushTokens = await this.prismaService.expoPushNotificationAccessToken.findMany({
-      select: {
-        id: true,
-        token: true,
-        userId: true,
-        user: {
-          select: {
-            locale: true,
-          },
-        },
-      },
-      where: {
-        user: {
-          school: {
-            city: {
-              countryId: tag.countryId,
-            },
-          },
-        },
-      },
-    })
+    const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
+      .$queryRaw`
+    SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken", "City", "School"
+    WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"
+    AND "User"."schoolId" = "School"."id"
+    AND "School"."cityId" = "City"."id"
+    AND "City"."countryId" =  ${tag.countryId}`
 
     // eslint-disable-next-line functional/no-try-statement
     try {
       const messages = await Promise.all(
         allPushTokens
-          .map(async ({ token, user: { locale: lang } }) => {
+          .map(async ({ token, locale: lang }) => {
             return {
               to: token,
               sound: 'default' as const,
