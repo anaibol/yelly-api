@@ -5,6 +5,8 @@ import algoliasearch from 'algoliasearch'
 import { PostSelect } from '../../src/post/post-select.constant'
 import { mapAlgoliaPost, PostIndexAlgoliaInterface } from '../../src/utils/algolia'
 
+import 'dotenv/config'
+
 async function main() {
   const prisma = new PrismaClient()
   const INDEX_NAME = 'dev_POSTS'
@@ -31,7 +33,10 @@ async function main() {
     }
 
     skip += 500
-    const algoliaClient = await algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_API_KEY)
+    const algoliaClient = await algoliasearch(
+      process.env.ALGOLIA_APP_ID as string,
+      process.env.ALGOLIA_API_KEY as string
+    )
     const postIndex = await algoliaClient.initIndex(INDEX_NAME)
     console.log('insert ' + skip)
 

@@ -3,6 +3,8 @@
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 
+import 'dotenv/config'
+
 const INDEX_NAME = 'dev_CITIES'
 const CHUNK_SIZE = 5000
 
