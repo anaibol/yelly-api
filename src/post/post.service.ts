@@ -553,6 +553,7 @@ export class PostService {
 
   async syncPostIndexWithAlgolia(id: string): Promise<undefined> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
+
     const post = await this.prismaService.post.findUnique({
       where: {
         id,
@@ -560,7 +561,7 @@ export class PostService {
       select: PostSelectWithParent,
     })
 
-    if (!post || !post.expiresAt) return
+    if (!post || post.expiresAt) return
 
     const objectToCreate = {
       id: post.id,
