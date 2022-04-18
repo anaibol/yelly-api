@@ -216,14 +216,6 @@ export class PostService {
     const posts = await this.prismaService.post.findMany({
       where: {
         ...getNotExpiredCondition(),
-        tags: {
-          none: {
-            text: {
-              in: excludedTags,
-              mode: 'insensitive',
-            },
-          },
-        },
         author: {
           isActive: true,
           school: {
@@ -243,6 +235,23 @@ export class PostService {
             },
           },
         ],
+        AND: {
+          OR: [
+            {
+              tags: {
+                none: {
+                  text: {
+                    in: excludedTags,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+            },
+            {
+              authorId: authUser.id,
+            },
+          ],
+        },
       },
       ...(currentCursor && {
         cursor: {
