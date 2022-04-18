@@ -62,6 +62,7 @@ export class TagService {
       select: {
         id: true,
         text: true,
+        isLive: true,
         createdAt: true,
         _count: {
           select: {
