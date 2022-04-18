@@ -2,7 +2,7 @@
 /* eslint-disable functional/no-loop-statement */
 import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
-import { trendsTagSelect } from '../../src/utils/algolia'
+import { tagSelect } from 'src/tag/tag-select.constant'
 
 const INDEX_NAME = process.env.ALGOLIA_INDEX_PREFIX + 'TAGS'
 
@@ -21,7 +21,10 @@ async function main() {
 
   while (hasTags) {
     const tags = await prisma.tag.findMany({
-      select: trendsTagSelect,
+      select: {
+        ...tagSelect,
+        updatedAt: true,
+      },
       skip,
       take: CHUNK_SIZE,
     })

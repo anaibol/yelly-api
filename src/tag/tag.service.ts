@@ -4,10 +4,10 @@ import { PrismaService } from '../core/prisma.service'
 import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
-import { trendsTagSelect } from '../utils/algolia'
 import { PaginatedTrends } from './paginated-trends.model'
 import { AuthUser } from 'src/auth/auth.service'
 import { Tag } from './tag.model'
+import { tagSelect } from './tag-select.constant'
 
 @Injectable()
 export class TagService {
@@ -20,7 +20,7 @@ export class TagService {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
 
     const tag = await this.prismaService.tag.findUnique({
-      select: trendsTagSelect,
+      select: tagSelect,
       where: {
         text: tagText,
       },
@@ -59,17 +59,7 @@ export class TagService {
         isLive: true,
         countryId: country.id,
       },
-      select: {
-        id: true,
-        text: true,
-        isLive: true,
-        createdAt: true,
-        _count: {
-          select: {
-            posts: true,
-          },
-        },
-      },
+      select: tagSelect,
     })
 
     return liveTags.map(({ _count, ...tag }) => ({
@@ -187,7 +177,7 @@ export class TagService {
           },
         },
         take: limit,
-        select: trendsTagSelect,
+        select: tagSelect,
       }),
     ])
 
