@@ -397,9 +397,11 @@ export class PostService {
 
     this.syncPostIndexWithAlgolia(post.id)
 
-    if (parentId) {
+    const hasExcludedTags = tags?.some((tag) => excludedTags.includes(tag.toLowerCase()))
+
+    if (parentId && !hasExcludedTags) {
       this.pushNotificationService.postReplied(post.id)
-    } else {
+    } else if (!hasExcludedTags) {
       this.pushNotificationService.friendPosted(post.id)
     }
 
