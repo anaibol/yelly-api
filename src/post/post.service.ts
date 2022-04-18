@@ -12,7 +12,7 @@ import {
   getNotExpiredCondition,
 } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
-import { SendbirdService } from 'src/sendbird/sendbird.service'
+// import { SendbirdService } from 'src/sendbird/sendbird.service'
 import dates from 'src/utils/dates'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { AuthUser } from 'src/auth/auth.service'
@@ -21,6 +21,7 @@ import { PaginatedPosts } from './paginated-posts.model'
 import { Post } from './post.model'
 import { PostPollVote } from './post.model'
 import { Prisma } from '@prisma/client'
+import { excludedTags } from 'src/tag/excluded-tags.constant'
 
 const getExpiredAt = (expiresIn?: number | null): Date | undefined => {
   if (!expiresIn) return
@@ -215,6 +216,14 @@ export class PostService {
     const posts = await this.prismaService.post.findMany({
       where: {
         ...getNotExpiredCondition(),
+        tags: {
+          none: {
+            text: {
+              in: excludedTags,
+              mode: 'insensitive',
+            },
+          },
+        },
         author: {
           isActive: true,
           school: {
@@ -224,6 +233,16 @@ export class PostService {
           },
           birthdate: datesRanges,
         },
+        OR: [
+          {
+            parent: null,
+          },
+          {
+            parent: {
+              parent: null,
+            },
+          },
+        ],
       },
       ...(currentCursor && {
         cursor: {
