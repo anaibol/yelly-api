@@ -141,6 +141,7 @@ export class PushNotificationService {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
+        expiresAt: true,
         author: {
           select: UserPushTokenSelect,
         },
@@ -175,10 +176,13 @@ export class PushNotificationService {
 
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
-        body: await this.i18n.translate('notifications.FRIEND_POSTED', {
-          ...(lang && { lang }),
-          args: { firstName: post.author.firstName },
-        }),
+        body: await this.i18n.translate(
+          `notifications.${post.expiresAt ? 'FRIEND_POSTED_EPHEMERAL' : 'FRIEND_POSTED'}`,
+          {
+            ...(lang && { lang }),
+            args: { firstName: post.author.firstName },
+          }
+        ),
         data: { postId, url },
         sound: 'default' as const,
       }
