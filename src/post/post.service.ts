@@ -12,7 +12,7 @@ import {
   getNotExpiredCondition,
 } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
-import { SendbirdService } from 'src/sendbird/sendbird.service'
+// import { SendbirdService } from 'src/sendbird/sendbird.service'
 import dates from 'src/utils/dates'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { AuthUser } from 'src/auth/auth.service'
@@ -21,6 +21,7 @@ import { PaginatedPosts } from './paginated-posts.model'
 import { Post } from './post.model'
 import { PostPollVote } from './post.model'
 import { Prisma } from '@prisma/client'
+import { excludedTags } from 'src/tag/excluded-tags.constant'
 
 const getExpiredAt = (expiresIn?: number | null): Date | undefined => {
   if (!expiresIn) return
@@ -154,7 +155,7 @@ export class PostService {
   //     // },
   //     ...(currentCursor && {
   //       cursor: {
-  //         createdAt: new Date(+currentCursor).toISOString(),
+  //         createdAt: new Date(+currentCursor),
   //       },
   //       skip: 1,
   //     }),
@@ -224,10 +225,37 @@ export class PostService {
           },
           birthdate: datesRanges,
         },
+        OR: [
+          {
+            parent: null,
+          },
+          {
+            parent: {
+              parent: null,
+            },
+          },
+        ],
+        AND: {
+          OR: [
+            {
+              tags: {
+                none: {
+                  text: {
+                    in: excludedTags,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+            },
+            {
+              authorId: authUser.id,
+            },
+          ],
+        },
       },
       ...(currentCursor && {
         cursor: {
-          createdAt: new Date(+currentCursor).toISOString(),
+          createdAt: new Date(+currentCursor),
         },
         skip: 1,
       }),
@@ -261,7 +289,7 @@ export class PostService {
           },
           ...(currentCursor && {
             cursor: {
-              createdAt: new Date(+currentCursor).toISOString(),
+              createdAt: new Date(+currentCursor),
             },
             skip: 1,
           }),
@@ -369,9 +397,11 @@ export class PostService {
 
     this.syncPostIndexWithAlgolia(post.id)
 
-    if (parentId) {
+    const hasExcludedTags = tags?.some((tag) => excludedTags.includes(tag.toLowerCase()))
+
+    if (parentId && !hasExcludedTags) {
       this.pushNotificationService.postReplied(post.id)
-    } else {
+    } else if (!hasExcludedTags) {
       this.pushNotificationService.friendPosted(post.id)
     }
 
@@ -553,6 +583,7 @@ export class PostService {
 
   async syncPostIndexWithAlgolia(id: string): Promise<undefined> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
+
     const post = await this.prismaService.post.findUnique({
       where: {
         id,
@@ -560,7 +591,7 @@ export class PostService {
       select: PostSelectWithParent,
     })
 
-    if (!post || !post.expiresAt) return
+    if (!post || post.expiresAt) return
 
     const objectToCreate = {
       id: post.id,

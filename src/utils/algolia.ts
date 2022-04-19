@@ -111,19 +111,6 @@ export const algoliaUserSelect = {
   },
 }
 
-export const trendsTagSelect = {
-  id: true,
-  text: true,
-  createdAt: true,
-  updatedAt: true,
-  isEmoji: true,
-  _count: {
-    select: {
-      posts: true,
-    },
-  },
-}
-
 export const algoliaSchoolSelect = {
   id: true,
   name: true,

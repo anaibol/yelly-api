@@ -82,10 +82,16 @@ async function main() {
           isLive: false,
           isEmoji: true,
           countryId,
+          posts: {
+            connect: {
+              id,
+            },
+          },
         },
       })
 
       console.log('emoji:created', { emoji })
+
       emojiCreatedCount++
     }
   }
