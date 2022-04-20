@@ -5,7 +5,7 @@
   "FRIENDSHIP_ACCEPTED_BODY": "{firstName} a accepté ta demande d’ami",
   "NEW_LIVE_TAG_BODY": "Tendance Yelly live",
   "FRIEND_POSTED": "{firstName} a publié un nouveau post 💬",
-  "FRIEND_POSTED_EPHEMERAL": "{firstName} a publié un nouveau post éphémère qui disparaît dans 15 minutes ⚡",
+  "FRIEND_POSTED_EPHEMERAL": "{firstName} a publié un nouveau post qui disparaît dans 15 minutes ⚡",
   "POST_REPLIED": "{firstName} a répondu à ton post 💬",
   "SAME_POST_REPLIED": "{firstName} a répondu au même post que toi 💬",
   "YOUR_POST_WILL_VANISH": "Ton post disparaît dans 5 minutes ⚡ Post à nouveau pour dire ce que tu fais ! 💬"
