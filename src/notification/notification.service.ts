@@ -37,7 +37,7 @@ export class NotificationService {
           post: {
             select: {
               id: true,
-              expiresAt: true,
+              expiresIn: true,
               parent: {
                 select: {
                   id: true,
