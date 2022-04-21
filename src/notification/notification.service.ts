@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { getNotExpiredCondition } from 'src/post/post-select.constant'
 import { PrismaService } from '../core/prisma.service'
 import { PaginatedNotifications } from './paginated-notifications.model'
 
@@ -16,6 +17,17 @@ export class NotificationService {
       this.prismaService.notification.findMany({
         where: {
           userId,
+          // filter expired posts notifications
+          OR: [
+            {
+              post: null,
+            },
+            {
+              post: {
+                ...getNotExpiredCondition(),
+              },
+            },
+          ],
         },
         select: {
           id: true,
@@ -25,6 +37,7 @@ export class NotificationService {
           post: {
             select: {
               id: true,
+              expiresIn: true,
               parent: {
                 select: {
                   id: true,

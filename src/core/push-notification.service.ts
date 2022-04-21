@@ -9,6 +9,8 @@ import expo from '../utils/expo'
 import { AmplitudeService } from './amplitude.service'
 import { Cron } from '@nestjs/schedule'
 
+const expiresInFlash = 60 * 15 // 15m
+
 type SendbirdMessageWebhookBody = {
   sender: any
   members: any[]
@@ -141,6 +143,7 @@ export class PushNotificationService {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
+        expiresIn: true,
         author: {
           select: UserPushTokenSelect,
         },
@@ -175,10 +178,13 @@ export class PushNotificationService {
 
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
-        body: await this.i18n.translate('notifications.FRIEND_POSTED', {
-          ...(lang && { lang }),
-          args: { firstName: post.author.firstName },
-        }),
+        body: await this.i18n.translate(
+          `notifications.${post.expiresIn === expiresInFlash ? 'FRIEND_POSTED_EPHEMERAL' : 'FRIEND_POSTED'}`,
+          {
+            ...(lang && { lang }),
+            args: { firstName: post.author.firstName },
+          }
+        ),
         data: { postId, url },
         sound: 'default' as const,
       }
