@@ -433,10 +433,13 @@ export class PushNotificationService {
         const expoPushTickets = result.value
         return expoPushTickets.map(async (ticket) => {
           if (ticket.status == 'ok') {
+            console.log({ trackEvent, tokens: tokens[index].userId })
             if (trackEvent) await this.amplitudeService.logEvent(trackEvent, tokens[index].userId)
             return true
           } else {
             const errorType = ticket.details?.error
+            console.log({ errorType })
+
             if (errorType === 'DeviceNotRegistered')
               await this.expoPushNotificationTokenService.deleteByUserAndToken(
                 tokens[index].userId,
