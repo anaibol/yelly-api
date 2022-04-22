@@ -13,10 +13,11 @@ import { User } from './user.model'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { Me } from './me.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { FriendRequest } from './friendRequest.model'
+import { FollowRequest } from './followRequest.model'
 import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { AuthUser } from 'src/auth/auth.service'
 import { PostService } from 'src/post/post.service'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class UserService {
@@ -119,7 +120,8 @@ export class UserService {
         },
         _count: {
           select: {
-            friends: true,
+            followers: true,
+            followees: true,
           },
         },
       },
@@ -131,198 +133,191 @@ export class UserService {
 
     return {
       ...user,
-      friendsCount: _count.friends,
+      followersCount: _count.followers,
+      followeesCount: _count.followees,
     }
   }
 
-  getFriendsCount(userId: string): Promise<number> {
-    return this.prismaService.friend.count({
-      where: {
-        userId,
-      },
-    })
-  }
+  // async getCommonFriendsCountMultiUser(authUser: AuthUser, otherUserIds: string[]) {
+  //   const users = await this.prismaService.user.findMany({
+  //     where: {
+  //       id: {
+  //         in: otherUserIds,
+  //       },
+  //       friends: {
+  //         some: {
+  //           otherUser: {
+  //             friends: {
+  //               some: {
+  //                 otherUserId: authUser.id,
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //     select: {
+  //       id: true,
+  //       _count: {
+  //         select: {
+  //           friends: true,
+  //         },
+  //       },
+  //     },
+  //   })
 
-  async getCommonFriendsCountMultiUser(authUser: AuthUser, otherUserIds: string[]) {
-    const users = await this.prismaService.user.findMany({
-      where: {
-        id: {
-          in: otherUserIds,
-        },
-        friends: {
-          some: {
-            otherUser: {
-              friends: {
-                some: {
-                  otherUserId: authUser.id,
-                },
-              },
-            },
-          },
-        },
-      },
-      select: {
-        id: true,
-        _count: {
-          select: {
-            friends: true,
-          },
-        },
-      },
-    })
+  //   return users.map((u) => ({ otherUserId: u.id, count: u._count.friends }))
+  // }
 
-    return users.map((u) => ({ otherUserId: u.id, count: u._count.friends }))
-  }
+  // getCommonFriendsCount(authUser: AuthUser, otherUserId: string): Promise<number> {
+  //   return this.prismaService.user.count({
+  //     where: {
+  //       AND: [
+  //         {
+  //           friends: {
+  //             some: {
+  //               otherUserId: authUser.id,
+  //             },
+  //           },
+  //         },
+  //         {
+  //           friends: {
+  //             some: {
+  //               otherUserId,
+  //             },
+  //           },
+  //         },
+  //       ],
+  //     },
+  //   })
+  // }
 
-  getCommonFriendsCount(authUser: AuthUser, otherUserId: string): Promise<number> {
-    return this.prismaService.user.count({
-      where: {
-        AND: [
-          {
-            friends: {
-              some: {
-                otherUserId: authUser.id,
-              },
-            },
-          },
-          {
-            friends: {
-              some: {
-                otherUserId,
-              },
-            },
-          },
-        ],
-      },
-    })
-  }
+  // async getCommonFriends(
+  //   authUser: AuthUser,
+  //   otherUserId: string,
+  //   skip: number,
+  //   limit: number
+  // ): Promise<PaginatedUsers> {
+  //   const where = {
+  //     AND: [
+  //       {
+  //         friends: {
+  //           some: {
+  //             otherUserId: authUser.id,
+  //           },
+  //         },
+  //       },
+  //       {
+  //         friends: {
+  //           some: {
+  //             otherUserId,
+  //           },
+  //         },
+  //       },
+  //     ],
+  //   }
 
-  async getCommonFriends(
-    authUser: AuthUser,
-    otherUserId: string,
-    skip: number,
-    limit: number
-  ): Promise<PaginatedUsers> {
-    const where = {
-      AND: [
-        {
-          friends: {
-            some: {
-              otherUserId: authUser.id,
-            },
-          },
-        },
-        {
-          friends: {
-            some: {
-              otherUserId,
-            },
-          },
-        },
-      ],
-    }
+  //   const [totalCount, items] = await this.prismaService.$transaction([
+  //     this.prismaService.user.count({
+  //       where,
+  //     }),
+  //     this.prismaService.user.findMany({
+  //       take: limit,
+  //       skip,
+  //       where,
+  //       include: {
+  //         school: true,
+  //       },
+  //     }),
+  //   ])
 
-    const [totalCount, items] = await this.prismaService.$transaction([
-      this.prismaService.user.count({
-        where,
-      }),
-      this.prismaService.user.findMany({
-        take: limit,
-        skip,
-        where,
-        include: {
-          school: true,
-        },
-      }),
-    ])
+  //   const nextSkip = skip + limit
 
-    const nextSkip = skip + limit
+  //   return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+  // }
 
-    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
-  }
+  // async getCommonFriendsMultiUser(
+  //   authUser: AuthUser,
+  //   otherUserIds: string[],
+  //   skip: number,
+  //   limit: number
+  // ): Promise<
+  //   {
+  //     otherUserId: string
+  //     commonFriends: PaginatedUsers
+  //   }[]
+  // > {
+  //   const where = {
+  //     AND: [
+  //       {
+  //         friends: {
+  //           some: {
+  //             otherUserId: authUser.id,
+  //           },
+  //         },
+  //       },
+  //       {
+  //         friends: {
+  //           some: {
+  //             otherUserId: {
+  //               in: otherUserIds,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     ],
+  //   }
 
-  async getCommonFriendsMultiUser(
-    authUser: AuthUser,
-    otherUserIds: string[],
-    skip: number,
-    limit: number
-  ): Promise<
-    {
-      otherUserId: string
-      commonFriends: PaginatedUsers
-    }[]
-  > {
-    const where = {
-      AND: [
-        {
-          friends: {
-            some: {
-              otherUserId: authUser.id,
-            },
-          },
-        },
-        {
-          friends: {
-            some: {
-              otherUserId: {
-                in: otherUserIds,
-              },
-            },
-          },
-        },
-      ],
-    }
+  //   const [totalCount, users] = await this.prismaService.$transaction([
+  //     this.prismaService.user.count({
+  //       where,
+  //     }),
+  //     this.prismaService.user.findMany({
+  //       where,
+  //       select: {
+  //         id: true,
+  //         friends: {
+  //           take: limit,
+  //           skip,
+  //           select: {
+  //             user: true,
+  //           },
+  //         },
+  //       },
+  //     }),
+  //   ])
 
-    const [totalCount, users] = await this.prismaService.$transaction([
-      this.prismaService.user.count({
-        where,
-      }),
-      this.prismaService.user.findMany({
-        where,
-        select: {
-          id: true,
-          friends: {
-            take: limit,
-            skip,
-            select: {
-              user: true,
-            },
-          },
-        },
-      }),
-    ])
+  //   const nextSkip = skip + limit
 
-    const nextSkip = skip + limit
+  //   const res = otherUserIds.map((otherUserId) => {
+  //     const u = users.find(({ id }) => id === otherUserId)
 
-    const res = otherUserIds.map((otherUserId) => {
-      const u = users.find(({ id }) => id === otherUserId)
+  //     if (!u)
+  //       return {
+  //         otherUserId,
+  //         commonFriends: {
+  //           items: [],
+  //           nextSkip: 0,
+  //         },
+  //       }
 
-      if (!u)
-        return {
-          otherUserId,
-          commonFriends: {
-            items: [],
-            nextSkip: 0,
-          },
-        }
+  //     return {
+  //       otherUserId,
+  //       commonFriends: {
+  //         items: u.friends.map(({ user }) => user),
+  //         nextSkip: totalCount > nextSkip ? nextSkip : 0,
+  //       },
+  //     }
+  //   })
 
-      return {
-        otherUserId,
-        commonFriends: {
-          items: u.friends.map(({ user }) => user),
-          nextSkip: totalCount > nextSkip ? nextSkip : 0,
-        },
-      }
-    })
+  //   return res
+  // }
 
-    return res
-  }
-
-  async getFriends(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
-    const where = {
-      friends: {
+  async getFollowers(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
+    const where: Prisma.UserWhereInput = {
+      followees: {
         some: {
-          otherUserId: userId,
+          followerId: userId,
         },
       },
     }
@@ -352,13 +347,63 @@ export class UserService {
     return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async isFriend(
+  async getFollowees(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
+    const where: Prisma.UserWhereInput = {
+      followees: {
+        some: {
+          followerId: userId,
+        },
+      },
+    }
+
+    const [totalCount, items] = await this.prismaService.$transaction([
+      this.prismaService.user.count({
+        where,
+      }),
+      this.prismaService.user.findMany({
+        take: limit,
+        skip,
+        where,
+        include: {
+          school: true,
+        },
+      }),
+    ])
+
+    if (!items.length)
+      return {
+        items: [],
+        nextSkip: 0,
+      }
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+  }
+
+  getFollowersCount(userId: string): Promise<number> {
+    return this.prismaService.followship.count({
+      where: {
+        followeeId: userId,
+      },
+    })
+  }
+
+  getFolloweesCount(userId: string): Promise<number> {
+    return this.prismaService.followship.count({
+      where: {
+        followerId: userId,
+      },
+    })
+  }
+
+  async isFollowedByAuthUser(
     userId: string,
     otherUserIds: string[]
   ): Promise<
     {
       otherUserId: string
-      isFriend: boolean
+      isFollowedByAuthUser: boolean
     }[]
   > {
     if (otherUserIds.length === 1) {
@@ -373,7 +418,7 @@ export class UserService {
         },
       })
 
-      return [{ otherUserId, isFriend: !!friend }]
+      return [{ otherUserId, isFollowedByAuthUser: !!friend }]
     }
 
     const friends = await this.prismaService.friend.findMany({
@@ -387,12 +432,12 @@ export class UserService {
 
     return otherUserIds.map((otherUserId) => ({
       otherUserId,
-      isFriend: friends.map(({ otherUserId }) => otherUserId).includes(otherUserId),
+      isFollowedByAuthUser: friends.map(({ otherUserId }) => otherUserId).includes(otherUserId),
     }))
   }
 
-  async getFriendRequest(fromUserId: string, toUserId: string): Promise<FriendRequest | null> {
-    return this.prismaService.friendRequest.findFirst({
+  async getFollowRequest(fromUserId: string, toUserId: string): Promise<FollowRequest | null> {
+    return this.prismaService.followRequest.findFirst({
       select: {
         id: true,
         status: true,
@@ -464,7 +509,8 @@ export class UserService {
         },
         _count: {
           select: {
-            friends: true,
+            followers: true,
+            followees: true,
           },
         },
       },
@@ -477,7 +523,8 @@ export class UserService {
     return {
       ...user,
       expoPushNotificationTokens: expoPushNotificationTokens.map(({ token }) => token),
-      friendsCount: _count.friends,
+      followersCount: _count.followers,
+      followeesCount: _count.followees,
     }
   }
 
@@ -580,8 +627,8 @@ export class UserService {
     return true
   }
 
-  async createFriendRequest(authUser: AuthUser, otherUserId: string): Promise<FriendRequest> {
-    const friendRequest = await this.prismaService.friendRequest.create({
+  async createFollowRequest(authUser: AuthUser, otherUserId: string): Promise<FollowRequest> {
+    const followRequest = await this.prismaService.followRequest.create({
       data: {
         fromUser: {
           connect: {
@@ -595,37 +642,37 @@ export class UserService {
         },
         notifications: {
           create: {
-            type: 'FRIEND_REQUEST_PENDING',
+            type: 'FOLLOW_REQUEST_PENDING',
             userId: otherUserId,
           },
         },
       },
     })
 
-    this.pushNotificationService.createFriendRequestPushNotification(friendRequest)
+    this.pushNotificationService.createFollowRequestPushNotification(followRequest)
 
-    return friendRequest
+    return followRequest
   }
 
-  async deleteFriendRequest(authUser: AuthUser, friendRequestId: string): Promise<boolean> {
+  async deleteFollowRequest(authUser: AuthUser, followRequestId: string): Promise<boolean> {
     const exists = await this.prismaService.user
       .findUnique({
         where: {
           id: authUser.id,
         },
       })
-      .friendRequestFromUser({
+      .followRequestFromUser({
         where: {
-          id: friendRequestId,
+          id: followRequestId,
         },
       })
 
-    if (!exists) return Promise.reject(new Error("Friend request doesn't exists or is not from this user"))
+    if (!exists) return Promise.reject(new Error("Follow request doesn't exists or is not from this user"))
 
     await Promise.all([
       this.prismaService.notification.deleteMany({
         where: {
-          friendRequestId,
+          followRequestId,
         },
       }),
     ])
@@ -633,10 +680,10 @@ export class UserService {
     return true
   }
 
-  async declineFriendRequest(authUser: AuthUser, friendRequestId: string): Promise<boolean> {
-    const exists = await this.prismaService.friendRequest.findFirst({
+  async declineFollowRequest(authUser: AuthUser, followRequestId: string): Promise<boolean> {
+    const exists = await this.prismaService.followRequest.findFirst({
       where: {
-        id: friendRequestId,
+        id: followRequestId,
         toUserId: authUser.id,
       },
     })
@@ -646,12 +693,12 @@ export class UserService {
     await this.prismaService.$transaction([
       this.prismaService.notification.deleteMany({
         where: {
-          friendRequestId,
+          followRequestId,
         },
       }),
-      this.prismaService.friendRequest.update({
+      this.prismaService.followRequest.update({
         where: {
-          id: friendRequestId,
+          id: followRequestId,
         },
         data: {
           status: 'DECLINED',
@@ -662,33 +709,27 @@ export class UserService {
     return true
   }
 
-  async acceptFriendRequest(authUser: AuthUser, friendRequestId: string): Promise<boolean> {
-    const friendRequest = await this.prismaService.friendRequest.findUnique({
+  async acceptFollowRequest(authUser: AuthUser, followRequestId: string): Promise<boolean> {
+    const followRequest = await this.prismaService.followRequest.findUnique({
       where: {
-        id: friendRequestId,
+        id: followRequestId,
       },
     })
 
-    if (friendRequest?.toUserId !== authUser.id) return Promise.reject(new Error('No friend request'))
+    if (followRequest?.toUserId !== authUser.id) return Promise.reject(new Error('No follow request'))
 
-    const { fromUserId, toUserId } = friendRequest
+    const { fromUserId, toUserId } = followRequest
 
     await this.prismaService.$transaction([
-      this.prismaService.friend.createMany({
-        data: [
-          {
-            userId: fromUserId,
-            otherUserId: toUserId,
-          },
-          {
-            userId: toUserId,
-            otherUserId: fromUserId,
-          },
-        ],
+      this.prismaService.followship.create({
+        data: {
+          followerId: fromUserId,
+          followeeId: toUserId,
+        },
       }),
-      this.prismaService.friendRequest.update({
+      this.prismaService.followRequest.update({
         where: {
-          id: friendRequestId,
+          id: followRequestId,
         },
         data: {
           status: 'ACCEPTED',
@@ -696,39 +737,31 @@ export class UserService {
       }),
       this.prismaService.notification.updateMany({
         where: {
-          friendRequestId,
+          followRequestId,
         },
         data: {
-          type: 'FRIEND_REQUEST_ACCEPTED',
+          type: 'FOLLOW_REQUEST_ACCEPTED',
         },
       }),
       this.prismaService.notification.create({
         data: {
           userId: fromUserId,
-          friendRequestId,
-          type: 'FRIEND_REQUEST_ACCEPTED',
+          followRequestId,
+          type: 'FOLLOW_REQUEST_ACCEPTED',
         },
       }),
     ])
 
-    this.pushNotificationService.createFriendRequestAcceptedPushNotification(friendRequest)
+    this.pushNotificationService.createFollowRequestAcceptedPushNotification(followRequest)
 
     return true
   }
 
-  async unfriend(userId: string, otherUserId: string): Promise<boolean> {
-    await this.prismaService.friend.deleteMany({
+  async unFollow(followerId: string, followeeId: string): Promise<boolean> {
+    await this.prismaService.followship.deleteMany({
       where: {
-        OR: [
-          {
-            userId: userId,
-            otherUserId: otherUserId,
-          },
-          {
-            userId: otherUserId,
-            otherUserId: userId,
-          },
-        ],
+        followerId,
+        followeeId,
       },
     })
 

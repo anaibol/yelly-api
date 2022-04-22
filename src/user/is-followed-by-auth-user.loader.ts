@@ -5,7 +5,7 @@ import { AuthUser } from 'src/auth/auth.service'
 import { UserService } from './user.service'
 
 @DataloaderProvider()
-export class IsFriendLoader {
+export class IsFollowedByAuthUserLoader {
   constructor(private userService: UserService) {}
 
   createDataloader(ctx: GqlExecutionContext) {
@@ -13,9 +13,9 @@ export class IsFriendLoader {
     const authUser: AuthUser = ctx.getContext().req.user
     // Replace this with your actual dataloader implementation
     return new DataLoader<string, boolean | undefined, string>(async (otherUserIds: readonly string[]) => {
-      const isFriend = await this.userService.isFriend(authUser.id, otherUserIds as string[]) // skip, limit
+      const isFollowedByAuthUser = await this.userService.isFollowedByAuthUser(authUser.id, otherUserIds as string[]) // skip, limit
 
-      const usersMap = new Map(isFriend.map((user) => [user.otherUserId, user.isFriend]))
+      const usersMap = new Map(isFollowedByAuthUser.map((user) => [user.otherUserId, user.isFollowedByAuthUser]))
 
       return otherUserIds.map((otherUserId) => usersMap.get(otherUserId))
     })

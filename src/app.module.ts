@@ -13,13 +13,13 @@ import { NotificationModule } from './notification/notification.module'
 import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
 import { SendbirdWebhookModule } from './sendbird-webhook/sendbird-webhook.module'
 import { SchoolModule } from './school/school.module'
-import { CommonFriendsLoader } from './user/common-friends.loader'
-import { IsFriendLoader } from './user/is-friend.loader'
+// import { CommonFriendsLoader } from './user/common-friends.loader'
+import { IsFollowedByAuthUserLoader } from './user/is-followed-by-auth-user.loader'
 import { ScheduleModule } from '@nestjs/schedule'
 // import { GraphQLError, GraphQLFormattedError } from 'graphql'
 
 @Module({
-  providers: [UserModule, CommonFriendsLoader, IsFriendLoader],
+  providers: [UserModule, IsFollowedByAuthUserLoader], // CommonFriendsLoader
   imports: [
     ScheduleModule.forRoot(),
     GraphQLModule.forRoot<ApolloDriverConfig>({

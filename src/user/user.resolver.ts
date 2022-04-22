@@ -14,12 +14,12 @@ import { PrismaService } from 'src/core/prisma.service'
 import { PostSelectWithParent, mapPost, getNotExpiredCondition } from 'src/post/post-select.constant'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { FriendRequest } from './friendRequest.model'
+import { FollowRequest } from './followRequest.model'
 import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
 import { Loader } from '@tracworx/nestjs-dataloader'
-import { CommonFriendsLoader } from './common-friends.loader'
-import { CommonFriendsCountLoader } from './common-friends-count.loader'
-import { IsFriendLoader } from './is-friend.loader'
+// import { CommonFriendsLoader } from './common-friends.loader'
+// import { CommonFriendsCountLoader } from './common-friends-count.loader'
+import { IsFollowedByAuthUserLoader } from './is-followed-by-auth-user.loader'
 import DataLoader from 'dataloader'
 
 @Resolver(() => User)
@@ -33,127 +33,127 @@ export class UserResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => FriendRequest)
-  createFriendRequest(
+  @Mutation(() => FollowRequest)
+  createFollowRequest(
     @Args('otherUserId') otherUserId: string,
     @CurrentUser() authUser: AuthUser
-  ): Promise<FriendRequest> {
-    return this.userService.createFriendRequest(authUser, otherUserId)
+  ): Promise<FollowRequest> {
+    return this.userService.createFollowRequest(authUser, otherUserId)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  acceptFriendRequest(
-    @Args('friendRequestId') friendRequestId: string,
+  acceptFollowRequest(
+    @Args('followRequestId') followRequestId: string,
     @CurrentUser() authUser: AuthUser
   ): Promise<boolean> {
-    return this.userService.acceptFriendRequest(authUser, friendRequestId)
+    return this.userService.acceptFollowRequest(authUser, followRequestId)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  deleteFriendRequest(
-    @Args('friendRequestId') friendRequestId: string,
+  deleteFollowRequest(
+    @Args('followRequestId') followRequestId: string,
     @CurrentUser() authUser: AuthUser
   ): Promise<boolean> {
-    return this.userService.deleteFriendRequest(authUser, friendRequestId)
+    return this.userService.deleteFollowRequest(authUser, followRequestId)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  unfriend(@Args('otherUserId') otherUserId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.unfriend(authUser.id, otherUserId)
+  unFollow(@Args('otherUserId') otherUserId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.unFollow(authUser.id, otherUserId)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  declineFriendRequest(
-    @Args('friendRequestId') friendRequestId: string,
+  declineFollowRequest(
+    @Args('followRequestId') followRequestId: string,
     @CurrentUser() authUser: AuthUser
   ): Promise<boolean> {
-    return this.userService.declineFriendRequest(authUser, friendRequestId)
+    return this.userService.declineFollowRequest(authUser, followRequestId)
   }
 
   @ResolveField()
-  friends(@Parent() user: User, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFriends(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+  followers(@Parent() user: User, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
+    return this.userService.getFollowers(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
   }
 
   @ResolveField()
-  friendsCount(@Parent() user: User): Promise<number> {
-    return this.userService.getFriendsCount(user.id)
+  followersCount(@Parent() user: User): Promise<number> {
+    return this.userService.getFollowersCount(user.id)
   }
 
-  @ResolveField()
-  async commonFriendsCountMultiUser(
-    @Parent() user: User,
-    @CurrentUser() authUser: AuthUser,
-    @Loader(CommonFriendsCountLoader) commonFriendsCountLoader: DataLoader<string, number | undefined, string>
-  ): Promise<number> {
-    const commonFriendsCount = await commonFriendsCountLoader.load(user.id) // offsetPaginationArgs.skip, offsetPaginationArgs.limit
+  // @ResolveField()
+  // async commonFriendsCountMultiUser(
+  //   @Parent() user: User,
+  //   @CurrentUser() authUser: AuthUser,
+  //   @Loader(CommonFriendsCountLoader) commonFriendsCountLoader: DataLoader<string, number | undefined, string>
+  // ): Promise<number> {
+  //   const commonFriendsCount = await commonFriendsCountLoader.load(user.id) // offsetPaginationArgs.skip, offsetPaginationArgs.limit
 
-    if (!commonFriendsCount) return Promise.reject(new Error('Error'))
-    // return this.userService.getCommonFriendsCount(authUser, user.id)
+  //   if (!commonFriendsCount) return Promise.reject(new Error('Error'))
+  //   // return this.userService.getCommonFriendsCount(authUser, user.id)
 
-    return commonFriendsCount
-  }
+  //   return commonFriendsCount
+  // }
 
-  @ResolveField()
-  async commonFriendsCount(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<number> {
-    return this.userService.getCommonFriendsCount(authUser, user.id)
-  }
+  // @ResolveField()
+  // async commonFriendsCount(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<number> {
+  //   return this.userService.getCommonFriendsCount(authUser, user.id)
+  // }
+
+  // @UseGuards(AuthGuard)
+  // @ResolveField()
+  // async commonFriendsMultiUser(
+  //   @Parent() user: User,
+  //   @CurrentUser() authUser: AuthUser,
+  //   @Args() offsetPaginationArgs: OffsetPaginationArgs,
+  //   @Loader(CommonFriendsLoader) commonFriendsLoader: DataLoader<string, PaginatedUsers | undefined, string>
+  // ): Promise<PaginatedUsers> {
+  //   const commonFriends = await commonFriendsLoader.load(user.id) // offsetPaginationArgs.skip, offsetPaginationArgs.limit
+
+  //   if (!commonFriends) return Promise.reject(new Error('Error'))
+
+  //   return commonFriends
+  // }
+
+  // @UseGuards(AuthGuard)
+  // @ResolveField()
+  // async commonFriends(
+  //   @Parent() user: User,
+  //   @CurrentUser() authUser: AuthUser,
+  //   @Args() offsetPaginationArgs: OffsetPaginationArgs
+  // ): Promise<PaginatedUsers> {
+  //   return this.userService.getCommonFriends(authUser, user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+  // }
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async commonFriendsMultiUser(
+  async isFollowedByAuthUser(
     @Parent() user: User,
-    @CurrentUser() authUser: AuthUser,
-    @Args() offsetPaginationArgs: OffsetPaginationArgs,
-    @Loader(CommonFriendsLoader) commonFriendsLoader: DataLoader<string, PaginatedUsers | undefined, string>
-  ): Promise<PaginatedUsers> {
-    const commonFriends = await commonFriendsLoader.load(user.id) // offsetPaginationArgs.skip, offsetPaginationArgs.limit
-
-    if (!commonFriends) return Promise.reject(new Error('Error'))
-
-    return commonFriends
-  }
-
-  @UseGuards(AuthGuard)
-  @ResolveField()
-  async commonFriends(
-    @Parent() user: User,
-    @CurrentUser() authUser: AuthUser,
-    @Args() offsetPaginationArgs: OffsetPaginationArgs
-  ): Promise<PaginatedUsers> {
-    return this.userService.getCommonFriends(authUser, user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
-  }
-
-  @UseGuards(AuthGuard)
-  @ResolveField()
-  async isAuthUserFriend(
-    @Parent() user: User,
-    @Loader(IsFriendLoader) isFriendLoader: DataLoader<string, boolean | undefined, string>
+    @Loader(IsFollowedByAuthUserLoader) isFollowedByAuthUserLoader: DataLoader<string, boolean | undefined, string>
   ): Promise<boolean> {
-    const isFriend = await isFriendLoader.load(user.id)
+    const isFollowedByAuthUser = await isFollowedByAuthUserLoader.load(user.id)
 
-    if (isFriend === undefined) return Promise.reject(new Error('isFriend undefined'))
+    if (isFollowedByAuthUser === undefined) return Promise.reject(new Error('isFollowedByAuthUser undefined'))
 
-    return isFriend
+    return isFollowedByAuthUser
   }
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  authUserFriendRequestFromUser(
+  authUserFollowRequestFromUser(
     @Parent() user: User,
     @CurrentUser() authUser: AuthUser
-  ): Promise<FriendRequest | null> {
-    return this.userService.getFriendRequest(user.id, authUser.id)
+  ): Promise<FollowRequest | null> {
+    return this.userService.getFollowRequest(user.id, authUser.id)
   }
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  authUserFriendRequestToUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FriendRequest | null> {
-    return this.userService.getFriendRequest(authUser.id, user.id)
+  authUserFollowRequestToUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FollowRequest | null> {
+    return this.userService.getFollowRequest(authUser.id, user.id)
   }
 
   @Mutation(() => Boolean)

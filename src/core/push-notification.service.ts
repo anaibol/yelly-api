@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { ExpoPushNotificationAccessToken, FriendRequest, NotificationType } from '@prisma/client'
+import { ExpoPushNotificationAccessToken, FollowRequest, NotificationType } from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
 import { PrismaService } from 'src/core/prisma.service'
@@ -139,39 +139,39 @@ export class PushNotificationService {
     // await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION_SENT')
   }
 
-  async friendPosted(postId: string) {
+  async followeePosted(postId: string) {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
         expiresIn: true,
         author: {
-          select: UserPushTokenSelect,
+          select: {
+            ...UserPushTokenSelect,
+            followers: {
+              select: {
+                follower: {
+                  select: UserPushTokenSelect,
+                },
+              },
+            },
+          },
         },
       },
     })
 
     if (!post) return Promise.reject(new Error('Post not found'))
 
-    const friends = await this.prismaService.user.findMany({
-      where: {
-        friends: {
-          some: {
-            otherUserId: post.author.id,
-          },
-        },
-      },
-      select: UserPushTokenSelect,
-    })
+    const followers = post.author.followers.map(({ follower }) => follower)
 
     await this.prismaService.notification.createMany({
-      data: friends.map((user) => ({
+      data: followers.map((user) => ({
         userId: user.id,
-        type: NotificationType.FRIEND_POSTED,
+        type: NotificationType.FOLLOWEE_POSTED,
         postId,
       })),
     })
 
-    const friendPostedPushNotifications = friends.map(async (user) => {
+    const followersPushNotifications = followers.map(async (user) => {
       const lang = user.locale
 
       const url = `${process.env.APP_BASE_URL}/posts/${postId}`
@@ -179,7 +179,7 @@ export class PushNotificationService {
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
         body: await this.i18n.translate(
-          `notifications.${post.expiresIn === expiresInFlash ? 'FRIEND_POSTED_EPHEMERAL' : 'FRIEND_POSTED'}`,
+          `notifications.${post.expiresIn === expiresInFlash ? 'FOLLOWEE_POSTED_EPHEMERAL' : 'FOLLOWEE_POSTED'}`,
           {
             ...(lang && { lang }),
             args: { firstName: post.author.firstName },
@@ -190,12 +190,12 @@ export class PushNotificationService {
       }
     })
 
-    const notificationsToSend = await Promise.all(friendPostedPushNotifications)
+    const notificationsToSend = await Promise.all(followersPushNotifications)
 
     await this.sendNotifications(
       notificationsToSend,
-      friends.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
-      'FRIEND_POSTED_PUSH_NOTIFICATION_SENT'
+      followers.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
+      'FOLLOWEE_POSTED_PUSH_NOTIFICATION_SENT'
     )
   }
 
@@ -341,38 +341,38 @@ export class PushNotificationService {
   //   await this.sendNotifications(messages, pushTokens)
   // }
 
-  async createFriendRequestPushNotification(friendRequest: FriendRequest) {
-    const url = `${process.env.APP_BASE_URL}/users/${friendRequest.fromUserId}`
+  async createFollowRequestPushNotification(followRequest: FollowRequest) {
+    const url = `${process.env.APP_BASE_URL}/users/${followRequest.fromUserId}`
 
     const receiverUser = await this.prismaService.user.findUnique({
       select: UserPushTokenSelect,
-      where: { id: friendRequest.toUserId },
+      where: { id: followRequest.toUserId },
     })
 
-    const friendRequestFromUser = await this.prismaService.user.findUnique({
+    const followRequestFromUser = await this.prismaService.user.findUnique({
       select: {
         id: true,
         firstName: true,
       },
-      where: { id: friendRequest.fromUserId },
+      where: { id: followRequest.fromUserId },
     })
 
-    if (!receiverUser || !friendRequestFromUser)
-      return Promise.reject(new Error('receiverUser or friendRequestFromUser not found'))
+    if (!receiverUser || !followRequestFromUser)
+      return Promise.reject(new Error('receiverUser or followRequestFromUser not found'))
 
     const { locale: lang, expoPushNotificationTokens } = receiverUser
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.FRIENDSHIP_REQUEST_BODY', {
+      body: await this.i18n.translate('notifications.FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY', {
         ...(lang && { lang }),
-        args: { firstName: friendRequestFromUser.firstName },
+        args: { firstName: followRequestFromUser.firstName },
       }),
-      data: { userId: friendRequestFromUser.id, url },
+      data: { userId: followRequestFromUser.id, url },
       sound: 'default' as const,
     }
 
-    await this.sendNotifications([message], expoPushNotificationTokens, 'FRIEND_REQUEST_PUSH_NOTIFICATION_SENT')
+    await this.sendNotifications([message], expoPushNotificationTokens, 'FOLLOW_REQUEST_PUSH_NOTIFICATION_SENT')
 
     return {
       statusCode: 200,
@@ -380,32 +380,32 @@ export class PushNotificationService {
     }
   }
 
-  async createFriendRequestAcceptedPushNotification(friendRequest: FriendRequest) {
-    const friendRequestToUser = await this.prismaService.user.findUnique({
+  async createFollowRequestAcceptedPushNotification(followRequest: FollowRequest) {
+    const followRequestToUser = await this.prismaService.user.findUnique({
       select: {
         id: true,
         firstName: true,
       },
-      where: { id: friendRequest.toUserId },
+      where: { id: followRequest.toUserId },
     })
 
     const receiverUser = await this.prismaService.user.findUnique({
       select: UserPushTokenSelect,
-      where: { id: friendRequest.fromUserId },
+      where: { id: followRequest.fromUserId },
     })
 
-    if (!friendRequestToUser || !receiverUser)
-      return Promise.reject(new Error('friendRequestToUser or receiverUser not found'))
+    if (!followRequestToUser || !receiverUser)
+      return Promise.reject(new Error('followRequestToUser or receiverUser not found'))
 
-    const url = `${process.env.APP_BASE_URL}/user/${friendRequestToUser.id}`
+    const url = `${process.env.APP_BASE_URL}/user/${followRequestToUser.id}`
 
     const { locale: lang, expoPushNotificationTokens, id: userId } = receiverUser
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.FRIENDSHIP_ACCEPTED_BODY', {
+      body: await this.i18n.translate('notifications.FOLLOW_REQUEST_ACCEPTED_BODY', {
         ...(lang && { lang }),
-        args: { firstName: friendRequestToUser.firstName },
+        args: { firstName: followRequestToUser.firstName },
       }),
       data: { userId, url },
       sound: 'default' as const,
@@ -437,12 +437,13 @@ export class PushNotificationService {
             return true
           } else {
             const errorType = ticket.details?.error
-            if (errorType === 'DeviceNotRegistered')
+            if (errorType === 'DeviceNotRegistered') {
               await this.expoPushNotificationTokenService.deleteByUserAndToken(
                 tokens[index].userId,
                 tokens[index].token
               )
-            return false
+              return false
+            }
           }
         })
       })

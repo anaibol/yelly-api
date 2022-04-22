@@ -73,7 +73,7 @@ export class NotificationService {
               },
             },
           },
-          friendRequest: {
+          followRequest: {
             select: {
               id: true,
               status: true,

@@ -362,6 +362,21 @@ export class PostService {
       })
     )
 
+    const threadId =
+      parent &&
+      (parent.threadId ||
+        (
+          await this.prismaService.thread.create({
+            data: {
+              posts: {
+                connect: {
+                  id: parent.id,
+                },
+              },
+            },
+          })
+        ).id)
+
     const post = await this.prismaService.post.create({
       data: {
         text,
@@ -387,6 +402,14 @@ export class PostService {
             },
           },
         }),
+        ...(parentId &&
+          threadId && {
+            thread: {
+              connect: {
+                id: threadId,
+              },
+            },
+          }),
         tags: {
           connectOrCreate: [...connectOrCreateTags, ...connectOrCreateEmojis],
         },
@@ -402,7 +425,7 @@ export class PostService {
     if (parentId && !hasExcludedTags) {
       this.pushNotificationService.postReplied(post.id)
     } else if (!hasExcludedTags) {
-      this.pushNotificationService.friendPosted(post.id)
+      this.pushNotificationService.followeePosted(post.id)
     }
 
     return post

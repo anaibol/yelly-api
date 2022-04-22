@@ -34,15 +34,28 @@ model Notification {
   createdAt       DateTime          @default(now())
   postId          String?
   postReactionId  String?           @unique
+  followshipId    String?           @unique
   userId          String
-  friendRequestId String?
+  followRequestId String?
   post            Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
-  friendRequest   FriendRequest?    @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
+  followRequest   FollowRequest?    @relation(fields: [followRequestId], references: [id], onDelete: Cascade)
   postReaction    PostReaction?     @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
   type            NotificationType?
 
   @@index([createdAt], map: "Notification_createdAt")
   @@index([userId])
+}
+
+model FeedItem {
+  id        String   @id @default(uuid())
+  isSeen    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String
+
+  @@index([createdAt], map: "FeedItem_createdAt")
 }
 
 model School {
@@ -95,26 +108,29 @@ model User {
   expoPushNotificationTokens   ExpoPushNotificationAccessToken[]
   friendUserFriends            Friend[]                          @relation("friendUserFriends")
   friends                      Friend[]                          @relation("userFriends")
-  friendRequestFromUser        FriendRequest[]                   @relation("friendRequestFromUser")
-  friendRequestToUser          FriendRequest[]                   @relation("friendRequestToUser")
+  followRequestFromUser        FollowRequest[]                   @relation("followRequestFromUser")
+  followRequestToUser          FollowRequest[]                   @relation("followRequestToUser")
   posts                        Post[]
   postReactions                PostReaction[]
   postPollVotes                PostPollVote[]
+  followees                    Followship[]                      @relation("followees")
+  followers                    Followship[]                      @relation("followers")
+  feedItems                    FeedItem[]
 
   @@index([birthdate], map: "User_birthdate")
 }
 
-model FriendRequest {
+model FollowRequest {
   id            String              @id @default(uuid())
   fromUserId    String
   toUserId      String
   createdAt     DateTime            @default(now())
-  status        FriendRequestStatus @default(PENDING)
-  fromUser      User                @relation("friendRequestFromUser", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser        User                @relation("friendRequestToUser", fields: [toUserId], references: [id], onDelete: Cascade)
+  status        FollowRequestStatus @default(PENDING)
+  fromUser      User                @relation("followRequestFromUser", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser        User                @relation("followRequestToUser", fields: [toUserId], references: [id], onDelete: Cascade)
   notifications Notification[]
 
-  @@index([fromUserId,toUserId])
+  @@index([fromUserId, toUserId])
 }
 
 model Friend {
@@ -129,6 +145,17 @@ model Friend {
   @@index([userId])
 }
 
+model Followship {
+  id         String   @unique @default(uuid())
+  followerId String
+  followeeId String
+  createdAt  DateTime @unique @default(now())
+  follower   User     @relation("followers", fields: [followerId], references: [id], onDelete: Cascade)
+  followee   User     @relation("followees", fields: [followeeId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followeeId])
+}
+
 model Tag {
   id        String   @id @default(uuid())
   text      String   @unique
@@ -141,7 +168,7 @@ model Tag {
   isEmoji   Boolean  @default(false)
 
   @@index([createdAt])
-  @@index([isLive,countryId])
+  @@index([isLive, countryId])
 }
 
 model Post {
@@ -157,10 +184,13 @@ model Post {
   pollVotes    PostPollVote[]
   expiresIn    Int?
   expiresAt    DateTime?
-  children     Post[]           @relation("postThreads")
-  parent       Post?            @relation("postThreads", fields: [parentId], references: [id])
+  children     Post[]           @relation("parentChildren")
+  parent       Post?            @relation("parentChildren", fields: [parentId], references: [id])
   parentId     String?
   notification Notification[]
+  thread       Thread?          @relation(fields: [threadId], references: [id])
+  threadId     String?
+  feedItems    FeedItem[]
 
   @@index([authorId])
   @@index([expiresAt])
@@ -214,7 +244,7 @@ model ExpoPushNotificationAccessToken {
   @@index([userId])
 }
 
-enum FriendRequestStatus {
+enum FollowRequestStatus {
   PENDING
   ACCEPTED
   DECLINED
@@ -226,9 +256,14 @@ enum UserRole {
 }
 
 enum NotificationType {
-  FRIEND_POSTED
+  FOLLOWEE_POSTED
   POST_REPLIED
   SAME_POST_REPLIED
-  FRIEND_REQUEST_PENDING
-  FRIEND_REQUEST_ACCEPTED
+  FOLLOW_REQUEST_PENDING
+  FOLLOW_REQUEST_ACCEPTED
+}
+
+model Thread {
+  id    String @id @default(uuid())
+  posts Post[]
 }

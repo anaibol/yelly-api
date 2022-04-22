@@ -32,6 +32,8 @@ export class Me {
   training?: Training | null
   school?: School | null
   posts?: PaginatedPosts
-  friends?: PaginatedUsers
-  friendsCount?: number
+  followers?: PaginatedUsers
+  followees?: PaginatedUsers
+  followersCount?: number
+  followeesCount?: number
 }

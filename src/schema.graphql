@@ -64,21 +64,21 @@ input EmailSignInInput {
   password: String!
 }
 
-input ForgotPasswordInput {
-  email: String!
-}
-
-type FriendRequest {
+type FollowRequest {
   fromUser: User
   id: ID!
-  status: FriendRequestStatus
+  status: FollowRequestStatus
   toUser: User
 }
 
-enum FriendRequestStatus {
+enum FollowRequestStatus {
   ACCEPTED
   DECLINED
   PENDING
+}
+
+input ForgotPasswordInput {
+  email: String!
 }
 
 input InitPhoneNumberVerificationInput {
@@ -93,8 +93,10 @@ type Me {
   email: String
   expoPushNotificationTokens: [String!]
   firstName: String
-  friends(limit: Int = 10, skip: Int = 0): PaginatedUsers
-  friendsCount: Int
+  followees(limit: Int = 10, skip: Int = 0): PaginatedUsers
+  followeesCount: Int
+  followers(limit: Int = 10, skip: Int = 0): PaginatedUsers
+  followersCount: Int
   id: ID!
   instagram: String
   isFilled: Boolean
@@ -111,18 +113,18 @@ type Me {
 }
 
 type Mutation {
-  acceptFriendRequest(friendRequestId: String!): Boolean!
+  acceptFollowRequest(followRequestId: String!): Boolean!
   addExpoPushNotificationsToken(input: String!): Boolean!
   banUser(userId: String!): Boolean!
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
-  createFriendRequest(otherUserId: String!): FriendRequest!
+  createFollowRequest(otherUserId: String!): FollowRequest!
   createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
-  declineFriendRequest(friendRequestId: String!): Boolean!
+  declineFollowRequest(followRequestId: String!): Boolean!
   deleteAuthUser: Boolean!
   deleteExpoPushNotificationsToken(input: String!): Boolean!
-  deleteFriendRequest(friendRequestId: String!): Boolean!
+  deleteFollowRequest(followRequestId: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
   deleteUser(userId: String!): Boolean!
@@ -134,13 +136,13 @@ type Mutation {
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
   trackPostViews(postsIds: [String!]!): Boolean!
-  unfriend(otherUserId: String!): Boolean!
+  unFollow(otherUserId: String!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
 }
 
 type Notification {
   createdAt: DateTime!
-  friendRequest: FriendRequest
+  followRequest: FollowRequest
   id: ID!
   isSeen: Boolean
   post: Post
@@ -149,9 +151,9 @@ type Notification {
 }
 
 enum NotificationType {
-  FRIEND_POSTED
-  FRIEND_REQUEST_ACCEPTED
-  FRIEND_REQUEST_PENDING
+  FOLLOWEE_POSTED
+  FOLLOW_REQUEST_ACCEPTED
+  FOLLOW_REQUEST_PENDING
   POST_REPLIED
   SAME_POST_REPLIED
 }
@@ -287,20 +289,18 @@ type Upload {
 
 type User {
   about: String
-  authUserFriendRequestFromUser: FriendRequest
-  authUserFriendRequestToUser: FriendRequest
+  authUserFollowRequestFromUser: FollowRequest
+  authUserFollowRequestToUser: FollowRequest
   avatar3dId: String
   birthdate: DateTime
-  commonFriends(limit: Int = 10, skip: Int = 0): PaginatedUsers
-  commonFriendsCount: Int
-  commonFriendsCountMultiUser: Int
-  commonFriendsMultiUser(limit: Int = 10, skip: Int = 0): PaginatedUsers
   firstName: String
-  friends(limit: Int = 10, skip: Int = 0): PaginatedUsers
-  friendsCount: Int
+  followees: PaginatedUsers
+  followeesCount: Int
+  followers(limit: Int = 10, skip: Int = 0): PaginatedUsers
+  followersCount: Int
   id: ID!
   instagram: String
-  isAuthUserFriend: Boolean
+  isFollowedByAuthUser: Boolean
   lastName: String
   locale: String
   pictureId: String
