@@ -471,6 +471,8 @@ export class PushNotificationService {
     AND "School"."cityId" = "City"."id"
     AND "City"."countryId" =  ${tag.countryId}`
 
+    const url = `${process.env.APP_BASE_URL}/posts/create/${tag.text}`
+
     // eslint-disable-next-line functional/no-try-statement
     try {
       const messages = await Promise.all(
@@ -483,6 +485,7 @@ export class PushNotificationService {
                 .translate('notifications.NEW_LIVE_TAG_BODY', { ...(lang && { lang }) })
                 .catch(() => null),
               body: '#' + tag.text,
+              data: { url },
             }
           })
           .filter((v) => v)
