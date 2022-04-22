@@ -16,6 +16,12 @@ export class AmplitudeService implements OnModuleInit {
 
   // eslint-disable-next-line functional/no-return-void
   logEvent(event: TRACK_EVENT, userId: string) {
+    console.log({ key: process.env.AMPLITUDE_API_KEY })
+
+    console.log({
+      event_type: event,
+      user_id: userId,
+    })
     return this.client.logEvent({
       event_type: event,
       user_id: userId,
