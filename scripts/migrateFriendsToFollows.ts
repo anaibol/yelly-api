@@ -9,7 +9,7 @@ async function main() {
   let skip = 0
   // eslint-disable-next-line functional/no-loop-statement
   while (hasFollows) {
-    const friends = await prisma.follow.findMany({
+    const friends = await prisma.friend.findMany({
       take: 500,
       skip: skip,
     })
@@ -22,21 +22,12 @@ async function main() {
 
     console.log('in progress: ' + skip)
 
-    friends.forEach(async (follow) => {
-      await prisma.follow.createMany({
-        data: [
-          {
-            followerId: follow.followerId,
-            followeeId: follow.followeeId,
-            createdAt: follow.createdAt,
-          },
-          {
-            followerId: follow.followerId,
-            followeeId: follow.followeeId,
-            createdAt: follow.createdAt,
-          },
-        ],
-      })
+    await prisma.follow.createMany({
+      data: friends.map((friend) => ({
+        followerId: friend.userId,
+        followeeId: friend.otherUserId,
+        createdAt: friend.createdAt,
+      })),
     })
   }
 }

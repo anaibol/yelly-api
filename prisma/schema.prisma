@@ -149,7 +149,7 @@ model Follow {
   id         String   @unique @default(uuid())
   followerId String
   followeeId String
-  createdAt  DateTime @unique @default(now())
+  createdAt  DateTime @default(now())
   follower   User     @relation("followers", fields: [followerId], references: [id], onDelete: Cascade)
   followee   User     @relation("followees", fields: [followeeId], references: [id], onDelete: Cascade)
 
