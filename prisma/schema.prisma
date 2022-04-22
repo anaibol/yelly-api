@@ -34,7 +34,7 @@ model Notification {
   createdAt       DateTime          @default(now())
   postId          String?
   postReactionId  String?           @unique
-  followshipId    String?           @unique
+  followId    String?           @unique
   userId          String
   followRequestId String?
   post            Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -113,8 +113,8 @@ model User {
   posts                        Post[]
   postReactions                PostReaction[]
   postPollVotes                PostPollVote[]
-  followees                    Followship[]                      @relation("followees")
-  followers                    Followship[]                      @relation("followers")
+  followees                    Follow[]                      @relation("followees")
+  followers                    Follow[]                      @relation("followers")
   feedItems                    FeedItem[]
 
   @@index([birthdate], map: "User_birthdate")
@@ -145,7 +145,7 @@ model Friend {
   @@index([userId])
 }
 
-model Followship {
+model Follow {
   id         String   @unique @default(uuid())
   followerId String
   followeeId String

@@ -382,7 +382,7 @@ export class UserService {
   }
 
   getFollowersCount(userId: string): Promise<number> {
-    return this.prismaService.followship.count({
+    return this.prismaService.follow.count({
       where: {
         followeeId: userId,
       },
@@ -390,7 +390,7 @@ export class UserService {
   }
 
   getFolloweesCount(userId: string): Promise<number> {
-    return this.prismaService.followship.count({
+    return this.prismaService.follow.count({
       where: {
         followerId: userId,
       },
@@ -721,7 +721,7 @@ export class UserService {
     const { fromUserId, toUserId } = followRequest
 
     await this.prismaService.$transaction([
-      this.prismaService.followship.create({
+      this.prismaService.follow.create({
         data: {
           followerId: fromUserId,
           followeeId: toUserId,
@@ -758,7 +758,7 @@ export class UserService {
   }
 
   async unFollow(followerId: string, followeeId: string): Promise<boolean> {
-    await this.prismaService.followship.deleteMany({
+    await this.prismaService.follow.deleteMany({
       where: {
         followerId,
         followeeId,
