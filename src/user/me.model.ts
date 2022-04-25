@@ -36,4 +36,5 @@ export class Me {
   followees?: PaginatedUsers
   followersCount?: number
   followeesCount?: number
+  postCount?: number
 }

@@ -74,16 +74,6 @@ export class UserResolver {
     return this.userService.declineFollowRequest(authUser, followRequestId)
   }
 
-  @ResolveField()
-  followers(@Parent() user: User, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFollowers(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
-  }
-
-  @ResolveField()
-  followersCount(@Parent() user: User): Promise<number> {
-    return this.userService.getFollowersCount(user.id)
-  }
-
   // @ResolveField()
   // async commonFriendsCountMultiUser(
   //   @Parent() user: User,

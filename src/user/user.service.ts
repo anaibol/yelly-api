@@ -120,8 +120,7 @@ export class UserService {
         },
         _count: {
           select: {
-            followers: true,
-            followees: true,
+            posts: true,
           },
         },
       },
@@ -133,8 +132,7 @@ export class UserService {
 
     return {
       ...user,
-      followersCount: _count.followers,
-      followeesCount: _count.followees,
+      postCount: _count.posts,
     }
   }
 
@@ -511,6 +509,7 @@ export class UserService {
           select: {
             followers: true,
             followees: true,
+            posts: true,
           },
         },
       },
@@ -525,6 +524,7 @@ export class UserService {
       expoPushNotificationTokens: expoPushNotificationTokens.map(({ token }) => token),
       followersCount: _count.followers,
       followeesCount: _count.followees,
+      postCount: _count.posts,
     }
   }
 
