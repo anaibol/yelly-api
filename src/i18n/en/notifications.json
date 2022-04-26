@@ -1,8 +1,8 @@
 {
   "POST_REACTION_TITLE": "You have a new reaction",
   "POST_REACTION_BODY": "{firstName} sends you {postReaction}",
-  "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} wants to join your list",
-  "FOLLOW_REQUEST_ACCEPTED_BODY":  "You are now part of {firstName}'s list",
+  "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} requested to follow your posts",
+  "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} accepted your request to follow his/her posts",
   "NEW_LIVE_TAG_BODY": "Yelly trend live",
   "FOLLOWEE_POSTED": "{firstName} published a new post 💬",
   "FOLLOWEE_POSTED_EPHEMERAL": "{firstName} published a new ephemeral post ⚡",
