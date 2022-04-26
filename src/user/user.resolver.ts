@@ -67,6 +67,11 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
+  deleteFollower(@Args('otherUserId') otherUserId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.unFollow(otherUserId, authUser.id)
+  }
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
   declineFollowRequest(
     @Args('followRequestId') followRequestId: string,
     @CurrentUser() authUser: AuthUser

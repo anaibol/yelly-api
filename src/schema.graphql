@@ -137,6 +137,7 @@ type Mutation {
   resetPassword(input: ResetPasswordInput!): AccessToken!
   trackPostViews(postsIds: [String!]!): Boolean!
   unFollow(otherUserId: String!): Boolean!
+  deleteFollower(otherUserId: String!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
 }
 
