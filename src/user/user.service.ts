@@ -395,42 +395,42 @@ export class UserService {
     })
   }
 
-  async isFollowedByAuthUser(
-    userId: string,
-    otherUserIds: string[]
+  async areFollowedByUser(
+    followeesIds: string[],
+    followerId: string
   ): Promise<
     {
-      otherUserId: string
+      followeeId: string
       isFollowedByAuthUser: boolean
     }[]
   > {
-    if (otherUserIds.length === 1) {
-      const [otherUserId] = otherUserIds
+    if (followeesIds.length === 1) {
+      const [followeeId] = followeesIds
 
-      const friend = await this.prismaService.friend.findUnique({
+      const follow = await this.prismaService.follow.findUnique({
         where: {
-          userId_otherUserId: {
-            userId,
-            otherUserId: otherUserId,
+          followerId_followeeId: {
+            followeeId,
+            followerId,
           },
         },
       })
 
-      return [{ otherUserId, isFollowedByAuthUser: !!friend }]
+      return [{ followeeId, isFollowedByAuthUser: !!follow }]
     }
 
-    const friends = await this.prismaService.friend.findMany({
+    const follows = await this.prismaService.follow.findMany({
       where: {
-        userId,
-        otherUserId: {
-          in: otherUserIds as string[],
+        followerId,
+        followeeId: {
+          in: followeesIds as string[],
         },
       },
     })
 
-    return otherUserIds.map((otherUserId) => ({
-      otherUserId,
-      isFollowedByAuthUser: friends.map(({ otherUserId }) => otherUserId).includes(otherUserId),
+    return followeesIds.map((followeeId) => ({
+      followeeId,
+      isFollowedByAuthUser: follows.map(({ followeeId }) => followeeId).includes(followeeId),
     }))
   }
 

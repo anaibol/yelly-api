@@ -13,9 +13,9 @@ export class IsFollowedByAuthUserLoader {
     const authUser: AuthUser = ctx.getContext().req.user
     // Replace this with your actual dataloader implementation
     return new DataLoader<string, boolean | undefined, string>(async (otherUserIds: readonly string[]) => {
-      const isFollowedByAuthUser = await this.userService.isFollowedByAuthUser(authUser.id, otherUserIds as string[]) // skip, limit
+      const isFollowedByAuthUser = await this.userService.areFollowedByUser(otherUserIds as string[], authUser.id) // skip, limit
 
-      const usersMap = new Map(isFollowedByAuthUser.map((user) => [user.otherUserId, user.isFollowedByAuthUser]))
+      const usersMap = new Map(isFollowedByAuthUser.map((user) => [user.followeeId, user.isFollowedByAuthUser]))
 
       return otherUserIds.map((otherUserId) => usersMap.get(otherUserId))
     })
