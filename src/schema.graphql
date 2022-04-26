@@ -104,6 +104,7 @@ type Me {
   locale: String
   phoneNumber: String
   pictureId: String
+  postCount: Int
   posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
   role: UserRole!
   school: School
@@ -125,6 +126,7 @@ type Mutation {
   deleteAuthUser: Boolean!
   deleteExpoPushNotificationsToken(input: String!): Boolean!
   deleteFollowRequest(followRequestId: String!): Boolean!
+  deleteFollower(otherUserId: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
   deleteUser(userId: String!): Boolean!
@@ -137,7 +139,6 @@ type Mutation {
   resetPassword(input: ResetPasswordInput!): AccessToken!
   trackPostViews(postsIds: [String!]!): Boolean!
   unFollow(otherUserId: String!): Boolean!
-  deleteFollower(otherUserId: String!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
 }
 
@@ -290,21 +291,18 @@ type Upload {
 
 type User {
   about: String
-  authUserFollowRequestFromUser: FollowRequest
-  authUserFollowRequestToUser: FollowRequest
   avatar3dId: String
   birthdate: DateTime
   firstName: String
-  followees: PaginatedUsers
-  followeesCount: Int
-  followers(limit: Int = 10, skip: Int = 0): PaginatedUsers
-  followersCount: Int
   id: ID!
   instagram: String
   isFollowedByAuthUser: Boolean
   lastName: String
   locale: String
+  pendingFollowRequestFromUser: FollowRequest
+  pendingFollowRequestToUser: FollowRequest
   pictureId: String
+  postCount: Int
   posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
   school: School
   snapchat: String
