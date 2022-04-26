@@ -142,13 +142,13 @@ export class UserResolver {
     @Parent() user: User,
     @CurrentUser() authUser: AuthUser
   ): Promise<FollowRequest | null> {
-    return this.userService.getFollowRequest(user.id, authUser.id)
+    return this.userService.getPendingFollowRequest(user.id, authUser.id)
   }
 
   @UseGuards(AuthGuard)
   @ResolveField()
   authUserFollowRequestToUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FollowRequest | null> {
-    return this.userService.getFollowRequest(authUser.id, user.id)
+    return this.userService.getPendingFollowRequest(authUser.id, user.id)
   }
 
   @Mutation(() => Boolean)

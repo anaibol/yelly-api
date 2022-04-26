@@ -434,7 +434,7 @@ export class UserService {
     }))
   }
 
-  async getFollowRequest(fromUserId: string, toUserId: string): Promise<FollowRequest | null> {
+  async getPendingFollowRequest(fromUserId: string, toUserId: string): Promise<FollowRequest | null> {
     return this.prismaService.followRequest.findFirst({
       select: {
         id: true,
@@ -451,6 +451,7 @@ export class UserService {
       where: {
         fromUserId,
         toUserId,
+        status: 'PENDING',
       },
       orderBy: {
         createdAt: 'desc',
