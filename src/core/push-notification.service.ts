@@ -234,12 +234,15 @@ export class PushNotificationService {
       },
     })
 
+    const url = `${process.env.APP_BASE_URL}/posts/${postId}`
+
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
       body: await this.i18n.translate('notifications.POST_REPLIED', {
         ...(lang && { lang }),
         args: { firstName: author.firstName },
       }),
+      data: { postId, url },
       sound: 'default' as const,
     }
 
