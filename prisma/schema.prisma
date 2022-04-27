@@ -113,8 +113,8 @@ model User {
   posts                        Post[]
   postReactions                PostReaction[]
   postPollVotes                PostPollVote[]
-  followees                    Follow[]                      @relation("followees")
-  followers                    Follow[]                      @relation("followers")
+  followees                    Follow[]                      @relation("followers")
+  followers                    Follow[]                      @relation("followees")
   feedItems                    FeedItem[]
 
   @@index([birthdate], map: "User_birthdate")

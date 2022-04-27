@@ -352,7 +352,7 @@ export class UserService {
         take: limit,
         skip,
         where: {
-          followeeId: userId,
+          followerId: userId,
         },
         include: {
           followee: {
@@ -369,22 +369,6 @@ export class UserService {
     const nextSkip = skip + limit
 
     return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
-  }
-
-  getFollowersCount(userId: string): Promise<number> {
-    return this.prismaService.follow.count({
-      where: {
-        followeeId: userId,
-      },
-    })
-  }
-
-  getFolloweesCount(userId: string): Promise<number> {
-    return this.prismaService.follow.count({
-      where: {
-        followerId: userId,
-      },
-    })
   }
 
   async areFollowedByUser(
