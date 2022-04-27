@@ -149,7 +149,7 @@ export class PushNotificationService {
             ...UserPushTokenSelect,
             followers: {
               select: {
-                follower: {
+                user: {
                   select: UserPushTokenSelect,
                 },
               },
@@ -161,7 +161,7 @@ export class PushNotificationService {
 
     if (!post) return Promise.reject(new Error('Post not found'))
 
-    const followers = post.author.followers.map(({ follower }) => follower)
+    const followers = post.author.followers.map(({ user }) => user)
 
     await this.prismaService.notification.createMany({
       data: followers.map((user) => ({
@@ -345,23 +345,23 @@ export class PushNotificationService {
   // }
 
   async createFollowRequestPushNotification(followRequest: FollowRequest) {
-    const url = `${process.env.APP_BASE_URL}/users/${followRequest.fromUserId}`
+    const url = `${process.env.APP_BASE_URL}/users/${followRequest.requesterId}`
 
     const receiverUser = await this.prismaService.user.findUnique({
       select: UserPushTokenSelect,
-      where: { id: followRequest.toUserId },
+      where: { id: followRequest.toFollowUserId },
     })
 
-    const followRequestFromUser = await this.prismaService.user.findUnique({
+    const followRequestRequester = await this.prismaService.user.findUnique({
       select: {
         id: true,
         firstName: true,
       },
-      where: { id: followRequest.fromUserId },
+      where: { id: followRequest.requesterId },
     })
 
-    if (!receiverUser || !followRequestFromUser)
-      return Promise.reject(new Error('receiverUser or followRequestFromUser not found'))
+    if (!receiverUser || !followRequestRequester)
+      return Promise.reject(new Error('receiverUser or followRequestRequester not found'))
 
     const { locale: lang, expoPushNotificationTokens } = receiverUser
 
@@ -369,9 +369,9 @@ export class PushNotificationService {
       to: expoPushNotificationTokens.map(({ token }) => token),
       body: await this.i18n.translate('notifications.FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY', {
         ...(lang && { lang }),
-        args: { firstName: followRequestFromUser.firstName },
+        args: { firstName: followRequestRequester.firstName },
       }),
-      data: { userId: followRequestFromUser.id, url },
+      data: { userId: followRequestRequester.id, url },
       sound: 'default' as const,
     }
 
@@ -389,12 +389,12 @@ export class PushNotificationService {
         id: true,
         firstName: true,
       },
-      where: { id: followRequest.toUserId },
+      where: { id: followRequest.toFollowUserId },
     })
 
     const receiverUser = await this.prismaService.user.findUnique({
       select: UserPushTokenSelect,
-      where: { id: followRequest.fromUserId },
+      where: { id: followRequest.requesterId },
     })
 
     if (!followRequestToUser || !receiverUser)

@@ -65,10 +65,10 @@ input EmailSignInInput {
 }
 
 type FollowRequest {
-  fromUser: User
   id: ID!
+  requester: User
   status: FollowRequestStatus
-  toUser: User
+  toFollowUser: User
 }
 
 enum FollowRequestStatus {
@@ -299,8 +299,8 @@ type User {
   isFollowedByAuthUser: Boolean
   lastName: String
   locale: String
-  pendingFollowRequestFromUser: FollowRequest
-  pendingFollowRequestToUser: FollowRequest
+  pendingfollowRequestRequester: FollowRequest
+  pendingfollowRequestToUser: FollowRequest
   pictureId: String
   postCount: Int
   posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts

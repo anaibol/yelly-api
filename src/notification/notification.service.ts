@@ -77,14 +77,14 @@ export class NotificationService {
             select: {
               id: true,
               status: true,
-              fromUser: {
+              requester: {
                 select: {
                   id: true,
                   firstName: true,
                   pictureId: true,
                 },
               },
-              toUser: {
+              toFollowUser: {
                 select: {
                   id: true,
                   firstName: true,

@@ -22,9 +22,9 @@ async function main() {
 
     console.log('in progress: ' + skip)
 
-    await prisma.follow.createMany({
+    await prisma.follower.createMany({
       data: friends.map((friend) => ({
-        followerId: friend.userId,
+        userId: friend.userId,
         followeeId: friend.otherUserId,
         createdAt: friend.createdAt,
       })),

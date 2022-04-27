@@ -21,7 +21,7 @@ export class User {
   school?: School | null
   posts?: PaginatedPosts
   isFollowedByAuthUser?: boolean
-  pendingFollowRequestFromUser?: FollowRequest | null
-  pendingFollowRequestToUser?: FollowRequest | null
+  pendingfollowRequestRequester?: FollowRequest | null
+  pendingfollowRequestToUser?: FollowRequest | null
   postCount?: number
 }

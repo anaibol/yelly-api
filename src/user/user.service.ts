@@ -313,19 +313,19 @@ export class UserService {
 
   async getFollowers(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
     const [totalCount, follows] = await this.prismaService.$transaction([
-      this.prismaService.follow.count({
+      this.prismaService.follower.count({
         where: {
           followeeId: userId,
         },
       }),
-      this.prismaService.follow.findMany({
+      this.prismaService.follower.findMany({
         take: limit,
         skip,
         where: {
           followeeId: userId,
         },
         include: {
-          follower: {
+          user: {
             include: {
               school: true,
             },
@@ -334,7 +334,7 @@ export class UserService {
       }),
     ])
 
-    const items = follows.map(({ follower }) => follower)
+    const items = follows.map(({ user }) => user)
 
     const nextSkip = skip + limit
 
@@ -343,16 +343,16 @@ export class UserService {
 
   async getFollowees(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
     const [totalCount, follows] = await this.prismaService.$transaction([
-      this.prismaService.follow.count({
+      this.prismaService.follower.count({
         where: {
-          followerId: userId,
+          userId,
         },
       }),
-      this.prismaService.follow.findMany({
+      this.prismaService.follower.findMany({
         take: limit,
         skip,
         where: {
-          followerId: userId,
+          userId,
         },
         include: {
           followee: {
@@ -373,7 +373,7 @@ export class UserService {
 
   async areFollowedByUser(
     followeesIds: string[],
-    followerId: string
+    userId: string
   ): Promise<
     {
       followeeId: string
@@ -383,11 +383,11 @@ export class UserService {
     if (followeesIds.length === 1) {
       const [followeeId] = followeesIds
 
-      const follow = await this.prismaService.follow.findUnique({
+      const follow = await this.prismaService.follower.findUnique({
         where: {
-          followerId_followeeId: {
+          userId_followeeId: {
             followeeId,
-            followerId,
+            userId,
           },
         },
       })
@@ -395,9 +395,9 @@ export class UserService {
       return [{ followeeId, isFollowedByAuthUser: !!follow }]
     }
 
-    const follows = await this.prismaService.follow.findMany({
+    const follows = await this.prismaService.follower.findMany({
       where: {
-        followerId,
+        userId,
         followeeId: {
           in: followeesIds as string[],
         },
@@ -410,12 +410,12 @@ export class UserService {
     }))
   }
 
-  async getPendingFollowRequest(fromUserId: string, toUserId: string): Promise<FollowRequest | null> {
+  async getPendingFollowRequest(requesterId: string, toFollowUserId: string): Promise<FollowRequest | null> {
     return this.prismaService.followRequest.findFirst({
       select: {
         id: true,
         status: true,
-        fromUser: {
+        requester: {
           select: {
             id: true,
             firstName: true,
@@ -425,8 +425,8 @@ export class UserService {
         },
       },
       where: {
-        fromUserId,
-        toUserId,
+        requesterId,
+        toFollowUserId,
         status: 'PENDING',
       },
       orderBy: {
@@ -607,12 +607,12 @@ export class UserService {
   async createFollowRequest(authUser: AuthUser, otherUserId: string): Promise<FollowRequest> {
     const followRequest = await this.prismaService.followRequest.create({
       data: {
-        fromUser: {
+        requester: {
           connect: {
             id: authUser.id,
           },
         },
-        toUser: {
+        toFollowUser: {
           connect: {
             id: otherUserId,
           },
@@ -638,7 +638,7 @@ export class UserService {
           id: authUser.id,
         },
       })
-      .followRequestFromUser({
+      .followRequestRequester({
         where: {
           id: followRequestId,
         },
@@ -661,7 +661,7 @@ export class UserService {
     const exists = await this.prismaService.followRequest.findFirst({
       where: {
         id: followRequestId,
-        toUserId: authUser.id,
+        toFollowUserId: authUser.id,
       },
     })
 
@@ -693,15 +693,15 @@ export class UserService {
       },
     })
 
-    if (followRequest?.toUserId !== authUser.id) return Promise.reject(new Error('No follow request'))
+    if (followRequest?.toFollowUserId !== authUser.id) return Promise.reject(new Error('No follow request'))
 
-    const { fromUserId, toUserId } = followRequest
+    const { requesterId, toFollowUserId } = followRequest
 
     await this.prismaService.$transaction([
-      this.prismaService.follow.create({
+      this.prismaService.follower.create({
         data: {
-          followerId: fromUserId,
-          followeeId: toUserId,
+          userId: requesterId,
+          followeeId: toFollowUserId,
         },
       }),
       this.prismaService.followRequest.update({
@@ -714,7 +714,7 @@ export class UserService {
       }),
       this.prismaService.notification.updateMany({
         where: {
-          userId: toUserId,
+          userId: toFollowUserId,
           followRequestId,
         },
         data: {
@@ -723,7 +723,7 @@ export class UserService {
       }),
       this.prismaService.notification.create({
         data: {
-          userId: fromUserId,
+          userId: requesterId,
           followRequestId,
           type: 'FOLLOW_REQUEST_ACCEPTED',
         },
@@ -735,11 +735,11 @@ export class UserService {
     return true
   }
 
-  async unFollow(followerId: string, followeeId: string): Promise<boolean> {
-    await this.prismaService.follow.delete({
+  async unFollow(userId: string, followeeId: string): Promise<boolean> {
+    await this.prismaService.follower.delete({
       where: {
-        followerId_followeeId: {
-          followerId,
+        userId_followeeId: {
+          userId,
           followeeId,
         },
       },

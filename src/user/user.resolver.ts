@@ -138,13 +138,16 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  pendingFollowRequestFromUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FollowRequest | null> {
+  pendingfollowRequestRequester(
+    @Parent() user: User,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<FollowRequest | null> {
     return this.userService.getPendingFollowRequest(user.id, authUser.id)
   }
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  pendingFollowRequestToUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FollowRequest | null> {
+  pendingfollowRequestToUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FollowRequest | null> {
     return this.userService.getPendingFollowRequest(authUser.id, user.id)
   }
 

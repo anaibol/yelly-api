@@ -34,7 +34,7 @@ model Notification {
   createdAt       DateTime          @default(now())
   postId          String?
   postReactionId  String?           @unique
-  followId    String?           @unique
+  followId        String?           @unique
   userId          String
   followRequestId String?
   post            Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -108,29 +108,29 @@ model User {
   expoPushNotificationTokens   ExpoPushNotificationAccessToken[]
   friendUserFriends            Friend[]                          @relation("friendUserFriends")
   friends                      Friend[]                          @relation("userFriends")
-  followRequestFromUser        FollowRequest[]                   @relation("followRequestFromUser")
-  followRequestToUser          FollowRequest[]                   @relation("followRequestToUser")
+  followRequestRequester       FollowRequest[]                   @relation("followRequestRequester")
+  followRequestToUser    FollowRequest[]                   @relation("followRequestToUser")
   posts                        Post[]
   postReactions                PostReaction[]
   postPollVotes                PostPollVote[]
-  followees                    Follow[]                      @relation("followers")
-  followers                    Follow[]                      @relation("followees")
+  followees                    Follower[]                        @relation("usersAsFollowees")
+  followers                    Follower[]                        @relation("usersAsFollowers")
   feedItems                    FeedItem[]
 
   @@index([birthdate], map: "User_birthdate")
 }
 
 model FollowRequest {
-  id            String              @id @default(uuid())
-  fromUserId    String
-  toUserId      String
-  createdAt     DateTime            @default(now())
-  status        FollowRequestStatus @default(PENDING)
-  fromUser      User                @relation("followRequestFromUser", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser        User                @relation("followRequestToUser", fields: [toUserId], references: [id], onDelete: Cascade)
-  notifications Notification[]
+  id             String              @id @default(uuid())
+  requesterId    String
+  toFollowUserId String
+  createdAt      DateTime            @default(now())
+  status         FollowRequestStatus @default(PENDING)
+  requester      User                @relation("followRequestRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  toFollowUser   User                @relation("followRequestToUser", fields: [toFollowUserId], references: [id], onDelete: Cascade)
+  notifications  Notification[]
 
-  @@index([fromUserId, toUserId])
+  @@index([requesterId, toFollowUserId])
 }
 
 model Friend {
@@ -145,15 +145,15 @@ model Friend {
   @@index([userId])
 }
 
-model Follow {
+model Follower {
   id         String   @unique @default(uuid())
-  followerId String
+  userId     String
   followeeId String
   createdAt  DateTime @default(now())
-  follower   User     @relation("followers", fields: [followerId], references: [id], onDelete: Cascade)
-  followee   User     @relation("followees", fields: [followeeId], references: [id], onDelete: Cascade)
+  user       User     @relation("usersAsFollowees", fields: [userId], references: [id], onDelete: Cascade)
+  followee   User     @relation("usersAsFollowers", fields: [followeeId], references: [id], onDelete: Cascade)
 
-  @@id([followerId, followeeId])
+  @@id([userId, followeeId])
 }
 
 model Tag {

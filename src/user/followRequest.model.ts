@@ -11,8 +11,8 @@ registerEnumType(FollowRequestStatus, {
 export class FollowRequest {
   @Field(() => ID)
   id: string
-  fromUser?: User
-  toUser?: User
+  requester?: User
+  toFollowUser?: User
   @Field(() => FollowRequestStatus)
   status?: FollowRequestStatus
 }
