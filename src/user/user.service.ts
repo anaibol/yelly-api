@@ -315,7 +315,7 @@ export class UserService {
     const where: Prisma.UserWhereInput = {
       followees: {
         some: {
-          followerId: userId,
+          followeeId: userId,
         },
       },
     }
