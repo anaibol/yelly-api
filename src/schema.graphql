@@ -299,8 +299,8 @@ type User {
   isFollowedByAuthUser: Boolean
   lastName: String
   locale: String
-  pendingfollowRequestRequester: FollowRequest
-  pendingfollowRequestToUser: FollowRequest
+  pendingFollowRequestFromUser: FollowRequest
+  pendingFollowRequestToUser: FollowRequest
   pictureId: String
   postCount: Int
   posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
