@@ -1,8 +1,8 @@
 {
   "POST_REACTION_TITLE": "Tu as une nouvelle réaction",
   "POST_REACTION_BODY": "{firstName} vous envoie {postReaction}",
-  "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} a demandé à rejoindre ta liste",
-  "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} t’a accepté(e) dans sa liste",
+  "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} a demandé à suivre tes posts",
+  "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} a accepté ta demande de suivre ses posts",
   "NEW_LIVE_TAG_BODY": "Tendance Yelly live",
   "FOLLOWEE_POSTED": "{firstName} a publié un nouveau post 💬",
   "FOLLOWEE_POSTED_EPHEMERAL": "{firstName} a publié un nouveau post éphémère ⚡",
