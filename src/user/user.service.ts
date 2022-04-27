@@ -312,33 +312,29 @@ export class UserService {
   // }
 
   async getFollowers(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
-    const where: Prisma.UserWhereInput = {
-      followees: {
-        some: {
+    const [totalCount, follows] = await this.prismaService.$transaction([
+      this.prismaService.follow.count({
+        where: {
           followeeId: userId,
         },
-      },
-    }
-
-    const [totalCount, items] = await this.prismaService.$transaction([
-      this.prismaService.user.count({
-        where,
       }),
-      this.prismaService.user.findMany({
+      this.prismaService.follow.findMany({
         take: limit,
         skip,
-        where,
+        where: {
+          followeeId: userId,
+        },
         include: {
-          school: true,
+          follower: {
+            include: {
+              school: true,
+            },
+          },
         },
       }),
     ])
 
-    if (!items.length)
-      return {
-        items: [],
-        nextSkip: 0,
-      }
+    const items = follows.map(({ follower }) => follower)
 
     const nextSkip = skip + limit
 
@@ -346,33 +342,29 @@ export class UserService {
   }
 
   async getFollowees(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
-    const where: Prisma.UserWhereInput = {
-      followees: {
-        some: {
+    const [totalCount, follows] = await this.prismaService.$transaction([
+      this.prismaService.follow.count({
+        where: {
           followerId: userId,
         },
-      },
-    }
-
-    const [totalCount, items] = await this.prismaService.$transaction([
-      this.prismaService.user.count({
-        where,
       }),
-      this.prismaService.user.findMany({
+      this.prismaService.follow.findMany({
         take: limit,
         skip,
-        where,
+        where: {
+          followeeId: userId,
+        },
         include: {
-          school: true,
+          followee: {
+            include: {
+              school: true,
+            },
+          },
         },
       }),
     ])
 
-    if (!items.length)
-      return {
-        items: [],
-        nextSkip: 0,
-      }
+    const items = follows.map(({ followee }) => followee)
 
     const nextSkip = skip + limit
 
@@ -738,6 +730,7 @@ export class UserService {
       }),
       this.prismaService.notification.updateMany({
         where: {
+          userId: toUserId,
           followRequestId,
         },
         data: {
@@ -759,10 +752,12 @@ export class UserService {
   }
 
   async unFollow(followerId: string, followeeId: string): Promise<boolean> {
-    await this.prismaService.follow.deleteMany({
+    await this.prismaService.follow.delete({
       where: {
-        followerId,
-        followeeId,
+        followerId_followeeId: {
+          followerId,
+          followeeId,
+        },
       },
     })
 
