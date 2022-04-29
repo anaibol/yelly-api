@@ -1,6 +1,4 @@
 {
-  "POST_REACTION_TITLE": "Tu as une nouvelle réaction",
-  "POST_REACTION_BODY": "{firstName} vous envoie {postReaction}",
   "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} a demandé à suivre tes posts",
   "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} a accepté ta demande de suivre ses posts",
   "NEW_LIVE_TAG_BODY": "Tendance Yelly live",

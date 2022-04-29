@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { ExpoPushNotificationAccessToken, FollowRequest, NotificationType } from '@prisma/client'
+import { ExpoPushNotificationAccessToken, FollowRequest, FeedItemType } from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
 import { PrismaService } from 'src/core/prisma.service'
@@ -7,7 +7,6 @@ import { TRACK_EVENT } from 'src/types/trackEvent'
 import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotificationsToken.service'
 import expo from '../utils/expo'
 import { AmplitudeService } from './amplitude.service'
-import { Cron } from '@nestjs/schedule'
 
 const expiresInFlash = 60 * 15 // 15m
 
@@ -61,52 +60,6 @@ export class PushNotificationService {
     })
   }
 
-  async chatMessage(body: SendbirdMessageWebhookBody) {
-    if (!body)
-      return {
-        statusCode: 404,
-      }
-
-    const { sender, members, payload } = body
-    const pushTokens = await this.getPushTokensByUsersIds(members.map((members) => members.user_id))
-    const receiverUsersTokens = pushTokens.filter(({ userId }) => userId !== sender.user_id)
-
-    const senderUser = await this.prismaService.user.findUnique({
-      select: {
-        id: true,
-        firstName: true,
-      },
-      where: { id: sender.user_id },
-    })
-
-    if (!senderUser?.firstName) return Promise.reject(new Error('Sender not found or without firsrtName'))
-
-    const logEvent: TRACK_EVENT =
-      payload.message_type === 'post_reaction'
-        ? 'POST_REACTION_PUSH_NOTIFICATION_SENT'
-        : 'CHAT_MESSAGE_PUSH_NOTIFICATION_SENT'
-
-    const messages = receiverUsersTokens.map((expoPushNotificationToken) => {
-      const url = `${process.env.APP_BASE_URL}/chats/${senderUser.id}`
-
-      return {
-        to: expoPushNotificationToken.token,
-        title: senderUser.firstName || '',
-        body: payload.message,
-        data: { userId: sender.user_id, unreadCount: 0, url },
-        sound: 'default' as const,
-      }
-    })
-
-    await this.sendNotifications(messages, pushTokens, logEvent)
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({}),
-    }
-  }
-
-  @Cron('* * * * *')
   async vanishingPosts() {
     // const users = await this.prismaService.user.findMany({
     //   where: {
@@ -163,10 +116,10 @@ export class PushNotificationService {
 
     const followers = post.author.followers.map(({ user }) => user)
 
-    await this.prismaService.notification.createMany({
+    await this.prismaService.feedItem.createMany({
       data: followers.map((user) => ({
         userId: user.id,
-        type: NotificationType.FOLLOWEE_POSTED,
+        type: FeedItemType.FOLLOWEE_POSTED,
         postId,
       })),
     })
@@ -226,10 +179,10 @@ export class PushNotificationService {
     const lang = parent.author.locale
     const expoPushNotificationTokens = parent.author.expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
 
-    await this.prismaService.notification.create({
+    await this.prismaService.feedItem.create({
       data: {
         userId: parent.author.id,
-        type: NotificationType.POST_REPLIED,
+        type: FeedItemType.POST_REPLIED,
         postId,
       },
     })
@@ -262,11 +215,11 @@ export class PushNotificationService {
       select: UserPushTokenSelect,
     })
 
-    await this.prismaService.notification.createMany({
+    await this.prismaService.feedItem.createMany({
       data: samePostRepliedUsers.map((user) => ({
         userId: user.id,
         postId,
-        type: NotificationType.SAME_POST_REPLIED,
+        type: FeedItemType.SAME_POST_REPLIED,
       })),
     })
 
@@ -294,55 +247,6 @@ export class PushNotificationService {
       'SAME_POST_REPLIED_PUSH_NOTIFICATION_SENT'
     )
   }
-
-  // NOTE: When user send a reaction currently we send a chat message with sendbird.
-  // async postReaction(postReaction: Partial<PostReaction>) {
-  //   const author = await this.prismaService.post.findUnique({
-  //     where: {
-  //       id: postReaction.postId,
-  //     },
-  //     select: {
-  //       authorId: true,
-  //       author: {
-  //         select: {
-  //           locale: true,
-  //         },
-  //       },
-  //     },
-  //   })
-
-  //   if (!author) return Promise.reject(new Error('Author not found')
-
-  //   const {
-  //     authorId: postAuthorID,
-  //     author: { locale },
-  //   } = author
-
-  //   const pushTokens = await this.getPushTokensByUsersIds([postAuthorID])
-  //   const reaction = await this.prismaService.user.findUnique({ where: { id: postReaction.authorId } })
-
-  //   if (!reaction) return Promise.reject(new Error('Reaction not found')
-
-  //   // TODO: ask for text and setup translations file
-  //   const message = {
-  //     title: await this.i18n.translate('notifications.POST_REACTION_TITLE', { lang: locale || 'fr' }),
-  //     body: await this.i18n.translate('notifications.POST_REACTION_BODY', {
-  //       args: { firstName: reaction.firstName, postReaction: postReaction.reaction },
-  //       lang: locale || 'fr',
-  //     }),
-  //   }
-
-  //   const messages = pushTokens.map((expoPushNotificationToken) => {
-  //     return {
-  //       ...message,
-  //       to: expoPushNotificationToken.token,
-  //       data: { url: `${process.env.APP_BASE_URL}/posts/${postReaction.postId}` },
-  //       sound: 'default' as const,
-  //     }
-  //   })
-
-  //   await this.sendNotifications(messages, pushTokens)
-  // }
 
   async createFollowRequestPushNotification(followRequest: FollowRequest) {
     const url = `${process.env.APP_BASE_URL}/users/${followRequest.requesterId}`

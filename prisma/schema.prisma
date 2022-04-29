@@ -32,14 +32,10 @@ model Notification {
   id              String            @id @default(uuid())
   isSeen          Boolean           @default(false)
   createdAt       DateTime          @default(now())
-  postId          String?
-  postReactionId  String?           @unique
   followId        String?           @unique
   userId          String
   followRequestId String?
-  post            Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
   followRequest   FollowRequest?    @relation(fields: [followRequestId], references: [id], onDelete: Cascade)
-  postReaction    PostReaction?     @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
   type            NotificationType?
 
   @@index([createdAt], map: "Notification_createdAt")
@@ -53,6 +49,7 @@ model FeedItem {
   postId    String?
   post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
   user      User?    @relation(fields: [userId], references: [id])
+  type      FeedItemType
   userId    String
 
   @@index([createdAt], map: "FeedItem_createdAt")
@@ -109,9 +106,8 @@ model User {
   friendUserFriends            Friend[]                          @relation("friendUserFriends")
   friends                      Friend[]                          @relation("userFriends")
   followRequestRequester       FollowRequest[]                   @relation("followRequestRequester")
-  followRequestToUser    FollowRequest[]                   @relation("followRequestToUser")
+  followRequestToUser          FollowRequest[]                   @relation("followRequestToUser")
   posts                        Post[]
-  postReactions                PostReaction[]
   postPollVotes                PostPollVote[]
   followees                    Follower[]                        @relation("usersAsFollowees")
   followers                    Follower[]                        @relation("usersAsFollowers")
@@ -172,25 +168,23 @@ model Tag {
 }
 
 model Post {
-  id           String           @id @default(uuid())
-  text         String           @db.Text
-  createdAt    DateTime         @unique @default(now())
-  authorId     String
-  viewsCount   Int              @default(0)
-  author       User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  reactions    PostReaction[]
-  tags         Tag[]
-  pollOptions  PostPollOption[]
-  pollVotes    PostPollVote[]
-  expiresIn    Int?
-  expiresAt    DateTime?
-  children     Post[]           @relation("parentChildren")
-  parent       Post?            @relation("parentChildren", fields: [parentId], references: [id])
-  parentId     String?
-  notification Notification[]
-  thread       Thread?          @relation(fields: [threadId], references: [id])
-  threadId     String?
-  feedItems    FeedItem[]
+  id          String           @id @default(uuid())
+  text        String           @db.Text
+  createdAt   DateTime         @unique @default(now())
+  authorId    String
+  viewsCount  Int              @default(0)
+  author      User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags        Tag[]
+  pollOptions PostPollOption[]
+  pollVotes   PostPollVote[]
+  expiresIn   Int?
+  expiresAt   DateTime?
+  children    Post[]           @relation("parentChildren")
+  parent      Post?            @relation("parentChildren", fields: [parentId], references: [id])
+  parentId    String?
+  thread      Thread?          @relation(fields: [threadId], references: [id])
+  threadId    String?
+  feedItems   FeedItem[]
 
   @@index([authorId])
   @@index([expiresAt])
@@ -222,19 +216,6 @@ model PostPollVote {
   @@index([postId])
 }
 
-model PostReaction {
-  id           String        @id @default(uuid())
-  createdAt    DateTime      @unique @default(now())
-  reaction     String
-  postId       String
-  authorId     String
-  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  notification Notification?
-
-  @@unique([authorId, postId])
-}
-
 model ExpoPushNotificationAccessToken {
   id     String @id @default(uuid())
   userId String
@@ -256,11 +237,14 @@ enum UserRole {
 }
 
 enum NotificationType {
+  FOLLOW_REQUEST_PENDING
+  FOLLOW_REQUEST_ACCEPTED
+}
+
+enum FeedItemType {
   FOLLOWEE_POSTED
   POST_REPLIED
   SAME_POST_REPLIED
-  FOLLOW_REQUEST_PENDING
-  FOLLOW_REQUEST_ACCEPTED
 }
 
 model Thread {

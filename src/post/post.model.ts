@@ -24,6 +24,7 @@ export class Post {
   expiresIn?: number | null
   expiresAt?: Date | null
   parent?: Post | null
+  threadId?: string | null
   children?: PaginatedPosts
   childrenCount?: number
 }

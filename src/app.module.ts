@@ -15,13 +15,12 @@ import { SendbirdWebhookModule } from './sendbird-webhook/sendbird-webhook.modul
 import { SchoolModule } from './school/school.module'
 // import { CommonFriendsLoader } from './user/common-friends.loader'
 import { IsFollowedByAuthUserLoader } from './user/is-followed-by-auth-user.loader'
-import { ScheduleModule } from '@nestjs/schedule'
+import { FeedModule } from './feed/feed.module'
 // import { GraphQLError, GraphQLFormattedError } from 'graphql'
 
 @Module({
   providers: [UserModule, IsFollowedByAuthUserLoader], // CommonFriendsLoader
   imports: [
-    ScheduleModule.forRoot(),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       playground: false,
@@ -57,6 +56,7 @@ import { ScheduleModule } from '@nestjs/schedule'
       },
     }),
     UserModule,
+    FeedModule,
     PostModule,
     TagModule,
     CoreModule,

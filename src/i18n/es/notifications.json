@@ -1,6 +1,4 @@
 {
-  "POST_REACTION_TITLE": "Tienes una nueva reacción",
-  "POST_REACTION_BODY": "{firstName} te envía {postReaction}",
   "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} te envió una solicitud de amistad",
   "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} aceptó tu solicitud de amistad",
   "NEW_LIVE_TAG_BODY": "Tendencia Yelly live",
