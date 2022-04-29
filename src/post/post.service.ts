@@ -265,7 +265,7 @@ export class PostService {
         if (post.threadId && !threads.includes(post.threadId)) {
           // eslint-disable-next-line functional/immutable-data
           threads.push(post.threadId)
-          return [post, ...posts.filter(({ threadId }) => threadId === post.threadId)]
+          return [post, ...posts.filter(({ threadId, id }) => threadId === post.threadId && id !== post.id)]
         }
 
         return post

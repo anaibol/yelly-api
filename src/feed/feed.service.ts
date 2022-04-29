@@ -81,7 +81,10 @@ export class FeedService {
         if (item && item.post && item.post.threadId && !threads.includes(item.post.threadId)) {
           // eslint-disable-next-line functional/immutable-data
           threads.push(item.post.threadId)
-          return [item, ...mappedPosts.filter((i) => i.post?.threadId === item.post?.threadId)]
+          return [
+            item,
+            ...mappedPosts.filter((i) => i.post?.threadId === item.post?.threadId && i.post?.id !== item.post?.id),
+          ]
         }
 
         return item
