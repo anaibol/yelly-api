@@ -43,7 +43,7 @@ model Notification {
 }
 
 model FeedItem {
-  id        String   @id @default(uuid())
+  id        String   @id @default(dbgenerated("generate_id()"))
   isSeen    Boolean  @default(false)
   createdAt DateTime @default(now())
   postId    String?

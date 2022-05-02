@@ -25,6 +25,7 @@ export class FeedService {
     const feedItems = await this.prismaService.feedItem.findMany({
       where: {
         userId: authUser.id,
+        isSeen: false,
         post: {
           ...getNotExpiredCondition(),
           author: {
@@ -49,13 +50,13 @@ export class FeedService {
             },
           },
         },
-        ...(currentCursor && {
-          cursor: {
-            createdAt: new Date(+currentCursor),
-          },
-          skip: 1,
-        }),
       },
+      ...(currentCursor && {
+        cursor: {
+          id: currentCursor,
+        },
+        skip: 1,
+      }),
       orderBy: {
         createdAt: 'desc',
       },
@@ -74,28 +75,28 @@ export class FeedService {
     }))
 
     // eslint-disable-next-line prefer-const
-    let threads: string[] = []
+    // let threads: string[] = []
 
-    const items: FeedItem[] = mappedPosts
-      .map((item) => {
-        if (item && item.post && item.post.threadId && !threads.includes(item.post.threadId)) {
-          // eslint-disable-next-line functional/immutable-data
-          threads.push(item.post.threadId)
-          return [
-            item,
-            ...mappedPosts.filter((i) => i.post?.threadId === item.post?.threadId && i.post?.id !== item.post?.id),
-          ]
-        }
+    // const items: FeedItem[] = mappedPosts
+    //   .map((item) => {
+    //     if (item && item.post && item.post.threadId && !threads.includes(item.post.threadId)) {
+    //       // eslint-disable-next-line functional/immutable-data
+    //       threads.push(item.post.threadId)
+    //       return [
+    //         item,
+    //         ...mappedPosts.filter((i) => i.post?.threadId === item.post?.threadId && i.post?.id !== item.post?.id),
+    //       ]
+    //     }
 
-        return item
-      })
-      .flat()
+    //     return item
+    //   })
+    //   .flat()
+
+    const items = mappedPosts
 
     const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const lastCreatedAt = lastItem?.post?.createdAt
-
-    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
+    const nextCursor = lastItem ? lastItem.id : ''
 
     return { items, nextCursor }
   }
@@ -109,13 +110,17 @@ export class FeedService {
     })
   }
 
-  async markAsSeen(feedItemId: string): Promise<boolean> {
-    const update = await this.prismaService.feedItem.update({
+  async markAsSeen(authUser: AuthUser, after: Date, before: Date): Promise<boolean> {
+    const update = await this.prismaService.feedItem.updateMany({
       data: {
         isSeen: true,
       },
       where: {
-        id: feedItemId,
+        userId: '45a3f764-dc40-4c47-9345-afa43d60cf00',
+        createdAt: {
+          gte: after,
+          lte: before,
+        },
       },
     })
 

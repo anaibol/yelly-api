@@ -258,19 +258,27 @@ export class PostService {
     const mappedPosts = posts.map(mapPost)
 
     // eslint-disable-next-line prefer-const
-    let threads: string[] = []
+    // let threads: string[] = []
+
+    // const items = mappedPosts
+    //   .map((post): Post | Post[] => {
+    //     if (post.threadId && !threads.includes(post.threadId)) {
+    //       // eslint-disable-next-line functional/immutable-data
+    //       threads.push(post.threadId)
+    //       return [
+    //         post,
+    //         ...posts.filter(
+    //           ({ threadId, id }) =>
+    //             post.threadId && !threads.includes(post.threadId) && threadId === post.threadId && id !== post.id
+    //         ),
+    //       ]
+    //     }
+
+    //     return post
+    //   })
+    //   .flat()
 
     const items = mappedPosts
-      .map((post): Post | Post[] => {
-        if (post.threadId && !threads.includes(post.threadId)) {
-          // eslint-disable-next-line functional/immutable-data
-          threads.push(post.threadId)
-          return [post, ...posts.filter(({ threadId, id }) => threadId === post.threadId && id !== post.id)]
-        }
-
-        return post
-      })
-      .flat()
 
     const lastItem = items.length === limit && items[limit - 1]
 

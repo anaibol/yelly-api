@@ -27,7 +27,11 @@ export class FeedResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  markFeedItemAsSeen(@Args('feedItemId') feedItemId: string): Promise<boolean> {
-    return this.feedService.markAsSeen(feedItemId)
+  markFeedItemsAsSeen(
+    @CurrentUser() authUser: AuthUser,
+    @Args('after') after: Date,
+    @Args('before') before: Date
+  ): Promise<boolean> {
+    return this.feedService.markAsSeen(authUser, after, before)
   }
 }
