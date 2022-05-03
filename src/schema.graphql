@@ -148,7 +148,7 @@ type Mutation {
   emailSignIn(input: EmailSignInInput!): AccessToken!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
-  markFeedItemsAsSeen(after: DateTime!, before: DateTime!, feedItemId: String): Boolean!
+  markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: String): Boolean!
   markNotificationAsSeen(notificationId: String!): Boolean!
   refreshAccessToken(refreshToken: String!): AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!

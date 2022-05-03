@@ -94,7 +94,7 @@ export class FeedService {
     return { items, nextCursor, totalCount }
   }
 
-  async markAsSeen(authUser: AuthUser, after: Date, before: Date, feedItemId?: string): Promise<boolean> {
+  async markAsSeen(authUser: AuthUser, after?: Date, before?: Date, feedItemId?: string): Promise<boolean> {
     const update = await this.prismaService.feedItem.updateMany({
       data: {
         isSeen: true,
