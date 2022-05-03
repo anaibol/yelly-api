@@ -85,14 +85,14 @@ export class MeResolver {
 
     await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
 
-    const user = await this.userService.findOrCreate(phoneNumber, locale)
+    const { user, isNewUser } = await this.userService.findOrCreate(phoneNumber, locale)
 
     const [accessToken, refreshToken] = await Promise.all([
       this.authService.getAccessToken(user.id),
       this.authService.getRefreshToken(user.id),
     ])
 
-    return { accessToken, refreshToken }
+    return { accessToken, refreshToken, isNewUser }
   }
 
   @Query(() => Me)

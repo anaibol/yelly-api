@@ -769,22 +769,23 @@ export class UserService {
     return posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id))
   }
 
-  async findOrCreate(phoneNumber: string, locale: string): Promise<User> {
-    const user = await this.prismaService.user.upsert({
+  async findOrCreate(phoneNumber: string, locale: string): Promise<{ user: User; isNewUser?: boolean }> {
+    const user = await this.prismaService.user.findUnique({
       where: {
         phoneNumber,
       },
-      select: {
-        id: true,
-      },
-      create: {
+    })
+
+    if (user) return { user }
+
+    const newUser = await this.prismaService.user.create({
+      data: {
         phoneNumber,
         locale,
       },
-      update: {},
     })
 
-    return { id: user.id }
+    return { user: newUser, isNewUser: true }
   }
 
   async update(userId: string, data: UpdateUserInput): Promise<Me> {

@@ -4,6 +4,7 @@
 
 type AccessToken {
   accessToken: String!
+  isNewUser: Boolean
   refreshToken: String!
 }
 
