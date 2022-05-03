@@ -66,6 +66,7 @@ type Feed {
 }
 
 type FeedItem {
+  createdAt: DateTime
   id: ID!
   post: Post
   type: FeedItemType

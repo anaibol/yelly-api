@@ -11,6 +11,7 @@ export class FeedItem {
   @Field(() => ID)
   id: string
   post?: Post
+  createdAt?: Date
   @Field(() => FeedItemType)
   type?: FeedItemType | null
 }

@@ -63,6 +63,7 @@ export class FeedService {
       take: limit,
       select: {
         id: true,
+        createdAt: true,
         post: {
           select: PostSelectWithParent,
         },
@@ -116,7 +117,7 @@ export class FeedService {
         isSeen: true,
       },
       where: {
-        userId: '45a3f764-dc40-4c47-9345-afa43d60cf00',
+        userId: authUser.id,
         createdAt: {
           gte: after,
           lte: before,
