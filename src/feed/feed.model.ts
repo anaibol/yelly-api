@@ -20,4 +20,5 @@ export class FeedItem {
 export class Feed {
   nextCursor: string
   items: FeedItem[]
+  totalCount: number
 }

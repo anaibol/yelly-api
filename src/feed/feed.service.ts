@@ -6,11 +6,12 @@ import { AuthUser } from 'src/auth/auth.service'
 
 import { excludedTags } from 'src/tag/excluded-tags.constant'
 import { Feed, FeedItem } from './feed.model'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class FeedService {
   constructor(private prismaService: PrismaService) {}
-  async getFeed(authUser: AuthUser, limit: number, currentCursor?: string): Promise<Feed> {
+  async getFeed(authUser: AuthUser, limit: number, currentCursor?: string, isSeen?: boolean): Promise<Feed> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const authUserCountry = await this.prismaService.school
@@ -22,53 +23,44 @@ export class FeedService {
 
     if (!authUserCountry) return Promise.reject(new Error('No country'))
 
-    const feedItems = await this.prismaService.feedItem.findMany({
-      where: {
-        userId: authUser.id,
-        isSeen: false,
-        post: {
-          ...getNotExpiredCondition(),
-          author: {
-            isActive: true,
-          },
-          OR: [
-            {
-              parent: null,
-            },
-            {
-              parent: {
-                parent: null,
-              },
-            },
-          ],
-          tags: {
-            none: {
-              text: {
-                in: excludedTags,
-                mode: 'insensitive',
-              },
-            },
-          },
-        },
-      },
-      ...(currentCursor && {
-        cursor: {
-          id: currentCursor,
-        },
-        skip: 1,
+    const where: Prisma.FeedItemWhereInput = {
+      userId: authUser.id,
+      ...(isSeen && {
+        isSeen,
       }),
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: {
-        id: true,
-        createdAt: true,
-        post: {
-          select: PostSelectWithParent,
+      post: {
+        ...getNotExpiredCondition(),
+        author: {
+          isActive: true,
         },
       },
-    })
+    }
+
+    const [totalCount, feedItems] = await this.prismaService.$transaction([
+      this.prismaService.feedItem.count({
+        where,
+      }),
+      this.prismaService.feedItem.findMany({
+        where,
+        ...(currentCursor && {
+          cursor: {
+            id: currentCursor,
+          },
+          skip: 1,
+        }),
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: limit,
+        select: {
+          id: true,
+          createdAt: true,
+          post: {
+            select: PostSelectWithParent,
+          },
+        },
+      }),
+    ])
 
     const mappedPosts = feedItems.map(({ post, ...feedItem }) => ({
       ...feedItem,
@@ -99,24 +91,18 @@ export class FeedService {
 
     const nextCursor = lastItem ? lastItem.id : ''
 
-    return { items, nextCursor }
+    return { items, nextCursor, totalCount }
   }
 
-  getUnreadCount(userId: string): Promise<number> {
-    return this.prismaService.feedItem.count({
-      where: {
-        userId,
-        isSeen: false,
-      },
-    })
-  }
-
-  async markAsSeen(authUser: AuthUser, after: Date, before: Date): Promise<boolean> {
+  async markAsSeen(authUser: AuthUser, after: Date, before: Date, feedItemId?: string): Promise<boolean> {
     const update = await this.prismaService.feedItem.updateMany({
       data: {
         isSeen: true,
       },
       where: {
+        ...(feedItemId && {
+          id: feedItemId,
+        }),
         userId: authUser.id,
         createdAt: {
           gte: after,

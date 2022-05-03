@@ -5,7 +5,7 @@ import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
 
 import { CreateOrUpdateLiveTagInput } from '../post/create-or-update-live-tag.input'
-import { PostsArgs } from '../post/posts.args'
+import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
@@ -65,10 +65,10 @@ export class TagResolver {
   @ResolveField()
   async posts(
     @Parent() tag: Tag,
-    @Args() postsArgs: PostsArgs,
+    @Args() cursorPaginationArgs: CursorPaginationArgs,
     @CurrentUser() authUser: AuthUser
   ): Promise<PaginatedPosts> {
-    const { limit, after } = postsArgs
+    const { limit, after } = cursorPaginationArgs
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 

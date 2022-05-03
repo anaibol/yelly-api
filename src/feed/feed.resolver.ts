@@ -5,7 +5,8 @@ import { AuthGuard } from '../auth/auth-guard'
 import { AuthUser } from '../auth/auth.service'
 import { CurrentUser } from '../auth/user.decorator'
 import { Feed } from './feed.model'
-import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
+import { FeedArgs } from './feed.args'
+import { MarkFeedItemsAsSeenArgs } from './markFeedItemsAsSeen.args'
 
 @Resolver()
 export class FeedResolver {
@@ -13,25 +14,20 @@ export class FeedResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => Feed)
-  async feed(@Args() cursorPaginationArgs: CursorPaginationArgs, @CurrentUser() authUser: AuthUser): Promise<Feed> {
-    const { after, limit } = cursorPaginationArgs
+  async feed(@CurrentUser() authUser: AuthUser, @Args() feedArgs: FeedArgs): Promise<Feed> {
+    const { after, limit, isSeen } = feedArgs
 
-    return this.feedService.getFeed(authUser, limit, after)
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => Number)
-  unreadFeedItemsCount(@CurrentUser() authUser: AuthUser): Promise<number> {
-    return this.feedService.getUnreadCount(authUser.id)
+    return this.feedService.getFeed(authUser, limit, after, isSeen)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   markFeedItemsAsSeen(
     @CurrentUser() authUser: AuthUser,
-    @Args('after') after: Date,
-    @Args('before') before: Date
+    @Args() markFeedItemsAsSeen: MarkFeedItemsAsSeenArgs
   ): Promise<boolean> {
-    return this.feedService.markAsSeen(authUser, after, before)
+    const { after, before, feedItemId } = markFeedItemsAsSeen
+
+    return this.feedService.markAsSeen(authUser, after, before, feedItemId)
   }
 }
