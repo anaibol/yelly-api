@@ -25,7 +25,7 @@ export class FeedService {
 
     const where: Prisma.FeedItemWhereInput = {
       userId: authUser.id,
-      ...(isSeen && {
+      ...(isSeen !== undefined && {
         isSeen,
       }),
       post: {
