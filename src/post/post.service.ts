@@ -214,16 +214,7 @@ export class PostService {
           },
           birthdate: datesRanges,
         },
-        OR: [
-          {
-            parent: null,
-          },
-          {
-            parent: {
-              parent: null,
-            },
-          },
-        ],
+        parent: null,
         AND: {
           OR: [
             {

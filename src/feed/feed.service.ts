@@ -1,11 +1,9 @@
-/* eslint-disable functional/no-let */
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
 import { PostSelectWithParent, mapPost, getNotExpiredCondition } from '../post/post-select.constant'
 import { AuthUser } from 'src/auth/auth.service'
 
-import { excludedTags } from 'src/tag/excluded-tags.constant'
-import { Feed, FeedItem } from './feed.model'
+import { Feed } from './feed.model'
 import { Prisma } from '@prisma/client'
 
 @Injectable()
@@ -44,7 +42,7 @@ export class FeedService {
         where,
         ...(currentCursor && {
           cursor: {
-            id: currentCursor,
+            id: Number(currentCursor),
           },
           skip: 1,
         }),
@@ -62,7 +60,8 @@ export class FeedService {
       }),
     ])
 
-    const mappedPosts = feedItems.map(({ post, ...feedItem }) => ({
+    const mappedPosts = feedItems.map(({ post, id, ...feedItem }) => ({
+      id: id.toString(),
       ...feedItem,
       ...(post && { post: mapPost(post) }),
     }))
@@ -89,7 +88,7 @@ export class FeedService {
 
     const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const nextCursor = lastItem ? lastItem.id : ''
+    const nextCursor = lastItem ? lastItem.id.toString() : ''
 
     return { items, nextCursor, totalCount }
   }
@@ -101,7 +100,7 @@ export class FeedService {
       },
       where: {
         ...(feedItemId && {
-          id: feedItemId,
+          id: Number(feedItemId),
         }),
         userId: authUser.id,
         createdAt: {

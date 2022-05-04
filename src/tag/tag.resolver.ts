@@ -16,7 +16,8 @@ import { PaginatedPosts } from '../post/paginated-posts.model'
 import dates from '../utils/dates'
 import { PaginatedTrends } from './paginated-trends.model'
 import { UserService } from 'src/user/user.service'
-import { TrendsArgs } from './trends'
+import { TrendsArgs } from './trends.args'
+import { TopTrendsArgs } from './top-trends.args'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -58,6 +59,23 @@ export class TagResolver {
     const { skip, limit, isEmoji } = trendsArgs
 
     const { items, nextSkip } = await this.tagService.getTrends(authUser, isEmoji, skip, limit)
+
+    return { items, nextSkip }
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTrends)
+  async topTrends(@Args() topTrendsArgs: TopTrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTrends> {
+    const { skip, limit, isEmoji, postsAfter, postsBefore } = topTrendsArgs
+
+    const { items, nextSkip } = await this.tagService.getTopTrends(
+      authUser,
+      isEmoji,
+      skip,
+      limit,
+      postsAfter,
+      postsBefore
+    )
 
     return { items, nextSkip }
   }

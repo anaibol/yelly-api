@@ -11,4 +11,13 @@ export const excludedTags = [
   'rencontre',
   'connaissance',
   'celib',
+  'quiestcelib',
+  'celibataire',
+  'pechomoi',
+  'jesuiscelib',
+  'jesuiscelibataire',
+  'sex',
+  'cul',
+  'baise',
+  'cherchemeuf',
 ]

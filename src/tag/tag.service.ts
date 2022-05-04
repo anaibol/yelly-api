@@ -201,4 +201,52 @@ export class TagService {
 
     return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
+
+  async getTopTrends(
+    authUser: AuthUser,
+    isEmoji: boolean,
+    skip: number,
+    limit: number,
+    postsAfter: Date,
+    postBefore: Date
+  ): Promise<PaginatedTrends> {
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+
+    const country = await this.prismaService.school
+      .findUnique({
+        where: { id: authUser.schoolId },
+      })
+      .city()
+      .country()
+
+    if (!country) return Promise.reject(new Error('No country'))
+
+    const tagTrends: { id: string; text: string; postCount: number; totalCount: number }[] = await this.prismaService
+      .$queryRaw`
+      SELECT
+      T."id",
+      T."text",
+      COUNT(*) as "postCount",
+      COUNT(*) OVER() AS "totalCount",
+      FROM
+        "public"."Tag" T,
+        "public"."_PostToTag" PT,
+        "public"."Post" P,
+        "SELECT " as "totalCount"
+      WHERE
+        PT. "B" = T. "id"
+        AND PT. "A" = P. "id"
+        AND T."countryId" = ${country.id}
+        AND P."createdAt" BETWEEN  ${postsAfter} AND  ${postBefore}
+      GROUP BY T."id",T."text"	
+      ORDER BY "postCount" desc
+      OFFSET ${skip}
+      LIMIT ${limit}
+  `
+
+    const nextSkip = skip + limit
+    const totalCount = tagTrends.length > 0 ? tagTrends[0].totalCount : 0
+
+    return { items: tagTrends, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+  }
 }
