@@ -205,11 +205,10 @@ export class TagService {
   async getTopTrends(
     authUser: AuthUser,
     isEmoji: boolean,
-    isLive: boolean,
     skip: number,
     limit: number,
     postsAfter: Date,
-    postBefore: Date
+    postsBefore: Date
   ): Promise<PaginatedTrends> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
@@ -227,6 +226,7 @@ export class TagService {
       SELECT
       T."id",
       T."text",
+      T."isLive",
       COUNT(*) as "postCount"
       FROM
         "Tag" T,
@@ -237,8 +237,7 @@ export class TagService {
         AND PT. "A" = P. "id"
         AND T."countryId" = ${country.id}
         AND T."isEmoji" = ${isEmoji}
-        AND T."isLive" = ${isLive}
-        AND P."createdAt" BETWEEN  ${postsAfter} AND ${postBefore}
+        AND P."createdAt" BETWEEN  ${postsAfter} AND ${postsBefore}
       GROUP BY T."id",T."text"	
       ORDER BY "postCount" desc
       OFFSET ${skip}

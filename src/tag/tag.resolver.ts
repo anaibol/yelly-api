@@ -66,12 +66,11 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTrends)
   async topTrends(@Args() topTrendsArgs: TopTrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTrends> {
-    const { skip, limit, isEmoji, isLive, postsAfter, postsBefore } = topTrendsArgs
+    const { skip, limit, isEmoji, postsAfter, postsBefore } = topTrendsArgs
 
     const { items, nextSkip } = await this.tagService.getTopTrends(
       authUser,
       isEmoji,
-      isLive,
       skip,
       limit,
       postsAfter,
