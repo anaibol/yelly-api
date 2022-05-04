@@ -10,11 +10,11 @@ import { AmplitudeService } from './amplitude.service'
 
 const expiresInFlash = 60 * 15 // 15m
 
-type SendbirdMessageWebhookBody = {
-  sender: any
-  members: any[]
-  payload: any
-}
+// type SendbirdMessageWebhookBody = {
+//   sender: any
+//   members: any[]
+//   payload: any
+// }
 
 const UserPushTokenSelect = {
   id: true,
@@ -127,7 +127,7 @@ export class PushNotificationService {
     const followersPushNotifications = followers.map(async (user) => {
       const lang = user.locale
 
-      const url = `${process.env.APP_BASE_URL}/posts/${postId}`
+      const url = process.env.APP_BASE_URL
 
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
@@ -187,7 +187,7 @@ export class PushNotificationService {
       },
     })
 
-    const url = `${process.env.APP_BASE_URL}/posts/${postId}`
+    const url = process.env.APP_BASE_URL
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
@@ -226,7 +226,7 @@ export class PushNotificationService {
     const samePostRepliedUsersPushNotifications = samePostRepliedUsers.map(async (user) => {
       const lang = user.locale
 
-      const url = `${process.env.APP_BASE_URL}/posts/${postId}`
+      const url = process.env.APP_BASE_URL
 
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),

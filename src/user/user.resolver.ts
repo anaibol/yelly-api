@@ -164,6 +164,15 @@ export class UserResolver {
     return this.userService.ban(userId)
   }
 
+  @Query(() => PaginatedUsers)
+  @UseGuards(AuthGuard)
+  usersFromSameSchool(
+    @CurrentUser() authUser: AuthUser,
+    @Args() offsetPaginationArgs: OffsetPaginationArgs
+  ): Promise<PaginatedUsers> {
+    return this.userService.getUsersFromSameSchool(authUser, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+  }
+
   @ResolveField('posts', () => PaginatedPosts)
   async posts(@Parent() user: User, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedPosts> {
     const { after, limit } = cursorPaginationArgs

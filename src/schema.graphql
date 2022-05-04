@@ -233,6 +233,7 @@ type Query {
   trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
+  usersFromSameSchool(limit: Int = 10, skip: Int = 0): PaginatedUsers!
 }
 
 input ResetPasswordInput {

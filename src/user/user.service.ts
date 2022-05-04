@@ -769,6 +769,34 @@ export class UserService {
     return posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id))
   }
 
+  async getUsersFromSameSchool(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
+    const where = {
+      schoolId: authUser.schoolId,
+      NOT: {
+        followers: {
+          some: {
+            id: authUser.id,
+          },
+        },
+      },
+    }
+
+    const [totalCount, items] = await this.prismaService.$transaction([
+      this.prismaService.user.count({
+        where,
+      }),
+      this.prismaService.user.findMany({
+        take: limit,
+        skip,
+        where,
+      }),
+    ])
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+  }
+
   async findOrCreate(phoneNumber: string, locale: string): Promise<{ user: User; isNewUser?: boolean }> {
     const user = await this.prismaService.user.findUnique({
       where: {
