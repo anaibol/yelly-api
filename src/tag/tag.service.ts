@@ -204,6 +204,8 @@ export class TagService {
 
   async getTopTrends(
     authUser: AuthUser,
+    isEmoji: boolean,
+    isLive: boolean,
     skip: number,
     limit: number,
     postsAfter: Date,
@@ -234,7 +236,9 @@ export class TagService {
         PT. "B" = T. "id"
         AND PT. "A" = P. "id"
         AND T."countryId" = ${country.id}
-        AND P."createdAt" BETWEEN  ${postsAfter} AND  ${postBefore}
+        AND T."isEmoji" = ${isEmoji}
+        AND T."isLive" = ${isLive}
+        AND P."createdAt" BETWEEN  ${postsAfter} AND ${postBefore}
       GROUP BY T."id",T."text"	
       ORDER BY "postCount" desc
       OFFSET ${skip}
