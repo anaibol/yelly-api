@@ -204,7 +204,6 @@ export class TagService {
 
   async getTopTrends(
     authUser: AuthUser,
-    isEmoji: boolean,
     skip: number,
     limit: number,
     postsAfter: Date,
@@ -226,13 +225,11 @@ export class TagService {
       SELECT
       T."id",
       T."text",
-      COUNT(*) as "postCount",
-      COUNT(*) OVER() AS "totalCount",
+      COUNT(*) as "postCount"
       FROM
-        "public"."Tag" T,
-        "public"."_PostToTag" PT,
-        "public"."Post" P,
-        "SELECT " as "totalCount"
+        "Tag" T,
+        "_PostToTag" PT,
+        "Post" P
       WHERE
         PT. "B" = T. "id"
         AND PT. "A" = P. "id"
