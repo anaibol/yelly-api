@@ -127,8 +127,6 @@ export class PushNotificationService {
     const followersPushNotifications = followers.map(async (user) => {
       const lang = user.locale
 
-      const url = process.env.APP_BASE_URL
-
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
         body: await this.i18n.translate(
@@ -138,7 +136,6 @@ export class PushNotificationService {
             args: { firstName: post.author.firstName },
           }
         ),
-        data: { postId, url },
         sound: 'default' as const,
       }
     })
@@ -187,15 +184,12 @@ export class PushNotificationService {
       },
     })
 
-    const url = process.env.APP_BASE_URL
-
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
       body: await this.i18n.translate('notifications.POST_REPLIED', {
         ...(lang && { lang }),
         args: { firstName: author.firstName },
       }),
-      data: { postId, url },
       sound: 'default' as const,
     }
 
@@ -226,15 +220,12 @@ export class PushNotificationService {
     const samePostRepliedUsersPushNotifications = samePostRepliedUsers.map(async (user) => {
       const lang = user.locale
 
-      const url = process.env.APP_BASE_URL
-
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
         body: await this.i18n.translate('notifications.SAME_POST_REPLIED', {
           ...(lang && { lang }),
           args: { firstName: author.firstName },
         }),
-        data: { postId, url },
         sound: 'default' as const,
       }
     })

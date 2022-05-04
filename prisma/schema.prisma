@@ -9,7 +9,7 @@ datasource db {
 }
 
 model City {
-  id            String   @id @default(uuid())
+  id            String   @id @default(dbgenerated("generate_id()"))
   countryId     String
   name          String
   googlePlaceId String?  @unique
@@ -22,14 +22,14 @@ model City {
 }
 
 model Country {
-  id   String @id @default(uuid())
+  id   String @id @default(dbgenerated("generate_id()"))
   code String @unique
   city City[]
   tag  Tag[]
 }
 
 model Notification {
-  id              String            @id @default(uuid())
+  id              String            @id @default(dbgenerated("generate_id()"))
   isSeen          Boolean           @default(false)
   createdAt       DateTime          @default(now())
   followId        String?           @unique
@@ -43,7 +43,7 @@ model Notification {
 }
 
 model FeedItem {
-  id        String   @id @default(dbgenerated("generate_id()"))
+  id        BigInt   @id @default(dbgenerated("generate_id()"))
   isSeen    Boolean  @default(false)
   createdAt DateTime @default(now())
   postId    String?
@@ -56,7 +56,7 @@ model FeedItem {
 }
 
 model School {
-  id            String  @id @default(uuid())
+  id            String  @id @default(dbgenerated("generate_id()"))
   name          String
   googlePlaceId String? @unique
   lat           Float?
@@ -67,13 +67,13 @@ model School {
 }
 
 model Training {
-  id   String @id @default(uuid())
+  id   String @id @default(dbgenerated("generate_id()"))
   name String @unique
   user User[]
 }
 
 model User {
-  id                           String                            @id @default(uuid())
+  id                           String                            @id @default(dbgenerated("generate_id()"))
   firstName                    String?
   lastName                     String?
   email                        String?                           @unique
@@ -117,7 +117,7 @@ model User {
 }
 
 model FollowRequest {
-  id             String              @id @default(uuid())
+  id             String              @id @default(dbgenerated("generate_id()"))
   requesterId    String
   toFollowUserId String
   createdAt      DateTime            @default(now())
@@ -130,7 +130,7 @@ model FollowRequest {
 }
 
 model Friend {
-  id          String   @unique @default(uuid())
+  id          String   @unique @default(dbgenerated("generate_id()"))
   userId      String
   otherUserId String
   createdAt   DateTime @default(now())
@@ -142,7 +142,7 @@ model Friend {
 }
 
 model Follower {
-  id         String   @unique @default(uuid())
+  id         String   @unique @default(dbgenerated("generate_id()"))
   userId     String
   followeeId String
   createdAt  DateTime @default(now())
@@ -153,7 +153,7 @@ model Follower {
 }
 
 model Tag {
-  id        String   @id @default(uuid())
+  id        String   @id @default(dbgenerated("generate_id()"))
   text      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -168,7 +168,7 @@ model Tag {
 }
 
 model Post {
-  id          String           @id @default(uuid())
+  id          String           @id @default(dbgenerated("generate_id()"))
   text        String           @db.Text
   createdAt   DateTime         @unique @default(now())
   authorId    String
@@ -191,7 +191,7 @@ model Post {
 }
 
 model PostPollOption {
-  id       String         @id @default(uuid())
+  id       String         @id @default(dbgenerated("generate_id()"))
   text     String
   post     Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId   String
@@ -202,7 +202,7 @@ model PostPollOption {
 }
 
 model PostPollVote {
-  id        String         @id @default(uuid())
+  id        String         @id @default(dbgenerated("generate_id()"))
   option    PostPollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
   optionId  String
   post      Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -217,7 +217,7 @@ model PostPollVote {
 }
 
 model ExpoPushNotificationAccessToken {
-  id     String @id @default(uuid())
+  id     String @id @default(dbgenerated("generate_id()"))
   userId String
   token  String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -248,6 +248,6 @@ enum FeedItemType {
 }
 
 model Thread {
-  id    String @id @default(uuid())
+  id    String @id @default(dbgenerated("generate_id()"))
   posts Post[]
 }
