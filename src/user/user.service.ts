@@ -804,7 +804,7 @@ export class UserService {
 
     const nextSkip = skip + limit
 
-    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0, totalCount }
   }
 
   async findOrCreate(phoneNumber: string, locale: string): Promise<{ user: User; isNewUser?: boolean }> {

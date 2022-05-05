@@ -189,6 +189,7 @@ type PaginatedTrends {
 type PaginatedUsers {
   items: [User!]!
   nextSkip: Int
+  totalCount: Int
 }
 
 type Post {

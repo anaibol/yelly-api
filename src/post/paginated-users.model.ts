@@ -5,4 +5,5 @@ import { User } from 'src/user/user.model'
 export class PaginatedUsers {
   items: User[]
   nextSkip?: number
+  totalCount?: number
 }
