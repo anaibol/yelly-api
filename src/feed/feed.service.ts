@@ -42,7 +42,7 @@ export class FeedService {
         where,
         ...(currentCursor && {
           cursor: {
-            id: Number(currentCursor),
+            id: BigInt(currentCursor),
           },
           skip: 1,
         }),
@@ -99,16 +99,22 @@ export class FeedService {
         isSeen: true,
       },
       where: {
-        ...(feedItemId && {
-          id: Number(feedItemId),
-        }),
         userId: authUser.id,
-        createdAt: {
-          gte: after,
-          lte: before,
-        },
+        ...(feedItemId && {
+          id: BigInt(feedItemId),
+        }),
+        ...(after &&
+          before && {
+            createdAt: {
+              gte: after,
+              lte: before,
+            },
+          }),
       },
     })
+
+    // eslint-disable-next-line functional/no-throw-statement
+    if (feedItemId && !update.count) throw new Error('feedItemId not found')
 
     return !!update
   }
