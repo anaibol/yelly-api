@@ -3,7 +3,7 @@ import { ExpoPushNotificationAccessToken, FollowRequest, FeedItemType } from '@p
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
 import { PrismaService } from 'src/core/prisma.service'
-import { TRACK_EVENT } from 'src/types/trackEvent'
+import { TrackEventPrefix } from 'src/types/trackEventPrefix'
 import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotificationsToken.service'
 import expo from '../utils/expo'
 import { AmplitudeService } from './amplitude.service'
@@ -89,7 +89,7 @@ export class PushNotificationService {
     //   }
     // })
     // const notificationsToSend = await Promise.all(notifications)
-    // await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION_SENT')
+    // await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION')
   }
 
   async followeePosted(postId: string) {
@@ -145,7 +145,7 @@ export class PushNotificationService {
     await this.sendNotifications(
       notificationsToSend,
       followers.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
-      'FOLLOWEE_POSTED_PUSH_NOTIFICATION_SENT'
+      'FOLLOWEE_POSTED_PUSH_NOTIFICATION'
     )
   }
 
@@ -193,7 +193,7 @@ export class PushNotificationService {
       sound: 'default' as const,
     }
 
-    await this.sendNotifications([message], expoPushNotificationTokens, 'POST_REPLIED_PUSH_NOTIFICATION_SENT')
+    await this.sendNotifications([message], expoPushNotificationTokens, 'POST_REPLIED_PUSH_NOTIFICATION')
 
     const samePostRepliedUsers = await this.prismaService.user.findMany({
       where: {
@@ -235,7 +235,7 @@ export class PushNotificationService {
     await this.sendNotifications(
       notificationsToSend,
       samePostRepliedUsers.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
-      'SAME_POST_REPLIED_PUSH_NOTIFICATION_SENT'
+      'SAME_POST_REPLIED_PUSH_NOTIFICATION'
     )
   }
 
@@ -270,7 +270,7 @@ export class PushNotificationService {
       sound: 'default' as const,
     }
 
-    await this.sendNotifications([message], expoPushNotificationTokens, 'FOLLOW_REQUEST_PUSH_NOTIFICATION_SENT')
+    await this.sendNotifications([message], expoPushNotificationTokens, 'FOLLOW_REQUEST_PUSH_NOTIFICATION')
 
     return {
       statusCode: 200,
@@ -320,9 +320,17 @@ export class PushNotificationService {
   async sendNotifications(
     messages: ExpoPushMessage[],
     tokens: ExpoPushNotificationAccessToken[],
-    trackEvent?: TRACK_EVENT
+    trackEventPrefix?: TrackEventPrefix
   ): Promise<PromiseSettledResult<boolean | undefined>[]> {
-    const res = await expo.sendNotifications(messages)
+    const res = await expo.sendNotifications(
+      messages.map(({ data, ...message }) => ({
+        ...message,
+        data: {
+          ...data,
+          trackEventPrefix,
+        },
+      }))
+    )
 
     const promises = res
       .map((result, index) => {
@@ -331,8 +339,7 @@ export class PushNotificationService {
         const expoPushTickets = result.value
         return expoPushTickets.map(async (ticket) => {
           if (ticket.status == 'ok') {
-            console.log({ trackEvent, tokens: tokens[index].userId })
-            if (trackEvent) await this.amplitudeService.logEvent(trackEvent, tokens[index].userId)
+            if (trackEventPrefix) await this.amplitudeService.logEvent(trackEventPrefix + '_SENT', tokens[index].userId)
             return true
           } else {
             const errorType = ticket.details?.error
@@ -390,7 +397,7 @@ export class PushNotificationService {
       )
 
       // Typescript is not smart to recognize it will never be undefined
-      await this.sendNotifications(messages, allPushTokens, 'NEW_LIVE_TAG_PUSH_NOTIFICATION_SENT')
+      await this.sendNotifications(messages, allPushTokens, 'NEW_LIVE_TAG_PUSH_NOTIFICATION')
     } catch (e) {
       // eslint-disable-next-line functional/no-throw-statement
       throw e
