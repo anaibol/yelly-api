@@ -792,6 +792,13 @@ export class UserService {
         take: limit,
         skip,
         where,
+        include: {
+          school: {
+            include: {
+              city: true,
+            },
+          },
+        },
       }),
     ])
 
