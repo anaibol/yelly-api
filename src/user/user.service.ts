@@ -605,6 +605,9 @@ export class UserService {
   }
 
   async createFollowRequest(authUser: AuthUser, otherUserId: string): Promise<FollowRequest> {
+    // eslint-disable-next-line functional/no-throw-statement
+    if (authUser.id === otherUserId) throw new Error('AuthUserId and OtherUserId cant be equal')
+
     const followRequest = await this.prismaService.followRequest.create({
       data: {
         requester: {
