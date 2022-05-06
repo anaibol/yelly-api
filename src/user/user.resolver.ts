@@ -3,7 +3,7 @@ import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/g
 
 import { User } from './user.model'
 
-import { PostsArgs } from '../post/posts.args'
+import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
@@ -164,9 +164,18 @@ export class UserResolver {
     return this.userService.ban(userId)
   }
 
+  @Query(() => PaginatedUsers)
+  @UseGuards(AuthGuard)
+  usersFromSameSchool(
+    @CurrentUser() authUser: AuthUser,
+    @Args() offsetPaginationArgs: OffsetPaginationArgs
+  ): Promise<PaginatedUsers> {
+    return this.userService.getUsersFromSameSchool(authUser, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+  }
+
   @ResolveField('posts', () => PaginatedPosts)
-  async posts(@Parent() user: User, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
-    const { after, limit } = postsArgs
+  async posts(@Parent() user: User, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedPosts> {
+    const { after, limit } = cursorPaginationArgs
 
     const posts = await this.prismaService.user
       .findUnique({

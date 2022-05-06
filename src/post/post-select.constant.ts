@@ -1,10 +1,10 @@
 import { Prisma } from '@prisma/client'
 import { Post } from './post.model'
 
-// Prisma.PostSelect
 export const PostSelect = {
   id: true,
   parentId: true,
+  threadId: true,
   createdAt: true,
   expiresAt: true,
   expiresIn: true,
@@ -80,6 +80,8 @@ const PostSelectWithParentT = {
   select: PostSelectWithParent,
 }
 
+export type PostSelectT = Prisma.PostGetPayload<typeof PostSelectWithParentT>
+
 export const PostChildSelect = {
   select: {
     ...PostSelect,
@@ -91,7 +93,7 @@ export const PostChildSelect = {
   },
 }
 
-export function mapPost(post: Prisma.PostGetPayload<typeof PostSelectWithParentT>): Post {
+export function mapPost(post: PostSelectT): Post {
   const { pollOptions, parent, _count, ...rest } = post
 
   return {
@@ -121,10 +123,7 @@ export function mapPost(post: Prisma.PostGetPayload<typeof PostSelectWithParentT
   }
 }
 
-export function mapPostChild(
-  child: Prisma.PostGetPayload<typeof PostChildSelect>,
-  parent: Prisma.PostGetPayload<typeof PostSelectWithParentT>
-): Post {
+export function mapPostChild(child: Prisma.PostGetPayload<typeof PostChildSelect>, parent: PostSelectT): Post {
   const { _count, pollOptions, ...rest } = child
 
   return {

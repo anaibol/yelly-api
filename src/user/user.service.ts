@@ -605,6 +605,9 @@ export class UserService {
   }
 
   async createFollowRequest(authUser: AuthUser, otherUserId: string): Promise<FollowRequest> {
+    // eslint-disable-next-line functional/no-throw-statement
+    if (authUser.id === otherUserId) throw new Error('AuthUserId and OtherUserId cant be equal')
+
     const followRequest = await this.prismaService.followRequest.create({
       data: {
         requester: {
@@ -769,22 +772,61 @@ export class UserService {
     return posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id))
   }
 
-  async findOrCreate(phoneNumber: string, locale: string): Promise<User> {
-    const user = await this.prismaService.user.upsert({
+  async getUsersFromSameSchool(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
+    // eslint-disable-next-line functional/no-throw-statement
+    if (!authUser.schoolId) throw new Error('No school')
+
+    const where = {
+      schoolId: authUser.schoolId,
+      NOT: {
+        followers: {
+          some: {
+            id: authUser.id,
+          },
+        },
+      },
+    }
+
+    const [totalCount, items] = await this.prismaService.$transaction([
+      this.prismaService.user.count({
+        where,
+      }),
+      this.prismaService.user.findMany({
+        take: limit,
+        skip,
+        where,
+        include: {
+          school: {
+            include: {
+              city: true,
+            },
+          },
+        },
+      }),
+    ])
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0, totalCount }
+  }
+
+  async findOrCreate(phoneNumber: string, locale: string): Promise<{ user: User; isNewUser?: boolean }> {
+    const user = await this.prismaService.user.findUnique({
       where: {
         phoneNumber,
       },
-      select: {
-        id: true,
-      },
-      create: {
+    })
+
+    if (user) return { user }
+
+    const newUser = await this.prismaService.user.create({
+      data: {
         phoneNumber,
         locale,
       },
-      update: {},
     })
 
-    return { id: user.id }
+    return { user: newUser, isNewUser: true }
   }
 
   async update(userId: string, data: UpdateUserInput): Promise<Me> {

@@ -5,7 +5,7 @@ import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
 
 import { CreateOrUpdateLiveTagInput } from '../post/create-or-update-live-tag.input'
-import { PostsArgs } from '../post/posts.args'
+import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
@@ -16,7 +16,8 @@ import { PaginatedPosts } from '../post/paginated-posts.model'
 import dates from '../utils/dates'
 import { PaginatedTrends } from './paginated-trends.model'
 import { UserService } from 'src/user/user.service'
-import { TrendsArgs } from './trends'
+import { TrendsArgs } from './trends.args'
+import { TopTrendsArgs } from './top-trends.args'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -62,13 +63,30 @@ export class TagResolver {
     return { items, nextSkip }
   }
 
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTrends)
+  async topTrends(@Args() topTrendsArgs: TopTrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTrends> {
+    const { skip, limit, isEmoji, postsAfter, postsBefore } = topTrendsArgs
+
+    const { items, nextSkip } = await this.tagService.getTopTrends(
+      authUser,
+      isEmoji,
+      skip,
+      limit,
+      postsAfter,
+      postsBefore
+    )
+
+    return { items, nextSkip }
+  }
+
   @ResolveField()
   async posts(
     @Parent() tag: Tag,
-    @Args() postsArgs: PostsArgs,
+    @Args() cursorPaginationArgs: CursorPaginationArgs,
     @CurrentUser() authUser: AuthUser
   ): Promise<PaginatedPosts> {
-    const { limit, after } = postsArgs
+    const { limit, after } = cursorPaginationArgs
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 

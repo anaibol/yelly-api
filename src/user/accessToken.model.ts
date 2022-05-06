@@ -4,4 +4,5 @@ import { ObjectType } from '@nestjs/graphql'
 export class AccessToken {
   accessToken: string
   refreshToken: string
+  isNewUser?: boolean
 }

@@ -14,7 +14,7 @@ export class SendbirdWebhookController {
 
   @Post('/chat-message')
   async chatMessage(@Body() body: SendbirdMessageWebhookBody, @Res() response: Response) {
-    await this.pushNotificationService.chatMessage(body)
-    response.status(HttpStatus.OK).send()
+    // await this.pushNotificationService.chatMessage(body)
+    // response.status(HttpStatus.OK).send()
   }
 }

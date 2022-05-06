@@ -5,7 +5,7 @@ import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { Me } from './me.model'
 import { AccessToken } from './accessToken.model'
 
-import { PostsArgs } from '../post/posts.args'
+import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
@@ -85,14 +85,14 @@ export class MeResolver {
 
     await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
 
-    const user = await this.userService.findOrCreate(phoneNumber, locale)
+    const { user, isNewUser } = await this.userService.findOrCreate(phoneNumber, locale)
 
     const [accessToken, refreshToken] = await Promise.all([
       this.authService.getAccessToken(user.id),
       this.authService.getRefreshToken(user.id),
     ])
 
-    return { accessToken, refreshToken }
+    return { accessToken, refreshToken, isNewUser }
   }
 
   @Query(() => Me)
@@ -176,8 +176,8 @@ export class MeResolver {
   }
 
   @ResolveField()
-  async posts(@Parent() me: Me, @Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
-    const { after, limit } = postsArgs
+  async posts(@Parent() me: Me, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedPosts> {
+    const { after, limit } = cursorPaginationArgs
 
     const posts = await this.prismaService.user.findUnique({ where: { id: me.id } }).posts({
       where: {

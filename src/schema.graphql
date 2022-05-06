@@ -4,6 +4,7 @@
 
 type AccessToken {
   accessToken: String!
+  isNewUser: Boolean
   refreshToken: String!
 }
 
@@ -55,13 +56,28 @@ input DeletePostInput {
   id: String!
 }
 
-input DeletePostReactionInput {
-  postId: String!
-}
-
 input EmailSignInInput {
   email: String!
   password: String!
+}
+
+type Feed {
+  items: [FeedItem!]!
+  nextCursor: String!
+  totalCount: Int!
+}
+
+type FeedItem {
+  createdAt: DateTime
+  id: ID!
+  post: Post
+  type: FeedItemType
+}
+
+enum FeedItemType {
+  FOLLOWEE_POSTED
+  POST_REPLIED
+  SAME_POST_REPLIED
 }
 
 type FollowRequest {
@@ -105,7 +121,7 @@ type Me {
   phoneNumber: String
   pictureId: String
   postCount: Int
-  posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
+  posts(after: String, limit: Int = 10): PaginatedPosts
   role: UserRole!
   school: School
   sendbirdAccessToken: String
@@ -128,11 +144,11 @@ type Mutation {
   deleteFollowRequest(followRequestId: String!): Boolean!
   deleteFollower(otherUserId: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
-  deletePostReaction(input: DeletePostReactionInput!): Boolean!
   deleteUser(userId: String!): Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
+  markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: String): Boolean!
   markNotificationAsSeen(notificationId: String!): Boolean!
   refreshAccessToken(refreshToken: String!): AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!
@@ -147,17 +163,12 @@ type Notification {
   followRequest: FollowRequest
   id: ID!
   isSeen: Boolean
-  post: Post
-  postReaction: PostReaction
   type: NotificationType
 }
 
 enum NotificationType {
-  FOLLOWEE_POSTED
   FOLLOW_REQUEST_ACCEPTED
   FOLLOW_REQUEST_PENDING
-  POST_REPLIED
-  SAME_POST_REPLIED
 }
 
 type PaginatedNotifications {
@@ -178,6 +189,7 @@ type PaginatedTrends {
 type PaginatedUsers {
   items: [User!]!
   nextSkip: Int
+  totalCount: Int
 }
 
 type Post {
@@ -193,6 +205,7 @@ type Post {
   pollOptions: [PostPollOption!]
   tags: [Tag!]
   text: String
+  threadId: String
   viewsCount: Int
 }
 
@@ -208,26 +221,21 @@ type PostPollVote {
   post: Post
 }
 
-type PostReaction {
-  author: User
-  createdAt: DateTime
-  id: ID!
-  postId: String
-  reaction: String!
-}
-
 type Query {
+  feed(after: String, isSeen: Boolean, limit: Int = 10): Feed!
   getS3PresignedUploadUrl: Upload!
   liveTags: [Tag!]!
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: String, id: String!, limit: Int = 10): Post!
-  posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts!
+  posts(after: String, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String): Tag!
+  topTrends(isEmoji: Boolean!, limit: Int = 10, postsAfter: DateTime!, postsBefore: DateTime!, skip: Int = 0): PaginatedTrends!
   trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
+  usersFromSameSchool(limit: Int = 10, skip: Int = 0): PaginatedUsers!
 }
 
 input ResetPasswordInput {
@@ -259,7 +267,7 @@ type Tag {
   isEmoji: Boolean
   isLive: Boolean
   postCount: Int
-  posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
+  posts(after: String, limit: Int = 10): PaginatedPosts
   text: String!
 }
 
@@ -303,7 +311,7 @@ type User {
   pendingFollowRequestToUser: FollowRequest
   pictureId: String
   postCount: Int
-  posts(after: String, forYou: Boolean, limit: Int = 10): PaginatedPosts
+  posts(after: String, limit: Int = 10): PaginatedPosts
   school: School
   snapchat: String
   training: Training

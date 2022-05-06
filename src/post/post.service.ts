@@ -1,8 +1,7 @@
+/* eslint-disable functional/no-let */
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
 import { CreatePostInput } from './create-post.input'
-// import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
-import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { TagService } from 'src/tag/tag.service'
 import {
   PostSelectWithParent,
@@ -10,6 +9,7 @@ import {
   mapPostChild,
   PostChildSelect,
   getNotExpiredCondition,
+  PostSelectT,
 } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
 // import { SendbirdService } from 'src/sendbird/sendbird.service'
@@ -142,17 +142,6 @@ export class PostService {
   //         ],
   //       },
   //     },
-  //     // reactions: {
-  //     //   some: {
-  //     //     author: {
-  //     //       friends: {
-  //     //         some: {
-  //     //           otherUserId: authUser.id,
-  //     //         },
-  //     //       },
-  //     //     },
-  //     //   },
-  //     // },
   //     ...(currentCursor && {
   //       cursor: {
   //         createdAt: new Date(+currentCursor),
@@ -198,7 +187,7 @@ export class PostService {
   //   return { items, nextCursor }
   // }
 
-  async getPostFeed(authUser: AuthUser, limit: number, currentCursor?: string): Promise<PaginatedPosts> {
+  async getPosts(authUser: AuthUser, limit: number, currentCursor?: string): Promise<PaginatedPosts> {
     const userAge = authUser.birthdate && dates.getAge(authUser.birthdate)
     const datesRanges = userAge ? dates.getDateRanges(userAge) : undefined
 
@@ -225,16 +214,7 @@ export class PostService {
           },
           birthdate: datesRanges,
         },
-        OR: [
-          {
-            parent: null,
-          },
-          {
-            parent: {
-              parent: null,
-            },
-          },
-        ],
+        parent: null,
         AND: {
           OR: [
             {
@@ -266,7 +246,30 @@ export class PostService {
       select: PostSelectWithParent,
     })
 
-    const items = posts.map(mapPost)
+    const mappedPosts = posts.map(mapPost)
+
+    // eslint-disable-next-line prefer-const
+    // let threads: string[] = []
+
+    // const items = mappedPosts
+    //   .map((post): Post | Post[] => {
+    //     if (post.threadId && !threads.includes(post.threadId)) {
+    //       // eslint-disable-next-line functional/immutable-data
+    //       threads.push(post.threadId)
+    //       return [
+    //         post,
+    //         ...posts.filter(
+    //           ({ threadId, id }) =>
+    //             post.threadId && !threads.includes(post.threadId) && threadId === post.threadId && id !== post.id
+    //         ),
+    //       ]
+    //     }
+
+    //     return post
+    //   })
+    //   .flat()
+
+    const items = mappedPosts
 
     const lastItem = items.length === limit && items[limit - 1]
 
@@ -468,71 +471,6 @@ export class PostService {
 
     deletedPost.tags.forEach(async (tag) => {
       if (!tag.isLive && tag.posts.length == 1) this.tagService.delete(tag.id)
-    })
-
-    return true
-  }
-
-  // async createOrUpdatePostReaction(
-  //   createOrUpdatePostReactionInput: CreateOrUpdatePostReactionInput,
-  //   authUser: AuthUser
-  // ): Promise<boolean> {
-  //   const { reaction, postId } = createOrUpdatePostReactionInput
-  //   const authorId = authUser.id
-
-  //   const reactionData = {
-  //     reaction,
-  //     authorId,
-  //     postId,
-  //   }
-
-  //   const postReaction = await this.prismaService.postReaction.upsert({
-  //     where: {
-  //       authorId_postId: {
-  //         authorId,
-  //         postId,
-  //       },
-  //     },
-  //     select: {
-  //       authorId: true,
-  //       id: true,
-  //       postId: true,
-  //       reaction: true,
-  //       post: {
-  //         select: {
-  //           authorId: true,
-  //         },
-  //       },
-  //     },
-  //     create: {
-  //       author: {
-  //         connect: {
-  //           id: authUser.id,
-  //         },
-  //       },
-  //       reaction,
-  //       post: {
-  //         connect: {
-  //           id: postId,
-  //         },
-  //       },
-  //     },
-  //     update: reactionData,
-  //   })
-
-  //   if (postReaction.post.authorId !== authUser.id) this.sendbirdService.sendPostReactionMessage(postReaction.id)
-
-  //   return !!postReaction
-  // }
-
-  async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUser: AuthUser): Promise<boolean> {
-    const { postId } = deletePostReactionInput
-    const authorId = authUser.id
-
-    await this.prismaService.postReaction.delete({
-      where: {
-        authorId_postId: { authorId, postId },
-      },
     })
 
     return true
