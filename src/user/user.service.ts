@@ -779,6 +779,7 @@ export class UserService {
     const where = {
       schoolId: authUser.schoolId,
       NOT: {
+        id: authUser.id,
         followers: {
           some: {
             id: authUser.id,
