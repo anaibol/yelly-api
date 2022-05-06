@@ -89,7 +89,7 @@ export class PushNotificationService {
     //   }
     // })
     // const notificationsToSend = await Promise.all(notifications)
-    // await this.sendNotifications(notificationsToSend, tokens, 'POST_VANISHING_PUSH_NOTIFICATION')
+    // await this.sendNotifications(notificationsToSend, tokens, 'PUSH_NOTIFICATION_POST_VANISHING')
   }
 
   async followeePosted(postId: string) {
@@ -145,7 +145,7 @@ export class PushNotificationService {
     await this.sendNotifications(
       notificationsToSend,
       followers.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
-      'FOLLOWEE_POSTED_PUSH_NOTIFICATION'
+      'PUSH_NOTIFICATION_FOLLOWEE_POSTED'
     )
   }
 
@@ -193,7 +193,7 @@ export class PushNotificationService {
       sound: 'default' as const,
     }
 
-    await this.sendNotifications([message], expoPushNotificationTokens, 'POST_REPLIED_PUSH_NOTIFICATION')
+    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_POST_REPLIED')
 
     const samePostRepliedUsers = await this.prismaService.user.findMany({
       where: {
@@ -235,7 +235,7 @@ export class PushNotificationService {
     await this.sendNotifications(
       notificationsToSend,
       samePostRepliedUsers.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
-      'SAME_POST_REPLIED_PUSH_NOTIFICATION'
+      'PUSH_NOTIFICATION_SAME_POST_REPLIED'
     )
   }
 
@@ -270,7 +270,7 @@ export class PushNotificationService {
       sound: 'default' as const,
     }
 
-    await this.sendNotifications([message], expoPushNotificationTokens, 'FOLLOW_REQUEST_PUSH_NOTIFICATION')
+    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_FOLLOW_REQUEST')
 
     return {
       statusCode: 200,
@@ -397,7 +397,7 @@ export class PushNotificationService {
       )
 
       // Typescript is not smart to recognize it will never be undefined
-      await this.sendNotifications(messages, allPushTokens, 'NEW_LIVE_TAG_PUSH_NOTIFICATION')
+      await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_NEW_LIVE_TAG')
     } catch (e) {
       // eslint-disable-next-line functional/no-throw-statement
       throw e

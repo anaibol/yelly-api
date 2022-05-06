@@ -773,6 +773,9 @@ export class UserService {
   }
 
   async getUsersFromSameSchool(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
+    // eslint-disable-next-line functional/no-throw-statement
+    if (!authUser.schoolId) throw new Error('No school')
+
     const where = {
       schoolId: authUser.schoolId,
       NOT: {
