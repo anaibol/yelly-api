@@ -17,13 +17,13 @@ const getDateRanges = (userAge: number): { gte: Date; lt: Date } | null => {
 
   if (userAge >= 15 && userAge <= 18)
     return {
-      gte: getDateYearsAgo(22),
+      gte: getDateYearsAgo(25),
       lt: getDateYearsAgo(13),
     }
 
   if (userAge > 18)
     return {
-      gte: getDateYearsAgo(22),
+      gte: getDateYearsAgo(25),
       lt: getDateYearsAgo(16),
     }
 
