@@ -48,7 +48,7 @@ model FeedItem {
   createdAt DateTime @default(now())
   postId    String?
   post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      FeedItemType
   userId    String
 
