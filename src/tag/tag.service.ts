@@ -9,6 +9,7 @@ import { AuthUser } from 'src/auth/auth.service'
 import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
 import { excludedTags } from './excluded-tags.constant'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class TagService {
@@ -221,8 +222,7 @@ export class TagService {
 
     if (!country) return Promise.reject(new Error('No country'))
 
-    const tagTrends: { id: string; text: string; postCount: number; totalCount: number }[] = await this.prismaService
-      .$queryRaw`
+    const query = Prisma.sql`
       SELECT
       T."id",
       T."text",
@@ -238,11 +238,15 @@ export class TagService {
         AND T."countryId" = ${country.id}
         AND T."isEmoji" = ${isEmoji}
         AND P."createdAt" BETWEEN  ${postsAfter} AND ${postsBefore}
+        AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
       GROUP BY T."id",T."text"	
       ORDER BY "postCount" desc
       OFFSET ${skip}
       LIMIT ${limit}
-  `
+    `
+
+    const tagTrends: { id: string; text: string; postCount: number; totalCount: number }[] =
+      await this.prismaService.$queryRaw(query)
 
     const nextSkip = skip + limit
     const totalCount = tagTrends.length > 0 ? tagTrends[0].totalCount : 0
