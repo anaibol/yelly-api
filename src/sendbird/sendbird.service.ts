@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import { HttpService } from 'nestjs-http-promise'
-import { PrismaService } from '../core/prisma.service'
 import { GroupChannel } from './types'
 
 const buildChannelUrl = (userIds: string[]): string => {
@@ -10,12 +9,12 @@ const buildChannelUrl = (userIds: string[]): string => {
 type SendbirdUser = {
   user_id: string
   nickname: string
-  profile_url: string | null
+  profile_url?: string | null
   issue_access_token: true
   metadata: {
     firstName: string | null
     lastName: string | null
-    pictureId: string | null
+    pictureId?: string | null
   }
 }
 
@@ -32,7 +31,7 @@ const cleanUndefinedFromObj = (obj: any) =>
 
 @Injectable()
 export class SendbirdService {
-  constructor(private prismaService: PrismaService, private httpService: HttpService) {}
+  constructor(private httpService: HttpService) {}
 
   async createUser(user: IncomingUser): Promise<string> {
     const profileUrl = user.pictureId && `http://yelly.imgix.net/${user.pictureId}?format=auto`
@@ -40,12 +39,16 @@ export class SendbirdService {
     const sendbirdUser: SendbirdUser = {
       user_id: user.id,
       nickname: user.firstName + ' ' + user.lastName,
-      profile_url: profileUrl,
+      ...(profileUrl && {
+        profile_url: profileUrl,
+      }),
       issue_access_token: true,
       metadata: {
         firstName: user.firstName,
         lastName: user.lastName,
-        pictureId: user.pictureId,
+        ...(user.pictureId && {
+          pictureId: user.pictureId,
+        }),
       },
     }
 
@@ -59,7 +62,7 @@ export class SendbirdService {
 
     const updatedUserData: Partial<SendbirdUser> = {
       nickname: `${user.firstName} ${user.lastName}`,
-      ...cleanUndefinedFromObj({
+      ...(profileUrl && {
         profile_url: profileUrl,
       }),
     }

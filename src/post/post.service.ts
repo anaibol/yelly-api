@@ -22,6 +22,7 @@ import { Post } from './post.model'
 import { PostPollVote } from './post.model'
 import { Prisma } from '@prisma/client'
 import { excludedTags } from 'src/tag/excluded-tags.constant'
+import { PartialUpdateObjectResponse } from '@algolia/client-search'
 
 const getExpiredAt = (expiresIn?: number | null): Date | undefined => {
   if (!expiresIn) return
@@ -542,7 +543,7 @@ export class PostService {
     return authUserVotes[0]
   }
 
-  async syncPostIndexWithAlgolia(id: string): Promise<undefined> {
+  async syncPostIndexWithAlgolia(id: string): Promise<PartialUpdateObjectResponse | undefined> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
 
     const post = await this.prismaService.post.findUnique({
@@ -564,7 +565,7 @@ export class PostService {
       tags: post.tags,
     }
 
-    this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, post.id)
+    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, post.id)
   }
 
   async deletePostFromAlgolia(id: string): Promise<void> {

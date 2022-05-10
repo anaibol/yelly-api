@@ -229,6 +229,9 @@ export class TagService {
 
     if (!country) return Promise.reject(new Error('No country'))
 
+    const andIsEmoji = Prisma.sql`AND T."isEmoji" = ${isEmoji}`
+    const andCreatedBetween = Prisma.sql`AND P."createdAt" = ${postsBefore}`
+
     const query = Prisma.sql`
       SELECT
       T."id",
@@ -243,8 +246,8 @@ export class TagService {
         PT. "B" = T. "id"
         AND PT. "A" = P. "id"
         AND T."countryId" = ${country.id}
-        AND T."isEmoji" = ${isEmoji}
-        AND P."createdAt" BETWEEN  ${postsAfter} AND ${postsBefore}
+        ${isEmoji !== undefined ? andIsEmoji : Prisma.empty}
+        ${postsAfter !== undefined && postsBefore !== undefined ? andCreatedBetween : Prisma.empty}
         AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
       GROUP BY T."id",T."text"	
       ORDER BY "postCount" desc
