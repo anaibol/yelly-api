@@ -6,4 +6,5 @@ export class TopTrendsArgs extends OffsetPaginationArgs {
   isEmoji?: boolean
   postsAfter?: Date
   postsBefore?: Date
+  postsAuthorBirthYear?: number
 }

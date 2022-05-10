@@ -210,6 +210,7 @@ export class TagService {
     isEmoji,
     postsAfter,
     postsBefore,
+    postsAuthorBirthYear,
   }: {
     authUser: AuthUser
     skip: number
@@ -217,6 +218,7 @@ export class TagService {
     isEmoji?: boolean
     postsAfter?: Date
     postsBefore?: Date
+    postsAuthorBirthYear?: number
   }): Promise<PaginatedTrends> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
@@ -230,7 +232,8 @@ export class TagService {
     if (!country) return Promise.reject(new Error('No country'))
 
     const andIsEmoji = Prisma.sql`AND T."isEmoji" = ${isEmoji}`
-    const andCreatedBetween = Prisma.sql`AND P."createdAt" = ${postsBefore}`
+    const andCreatedBetween = Prisma.sql`AND P."createdAt" > ${postsAfter} AND P."createdAt" < ${postsBefore}`
+    const andPostsAuthorBirthYear = Prisma.sql`AND DATE_PART('year', U."birthdate") = 2004`
 
     const query = Prisma.sql`
       SELECT
@@ -241,22 +244,26 @@ export class TagService {
       FROM
         "Tag" T,
         "_PostToTag" PT,
-        "Post" P
+        "Post" P,
+        "User" U
       WHERE
         PT. "B" = T. "id"
         AND PT. "A" = P. "id"
+        AND U. "id" = P. "authorId"
         AND T."countryId" = ${country.id}
+        ${postsAuthorBirthYear ? andPostsAuthorBirthYear : Prisma.empty}
         ${isEmoji !== undefined ? andIsEmoji : Prisma.empty}
-        ${postsAfter !== undefined && postsBefore !== undefined ? andCreatedBetween : Prisma.empty}
+        ${postsAfter && postsBefore ? andCreatedBetween : Prisma.empty}
         AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
       GROUP BY T."id",T."text"	
       ORDER BY "postCount" desc
       OFFSET ${skip}
       LIMIT ${limit}
     `
-
+    console.log(query)
     const tagTrends: { id: string; text: string; postCount: number; totalCount: number }[] =
       await this.prismaService.$queryRaw(query)
+    console.log({ tagTrends })
 
     const nextSkip = skip + limit
     const totalCount = tagTrends.length > 0 ? tagTrends[0].totalCount : 0

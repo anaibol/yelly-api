@@ -230,8 +230,8 @@ type Query {
   post(after: String, id: String!, limit: Int = 10): Post!
   posts(after: String, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
-  tag(text: String): Tag!
-  topTrends(isEmoji: Boolean, limit: Int = 10, postsAfter: DateTime, postsBefore: DateTime, skip: Int = 0): PaginatedTrends!
+  tag(postsAuthorBirthYear: Int, text: String!): Tag!
+  topTrends(isEmoji: Boolean, limit: Int = 10, postsAfter: DateTime, postsAuthorBirthYear: Int, postsBefore: DateTime, skip: Int = 0): PaginatedTrends!
   trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
@@ -267,7 +267,7 @@ type Tag {
   isEmoji: Boolean
   isLive: Boolean
   postCount: Int
-  posts(after: String, limit: Int = 10): PaginatedPosts
+  posts(after: String, limit: Int = 10, postsAuthorBirthYear: Int): PaginatedPosts
   text: String!
 }
 
