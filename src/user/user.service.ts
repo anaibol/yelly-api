@@ -18,6 +18,7 @@ import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { AuthUser } from 'src/auth/auth.service'
 import { PostService } from 'src/post/post.service'
 import { Prisma } from '@prisma/client'
+import { PartialUpdateObjectResponse } from '@algolia/client-search'
 
 @Injectable()
 export class UserService {
@@ -584,8 +585,8 @@ export class UserService {
       await this.prismaService.user.delete({ where: { id: userId } })
       const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
-      this.algoliaService.deleteObject(algoliaUserIndex, userId)
-      this.sendbirdService.deleteUser(userId)
+      this.algoliaService.deleteObject(algoliaUserIndex, userId).catch(console.error)
+      this.sendbirdService.deleteUser(userId).catch(console.error)
 
       return true
     } catch {
@@ -751,7 +752,7 @@ export class UserService {
     return true
   }
 
-  async syncUsersIndexWithAlgolia(userId: string) {
+  async syncUsersIndexWithAlgolia(userId: string): Promise<PartialUpdateObjectResponse> {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
       select: algoliaUserSelect,
@@ -766,25 +767,20 @@ export class UserService {
     return this.algoliaService.partialUpdateObject(usersIndex, newUserAlgoliaObject, user.id)
   }
 
-  async syncPostsIndexWithAlgolia(userId: string): Promise<Promise<undefined>[]> {
+  async syncPostsIndexWithAlgolia(userId: string): Promise<(PartialUpdateObjectResponse | undefined)[]> {
     const posts = await this.prismaService.post.findMany({ where: { authorId: userId }, select: { id: true } })
 
-    return posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id))
+    return Promise.all(posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id)))
   }
 
-  async getUsersFromSameSchool(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
+  async getUsersFromSchool(schoolId: string, authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
     // eslint-disable-next-line functional/no-throw-statement
     if (!authUser.schoolId) throw new Error('No school')
 
     const where = {
-      schoolId: authUser.schoolId,
-      NOT: {
-        id: authUser.id,
-        followers: {
-          some: {
-            id: authUser.id,
-          },
-        },
+      schoolId,
+      id: {
+        not: authUser.id,
       },
     }
 

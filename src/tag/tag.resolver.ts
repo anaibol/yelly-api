@@ -68,14 +68,14 @@ export class TagResolver {
   async topTrends(@Args() topTrendsArgs: TopTrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTrends> {
     const { skip, limit, isEmoji, postsAfter, postsBefore } = topTrendsArgs
 
-    const { items, nextSkip } = await this.tagService.getTopTrends(
+    const { items, nextSkip } = await this.tagService.getTopTrends({
       authUser,
-      isEmoji,
       skip,
       limit,
+      isEmoji,
       postsAfter,
-      postsBefore
-    )
+      postsBefore,
+    })
 
     return { items, nextSkip }
   }

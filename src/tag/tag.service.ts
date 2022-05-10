@@ -203,14 +203,21 @@ export class TagService {
     return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async getTopTrends(
-    authUser: AuthUser,
-    isEmoji: boolean,
-    skip: number,
-    limit: number,
-    postsAfter: Date,
-    postsBefore: Date
-  ): Promise<PaginatedTrends> {
+  async getTopTrends({
+    authUser,
+    skip,
+    limit,
+    isEmoji,
+    postsAfter,
+    postsBefore,
+  }: {
+    authUser: AuthUser
+    skip: number
+    limit: number
+    isEmoji?: boolean
+    postsAfter?: Date
+    postsBefore?: Date
+  }): Promise<PaginatedTrends> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
@@ -221,6 +228,9 @@ export class TagService {
       .country()
 
     if (!country) return Promise.reject(new Error('No country'))
+
+    const andIsEmoji = Prisma.sql`AND T."isEmoji" = ${isEmoji}`
+    const andCreatedBetween = Prisma.sql`AND P."createdAt" = ${postsBefore}`
 
     const query = Prisma.sql`
       SELECT
@@ -236,8 +246,8 @@ export class TagService {
         PT. "B" = T. "id"
         AND PT. "A" = P. "id"
         AND T."countryId" = ${country.id}
-        AND T."isEmoji" = ${isEmoji}
-        AND P."createdAt" BETWEEN  ${postsAfter} AND ${postsBefore}
+        ${isEmoji !== undefined ? andIsEmoji : Prisma.empty}
+        ${postsAfter !== undefined && postsBefore !== undefined ? andCreatedBetween : Prisma.empty}
         AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
       GROUP BY T."id",T."text"	
       ORDER BY "postCount" desc
