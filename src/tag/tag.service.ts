@@ -203,14 +203,21 @@ export class TagService {
     return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async getTopTrends(
-    authUser: AuthUser,
-    isEmoji: boolean,
-    skip: number,
-    limit: number,
-    postsAfter: Date,
-    postsBefore: Date
-  ): Promise<PaginatedTrends> {
+  async getTopTrends({
+    authUser,
+    skip,
+    limit,
+    isEmoji,
+    postsAfter,
+    postsBefore,
+  }: {
+    authUser: AuthUser
+    skip: number
+    limit: number
+    isEmoji?: boolean
+    postsAfter?: Date
+    postsBefore?: Date
+  }): Promise<PaginatedTrends> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school

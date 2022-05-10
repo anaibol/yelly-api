@@ -584,8 +584,8 @@ export class UserService {
       await this.prismaService.user.delete({ where: { id: userId } })
       const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
-      this.algoliaService.deleteObject(algoliaUserIndex, userId)
-      this.sendbirdService.deleteUser(userId)
+      this.algoliaService.deleteObject(algoliaUserIndex, userId).catch(console.error)
+      this.sendbirdService.deleteUser(userId).catch(console.error)
 
       return true
     } catch {
@@ -772,19 +772,19 @@ export class UserService {
     return posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id))
   }
 
-  async getUsersFromSameSchool(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
+  async getUsersFromSchool(schoolId: string, authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
     // eslint-disable-next-line functional/no-throw-statement
     if (!authUser.schoolId) throw new Error('No school')
 
     const where = {
-      schoolId: authUser.schoolId,
+      schoolId,
       NOT: {
         id: authUser.id,
-        followers: {
-          some: {
-            id: authUser.id,
-          },
-        },
+        // followers: {
+        //   some: {
+        //     id: authUser.id,
+        //   },
+        // },
       },
     }
 
@@ -832,7 +832,7 @@ export class UserService {
 
   async update(userId: string, data: UpdateUserInput): Promise<Me> {
     const schoolData = data.schoolGooglePlaceId && (await this.schoolService.getOrCreate(data.schoolGooglePlaceId))
-
+    console.log({ data })
     const updatedUser = await this.prismaService.user.update({
       where: {
         id: userId,
@@ -929,9 +929,13 @@ export class UserService {
         // eslint-disable-next-line functional/immutable-data
         updatedUser.sendbirdAccessToken = sendbirdAccessToken
       } catch (error) {
+        console.log(33)
+
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
+
+      console.log(12333)
 
       // eslint-disable-next-line functional/no-try-statement
       try {

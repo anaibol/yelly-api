@@ -166,11 +166,17 @@ export class UserResolver {
 
   @Query(() => PaginatedUsers)
   @UseGuards(AuthGuard)
-  usersFromSameSchool(
+  usersFromSchool(
     @CurrentUser() authUser: AuthUser,
+    @Args('schoolId') schoolId: string,
     @Args() offsetPaginationArgs: OffsetPaginationArgs
   ): Promise<PaginatedUsers> {
-    return this.userService.getUsersFromSameSchool(authUser, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+    return this.userService.getUsersFromSchool(
+      schoolId,
+      authUser,
+      offsetPaginationArgs.skip,
+      offsetPaginationArgs.limit
+    )
   }
 
   @ResolveField('posts', () => PaginatedPosts)
