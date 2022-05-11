@@ -793,11 +793,8 @@ export class UserService {
         skip,
         where,
         include: {
-          school: {
-            include: {
-              city: true,
-            },
-          },
+          school: true,
+          training: true,
         },
       }),
     ])
