@@ -269,6 +269,7 @@ export class TagService {
       OFFSET ${skip}
       LIMIT ${limit}
     `
+
     const tagTrends: { id: string; text: string; postCount: number; totalCount: number }[] =
       await this.prismaService.$queryRaw(query)
 
