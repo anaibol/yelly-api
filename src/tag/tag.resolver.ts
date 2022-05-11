@@ -66,16 +66,17 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTrends)
   async topTrends(@Args() topTrendsArgs: TopTrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTrends> {
-    const { skip, limit, isEmoji, postsAfter, postsBefore } = topTrendsArgs
+    const { skip, limit, isEmoji, postsAfter, postsBefore, postsAuthorBirthYear } = topTrendsArgs
 
-    const { items, nextSkip } = await this.tagService.getTopTrends(
+    const { items, nextSkip } = await this.tagService.getTopTrends({
       authUser,
-      isEmoji,
       skip,
       limit,
+      isEmoji,
       postsAfter,
-      postsBefore
-    )
+      postsBefore,
+      postsAuthorBirthYear,
+    })
 
     return { items, nextSkip }
   }
@@ -83,15 +84,20 @@ export class TagResolver {
   @ResolveField()
   async posts(
     @Parent() tag: Tag,
+    @CurrentUser() authUser: AuthUser,
     @Args() cursorPaginationArgs: CursorPaginationArgs,
-    @CurrentUser() authUser: AuthUser
+    @Args({ name: 'postsAuthorBirthYear', nullable: true }) postsAuthorBirthYear?: number
   ): Promise<PaginatedPosts> {
     const { limit, after } = cursorPaginationArgs
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
-    const userAge = dates.getAge(authUser.birthdate)
-    const datesRanges = dates.getDateRanges(userAge)
+    const datesRanges = postsAuthorBirthYear
+      ? {
+          gte: new Date(`01/01/${postsAuthorBirthYear}`),
+          lt: new Date(`12/31/${postsAuthorBirthYear}`),
+        }
+      : dates.getDateRanges(dates.getAge(authUser.birthdate))
 
     const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
       where: {

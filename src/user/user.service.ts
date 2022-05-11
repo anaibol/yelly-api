@@ -18,6 +18,7 @@ import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { AuthUser } from 'src/auth/auth.service'
 import { PostService } from 'src/post/post.service'
 import { Prisma } from '@prisma/client'
+import { PartialUpdateObjectResponse } from '@algolia/client-search'
 
 @Injectable()
 export class UserService {
@@ -266,7 +267,7 @@ export class UserService {
   //     ],
   //   }
 
-  //   const [totalCount, users] = await this.prismaService.$transaction([
+  //   const [totalCount, users] = await Promise.all([
   //     this.prismaService.user.count({
   //       where,
   //     }),
@@ -584,8 +585,8 @@ export class UserService {
       await this.prismaService.user.delete({ where: { id: userId } })
       const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
-      this.algoliaService.deleteObject(algoliaUserIndex, userId)
-      this.sendbirdService.deleteUser(userId)
+      this.algoliaService.deleteObject(algoliaUserIndex, userId).catch(console.error)
+      this.sendbirdService.deleteUser(userId).catch(console.error)
 
       return true
     } catch {
@@ -751,7 +752,7 @@ export class UserService {
     return true
   }
 
-  async syncUsersIndexWithAlgolia(userId: string) {
+  async syncUsersIndexWithAlgolia(userId: string): Promise<PartialUpdateObjectResponse> {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
       select: algoliaUserSelect,
@@ -766,29 +767,32 @@ export class UserService {
     return this.algoliaService.partialUpdateObject(usersIndex, newUserAlgoliaObject, user.id)
   }
 
-  async syncPostsIndexWithAlgolia(userId: string): Promise<Promise<undefined>[]> {
+  async syncPostsIndexWithAlgolia(userId: string): Promise<(PartialUpdateObjectResponse | undefined)[]> {
     const posts = await this.prismaService.post.findMany({ where: { authorId: userId }, select: { id: true } })
 
-    return posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id))
+    return Promise.all(posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id)))
   }
 
-  async getUsersFromSameSchool(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
+  async getFollowSuggestions(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
     // eslint-disable-next-line functional/no-throw-statement
     if (!authUser.schoolId) throw new Error('No school')
 
-    const where = {
+    const where: Prisma.UserWhereInput = {
       schoolId: authUser.schoolId,
       NOT: {
         id: authUser.id,
         followers: {
           some: {
-            id: authUser.id,
+            userId: authUser.id,
           },
         },
       },
+      id: {
+        not: authUser.id,
+      },
     }
 
-    const [totalCount, items] = await this.prismaService.$transaction([
+    const [totalCount, items] = await Promise.all([
       this.prismaService.user.count({
         where,
       }),
@@ -797,11 +801,11 @@ export class UserService {
         skip,
         where,
         include: {
-          school: {
-            include: {
-              city: true,
-            },
-          },
+          school: true,
+          training: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
         },
       }),
     ])
@@ -832,7 +836,7 @@ export class UserService {
 
   async update(userId: string, data: UpdateUserInput): Promise<Me> {
     const schoolData = data.schoolGooglePlaceId && (await this.schoolService.getOrCreate(data.schoolGooglePlaceId))
-
+    console.log({ data })
     const updatedUser = await this.prismaService.user.update({
       where: {
         id: userId,
@@ -929,9 +933,13 @@ export class UserService {
         // eslint-disable-next-line functional/immutable-data
         updatedUser.sendbirdAccessToken = sendbirdAccessToken
       } catch (error) {
+        console.log(33)
+
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
+
+      console.log(12333)
 
       // eslint-disable-next-line functional/no-try-statement
       try {

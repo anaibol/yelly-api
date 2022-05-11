@@ -34,7 +34,7 @@ export class FeedService {
       },
     }
 
-    const [totalCount, feedItems] = await this.prismaService.$transaction([
+    const [totalCount, feedItems] = await Promise.all([
       this.prismaService.feedItem.count({
         where,
       }),
