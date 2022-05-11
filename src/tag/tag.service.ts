@@ -233,7 +233,7 @@ export class TagService {
 
     const andIsEmoji = Prisma.sql`AND T."isEmoji" = ${isEmoji}`
     const andCreatedBetween = Prisma.sql`AND P."createdAt" > ${postsAfter} AND P."createdAt" < ${postsBefore}`
-    const andPostsAuthorBirthYear = Prisma.sql`AND DATE_PART('year', U."birthdate") = 2004`
+    const andPostsAuthorBirthdate = Prisma.sql`AND U."birthdate" > make_date(${postsAuthorBirthYear}, 01, 01) AND U."birthdate" < make_date(${postsAuthorBirthYear}, 12, 31)`
 
     const query = Prisma.sql`
       SELECT
@@ -251,7 +251,7 @@ export class TagService {
         AND PT. "A" = P. "id"
         AND U. "id" = P. "authorId"
         AND T."countryId" = ${country.id}
-        ${postsAuthorBirthYear ? andPostsAuthorBirthYear : Prisma.empty}
+        ${postsAuthorBirthYear ? andPostsAuthorBirthdate : Prisma.empty}
         ${isEmoji !== undefined ? andIsEmoji : Prisma.empty}
         ${postsAfter && postsBefore ? andCreatedBetween : Prisma.empty}
         AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
@@ -260,10 +260,8 @@ export class TagService {
       OFFSET ${skip}
       LIMIT ${limit}
     `
-    console.log(query)
     const tagTrends: { id: string; text: string; postCount: number; totalCount: number }[] =
       await this.prismaService.$queryRaw(query)
-    console.log({ tagTrends })
 
     const nextSkip = skip + limit
     const totalCount = tagTrends.length > 0 ? tagTrends[0].totalCount : 0
