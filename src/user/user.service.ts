@@ -267,7 +267,7 @@ export class UserService {
   //     ],
   //   }
 
-  //   const [totalCount, users] = await this.prismaService.$transaction([
+  //   const [totalCount, users] = await Promise.all([
   //     this.prismaService.user.count({
   //       where,
   //     }),
@@ -773,18 +773,25 @@ export class UserService {
     return Promise.all(posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id)))
   }
 
-  async getUsersFromSchool(schoolId: string, authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
+  async getFollowSuggestions(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
     // eslint-disable-next-line functional/no-throw-statement
     if (!authUser.schoolId) throw new Error('No school')
 
-    const where = {
-      schoolId,
+    const where: Prisma.UserWhereInput = {
+      schoolId: authUser.schoolId,
+      NOT: {
+        followers: {
+          some: {
+            userId: authUser.id,
+          },
+        },
+      },
       id: {
         not: authUser.id,
       },
     }
 
-    const [totalCount, items] = await this.prismaService.$transaction([
+    const [totalCount, items] = await Promise.all([
       this.prismaService.user.count({
         where,
       }),
@@ -804,7 +811,48 @@ export class UserService {
 
     const nextSkip = skip + limit
 
-    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0, totalCount }
+    if (totalCount) {
+      return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0, totalCount }
+    } else {
+      const authUserBirthYear = authUser.birthdate?.getFullYear()
+
+      const where: Prisma.UserWhereInput = {
+        birthdate: {
+          gte: new Date(`01/01/${authUserBirthYear}`),
+          lt: new Date(`12/31/${authUserBirthYear}`),
+        },
+        NOT: {
+          followers: {
+            some: {
+              userId: authUser.id,
+            },
+          },
+        },
+        id: {
+          not: authUser.id,
+        },
+      }
+
+      const [totalCount, items] = await Promise.all([
+        this.prismaService.user.count({
+          where,
+        }),
+        this.prismaService.user.findMany({
+          take: limit,
+          skip,
+          where,
+          include: {
+            school: true,
+            training: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        }),
+      ])
+
+      return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0, totalCount }
+    }
   }
 
   async findOrCreate(phoneNumber: string, locale: string): Promise<{ user: User; isNewUser?: boolean }> {

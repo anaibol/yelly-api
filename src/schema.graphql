@@ -223,6 +223,7 @@ type PostPollVote {
 
 type Query {
   feed(after: String, isSeen: Boolean, limit: Int = 10): Feed!
+  followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
   getS3PresignedUploadUrl: Upload!
   liveTags: [Tag!]!
   me: Me!
@@ -235,7 +236,6 @@ type Query {
   trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
-  usersFromSchool(limit: Int = 10, schoolId: String!, skip: Int = 0): PaginatedUsers!
 }
 
 input ResetPasswordInput {
