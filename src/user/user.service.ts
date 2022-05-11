@@ -796,6 +796,9 @@ export class UserService {
           school: true,
           training: true,
         },
+        orderBy: {
+          createdAt: 'desc',
+        },
       }),
     ])
 
