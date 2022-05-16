@@ -33,6 +33,12 @@ input CreateOrUpdateLiveTagInput {
   text: String!
 }
 
+input CreateOrUpdatePostReactionInput {
+  postId: String!
+  reaction: String!
+  text: String!
+}
+
 input CreatePostInput {
   emojis: [String!]
   expiresIn: Int
@@ -54,6 +60,10 @@ scalar DateTime
 
 input DeletePostInput {
   id: String!
+}
+
+input DeletePostReactionInput {
+  postId: String!
 }
 
 input EmailSignInInput {
@@ -136,6 +146,7 @@ type Mutation {
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createFollowRequest(otherUserId: String!): FollowRequest!
   createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!
+  createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Boolean!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   declineFollowRequest(followRequestId: String!): Boolean!
@@ -144,6 +155,7 @@ type Mutation {
   deleteFollowRequest(followRequestId: String!): Boolean!
   deleteFollower(otherUserId: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
+  deletePostReaction(input: DeletePostReactionInput!): Boolean!
   deleteUser(userId: String!): Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
@@ -163,6 +175,7 @@ type Notification {
   followRequest: FollowRequest
   id: ID!
   isSeen: Boolean
+  postReaction: PostReaction
   type: NotificationType
 }
 
@@ -179,6 +192,11 @@ type PaginatedNotifications {
 type PaginatedPosts {
   items: [Post!]!
   nextCursor: String!
+}
+
+type PaginatedTopTrends {
+  items: [TagWithPost!]!
+  nextSkip: Int!
 }
 
 type PaginatedTrends {
@@ -203,6 +221,8 @@ type Post {
   id: ID!
   parent: Post
   pollOptions: [PostPollOption!]
+  reactions: [PostReaction!]
+  reactionsCount: Int
   tags: [Tag!]
   text: String
   threadId: String
@@ -221,6 +241,11 @@ type PostPollVote {
   post: Post
 }
 
+type PostReaction {
+  authorId: String!
+  reaction: String!
+}
+
 type Query {
   feed(after: String, isSeen: Boolean, limit: Int = 10): Feed!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
@@ -232,7 +257,8 @@ type Query {
   posts(after: String, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String!): Tag!
-  topTrends(isEmoji: Boolean, limit: Int = 10, postsAfter: DateTime, postsAuthorBirthYear: Int, postsBefore: DateTime, skip: Int = 0): PaginatedTrends!
+  topTrends(isEmoji: Boolean, limit: Int = 10, skip: Int = 0): PaginatedTopTrends!
+  topTrendsByYear(isEmoji: Boolean, limit: Int = 10, postsAfter: DateTime, postsAuthorBirthYear: Int, postsBefore: DateTime, skip: Int = 0): PaginatedTrends!
   trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadNotificationsCount: Int!
   user(id: String!): User!
@@ -268,6 +294,15 @@ type Tag {
   isLive: Boolean
   postCount: Int
   posts(after: String, limit: Int = 10, postsAuthorBirthYear: Int): PaginatedPosts
+  text: String!
+}
+
+type TagWithPost {
+  createdAt: DateTime
+  id: ID!
+  isEmoji: Boolean
+  isLive: Boolean
+  post: Post
   text: String!
 }
 

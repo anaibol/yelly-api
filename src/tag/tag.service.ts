@@ -11,6 +11,8 @@ import { tagSelect } from './tag-select.constant'
 import { excludedTags } from './excluded-tags.constant'
 import { Prisma } from '@prisma/client'
 import dates from 'src/utils/dates'
+import { PaginatedTopTrends } from './paginated-top-trends.model'
+import { PostSelect } from 'src/post/post-select.constant'
 
 @Injectable()
 export class TagService {
@@ -209,6 +211,75 @@ export class TagService {
     skip,
     limit,
     isEmoji,
+  }: {
+    authUser: AuthUser
+    skip: number
+    limit: number
+    isEmoji?: boolean
+    postsBefore?: Date
+  }): Promise<PaginatedTopTrends> {
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+
+    const country = await this.prismaService.school
+      .findUnique({
+        where: { id: authUser.schoolId },
+      })
+      .city()
+      .country()
+
+    if (!country) return Promise.reject(new Error('No country'))
+
+    const where: Prisma.TagWhereInput = {
+      ...(isEmoji && {
+        isEmoji,
+      }),
+      isLive: false,
+      countryId: country.id,
+      text: {
+        notIn: excludedTags,
+        mode: 'insensitive',
+      },
+    }
+
+    const [totalCount, tags] = await Promise.all([
+      this.prismaService.tag.count({
+        where,
+      }),
+      this.prismaService.tag.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          posts: {
+            select: PostSelect,
+            take: 1,
+            orderBy: {
+              createdAt: 'desc',
+            },
+          },
+        },
+      }),
+    ])
+
+    const items = tags.map(({ posts, ...tag }) => {
+      const { _count, ...post } = posts[0]
+
+      return {
+        ...tag,
+        post: { ...post, reactionsCount: _count.reactions, post },
+      }
+    })
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+  }
+
+  async getTopTrendsByYear({
+    authUser,
+    skip,
+    limit,
+    isEmoji,
     postsAfter,
     postsBefore,
     postsAuthorBirthYear,
@@ -241,8 +312,6 @@ export class TagService {
     const datesRanges = dates.getDateRanges(userAge)
 
     const andPostsAuthorBirthdateRanges = Prisma.sql`AND U."birthdate" > ${datesRanges?.gte} AND U."birthdate" < ${datesRanges?.lt}`
-
-    console.log({ andPostsAuthorBirthdate, andPostsAuthorBirthdateRanges })
 
     const query = Prisma.sql`
       SELECT

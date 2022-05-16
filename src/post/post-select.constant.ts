@@ -65,6 +65,7 @@ export const PostSelect = {
   _count: {
     select: {
       children: true,
+      reactions: true,
     },
   },
 }
@@ -88,6 +89,7 @@ export const PostChildSelect = {
     _count: {
       select: {
         children: true,
+        reactions: true,
       },
     },
   },
@@ -110,6 +112,7 @@ export function mapPost(post: PostSelectT): Post {
               }))
             : undefined,
         childrenCount: parent._count.children,
+        reactionsCount: parent._count.reactions,
       },
     }),
     ...(pollOptions.length > 0 && {
@@ -120,6 +123,7 @@ export function mapPost(post: PostSelectT): Post {
       })),
     }),
     childrenCount: _count.children,
+    reactionsCount: _count.reactions,
   }
 }
 
@@ -136,6 +140,7 @@ export function mapPostChild(child: Prisma.PostGetPayload<typeof PostChildSelect
       })),
     }),
     childrenCount: _count.children,
+    reactionsCount: _count.children,
     expiresIn: parent.expiresIn,
     expiresAt: parent.expiresAt,
   }

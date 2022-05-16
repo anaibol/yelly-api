@@ -1,6 +1,7 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { NotificationType } from '@prisma/client'
-import { FollowRequest } from 'src/user/followRequest.model'
+import { PostReaction } from 'src/post/post-reaction.model'
+import { FollowRequest } from 'src/user/follow-request.model'
 
 registerEnumType(NotificationType, {
   name: 'NotificationType',
@@ -13,6 +14,7 @@ export class Notification {
   isSeen?: boolean
   createdAt: Date
   followRequest?: FollowRequest | null
+  postReaction?: PostReaction | null
   @Field(() => NotificationType)
   type?: NotificationType | null
 }

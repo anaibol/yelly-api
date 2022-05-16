@@ -11,7 +11,8 @@ import { PaginatedPosts } from './paginated-posts.model'
 import { Post, PostPollVote } from './post.model'
 import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
 import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
-
+import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
+import { DeletePostReactionInput } from './delete-post-reaction.input'
 @Resolver(() => Post)
 export class PostResolver {
   constructor(private postService: PostService) {}
@@ -48,6 +49,24 @@ export class PostResolver {
   @Mutation(() => Boolean)
   async deletePost(@Args('input') deletePostInput: DeletePostInput, @CurrentUser() authUser: AuthUser) {
     return this.postService.delete(deletePostInput.id, authUser)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async deletePostReaction(
+    @Args('input') deletePostReactionData: DeletePostReactionInput,
+    @CurrentUser() authUser: AuthUser
+  ) {
+    return this.postService.deletePostReaction(deletePostReactionData, authUser)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async createOrUpdatePostReaction(
+    @Args('input') createPostReactionData: CreateOrUpdatePostReactionInput,
+    @CurrentUser() authUser: AuthUser
+  ) {
+    return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser)
   }
 
   @UseGuards(AuthGuard)

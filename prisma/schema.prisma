@@ -37,18 +37,20 @@ model Notification {
   followRequestId String?
   followRequest   FollowRequest?    @relation(fields: [followRequestId], references: [id], onDelete: Cascade)
   type            NotificationType?
+  postReactionId  String?           @unique
+  postReaction    PostReaction?     @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
 
   @@index([createdAt], map: "Notification_createdAt")
   @@index([userId])
 }
 
 model FeedItem {
-  id        BigInt   @id @default(dbgenerated("generate_id()"))
-  isSeen    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id        BigInt       @id @default(dbgenerated("generate_id()"))
+  isSeen    Boolean      @default(false)
+  createdAt DateTime     @default(now())
   postId    String?
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      FeedItemType
   userId    String
 
@@ -108,6 +110,7 @@ model User {
   followRequestRequester       FollowRequest[]                   @relation("followRequestRequester")
   followRequestToUser          FollowRequest[]                   @relation("followRequestToUser")
   posts                        Post[]
+  postReactions                PostReaction[]
   postPollVotes                PostPollVote[]
   followees                    Follower[]                        @relation("usersAsFollowees")
   followers                    Follower[]                        @relation("usersAsFollowers")
@@ -175,6 +178,7 @@ model Post {
   viewsCount  Int              @default(0)
   author      User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
   tags        Tag[]
+  reactions   PostReaction[]
   pollOptions PostPollOption[]
   pollVotes   PostPollVote[]
   expiresIn   Int?
@@ -214,6 +218,19 @@ model PostPollVote {
   @@unique([authorId, postId])
   @@index([optionId])
   @@index([postId])
+}
+
+model PostReaction {
+  id     String @id @default(dbgenerated("generate_id()"))
+  createdAt    DateTime      @unique @default(now())
+  reaction     String
+  postId       String
+  authorId     String
+  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  notification Notification?
+
+  @@unique([authorId, postId])
 }
 
 model ExpoPushNotificationAccessToken {

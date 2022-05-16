@@ -23,6 +23,9 @@ import { PostPollVote } from './post.model'
 import { Prisma } from '@prisma/client'
 import { excludedTags } from 'src/tag/excluded-tags.constant'
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
+import { PostReaction } from './post-reaction.model'
+import { DeletePostReactionInput } from './delete-post-reaction.input'
+import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 
 const getExpiredAt = (expiresIn?: number | null): Date | undefined => {
   if (!expiresIn) return
@@ -477,6 +480,71 @@ export class PostService {
     return true
   }
 
+  async createOrUpdatePostReaction(
+    createOrUpdatePostReactionInput: CreateOrUpdatePostReactionInput,
+    authUser: AuthUser
+  ): Promise<boolean> {
+    const { reaction, postId } = createOrUpdatePostReactionInput
+    const authorId = authUser.id
+
+    const reactionData = {
+      reaction,
+      authorId,
+      postId,
+    }
+
+    const postReaction = await this.prismaService.postReaction.upsert({
+      where: {
+        authorId_postId: {
+          authorId,
+          postId,
+        },
+      },
+      select: {
+        authorId: true,
+        id: true,
+        postId: true,
+        reaction: true,
+        post: {
+          select: {
+            authorId: true,
+          },
+        },
+      },
+      create: {
+        author: {
+          connect: {
+            id: authUser.id,
+          },
+        },
+        reaction,
+        post: {
+          connect: {
+            id: postId,
+          },
+        },
+      },
+      update: reactionData,
+    })
+
+    // if (postReaction.post.authorId !== authUser.id) this.pushNotificationService.newPostReaction(postReaction.id)
+
+    return !!postReaction
+  }
+
+  async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUser: AuthUser): Promise<boolean> {
+    const { postId } = deletePostReactionInput
+    const authorId = authUser.id
+
+    await this.prismaService.postReaction.delete({
+      where: {
+        authorId_postId: { authorId, postId },
+      },
+    })
+
+    return true
+  }
+
   async createPollVote(postId: string, optionId: string, authUser: AuthUser): Promise<Post> {
     const pollWithOption = this.prismaService.postPollOption.findFirst({
       where: {
@@ -571,5 +639,44 @@ export class PostService {
   async deletePostFromAlgolia(id: string): Promise<void> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
     this.algoliaService.deleteObject(algoliaTagIndex, id)
+  }
+
+  async postsUserReactions(
+    postIds: string[],
+    userId: string
+  ): Promise<
+    {
+      postId: string
+      reaction?: PostReaction
+    }[]
+  > {
+    if (postIds.length === 1) {
+      const [postId] = postIds
+
+      const reaction = await this.prismaService.postReaction.findUnique({
+        where: {
+          authorId_postId: {
+            postId,
+            authorId: userId,
+          },
+        },
+      })
+
+      return [{ postId, ...(reaction && { reaction }) }]
+    }
+
+    const reactions = await this.prismaService.postReaction.findMany({
+      where: {
+        authorId: userId,
+        postId: {
+          in: postIds as string[],
+        },
+      },
+    })
+
+    return postIds.map((postId) => ({
+      postId,
+      reaction: reactions.find((post) => post.id === postId),
+    }))
   }
 }
