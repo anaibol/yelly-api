@@ -20,4 +20,9 @@ export const excludedTags = [
   'cul',
   'baise',
   'cherchemeuf',
+  'moninsta',
+  'moninstagram',
+  'vosinsta',
+  'mettezvotreinsta',
+  'toninsta',
 ]
