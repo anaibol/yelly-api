@@ -11,8 +11,6 @@ import { tagSelect } from './tag-select.constant'
 import { excludedTags } from './excluded-tags.constant'
 import { Prisma } from '@prisma/client'
 import dates from 'src/utils/dates'
-import { PaginatedTopTrends } from './paginated-top-trends.model'
-import { PostSelect } from 'src/post/post-select.constant'
 
 @Injectable()
 export class TagService {
@@ -217,7 +215,7 @@ export class TagService {
     limit: number
     isEmoji?: boolean
     postsBefore?: Date
-  }): Promise<PaginatedTopTrends> {
+  }): Promise<PaginatedTrends> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
@@ -249,28 +247,16 @@ export class TagService {
         where,
         skip,
         take: limit,
-        include: {
-          posts: {
-            select: PostSelect,
-            take: 1,
-            orderBy: {
-              createdAt: 'desc',
-            },
-          },
-        },
+        select: tagSelect,
       }),
     ])
 
-    const items = tags.map(({ posts, ...tag }) => {
-      const { _count, ...post } = posts[0]
-
-      return {
-        ...tag,
-        post: { ...post, reactionsCount: _count.reactions, post },
-      }
-    })
-
     const nextSkip = skip + limit
+
+    const items = tags.map(({ _count, ...tag }) => ({
+      ...tag,
+      postCount: _count.posts,
+    }))
 
     return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
