@@ -75,7 +75,7 @@ input EmailSignInInput {
 
 type Feed {
   items: [FeedItem!]!
-  nextCursor: String!
+  nextCursor: BigInt
   totalCount: Int!
 }
 

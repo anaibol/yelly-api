@@ -87,7 +87,7 @@ export class FeedService {
 
     const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const nextCursor = lastItem ? lastItem.id.toString() : ''
+    const nextCursor = lastItem ? lastItem.id : null
 
     return { items, nextCursor, totalCount }
   }

@@ -9,7 +9,7 @@ registerEnumType(FeedItemType, {
 @ObjectType()
 export class FeedItem {
   @Field(() => BigInt)
-  id: bigint
+  id: BigInt
   post?: Post
   createdAt?: Date
   @Field(() => FeedItemType)
@@ -18,7 +18,8 @@ export class FeedItem {
 
 @ObjectType()
 export class Feed {
-  nextCursor: string
+  @Field(() => BigInt)
+  nextCursor: BigInt | null
   items: FeedItem[]
   totalCount: number
 }
