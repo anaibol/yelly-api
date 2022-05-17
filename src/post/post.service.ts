@@ -9,7 +9,6 @@ import {
   mapPostChild,
   PostChildSelect,
   getNotExpiredCondition,
-  PostSelectT,
 } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
 // import { SendbirdService } from 'src/sendbird/sendbird.service'
@@ -483,32 +482,15 @@ export class PostService {
   async createOrUpdatePostReaction(
     createOrUpdatePostReactionInput: CreateOrUpdatePostReactionInput,
     authUser: AuthUser
-  ): Promise<boolean> {
-    const { reaction, postId } = createOrUpdatePostReactionInput
+  ): Promise<Post> {
+    const { text, postId } = createOrUpdatePostReactionInput
     const authorId = authUser.id
 
-    const reactionData = {
-      reaction,
-      authorId,
-      postId,
-    }
-
-    const postReaction = await this.prismaService.postReaction.upsert({
+    await this.prismaService.postReaction.upsert({
       where: {
         authorId_postId: {
           authorId,
           postId,
-        },
-      },
-      select: {
-        authorId: true,
-        id: true,
-        postId: true,
-        reaction: true,
-        post: {
-          select: {
-            authorId: true,
-          },
         },
       },
       create: {
@@ -517,19 +499,30 @@ export class PostService {
             id: authUser.id,
           },
         },
-        reaction,
+        text,
         post: {
           connect: {
             id: postId,
           },
         },
       },
-      update: reactionData,
+      update: {
+        text,
+        authorId,
+        postId,
+      },
     })
 
     // if (postReaction.post.authorId !== authUser.id) this.pushNotificationService.newPostReaction(postReaction.id)
 
-    return !!postReaction
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+      select: PostSelectWithParent,
+    })
+
+    if (!post) return Promise.reject(new Error('No poll with option'))
+
+    return mapPost(post)
   }
 
   async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUser: AuthUser): Promise<boolean> {
@@ -612,7 +605,7 @@ export class PostService {
   }
 
   async getAuthUserReaction(postId: string, authUser: AuthUser): Promise<PostReaction | null> {
-    const authUserVotes = await this.prismaService.user
+    const authUserPostReaction = await this.prismaService.user
       .findUnique({
         where: {
           id: authUser.id,
@@ -624,9 +617,11 @@ export class PostService {
         },
       })
 
-    if (!authUserVotes.length) return null
+    console.log({ authUserPostReaction, authUser })
 
-    return authUserVotes[0]
+    if (!authUserPostReaction.length) return null
+
+    return authUserPostReaction[0]
   }
 
   async syncPostIndexWithAlgolia(id: string): Promise<PartialUpdateObjectResponse | undefined> {
@@ -680,7 +675,14 @@ export class PostService {
         },
       })
 
-      return [{ postId, ...(reaction && { reaction }) }]
+      return [
+        {
+          postId,
+          ...(reaction && {
+            reaction,
+          }),
+        },
+      ]
     }
 
     const reactions = await this.prismaService.postReaction.findMany({
@@ -692,9 +694,11 @@ export class PostService {
       },
     })
 
-    return postIds.map((postId) => ({
-      postId,
-      reaction: reactions.find((post) => post.id === postId),
-    }))
+    return postIds.map((postId) => {
+      return {
+        postId,
+        reaction: reactions.find((reaction) => reaction.postId === postId),
+      }
+    })
   }
 }

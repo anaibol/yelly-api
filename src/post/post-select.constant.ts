@@ -81,7 +81,7 @@ const PostSelectWithParentT = {
   select: PostSelectWithParent,
 }
 
-export type PostSelectT = Prisma.PostGetPayload<typeof PostSelectWithParentT>
+export type PostSelectWithParentTT = Prisma.PostGetPayload<typeof PostSelectWithParentT>
 
 export const PostChildSelect = {
   select: {
@@ -95,7 +95,7 @@ export const PostChildSelect = {
   },
 }
 
-export function mapPost(post: PostSelectT): Post {
+export function mapPost(post: PostSelectWithParentTT): Post {
   const { pollOptions, parent, _count, ...rest } = post
 
   return {
@@ -127,7 +127,10 @@ export function mapPost(post: PostSelectT): Post {
   }
 }
 
-export function mapPostChild(child: Prisma.PostGetPayload<typeof PostChildSelect>, parent: PostSelectT): Post {
+export function mapPostChild(
+  child: Prisma.PostGetPayload<typeof PostChildSelect>,
+  parent: PostSelectWithParentTT
+): Post {
   const { _count, pollOptions, ...rest } = child
 
   return {

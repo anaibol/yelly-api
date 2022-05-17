@@ -67,11 +67,11 @@ export class PostResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
+  @Mutation(() => Post)
   async createOrUpdatePostReaction(
     @Args('input') createPostReactionData: CreateOrUpdatePostReactionInput,
     @CurrentUser() authUser: AuthUser
-  ) {
+  ): Promise<Post> {
     return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser)
   }
 

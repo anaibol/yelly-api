@@ -9,6 +9,7 @@ class TagWithPost {
   createdAt?: Date
   isLive?: boolean
   isEmoji?: boolean
+  postCount?: number
   post?: Post
 }
 

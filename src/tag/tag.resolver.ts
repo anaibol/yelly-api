@@ -138,6 +138,9 @@ export class TagResolver {
       }),
       orderBy: {
         createdAt: 'desc',
+        reactions: {
+          _count: 'desc',
+        },
       },
       take: limit,
       select: PostSelectWithParent,
