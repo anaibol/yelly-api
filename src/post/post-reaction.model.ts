@@ -4,6 +4,6 @@ import { Field, ID, ObjectType } from '@nestjs/graphql'
 export class PostReaction {
   @Field(() => ID)
   id: string
-  reaction: string
+  text: string
   authorId: string
 }

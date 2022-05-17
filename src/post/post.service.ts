@@ -617,11 +617,11 @@ export class PostService {
         },
       })
 
-    console.log({ authUserPostReaction, authUser })
-
     if (!authUserPostReaction.length) return null
 
-    return authUserPostReaction[0]
+    const { id, ...reaction } = authUserPostReaction[0]
+
+    return { ...reaction, id: id.toString() }
   }
 
   async syncPostIndexWithAlgolia(id: string): Promise<PartialUpdateObjectResponse | undefined> {
@@ -679,7 +679,8 @@ export class PostService {
         {
           postId,
           ...(reaction && {
-            reaction,
+            ...reaction,
+            id: reaction.id.toString(),
           }),
         },
       ]
@@ -695,9 +696,16 @@ export class PostService {
     })
 
     return postIds.map((postId) => {
+      const reaction = reactions.find((reaction) => reaction.postId === postId)
+
       return {
         postId,
-        reaction: reactions.find((reaction) => reaction.postId === postId),
+        ...(reaction && {
+          reaction: {
+            ...reaction,
+            id: reaction.id.toString(),
+          },
+        }),
       }
     })
   }

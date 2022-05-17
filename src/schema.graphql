@@ -35,7 +35,7 @@ input CreateOrUpdateLiveTagInput {
 
 input CreateOrUpdatePostReactionInput {
   postId: String!
-  reaction: String!
+  text: String!
 }
 
 input CreatePostInput {
@@ -145,7 +145,7 @@ type Mutation {
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createFollowRequest(otherUserId: String!): FollowRequest!
   createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!
-  createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Boolean!
+  createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Post!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   declineFollowRequest(followRequestId: String!): Boolean!
@@ -244,7 +244,7 @@ type PostPollVote {
 type PostReaction {
   authorId: String!
   id: ID!
-  reaction: String!
+  text: String!
 }
 
 type Query {
@@ -304,6 +304,7 @@ type TagWithPost {
   isEmoji: Boolean
   isLive: Boolean
   post: Post
+  postCount: Int
   text: String!
 }
 
