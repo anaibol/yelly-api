@@ -611,6 +611,24 @@ export class PostService {
     return authUserVotes[0]
   }
 
+  async getAuthUserReaction(postId: string, authUser: AuthUser): Promise<PostReaction | null> {
+    const authUserVotes = await this.prismaService.user
+      .findUnique({
+        where: {
+          id: authUser.id,
+        },
+      })
+      .postReactions({
+        where: {
+          postId,
+        },
+      })
+
+    if (!authUserVotes.length) return null
+
+    return authUserVotes[0]
+  }
+
   async syncPostIndexWithAlgolia(id: string): Promise<PartialUpdateObjectResponse | undefined> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
 

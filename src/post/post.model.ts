@@ -30,6 +30,7 @@ export class Post {
   threadId?: string | null
   children?: PaginatedPosts
   childrenCount?: number
+  authUserReaction?: PostReaction | null
 }
 
 @ObjectType()

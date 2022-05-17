@@ -36,7 +36,6 @@ input CreateOrUpdateLiveTagInput {
 input CreateOrUpdatePostReactionInput {
   postId: String!
   reaction: String!
-  text: String!
 }
 
 input CreatePostInput {
@@ -212,6 +211,7 @@ type PaginatedUsers {
 
 type Post {
   authUserPollVote: PostPollVote
+  authUserReaction: PostReaction
   author: User
   children: PaginatedPosts
   childrenCount: Int
@@ -243,6 +243,7 @@ type PostPollVote {
 
 type PostReaction {
   authorId: String!
+  id: ID!
   reaction: String!
 }
 
