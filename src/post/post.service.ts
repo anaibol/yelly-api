@@ -482,11 +482,11 @@ export class PostService {
   async createOrUpdatePostReaction(
     createOrUpdatePostReactionInput: CreateOrUpdatePostReactionInput,
     authUser: AuthUser
-  ): Promise<Post> {
+  ): Promise<PostReaction> {
     const { text, postId } = createOrUpdatePostReactionInput
     const authorId = authUser.id
 
-    await this.prismaService.postReaction.upsert({
+    const postReaction = await this.prismaService.postReaction.upsert({
       where: {
         authorId_postId: {
           authorId,
@@ -511,18 +511,27 @@ export class PostService {
         authorId,
         postId,
       },
+      select: {
+        id: true,
+        author: true,
+        text: true,
+        post: {
+          select: PostSelectWithParent,
+        },
+      },
     })
 
     // if (postReaction.post.authorId !== authUser.id) this.pushNotificationService.newPostReaction(postReaction.id)
 
-    const post = await this.prismaService.post.findUnique({
-      where: { id: postId },
-      select: PostSelectWithParent,
-    })
+    const { post, id, ...reaction } = postReaction
 
     if (!post) return Promise.reject(new Error('No poll with option'))
 
-    return mapPost(post)
+    return {
+      id: id.toString(),
+      ...reaction,
+      post: mapPost(post),
+    }
   }
 
   async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUser: AuthUser): Promise<boolean> {

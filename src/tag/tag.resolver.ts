@@ -115,18 +115,18 @@ export class TagResolver {
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
-    const datesRanges = postsAuthorBirthYear
-      ? {
-          gte: new Date(`01/01/${postsAuthorBirthYear}`),
-          lt: new Date(`12/31/${postsAuthorBirthYear}`),
-        }
-      : dates.getDateRanges(dates.getAge(authUser.birthdate))
+    // const datesRanges = postsAuthorBirthYear
+    //   ? {
+    //       gte: new Date(`01/01/${postsAuthorBirthYear}`),
+    //       lt: new Date(`12/31/${postsAuthorBirthYear}`),
+    //     }
+    //   : dates.getDateRanges(dates.getAge(authUser.birthdate))
 
     const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
       where: {
         author: {
           isActive: true,
-          birthdate: datesRanges,
+          // birthdate: datesRanges,
         },
         ...getNotExpiredCondition(),
       },
@@ -136,12 +136,14 @@ export class TagResolver {
         },
         skip: 1,
       }),
-      orderBy: {
-        createdAt: 'desc',
-        reactions: {
-          _count: 'desc',
+      orderBy: [
+        {
+          reactions: {
+            _count: 'desc',
+          },
         },
-      },
+        { createdAt: 'desc' },
+      ],
       take: limit,
       select: PostSelectWithParent,
     })

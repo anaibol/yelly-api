@@ -145,7 +145,7 @@ type Mutation {
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createFollowRequest(otherUserId: String!): FollowRequest!
   createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!
-  createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): Post!
+  createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): PostReaction!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   declineFollowRequest(followRequestId: String!): Boolean!
@@ -242,9 +242,10 @@ type PostPollVote {
 }
 
 type PostReaction {
-  authorId: String!
+  author: User
   id: ID!
-  text: String!
+  post: Post
+  text: String
 }
 
 type Query {

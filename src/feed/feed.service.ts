@@ -113,8 +113,7 @@ export class FeedService {
       },
     })
 
-    // eslint-disable-next-line functional/no-throw-statement
-    if (feedItemId && !update.count) throw new Error('feedItemId not found')
+    if (feedItemId && !update.count) return Promise.reject(new Error('feedItemId not found'))
 
     return !!update
   }

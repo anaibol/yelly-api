@@ -67,11 +67,11 @@ export class PostResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => Post)
+  @Mutation(() => PostReaction)
   async createOrUpdatePostReaction(
     @Args('input') createPostReactionData: CreateOrUpdatePostReactionInput,
     @CurrentUser() authUser: AuthUser
-  ): Promise<Post> {
+  ): Promise<PostReaction> {
     return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser)
   }
 
@@ -93,8 +93,6 @@ export class PostResolver {
 
   @ResolveField()
   async authUserReaction(@Parent() post: Post, @CurrentUser() authUser: AuthUser): Promise<PostReaction | null> {
-    if (!post.pollOptions) return null
-
     return this.postService.getAuthUserReaction(post.id, authUser)
   }
 
