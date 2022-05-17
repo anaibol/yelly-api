@@ -8,6 +8,9 @@ type AccessToken {
   refreshToken: String!
 }
 
+"""Date custom scalar type"""
+scalar BigInt
+
 input CheckPhoneNumberVerificationCodeInput {
   locale: String!
   phoneNumber: String!
@@ -78,7 +81,7 @@ type Feed {
 
 type FeedItem {
   createdAt: DateTime
-  id: ID!
+  id: BigInt!
   post: Post
   type: FeedItemType
 }
@@ -159,7 +162,7 @@ type Mutation {
   emailSignIn(input: EmailSignInInput!): AccessToken!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
-  markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: String): Boolean!
+  markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: BigInt): Boolean!
   markNotificationAsSeen(notificationId: String!): Boolean!
   refreshAccessToken(refreshToken: String!): AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!
@@ -238,13 +241,13 @@ type PostPollVote {
 
 type PostReaction {
   author: User
-  id: ID!
+  id: BigInt!
   post: Post
   text: String
 }
 
 type Query {
-  feed(after: String, isSeen: Boolean, limit: Int = 10): Feed!
+  feed(after: BigInt, isSeen: Boolean, limit: Int = 10): Feed!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
   getS3PresignedUploadUrl: Upload!
   liveTags: [Tag!]!

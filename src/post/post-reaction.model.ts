@@ -4,8 +4,8 @@ import { Post } from './post.model'
 
 @ObjectType()
 export class PostReaction {
-  @Field(() => ID)
-  id: string
+  @Field(() => BigInt)
+  id: BigInt
   text?: string
   author?: User
   post?: Post

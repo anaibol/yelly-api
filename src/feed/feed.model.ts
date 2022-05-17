@@ -8,8 +8,8 @@ registerEnumType(FeedItemType, {
 
 @ObjectType()
 export class FeedItem {
-  @Field(() => ID)
-  id: string
+  @Field(() => BigInt)
+  id: bigint
   post?: Post
   createdAt?: Date
   @Field(() => FeedItemType)

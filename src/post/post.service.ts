@@ -486,7 +486,7 @@ export class PostService {
     const { text, postId } = createOrUpdatePostReactionInput
     const authorId = authUser.id
 
-    const postReaction = await this.prismaService.postReaction.upsert({
+    const { post, ...reaction } = await this.prismaService.postReaction.upsert({
       where: {
         authorId_postId: {
           authorId,
@@ -523,12 +523,7 @@ export class PostService {
 
     // if (postReaction.post.authorId !== authUser.id) this.pushNotificationService.newPostReaction(postReaction.id)
 
-    const { post, id, ...reaction } = postReaction
-
-    if (!post) return Promise.reject(new Error('No poll with option'))
-
     return {
-      id: id.toString(),
       ...reaction,
       post: mapPost(post),
     }
@@ -628,9 +623,7 @@ export class PostService {
 
     if (!authUserPostReaction.length) return null
 
-    const { id, ...reaction } = authUserPostReaction[0]
-
-    return { ...reaction, id: id.toString() }
+    return authUserPostReaction[0]
   }
 
   async syncPostIndexWithAlgolia(id: string): Promise<PartialUpdateObjectResponse | undefined> {
@@ -688,8 +681,7 @@ export class PostService {
         {
           postId,
           ...(reaction && {
-            ...reaction,
-            id: reaction.id.toString(),
+            reaction,
           }),
         },
       ]
@@ -709,12 +701,7 @@ export class PostService {
 
       return {
         postId,
-        ...(reaction && {
-          reaction: {
-            ...reaction,
-            id: reaction.id.toString(),
-          },
-        }),
+        reaction,
       }
     })
   }

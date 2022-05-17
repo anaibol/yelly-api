@@ -13,11 +13,8 @@ import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
 import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
-import { Loader } from '@tracworx/nestjs-dataloader'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
-import { AuthUserPostReactionLoader } from './auth-user-post-reaction.loader'
-import DataLoader from 'dataloader'
 import { PostReaction } from './post-reaction.model'
 @Resolver(() => Post)
 export class PostResolver {
@@ -95,16 +92,4 @@ export class PostResolver {
   async authUserReaction(@Parent() post: Post, @CurrentUser() authUser: AuthUser): Promise<PostReaction | null> {
     return this.postService.getAuthUserReaction(post.id, authUser)
   }
-
-  // @ResolveField()
-  // async authUserReaction(
-  //   @Parent() post: Post,
-  //   @Loader(AuthUserPostReactionLoader) authUserPostReactionLoader: DataLoader<string, number | undefined, string>
-  // ): Promise<number> {
-  //   const postReaction = await authUserPostReactionLoader.load(post.id)
-
-  //   if (!postReaction) return Promise.reject(new Error('Error'))
-
-  //   return postReaction
-  // }
 }
