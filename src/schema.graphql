@@ -8,7 +8,7 @@ type AccessToken {
   refreshToken: String!
 }
 
-"""Date custom scalar type"""
+"""BigInt scalar type"""
 scalar BigInt
 
 input CheckPhoneNumberVerificationCodeInput {
