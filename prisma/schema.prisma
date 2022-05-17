@@ -32,12 +32,11 @@ model Notification {
   id              String            @id @default(dbgenerated("generate_id()"))
   isSeen          Boolean           @default(false)
   createdAt       DateTime          @default(now())
-  followId        String?           @unique
   userId          String
   followRequestId String?
   followRequest   FollowRequest?    @relation(fields: [followRequestId], references: [id], onDelete: Cascade)
   type            NotificationType?
-  postReactionId  String?           @unique
+  postReactionId  BigInt?           @unique
   postReaction    PostReaction?     @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
 
   @@index([createdAt], map: "Notification_createdAt")
@@ -221,9 +220,9 @@ model PostPollVote {
 }
 
 model PostReaction {
-  id     String @id @default(dbgenerated("generate_id()"))
+  id           BigInt        @id @default(dbgenerated("generate_id()"))
   createdAt    DateTime      @unique @default(now())
-  reaction     String
+  text         String
   postId       String
   authorId     String
   author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
