@@ -11,6 +11,7 @@ import { tagSelect } from './tag-select.constant'
 import { excludedTags } from './excluded-tags.constant'
 import { Prisma } from '@prisma/client'
 import dates from 'src/utils/dates'
+import { sub } from 'date-fns'
 
 @Injectable()
 export class TagService {
@@ -227,7 +228,39 @@ export class TagService {
 
     if (!country) return Promise.reject(new Error('No country'))
 
+    const andIsEmoji = Prisma.sql`AND T."isEmoji" = ${isEmoji}`
+
+    const postsAfter = sub(new Date(), { days: 1 })
+    const postsBefore = new Date()
+    const andCreatedBetween = Prisma.sql`AND P."createdAt" > ${postsAfter} AND P."createdAt" < ${postsBefore}`
+
+    const query = Prisma.sql`
+      SELECT
+        T."id",
+        COUNT(*) as "postCount"
+      FROM
+        "Tag" T,
+        "_PostToTag" PT,
+        "Post" P
+      WHERE
+        PT. "B" = T. "id"
+        AND PT. "A" = P. "id"
+        AND T."countryId" = ${country.id}
+        ${isEmoji !== undefined ? andIsEmoji : Prisma.empty}
+        ${postsAfter && postsBefore ? andCreatedBetween : Prisma.empty}
+        AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
+      GROUP BY T."id"
+      ORDER BY "postCount" desc
+      OFFSET ${skip}
+      LIMIT ${limit}
+    `
+
+    const tagIds: { id: string }[] = await this.prismaService.$queryRaw(query)
+
     const where: Prisma.TagWhereInput = {
+      id: {
+        in: tagIds.map(({ id }) => id),
+      },
       ...(isEmoji && {
         isEmoji,
       }),
