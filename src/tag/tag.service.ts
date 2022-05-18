@@ -149,7 +149,7 @@ export class TagService {
     return true
   }
 
-  async getTagsByPostCount(authUser: AuthUser, isEmoji: boolean, skip: number, limit: number): Promise<PaginatedTags> {
+  async getTags(authUser: AuthUser, skip: number, limit: number, isEmoji?: boolean): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
@@ -164,6 +164,9 @@ export class TagService {
     const where: Prisma.TagWhereInput = {
       isLive: false,
       countryId: country.id,
+      ...(isEmoji && {
+        isEmoji,
+      }),
       text: {
         notIn: excludedTags,
         mode: 'insensitive',
@@ -199,64 +202,7 @@ export class TagService {
     return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async getTrends(authUser: AuthUser, isEmoji: boolean, skip: number, limit: number): Promise<PaginatedTags> {
-    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-    const country = await this.prismaService.school
-      .findUnique({
-        where: { id: authUser.schoolId },
-      })
-      .city()
-      .country()
-
-    if (!country) return Promise.reject(new Error('No country'))
-
-    const where: Prisma.TagWhereInput = {
-      countryId: country.id,
-      isEmoji,
-      text: {
-        notIn: excludedTags as string[],
-        mode: 'insensitive',
-      },
-      posts: {
-        some: {
-          createdAt: {
-            gte: sub(new Date(), { days: 1 }),
-          },
-        },
-      },
-    }
-
-    const [totalCount, tags] = await Promise.all([
-      this.prismaService.tag.count({
-        where,
-      }),
-      this.prismaService.tag.findMany({
-        where,
-        skip,
-        orderBy: {
-          posts: {
-            _count: 'desc',
-          },
-        },
-        take: limit,
-        select: tagSelect,
-      }),
-    ])
-
-    const nextSkip = skip + limit
-
-    const dataTags = tags.map((tag) => {
-      return {
-        ...tag,
-        postCount: tag._count.posts,
-      }
-    })
-
-    return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
-  }
-
-  async getTopTrends({
+  async getTodayTrends({
     authUser,
     skip,
     limit,
@@ -288,6 +234,8 @@ export class TagService {
     const query = Prisma.sql`
       SELECT
         T."id",
+        T."text",
+        T."isLive",
         COUNT(*) as "postCount"
       FROM
         "Tag" T,
@@ -306,119 +254,12 @@ export class TagService {
       LIMIT ${limit}
     `
 
-    const tagIds: { id: string }[] = await this.prismaService.$queryRaw(query)
-
-    const where: Prisma.TagWhereInput = {
-      id: {
-        in: tagIds.map(({ id }) => id),
-      },
-      ...(isEmoji && {
-        isEmoji,
-      }),
-      countryId: country.id,
-      text: {
-        notIn: excludedTags,
-        mode: 'insensitive',
-      },
-    }
-
-    const [totalCount, tags] = await Promise.all([
-      this.prismaService.tag.count({
-        where,
-      }),
-      this.prismaService.tag.findMany({
-        where,
-        skip,
-        take: limit,
-        select: tagSelect,
-        orderBy: {
-          posts: {
-            _count: 'desc',
-          },
-        },
-      }),
-    ])
-
-    const nextSkip = skip + limit
-
-    const items = tags.map(({ _count, ...tag }) => ({
-      ...tag,
-      postCount: _count.posts,
-    }))
-
-    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
-  }
-
-  async getTopTrendsByYear({
-    authUser,
-    skip,
-    limit,
-    isEmoji,
-    postsAfter,
-    postsBefore,
-    postsAuthorBirthYear,
-  }: {
-    authUser: AuthUser
-    skip: number
-    limit: number
-    isEmoji?: boolean
-    postsAfter?: Date
-    postsBefore?: Date
-    postsAuthorBirthYear?: number
-  }): Promise<PaginatedTags> {
-    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-    const country = await this.prismaService.school
-      .findUnique({
-        where: { id: authUser.schoolId },
-      })
-      .city()
-      .country()
-
-    if (!country) return Promise.reject(new Error('No country'))
-    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
-
-    const andIsEmoji = Prisma.sql`AND T."isEmoji" = ${isEmoji}`
-    const andCreatedBetween = Prisma.sql`AND P."createdAt" > ${postsAfter} AND P."createdAt" < ${postsBefore}`
-    const andPostsAuthorBirthdate = Prisma.sql`AND U."birthdate" > make_date(${postsAuthorBirthYear}, 01, 01) AND U."birthdate" < make_date(${postsAuthorBirthYear}, 12, 31)`
-
-    const userAge = dates.getAge(authUser.birthdate)
-    const datesRanges = dates.getDateRanges(userAge)
-
-    const andPostsAuthorBirthdateRanges = Prisma.sql`AND U."birthdate" > ${datesRanges?.gte} AND U."birthdate" < ${datesRanges?.lt}`
-
-    const query = Prisma.sql`
-      SELECT
-      T."id",
-      T."text",
-      T."isLive",
-      COUNT(*) as "postCount"
-      FROM
-        "Tag" T,
-        "_PostToTag" PT,
-        "Post" P,
-        "User" U
-      WHERE
-        PT. "B" = T. "id"
-        AND PT. "A" = P. "id"
-        AND U. "id" = P. "authorId"
-        AND T."countryId" = ${country.id}
-        ${postsAuthorBirthYear ? andPostsAuthorBirthdate : andPostsAuthorBirthdateRanges}
-        ${isEmoji !== undefined ? andIsEmoji : Prisma.empty}
-        ${postsAfter && postsBefore ? andCreatedBetween : Prisma.empty}
-        AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
-      GROUP BY T."id",T."text"	
-      ORDER BY "postCount" desc
-      OFFSET ${skip}
-      LIMIT ${limit}
-    `
-
-    const tagTrends: { id: string; text: string; postCount: number; totalCount: number }[] =
+    const items: { id: string; text: string; isLive: boolean; postCount: number; totalCount: number }[] =
       await this.prismaService.$queryRaw(query)
 
     const nextSkip = skip + limit
-    const totalCount = tagTrends.length > 0 ? tagTrends[0].totalCount : 0
+    const totalCount = items.length > 0 ? items[0].totalCount : 0
 
-    return { items: tagTrends, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 }

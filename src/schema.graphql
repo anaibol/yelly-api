@@ -257,10 +257,8 @@ type Query {
   posts(after: String, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String!): Tag!
-  tagsByPostCount(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
-  topTrends(isEmoji: Boolean, limit: Int = 10, skip: Int = 0): PaginatedTags!
-  topTrendsByYear(isEmoji: Boolean, limit: Int = 10, postsAfter: DateTime, postsAuthorBirthYear: Int, postsBefore: DateTime, skip: Int = 0): PaginatedTags!
-  trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
+  tags(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
+  todayTrends(isEmoji: Boolean, limit: Int = 10, skip: Int = 0): PaginatedTags!
   unreadNotificationsCount: Int!
   user(id: String!): User!
 }

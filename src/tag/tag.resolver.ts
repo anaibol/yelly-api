@@ -13,12 +13,10 @@ import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
 import { PostSelectWithParent, mapPost, getNotExpiredCondition } from '../post/post-select.constant'
 import { PaginatedPosts } from '../post/paginated-posts.model'
-import dates from '../utils/dates'
 import { PaginatedTags } from './paginated-tags.model'
 import { UserService } from 'src/user/user.service'
 import { TrendsArgs } from './trends.args'
-import { TopTrendsArgs } from './top-trends.args'
-import { TopTrendsByYearArgs } from './top-trends-by-year.args'
+import { TodayTrendsArgs } from './today-trends.args'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -56,55 +54,27 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
-  async trends(@Args() trendsArgs: TrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
+  async tags(@Args() trendsArgs: TrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
     const { skip, limit, isEmoji } = trendsArgs
 
-    const { items, nextSkip } = await this.tagService.getTrends(authUser, isEmoji, skip, limit)
+    const { items, nextSkip } = await this.tagService.getTags(authUser, skip, limit, isEmoji)
 
     return { items, nextSkip }
   }
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
-  async tagsByPostCount(@Args() trendsArgs: TrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { skip, limit, isEmoji } = trendsArgs
-
-    const { items, nextSkip } = await this.tagService.getTagsByPostCount(authUser, isEmoji, skip, limit)
-
-    return { items, nextSkip }
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => PaginatedTags)
-  async topTrends(@Args() topTrendsArgs: TopTrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { skip, limit, isEmoji } = topTrendsArgs
-
-    const { items, nextSkip } = await this.tagService.getTopTrends({
-      authUser,
-      skip,
-      limit,
-      isEmoji,
-    })
-
-    return { items, nextSkip }
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => PaginatedTags)
-  async topTrendsByYear(
-    @Args() topTrendsArgs: TopTrendsByYearArgs,
+  async todayTrends(
+    @Args() todayTrendsArgs: TodayTrendsArgs,
     @CurrentUser() authUser: AuthUser
   ): Promise<PaginatedTags> {
-    const { skip, limit, isEmoji, postsAfter, postsBefore, postsAuthorBirthYear } = topTrendsArgs
+    const { skip, limit, isEmoji } = todayTrendsArgs
 
-    const { items, nextSkip } = await this.tagService.getTopTrendsByYear({
+    const { items, nextSkip } = await this.tagService.getTodayTrends({
       authUser,
       skip,
       limit,
       isEmoji,
-      postsAfter,
-      postsBefore,
-      postsAuthorBirthYear,
     })
 
     return { items, nextSkip }
@@ -121,18 +91,10 @@ export class TagResolver {
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
-    // const datesRanges = postsAuthorBirthYear
-    //   ? {
-    //       gte: new Date(`01/01/${postsAuthorBirthYear}`),
-    //       lt: new Date(`12/31/${postsAuthorBirthYear}`),
-    //     }
-    //   : dates.getDateRanges(dates.getAge(authUser.birthdate))
-
     const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
       where: {
         author: {
           isActive: true,
-          // birthdate: datesRanges,
         },
         ...getNotExpiredCondition(),
       },
