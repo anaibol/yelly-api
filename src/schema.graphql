@@ -196,7 +196,7 @@ type PaginatedPosts {
   nextCursor: String!
 }
 
-type PaginatedTrends {
+type PaginatedTags {
   items: [Tag!]!
   nextSkip: Int!
 }
@@ -257,9 +257,10 @@ type Query {
   posts(after: String, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String!): Tag!
-  topTrends(isEmoji: Boolean, limit: Int = 10, skip: Int = 0): PaginatedTrends!
-  topTrendsByYear(isEmoji: Boolean, limit: Int = 10, postsAfter: DateTime, postsAuthorBirthYear: Int, postsBefore: DateTime, skip: Int = 0): PaginatedTrends!
-  trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTrends!
+  tagsByPostCount(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
+  topTrends(isEmoji: Boolean, limit: Int = 10, skip: Int = 0): PaginatedTags!
+  topTrendsByYear(isEmoji: Boolean, limit: Int = 10, postsAfter: DateTime, postsAuthorBirthYear: Int, postsBefore: DateTime, skip: Int = 0): PaginatedTags!
+  trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
   unreadNotificationsCount: Int!
   user(id: String!): User!
 }

@@ -4,7 +4,7 @@ import { PrismaService } from '../core/prisma.service'
 import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
-import { PaginatedTrends } from './paginated-trends.model'
+import { PaginatedTags } from './paginated-tags.model'
 import { AuthUser } from 'src/auth/auth.service'
 import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
@@ -149,7 +149,7 @@ export class TagService {
     return true
   }
 
-  async getTrends(authUser: AuthUser, isEmoji: boolean, skip: number, limit: number): Promise<PaginatedTrends> {
+  async getTagsByPostCount(authUser: AuthUser, isEmoji: boolean, skip: number, limit: number): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
@@ -161,27 +161,78 @@ export class TagService {
 
     if (!country) return Promise.reject(new Error('No country'))
 
+    const where: Prisma.TagWhereInput = {
+      isLive: false,
+      countryId: country.id,
+      text: {
+        notIn: excludedTags,
+        mode: 'insensitive',
+      },
+    }
+
     const [totalCount, tags] = await Promise.all([
       this.prismaService.tag.count({
-        where: {
-          isLive: false,
-          countryId: country.id,
-          text: {
-            notIn: excludedTags,
-            mode: 'insensitive',
-          },
-        },
+        where,
       }),
       this.prismaService.tag.findMany({
-        where: {
-          isLive: false,
-          countryId: country.id,
-          isEmoji,
-          text: {
-            notIn: excludedTags,
-            mode: 'insensitive',
+        where,
+        skip,
+        orderBy: {
+          posts: {
+            _count: 'desc',
           },
         },
+        take: limit,
+        select: tagSelect,
+      }),
+    ])
+
+    const nextSkip = skip + limit
+
+    const dataTags = tags.map((tag) => {
+      return {
+        ...tag,
+        postCount: tag._count.posts,
+      }
+    })
+
+    return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+  }
+
+  async getTrends(authUser: AuthUser, isEmoji: boolean, skip: number, limit: number): Promise<PaginatedTags> {
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+
+    const country = await this.prismaService.school
+      .findUnique({
+        where: { id: authUser.schoolId },
+      })
+      .city()
+      .country()
+
+    if (!country) return Promise.reject(new Error('No country'))
+
+    const where: Prisma.TagWhereInput = {
+      countryId: country.id,
+      isEmoji,
+      text: {
+        notIn: excludedTags as string[],
+        mode: 'insensitive',
+      },
+      posts: {
+        some: {
+          createdAt: {
+            gte: sub(new Date(), { days: 1 }),
+          },
+        },
+      },
+    }
+
+    const [totalCount, tags] = await Promise.all([
+      this.prismaService.tag.count({
+        where,
+      }),
+      this.prismaService.tag.findMany({
+        where,
         skip,
         orderBy: {
           posts: {
@@ -216,7 +267,7 @@ export class TagService {
     limit: number
     isEmoji?: boolean
     postsBefore?: Date
-  }): Promise<PaginatedTrends> {
+  }): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
@@ -280,6 +331,11 @@ export class TagService {
         skip,
         take: limit,
         select: tagSelect,
+        orderBy: {
+          posts: {
+            _count: 'desc',
+          },
+        },
       }),
     ])
 
@@ -309,7 +365,7 @@ export class TagService {
     postsAfter?: Date
     postsBefore?: Date
     postsAuthorBirthYear?: number
-  }): Promise<PaginatedTrends> {
+  }): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school

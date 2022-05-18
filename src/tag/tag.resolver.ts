@@ -14,7 +14,7 @@ import { PrismaService } from 'src/core/prisma.service'
 import { PostSelectWithParent, mapPost, getNotExpiredCondition } from '../post/post-select.constant'
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import dates from '../utils/dates'
-import { PaginatedTrends } from './paginated-trends.model'
+import { PaginatedTags } from './paginated-tags.model'
 import { UserService } from 'src/user/user.service'
 import { TrendsArgs } from './trends.args'
 import { TopTrendsArgs } from './top-trends.args'
@@ -55,8 +55,8 @@ export class TagResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => PaginatedTrends)
-  async trends(@Args() trendsArgs: TrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTrends> {
+  @Query(() => PaginatedTags)
+  async trends(@Args() trendsArgs: TrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
     const { skip, limit, isEmoji } = trendsArgs
 
     const { items, nextSkip } = await this.tagService.getTrends(authUser, isEmoji, skip, limit)
@@ -65,8 +65,18 @@ export class TagResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => PaginatedTrends)
-  async topTrends(@Args() topTrendsArgs: TopTrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTrends> {
+  @Query(() => PaginatedTags)
+  async tagsByPostCount(@Args() trendsArgs: TrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
+    const { skip, limit, isEmoji } = trendsArgs
+
+    const { items, nextSkip } = await this.tagService.getTagsByPostCount(authUser, isEmoji, skip, limit)
+
+    return { items, nextSkip }
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTags)
+  async topTrends(@Args() topTrendsArgs: TopTrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
     const { skip, limit, isEmoji } = topTrendsArgs
 
     const { items, nextSkip } = await this.tagService.getTopTrends({
@@ -80,11 +90,11 @@ export class TagResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => PaginatedTrends)
+  @Query(() => PaginatedTags)
   async topTrendsByYear(
     @Args() topTrendsArgs: TopTrendsByYearArgs,
     @CurrentUser() authUser: AuthUser
-  ): Promise<PaginatedTrends> {
+  ): Promise<PaginatedTags> {
     const { skip, limit, isEmoji, postsAfter, postsBefore, postsAuthorBirthYear } = topTrendsArgs
 
     const { items, nextSkip } = await this.tagService.getTopTrendsByYear({
