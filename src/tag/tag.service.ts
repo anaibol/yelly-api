@@ -264,7 +264,6 @@ export class TagService {
       ...(isEmoji && {
         isEmoji,
       }),
-      isLive: false,
       countryId: country.id,
       text: {
         notIn: excludedTags,
