@@ -27,12 +27,16 @@ export class NotificationService {
             select: {
               id: true,
               text: true,
-              postId: true,
               author: {
                 select: {
                   id: true,
                   firstName: true,
                   pictureId: true,
+                },
+              },
+              post: {
+                select: {
+                  id: true,
                 },
               },
             },
