@@ -447,7 +447,6 @@ export class PushNotificationService {
     const lang = locale
 
     const message = {
-      title: await this.i18n.translate('notifications.POST_REACTION_TITLE', { ...(lang && { lang }) }),
       body: await this.i18n.translate('notifications.POST_REACTION_BODY', {
         args: { firstName: reaction.firstName, postReaction: postReaction.text },
         ...(lang && { lang }),
