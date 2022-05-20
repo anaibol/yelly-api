@@ -511,10 +511,7 @@ export class PostService {
         authorId,
         postId,
       },
-      select: {
-        id: true,
-        author: true,
-        text: true,
+      include: {
         post: {
           select: PostSelectWithParent,
         },

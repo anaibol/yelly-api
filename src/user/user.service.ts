@@ -936,8 +936,6 @@ export class UserService {
         // CATCH ERROR SO IT CONTINUES
       }
 
-      console.log(12333)
-
       // eslint-disable-next-line functional/no-try-statement
       try {
         this.syncUsersIndexWithAlgolia(userId)

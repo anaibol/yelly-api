@@ -410,24 +410,30 @@ export class PushNotificationService {
     }
   }
 
-  async newPostReaction(postReaction: Partial<PostReaction>) {
-    const postAuthor = await this.prismaService.user.findUnique({
+  async newPostReaction(postReaction: PostReaction) {
+    const postAuthor = await this.prismaService.post.findUnique({
       where: {
         id: postReaction.postId,
       },
       select: {
-        id: true,
-        locale: true,
+        author: {
+          select: {
+            id: true,
+            locale: true,
+          },
+        },
       },
     })
 
     if (!postAuthor) return Promise.reject(new Error('Post author not found'))
 
-    const { id: postAuthorId, locale } = postAuthor
+    const {
+      author: { id: postAuthorId, locale },
+    } = postAuthor
 
     await this.prismaService.notification.create({
       data: {
-        userId: postAuthor.id,
+        userId: postAuthorId,
         type: NotificationType.POST_REACTION,
         postReactionId: postReaction.id,
       },
