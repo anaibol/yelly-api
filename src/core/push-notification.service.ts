@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import { ExpoPushNotificationAccessToken, FollowRequest, FeedItemType, PostReaction } from '@prisma/client'
+import {
+  ExpoPushNotificationAccessToken,
+  FollowRequest,
+  FeedItemType,
+  PostReaction,
+  NotificationType,
+} from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
 import { PrismaService } from 'src/core/prisma.service'
@@ -405,28 +411,29 @@ export class PushNotificationService {
   }
 
   async newPostReaction(postReaction: Partial<PostReaction>) {
-    const author = await this.prismaService.post.findUnique({
+    const postAuthor = await this.prismaService.user.findUnique({
       where: {
         id: postReaction.postId,
       },
       select: {
-        authorId: true,
-        author: {
-          select: {
-            locale: true,
-          },
-        },
+        id: true,
+        locale: true,
       },
     })
 
-    if (!author) return Promise.reject(new Error('Author not found'))
+    if (!postAuthor) return Promise.reject(new Error('Post author not found'))
 
-    const {
-      authorId: postAuthorID,
-      author: { locale },
-    } = author
+    const { id: postAuthorId, locale } = postAuthor
 
-    const pushTokens = await this.getPushTokensByUsersIds([postAuthorID])
+    await this.prismaService.notification.create({
+      data: {
+        userId: postAuthor.id,
+        type: NotificationType.POST_REACTION,
+        postReactionId: postReaction.id,
+      },
+    })
+
+    const pushTokens = await this.getPushTokensByUsersIds([postAuthorId])
     const reaction = await this.prismaService.user.findUnique({ where: { id: postReaction.authorId } })
 
     if (!reaction) return Promise.reject(new Error('Reaction not found'))

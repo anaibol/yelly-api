@@ -184,6 +184,7 @@ type Notification {
 enum NotificationType {
   FOLLOW_REQUEST_ACCEPTED
   FOLLOW_REQUEST_PENDING
+  POST_REACTION
 }
 
 type PaginatedNotifications {

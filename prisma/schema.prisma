@@ -255,6 +255,7 @@ enum UserRole {
 enum NotificationType {
   FOLLOW_REQUEST_PENDING
   FOLLOW_REQUEST_ACCEPTED
+  POST_REACTION
 }
 
 enum FeedItemType {
