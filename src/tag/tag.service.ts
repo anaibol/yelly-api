@@ -10,8 +10,6 @@ import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
 import { excludedTags } from './excluded-tags.constant'
 import { Prisma } from '@prisma/client'
-import dates from 'src/utils/dates'
-import { sub } from 'date-fns'
 
 @Injectable()
 export class TagService {
@@ -202,17 +200,20 @@ export class TagService {
     return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async getTodayTrends({
+  async getTrends({
+    startDate,
+    endDate,
     authUser,
     skip,
     limit,
     isEmoji,
   }: {
+    startDate: Date
+    endDate: Date
     authUser: AuthUser
     skip: number
     limit: number
     isEmoji?: boolean
-    postsBefore?: Date
   }): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
@@ -227,9 +228,7 @@ export class TagService {
 
     const andIsEmoji = Prisma.sql`AND T."isEmoji" = ${isEmoji}`
 
-    const postsAfter = sub(new Date(), { days: 1 })
-    const postsBefore = new Date()
-    const andCreatedBetween = Prisma.sql`AND P."createdAt" > ${postsAfter} AND P."createdAt" < ${postsBefore}`
+    const andCreatedBetween = Prisma.sql`AND P."createdAt" > ${startDate} AND P."createdAt" < ${endDate}`
 
     const query = Prisma.sql`
       SELECT
@@ -246,7 +245,7 @@ export class TagService {
         AND PT. "A" = P. "id"
         AND T."countryId" = ${country.id}
         ${isEmoji !== undefined ? andIsEmoji : Prisma.empty}
-        ${postsAfter && postsBefore ? andCreatedBetween : Prisma.empty}
+        ${andCreatedBetween}
         AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
       GROUP BY T."id"
       ORDER BY "postCount" desc

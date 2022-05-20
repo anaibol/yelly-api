@@ -15,8 +15,8 @@ import { PostSelectWithParent, mapPost, getNotExpiredCondition } from '../post/p
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import { PaginatedTags } from './paginated-tags.model'
 import { UserService } from 'src/user/user.service'
+import { TagsArgs } from './tags.args'
 import { TrendsArgs } from './trends.args'
-import { TodayTrendsArgs } from './today-trends.args'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -54,8 +54,8 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
-  async tags(@Args() trendsArgs: TrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { skip, limit, isEmoji } = trendsArgs
+  async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
+    const { skip, limit, isEmoji } = tagsArgs
 
     const { items, nextSkip } = await this.tagService.getTags(authUser, skip, limit, isEmoji)
 
@@ -64,13 +64,12 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
-  async todayTrends(
-    @Args() todayTrendsArgs: TodayTrendsArgs,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<PaginatedTags> {
-    const { skip, limit, isEmoji } = todayTrendsArgs
+  async trends(@Args() trendsArgs: TrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
+    const { startDate, endDate, skip, limit, isEmoji } = trendsArgs
 
-    const { items, nextSkip } = await this.tagService.getTodayTrends({
+    const { items, nextSkip } = await this.tagService.getTrends({
+      startDate,
+      endDate,
       authUser,
       skip,
       limit,
