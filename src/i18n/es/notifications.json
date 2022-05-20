@@ -1,4 +1,6 @@
 {
+  "POST_REACTION_TITLE": "{firstName} a uppé ton post !",
+  "POST_REACTION_BODY": "{firstName} a uppé ton post !",
   "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} te envió una solicitud de amistad",
   "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} aceptó tu solicitud de amistad",
   "NEW_LIVE_TAG_BODY": "Tendencia Yelly live",

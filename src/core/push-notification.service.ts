@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { ExpoPushNotificationAccessToken, FollowRequest, FeedItemType } from '@prisma/client'
+import { ExpoPushNotificationAccessToken, FollowRequest, FeedItemType, PostReaction } from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
 import { PrismaService } from 'src/core/prisma.service'
@@ -402,5 +402,54 @@ export class PushNotificationService {
       // eslint-disable-next-line functional/no-throw-statement
       throw e
     }
+  }
+
+  async newPostReaction(postReaction: Partial<PostReaction>) {
+    const author = await this.prismaService.post.findUnique({
+      where: {
+        id: postReaction.postId,
+      },
+      select: {
+        authorId: true,
+        author: {
+          select: {
+            locale: true,
+          },
+        },
+      },
+    })
+
+    if (!author) return Promise.reject(new Error('Author not found'))
+
+    const {
+      authorId: postAuthorID,
+      author: { locale },
+    } = author
+
+    const pushTokens = await this.getPushTokensByUsersIds([postAuthorID])
+    const reaction = await this.prismaService.user.findUnique({ where: { id: postReaction.authorId } })
+
+    if (!reaction) return Promise.reject(new Error('Reaction not found'))
+
+    const lang = locale
+
+    const message = {
+      title: await this.i18n.translate('notifications.POST_REACTION_TITLE', { ...(lang && { lang }) }),
+      body: await this.i18n.translate('notifications.POST_REACTION_BODY', {
+        args: { firstName: reaction.firstName, postReaction: postReaction.text },
+        ...(lang && { lang }),
+      }),
+    }
+
+    const messages = pushTokens.map((expoPushNotificationToken) => {
+      return {
+        ...message,
+        to: expoPushNotificationToken.token,
+        data: { url: `${process.env.APP_BASE_URL}/post/${postReaction.postId}` },
+        sound: 'default' as const,
+      }
+    })
+
+    await this.sendNotifications(messages, pushTokens)
   }
 }

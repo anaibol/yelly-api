@@ -1,4 +1,6 @@
 {
+  "POST_REACTION_TITLE": "{firstName} upped your post!",
+  "POST_REACTION_BODY": "{firstName} upped your post!",
   "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} requested to follow your posts",
   "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} accepted your request to follow his/her posts",
   "NEW_LIVE_TAG_BODY": "Yelly trend live",

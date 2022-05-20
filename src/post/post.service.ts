@@ -521,7 +521,7 @@ export class PostService {
       },
     })
 
-    // if (postReaction.post.authorId !== authUser.id) this.pushNotificationService.newPostReaction(postReaction.id)
+    if (post.author.id !== authUser.id) this.pushNotificationService.newPostReaction(reaction)
 
     return {
       ...reaction,
