@@ -37,4 +37,11 @@ export const excludedTags = [
   'mestontiktok',
   'maistesreseaux',
   'maistontiktok',
+  'département',
+  'age',
+  'tonsigne',
+  'tonanniversaire',
+  'mataille',
+  'jechercheunamipourparler',
+  'coupleoucelib',
 ]
