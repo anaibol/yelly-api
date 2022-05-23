@@ -44,7 +44,7 @@ export class TagResolver {
   }
 
   @ResolveField()
-  async author(@Parent() tag: Tag): Promise<User> {
+  async author(@Parent() tag: Tag): Promise<User | null> {
     return this.tagService.getTagAuthor(tag.id)
   }
 
