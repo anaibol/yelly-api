@@ -18,8 +18,10 @@ import { IsFollowedByAuthUserLoader } from './user/is-followed-by-auth-user.load
 import { FeedModule } from './feed/feed.module'
 // import { GraphQLError, GraphQLFormattedError } from 'graphql'
 
+import { BigIntScalar } from './scalars/big-int.scalar'
+
 @Module({
-  providers: [UserModule, IsFollowedByAuthUserLoader], // CommonFriendsLoader
+  providers: [UserModule, IsFollowedByAuthUserLoader, BigIntScalar], // CommonFriendsLoader
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
@@ -44,6 +46,14 @@ import { FeedModule } from './feed/feed.module'
       //     name: error.extensions?.exception?.name || error.name,
       //   }
       //   return graphQLFormattedError
+      // },
+      // formatError: (error) => {
+      //   return {
+      //     type: error?.extensions?.type || 'Error',
+      //     message: error?.message || '에러 메세지가 없습니다.',
+      //     path: error?.path || [],
+      //     code: error?.extensions?.code || CtErrorType.InternalServerError,
+      //   };
       // },
       autoSchemaFile: join(process.cwd(), 'src/schema.graphql'),
       sortSchema: true,

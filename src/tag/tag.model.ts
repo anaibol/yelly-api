@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql'
+import { User } from 'src/user/user.model'
 import { PaginatedPosts } from '../post/paginated-posts.model'
 
 @ObjectType()
@@ -12,4 +13,5 @@ export class Tag {
   posts?: PaginatedPosts
   postCount?: number
   authUserPosted?: boolean
+  author?: User
 }

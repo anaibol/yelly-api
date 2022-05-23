@@ -8,6 +8,9 @@ type AccessToken {
   refreshToken: String!
 }
 
+"""BigInt scalar type"""
+scalar BigInt
+
 input CheckPhoneNumberVerificationCodeInput {
   locale: String!
   phoneNumber: String!
@@ -30,6 +33,11 @@ type Country {
 
 input CreateOrUpdateLiveTagInput {
   isLive: Boolean!
+  text: String!
+}
+
+input CreateOrUpdatePostReactionInput {
+  postId: String!
   text: String!
 }
 
@@ -56,6 +64,10 @@ input DeletePostInput {
   id: String!
 }
 
+input DeletePostReactionInput {
+  postId: String!
+}
+
 input EmailSignInInput {
   email: String!
   password: String!
@@ -63,13 +75,13 @@ input EmailSignInInput {
 
 type Feed {
   items: [FeedItem!]!
-  nextCursor: String!
+  nextCursor: BigInt
   totalCount: Int!
 }
 
 type FeedItem {
   createdAt: DateTime
-  id: ID!
+  id: BigInt!
   post: Post
   type: FeedItemType
 }
@@ -136,6 +148,7 @@ type Mutation {
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createFollowRequest(otherUserId: String!): FollowRequest!
   createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!
+  createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): PostReaction!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   declineFollowRequest(followRequestId: String!): Boolean!
@@ -144,11 +157,12 @@ type Mutation {
   deleteFollowRequest(followRequestId: String!): Boolean!
   deleteFollower(otherUserId: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
+  deletePostReaction(input: DeletePostReactionInput!): Boolean!
   deleteUser(userId: String!): Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
-  markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: String): Boolean!
+  markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: BigInt): Boolean!
   markNotificationAsSeen(notificationId: String!): Boolean!
   refreshAccessToken(refreshToken: String!): AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!
@@ -163,12 +177,14 @@ type Notification {
   followRequest: FollowRequest
   id: ID!
   isSeen: Boolean
+  postReaction: PostReaction
   type: NotificationType
 }
 
 enum NotificationType {
   FOLLOW_REQUEST_ACCEPTED
   FOLLOW_REQUEST_PENDING
+  POST_REACTION
 }
 
 type PaginatedNotifications {
@@ -181,7 +197,7 @@ type PaginatedPosts {
   nextCursor: String!
 }
 
-type PaginatedTrends {
+type PaginatedTags {
   items: [Tag!]!
   nextSkip: Int!
 }
@@ -194,6 +210,7 @@ type PaginatedUsers {
 
 type Post {
   authUserPollVote: PostPollVote
+  authUserReaction: PostReaction
   author: User
   children: PaginatedPosts
   childrenCount: Int
@@ -203,6 +220,8 @@ type Post {
   id: ID!
   parent: Post
   pollOptions: [PostPollOption!]
+  reactions: [PostReaction!]
+  reactionsCount: Int
   tags: [Tag!]
   text: String
   threadId: String
@@ -221,8 +240,15 @@ type PostPollVote {
   post: Post
 }
 
+type PostReaction {
+  author: User
+  id: BigInt!
+  post: Post
+  text: String
+}
+
 type Query {
-  feed(after: String, isSeen: Boolean, limit: Int = 10): Feed!
+  feed(after: BigInt, isSeen: Boolean, limit: Int = 10): Feed!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
   getS3PresignedUploadUrl: Upload!
   liveTags: [Tag!]!
@@ -232,8 +258,8 @@ type Query {
   posts(after: String, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String!): Tag!
-  topTrends(isEmoji: Boolean, limit: Int = 10, postsAfter: DateTime, postsAuthorBirthYear: Int, postsBefore: DateTime, skip: Int = 0): PaginatedTrends!
-  trends(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTrends!
+  tags(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
+  trends(endDate: DateTime!, isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0, startDate: DateTime!): PaginatedTags!
   unreadNotificationsCount: Int!
   user(id: String!): User!
 }
@@ -262,12 +288,13 @@ type SendbirdAccessToken {
 
 type Tag {
   authUserPosted: Boolean
+  author: User
   createdAt: DateTime
   id: ID!
   isEmoji: Boolean
   isLive: Boolean
   postCount: Int
-  posts(after: String, limit: Int = 10, postsAuthorBirthYear: Int): PaginatedPosts
+  posts(after: String, limit: Int = 10): PaginatedPosts
   text: String!
 }
 

@@ -1,7 +1,7 @@
 import { ArgsType } from '@nestjs/graphql'
-import { CursorPaginationArgs } from '../common/cursor-pagination.args'
+import { BigIntCursorPaginationArgs } from 'src/common/big-int-cursor-pagination.args'
 
 @ArgsType()
-export class FeedArgs extends CursorPaginationArgs {
+export class FeedArgs extends BigIntCursorPaginationArgs {
   isSeen?: boolean
 }

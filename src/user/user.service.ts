@@ -13,7 +13,7 @@ import { User } from './user.model'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { Me } from './me.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { FollowRequest } from './followRequest.model'
+import { FollowRequest } from './follow-request.model'
 import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { AuthUser } from 'src/auth/auth.service'
 import { PostService } from 'src/post/post.service'
@@ -606,8 +606,7 @@ export class UserService {
   }
 
   async createFollowRequest(authUser: AuthUser, otherUserId: string): Promise<FollowRequest> {
-    // eslint-disable-next-line functional/no-throw-statement
-    if (authUser.id === otherUserId) throw new Error('AuthUserId and OtherUserId cant be equal')
+    if (authUser.id === otherUserId) return Promise.reject(new Error('AuthUserId and OtherUserId cant be equal'))
 
     const followRequest = await this.prismaService.followRequest.create({
       data: {
@@ -774,8 +773,7 @@ export class UserService {
   }
 
   async getFollowSuggestions(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
-    // eslint-disable-next-line functional/no-throw-statement
-    if (!authUser.schoolId) throw new Error('No school')
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const where: Prisma.UserWhereInput = {
       schoolId: authUser.schoolId,
@@ -938,8 +936,6 @@ export class UserService {
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
-
-      console.log(12333)
 
       // eslint-disable-next-line functional/no-try-statement
       try {

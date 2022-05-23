@@ -4,13 +4,13 @@ import { PrismaService } from '../core/prisma.service'
 import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
-import { PaginatedTrends } from './paginated-trends.model'
+import { PaginatedTags } from './paginated-tags.model'
 import { AuthUser } from 'src/auth/auth.service'
 import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
 import { excludedTags } from './excluded-tags.constant'
 import { Prisma } from '@prisma/client'
-import dates from 'src/utils/dates'
+import { User } from 'src/user/user.model'
 
 @Injectable()
 export class TagService {
@@ -127,6 +127,34 @@ export class TagService {
     return newTag
   }
 
+  async getTagAuthor(tagId: string): Promise<User | null> {
+    const posts = await this.prismaService.tag
+      .findUnique({
+        where: {
+          id: tagId,
+        },
+      })
+      .posts({
+        take: 1,
+        orderBy: {
+          createdAt: 'asc',
+        },
+        select: {
+          author: {
+            select: {
+              id: true,
+              firstName: true,
+              pictureId: true,
+            },
+          },
+        },
+      })
+
+    if (!posts.length) return null
+
+    return posts[0].author
+  }
+
   async findByText(tagArgs: TagArgs) {
     return this.prismaService.tag.findUnique({
       where: {
@@ -148,7 +176,7 @@ export class TagService {
     return true
   }
 
-  async getTrends(authUser: AuthUser, isEmoji: boolean, skip: number, limit: number): Promise<PaginatedTrends> {
+  async getTags(authUser: AuthUser, skip: number, limit: number, isEmoji?: boolean): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
@@ -160,27 +188,24 @@ export class TagService {
 
     if (!country) return Promise.reject(new Error('No country'))
 
+    const where: Prisma.TagWhereInput = {
+      isLive: false,
+      countryId: country.id,
+      ...(isEmoji && {
+        isEmoji,
+      }),
+      text: {
+        notIn: excludedTags,
+        mode: 'insensitive',
+      },
+    }
+
     const [totalCount, tags] = await Promise.all([
       this.prismaService.tag.count({
-        where: {
-          isLive: false,
-          countryId: country.id,
-          text: {
-            notIn: excludedTags,
-            mode: 'insensitive',
-          },
-        },
+        where,
       }),
       this.prismaService.tag.findMany({
-        where: {
-          isLive: false,
-          countryId: country.id,
-          isEmoji,
-          text: {
-            notIn: excludedTags,
-            mode: 'insensitive',
-          },
-        },
+        where,
         skip,
         orderBy: {
           posts: {
@@ -204,23 +229,21 @@ export class TagService {
     return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async getTopTrends({
+  async getTrends({
+    startDate,
+    endDate,
     authUser,
     skip,
     limit,
     isEmoji,
-    postsAfter,
-    postsBefore,
-    postsAuthorBirthYear,
   }: {
+    startDate: Date
+    endDate: Date
     authUser: AuthUser
     skip: number
     limit: number
     isEmoji?: boolean
-    postsAfter?: Date
-    postsBefore?: Date
-    postsAuthorBirthYear?: number
-  }): Promise<PaginatedTrends> {
+  }): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
@@ -231,51 +254,40 @@ export class TagService {
       .country()
 
     if (!country) return Promise.reject(new Error('No country'))
-    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
     const andIsEmoji = Prisma.sql`AND T."isEmoji" = ${isEmoji}`
-    const andCreatedBetween = Prisma.sql`AND P."createdAt" > ${postsAfter} AND P."createdAt" < ${postsBefore}`
-    const andPostsAuthorBirthdate = Prisma.sql`AND U."birthdate" > make_date(${postsAuthorBirthYear}, 01, 01) AND U."birthdate" < make_date(${postsAuthorBirthYear}, 12, 31)`
 
-    const userAge = dates.getAge(authUser.birthdate)
-    const datesRanges = dates.getDateRanges(userAge)
-
-    const andPostsAuthorBirthdateRanges = Prisma.sql`AND U."birthdate" > ${datesRanges?.gte} AND U."birthdate" < ${datesRanges?.lt}`
-
-    console.log({ andPostsAuthorBirthdate, andPostsAuthorBirthdateRanges })
+    const andCreatedBetween = Prisma.sql`AND P."createdAt" > ${startDate} AND P."createdAt" < ${endDate}`
 
     const query = Prisma.sql`
       SELECT
-      T."id",
-      T."text",
-      T."isLive",
-      COUNT(*) as "postCount"
+        T."id",
+        T."text",
+        T."isLive",
+        COUNT(*) as "postCount"
       FROM
         "Tag" T,
         "_PostToTag" PT,
-        "Post" P,
-        "User" U
+        "Post" P
       WHERE
         PT. "B" = T. "id"
         AND PT. "A" = P. "id"
-        AND U. "id" = P. "authorId"
         AND T."countryId" = ${country.id}
-        ${postsAuthorBirthYear ? andPostsAuthorBirthdate : andPostsAuthorBirthdateRanges}
         ${isEmoji !== undefined ? andIsEmoji : Prisma.empty}
-        ${postsAfter && postsBefore ? andCreatedBetween : Prisma.empty}
+        ${andCreatedBetween}
         AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
-      GROUP BY T."id",T."text"	
+      GROUP BY T."id"
       ORDER BY "postCount" desc
       OFFSET ${skip}
       LIMIT ${limit}
     `
 
-    const tagTrends: { id: string; text: string; postCount: number; totalCount: number }[] =
+    const items: { id: string; text: string; isLive: boolean; postCount: number; totalCount: number }[] =
       await this.prismaService.$queryRaw(query)
 
     const nextSkip = skip + limit
-    const totalCount = tagTrends.length > 0 ? tagTrends[0].totalCount : 0
+    const totalCount = items.length > 0 ? items[0].totalCount : 0
 
-    return { items: tagTrends, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 }

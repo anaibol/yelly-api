@@ -23,6 +23,24 @@ export class NotificationService {
           type: true,
           createdAt: true,
           isSeen: true,
+          postReaction: {
+            select: {
+              id: true,
+              text: true,
+              author: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  pictureId: true,
+                },
+              },
+              post: {
+                select: {
+                  id: true,
+                },
+              },
+            },
+          },
           followRequest: {
             select: {
               id: true,

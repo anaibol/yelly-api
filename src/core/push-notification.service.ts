@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import { ExpoPushNotificationAccessToken, FollowRequest, FeedItemType } from '@prisma/client'
+import {
+  ExpoPushNotificationAccessToken,
+  FollowRequest,
+  FeedItemType,
+  PostReaction,
+  NotificationType,
+} from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
 import { PrismaService } from 'src/core/prisma.service'
@@ -402,5 +408,60 @@ export class PushNotificationService {
       // eslint-disable-next-line functional/no-throw-statement
       throw e
     }
+  }
+
+  async newPostReaction(postReaction: PostReaction) {
+    const postAuthor = await this.prismaService.post.findUnique({
+      where: {
+        id: postReaction.postId,
+      },
+      select: {
+        author: {
+          select: {
+            id: true,
+            locale: true,
+          },
+        },
+      },
+    })
+
+    if (!postAuthor) return Promise.reject(new Error('Post author not found'))
+
+    const {
+      author: { id: postAuthorId, locale },
+    } = postAuthor
+
+    await this.prismaService.notification.create({
+      data: {
+        userId: postAuthorId,
+        type: NotificationType.POST_REACTION,
+        postReactionId: postReaction.id,
+      },
+    })
+
+    const pushTokens = await this.getPushTokensByUsersIds([postAuthorId])
+    const reaction = await this.prismaService.user.findUnique({ where: { id: postReaction.authorId } })
+
+    if (!reaction) return Promise.reject(new Error('Reaction not found'))
+
+    const lang = locale
+
+    const message = {
+      body: await this.i18n.translate('notifications.POST_REACTION_BODY', {
+        args: { firstName: reaction.firstName, postReaction: postReaction.text },
+        ...(lang && { lang }),
+      }),
+    }
+
+    const messages = pushTokens.map((expoPushNotificationToken) => {
+      return {
+        ...message,
+        to: expoPushNotificationToken.token,
+        data: { url: `${process.env.APP_BASE_URL}/post/${postReaction.postId}` },
+        sound: 'default' as const,
+      }
+    })
+
+    await this.sendNotifications(messages, pushTokens)
   }
 }

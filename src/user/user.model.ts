@@ -1,7 +1,7 @@
 import { ID, Field, ObjectType } from '@nestjs/graphql'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { School } from '../school/school.model'
-import { FollowRequest } from './followRequest.model'
+import { FollowRequest } from './follow-request.model'
 import { Training } from './training.model'
 
 @ObjectType()

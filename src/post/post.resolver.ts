@@ -11,7 +11,11 @@ import { PaginatedPosts } from './paginated-posts.model'
 import { Post, PostPollVote } from './post.model'
 import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
 import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
-
+import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
+import { DeletePostReactionInput } from './delete-post-reaction.input'
+// import { CommonFriendsLoader } from './common-friends.loader'
+// import { CommonFriendsCountLoader } from './common-friends-count.loader'
+import { PostReaction } from './post-reaction.model'
 @Resolver(() => Post)
 export class PostResolver {
   constructor(private postService: PostService) {}
@@ -51,6 +55,24 @@ export class PostResolver {
   }
 
   @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async deletePostReaction(
+    @Args('input') deletePostReactionData: DeletePostReactionInput,
+    @CurrentUser() authUser: AuthUser
+  ) {
+    return this.postService.deletePostReaction(deletePostReactionData, authUser)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => PostReaction)
+  async createOrUpdatePostReaction(
+    @Args('input') createPostReactionData: CreateOrUpdatePostReactionInput,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PostReaction> {
+    return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser)
+  }
+
+  @UseGuards(AuthGuard)
   @Mutation(() => Post)
   async createPostPollVote(
     @Args('input') createPostPollVoteInput: CreatePostPollVoteInput,
@@ -64,5 +86,10 @@ export class PostResolver {
     if (!post.pollOptions) return null
 
     return this.postService.getAuthUserPollVote(post.id, authUser)
+  }
+
+  @ResolveField()
+  async authUserReaction(@Parent() post: Post, @CurrentUser() authUser: AuthUser): Promise<PostReaction | null> {
+    return this.postService.getAuthUserReaction(post.id, authUser)
   }
 }
