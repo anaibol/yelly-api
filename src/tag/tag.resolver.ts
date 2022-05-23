@@ -17,6 +17,7 @@ import { PaginatedTags } from './paginated-tags.model'
 import { UserService } from 'src/user/user.service'
 import { TagsArgs } from './tags.args'
 import { TrendsArgs } from './trends.args'
+import { User } from 'src/user/user.model'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -40,6 +41,11 @@ export class TagResolver {
   @ResolveField()
   async authUserPosted(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.userService.hasUserPostedOnTag(authUser.id, tag.id)
+  }
+
+  @ResolveField()
+  async author(@Parent() tag: Tag): Promise<User> {
+    return this.tagService.getTagAuthor(tag.id)
   }
 
   @Query(() => Tag)
@@ -83,8 +89,7 @@ export class TagResolver {
   async posts(
     @Parent() tag: Tag,
     @CurrentUser() authUser: AuthUser,
-    @Args() cursorPaginationArgs: CursorPaginationArgs,
-    @Args({ name: 'postsAuthorBirthYear', nullable: true }) postsAuthorBirthYear?: number
+    @Args() cursorPaginationArgs: CursorPaginationArgs
   ): Promise<PaginatedPosts> {
     const { limit, after } = cursorPaginationArgs
 

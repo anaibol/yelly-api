@@ -10,6 +10,7 @@ import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
 import { excludedTags } from './excluded-tags.constant'
 import { Prisma } from '@prisma/client'
+import { User } from 'src/user/user.model'
 
 @Injectable()
 export class TagService {
@@ -124,6 +125,34 @@ export class TagService {
     if (isLive) this.pushNotificationService.newLiveTag(newTag.id)
 
     return newTag
+  }
+
+  async getTagAuthor(tagId: string): Promise<User | null> {
+    const posts = await this.prismaService.tag
+      .findUnique({
+        where: {
+          id: tagId,
+        },
+      })
+      .posts({
+        take: 1,
+        orderBy: {
+          createdAt: 'asc',
+        },
+        select: {
+          author: {
+            select: {
+              id: true,
+              firstName: true,
+              pictureId: true,
+            },
+          },
+        },
+      })
+
+    if (!posts.length) return null
+
+    return posts[0].author
   }
 
   async findByText(tagArgs: TagArgs) {
