@@ -191,7 +191,7 @@ export class TagService {
     const where: Prisma.TagWhereInput = {
       isLive: false,
       countryId: country.id,
-      ...(isEmoji && {
+      ...(isEmoji !== undefined && {
         isEmoji,
       }),
       text: {

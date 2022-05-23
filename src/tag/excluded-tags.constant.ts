@@ -38,4 +38,10 @@ export const excludedTags = [
   'maistesreseaux',
   'maistontiktok',
   'département',
+  'age',
+  'tonsigne',
+  'tonanniversaire',
+  'mataille',
+  'jechercheunamipourparler',
+  'coupleoucelib',
 ]
