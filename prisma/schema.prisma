@@ -155,15 +155,16 @@ model Follower {
 }
 
 model Tag {
-  id        String   @id @default(dbgenerated("generate_id()"))
-  text      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  isLive    Boolean  @default(false)
+  id        String    @id @default(dbgenerated("generate_id()"))
+  text      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  isLive    Boolean   @default(false)
   posts     Post[]
   countryId String?
-  country   Country? @relation(fields: [countryId], references: [id])
-  isEmoji   Boolean  @default(false)
+  country   Country?  @relation(fields: [countryId], references: [id])
+  isEmoji   Boolean   @default(false)
+  ranks     PostTagRank[]
 
   @@index([createdAt])
   @@index([isLive, countryId])
@@ -188,9 +189,25 @@ model Post {
   thread      Thread?          @relation(fields: [threadId], references: [id])
   threadId    String?
   feedItems   FeedItem[]
+  ranks       PostTagRank[]
+  score       Int              @default(0)
 
   @@index([authorId])
   @@index([expiresAt])
+}
+
+model PostTagRank {
+  id               String @id @default(dbgenerated("generate_id()"))
+  tagId            String @unique
+  tag              Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  postId           String
+  post             Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  position         Int?
+  previousPosition Int?
+
+  @@unique([tagId, position])
+  @@index([tagId, postId])
+  @@index([tagId])
 }
 
 model PostPollOption {

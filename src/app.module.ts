@@ -19,6 +19,7 @@ import { FeedModule } from './feed/feed.module'
 // import { GraphQLError, GraphQLFormattedError } from 'graphql'
 
 import { BigIntScalar } from './scalars/big-int.scalar'
+import { CronModule } from './core/cron.module'
 
 @Module({
   providers: [UserModule, IsFollowedByAuthUserLoader, BigIntScalar], // CommonFriendsLoader
@@ -65,6 +66,7 @@ import { BigIntScalar } from './scalars/big-int.scalar'
         numberScalarMode: 'integer',
       },
     }),
+    CronModule,
     UserModule,
     FeedModule,
     PostModule,

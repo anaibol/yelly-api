@@ -778,6 +778,7 @@ export class UserService {
     const where: Prisma.UserWhereInput = {
       schoolId: authUser.schoolId,
       NOT: {
+        id: authUser.id,
         followers: {
           some: {
             userId: authUser.id,

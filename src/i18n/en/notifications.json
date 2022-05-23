@@ -1,8 +1,8 @@
 {
   "POST_REACTION_TITLE": "{firstName} upped your yelly!",
   "POST_REACTION_BODY": "{firstName} upped your yelly!",
-  "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} requested to follow your yelly",
-  "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} accepted your request to follow his/her yelly",
+  "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} requested to follow your yellys",
+  "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} accepted your request to follow his/her yellys",
   "NEW_LIVE_TAG_BODY": "Yelly trend live",
   "FOLLOWEE_POSTED": "{firstName} published a new yelly 💬",
   "FOLLOWEE_POSTED_EPHEMERAL": "{firstName} published a new ephemeral yelly ⚡",
