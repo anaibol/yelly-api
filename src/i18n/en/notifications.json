@@ -1,12 +1,12 @@
 {
-  "POST_REACTION_TITLE": "{firstName} upped your post!",
-  "POST_REACTION_BODY": "{firstName} upped your post!",
-  "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} requested to follow your posts",
-  "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} accepted your request to follow his/her posts",
+  "POST_REACTION_TITLE": "{firstName} upped your yelly!",
+  "POST_REACTION_BODY": "{firstName} upped your yelly!",
+  "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} requested to follow your yelly",
+  "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} accepted your request to follow his/her yelly",
   "NEW_LIVE_TAG_BODY": "Yelly trend live",
-  "FOLLOWEE_POSTED": "{firstName} published a new post 💬",
-  "FOLLOWEE_POSTED_EPHEMERAL": "{firstName} published a new ephemeral post ⚡",
-  "POST_REPLIED": "{firstName} replied your post 💬",
-  "SAME_POST_REPLIED": "{firstName} replied to the same post as you 💬",
-  "YOUR_POST_WILL_VANISH": "Your post will vanish in 5 minutes ⚡ Come and share what you're doing 💬"
+  "FOLLOWEE_POSTED": "{firstName} published a new yelly 💬",
+  "FOLLOWEE_POSTED_EPHEMERAL": "{firstName} published a new ephemeral yelly ⚡",
+  "POST_REPLIED": "{firstName} replied your yelly 💬",
+  "SAME_POST_REPLIED": "{firstName} replied to the same yelly as you 💬",
+  "YOUR_POST_WILL_VANISH": "Your yelly will vanish in 5 minutes ⚡ Come and share what you're doing 💬"
 }

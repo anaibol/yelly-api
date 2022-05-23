@@ -1,12 +1,12 @@
 {
-  "POST_REACTION_TITLE": "{firstName} a uppé ton post !",
-  "POST_REACTION_BODY": "{firstName} a uppé ton post !",
+  "POST_REACTION_TITLE": "{firstName} a uppé ton yelly !",
+  "POST_REACTION_BODY": "{firstName} a uppé ton yelly !",
   "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} te envió una solicitud de amistad",
   "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} aceptó tu solicitud de amistad",
   "NEW_LIVE_TAG_BODY": "Tendencia Yelly live",
-  "FOLLOWEE_POSTED": "{firstName} publicó un nuevo post 💬",
-  "FOLLOWEE_POSTED_EPHEMERAL": "{firstName} publicó un nuevo post efímero ⚡",
-  "POST_REPLIED": "{firstName} respondió a tu post 💬",
-  "SAME_POST_REPLIED": "{firstName} respondió al mismo post que tú 💬",
-  "YOUR_POST_WILL_VANISH": "Tu post desaparecerá en 5 minutos ⚡ Postea de nuevo para decir lo que haces ! 💬"
+  "FOLLOWEE_POSTED": "{firstName} publicó un nuevo yelly 💬",
+  "FOLLOWEE_POSTED_EPHEMERAL": "{firstName} publicó un nuevo yelly efímero ⚡",
+  "POST_REPLIED": "{firstName} respondió a tu yelly 💬",
+  "SAME_POST_REPLIED": "{firstName} respondió al mismo yelly que tú 💬",
+  "YOUR_POST_WILL_VANISH": "Tu yelly desaparecerá en 5 minutos ⚡ Postea de nuevo para decir lo que haces ! 💬"
 }
