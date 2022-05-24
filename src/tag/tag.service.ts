@@ -296,4 +296,58 @@ export class TagService {
 
     return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
+
+  async getNewTags({
+    authUser,
+    skip,
+    limit,
+    isEmoji,
+  }: {
+    authUser: AuthUser
+    skip: number
+    limit: number
+    isEmoji?: boolean
+  }): Promise<PaginatedTags> {
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+
+    const country = await this.prismaService.school
+      .findUnique({
+        where: { id: authUser.schoolId },
+      })
+      .city()
+      .country()
+
+    if (!country) return Promise.reject(new Error('No country'))
+
+    const where: Prisma.TagWhereInput = {
+      isLive: false,
+      countryId: country.id,
+      ...(isEmoji !== undefined && {
+        isEmoji,
+      }),
+      text: {
+        notIn: excludedTags,
+        mode: 'insensitive',
+      },
+    }
+
+    const [totalCount, items] = await Promise.all([
+      this.prismaService.tag.count({
+        where,
+      }),
+      this.prismaService.tag.findMany({
+        where,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        select: tagSelect,
+        take: limit,
+        skip,
+      }),
+    ])
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+  }
 }

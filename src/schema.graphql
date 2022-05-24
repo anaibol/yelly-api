@@ -253,6 +253,7 @@ type Query {
   getS3PresignedUploadUrl: Upload!
   liveTags: [Tag!]!
   me: Me!
+  newTags(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: String, id: String!, limit: Int = 10): Post!
   posts(after: String, limit: Int = 10): PaginatedPosts!
