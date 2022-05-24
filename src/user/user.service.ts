@@ -122,6 +122,8 @@ export class UserService {
         _count: {
           select: {
             posts: true,
+            followers: true,
+            followees: true,
           },
         },
       },
@@ -133,6 +135,8 @@ export class UserService {
 
     return {
       ...user,
+      followersCount: _count.followers,
+      followeesCount: _count.followees,
       postCount: _count.posts,
     }
   }

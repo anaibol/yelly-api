@@ -330,6 +330,10 @@ type User {
   avatar3dId: String
   birthdate: DateTime
   firstName: String
+  followees(limit: Int = 10, skip: Int = 0): PaginatedUsers
+  followeesCount: Int
+  followers(limit: Int = 10, skip: Int = 0): PaginatedUsers
+  followersCount: Int
   id: ID!
   instagram: String
   isFollowedByAuthUser: Boolean
