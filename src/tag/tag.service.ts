@@ -264,7 +264,8 @@ export class TagService {
         T."id",
         T."text",
         T."isLive",
-        COUNT(*) as "postCount"
+        COUNT(*) as "newPostCount",
+        (SELECT COUNT(*) FROM "_PostToTag" PTG WHERE PTG. "B" = T. "id") as "postCount"
       FROM
         "Tag" T,
         "_PostToTag" PT,
@@ -277,13 +278,18 @@ export class TagService {
         ${andCreatedBetween}
         AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
       GROUP BY T."id"
-      ORDER BY "postCount" desc
+      ORDER BY "newPostCount" desc
       OFFSET ${skip}
       LIMIT ${limit}
     `
 
-    const items: { id: string; text: string; isLive: boolean; postCount: number; totalCount: number }[] =
-      await this.prismaService.$queryRaw(query)
+    const items: {
+      id: string
+      text: string
+      isLive: boolean
+      postCount: number
+      totalCount: number
+    }[] = await this.prismaService.$queryRaw(query)
 
     const nextSkip = skip + limit
     const totalCount = items.length > 0 ? items[0].totalCount : 0
