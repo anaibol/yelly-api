@@ -473,7 +473,7 @@ export class PostService {
     this.deletePostFromAlgolia(postId)
 
     deletedPost.tags.forEach(async (tag) => {
-      if (!tag.isLive && !tag.posts.length) this.tagService.delete(tag.id)
+      if (!tag.isLive && tag.posts.length === 1) this.tagService.delete(tag.id)
     })
 
     return true
