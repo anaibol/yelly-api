@@ -1,3 +1,4 @@
+/* eslint-disable functional/no-try-statement */
 import { BullQueueInject, BullWorker, BullWorkerProcess } from '@anchan828/nest-bullmq'
 import { Injectable } from '@nestjs/common'
 import { Post, PostReaction } from '@prisma/client'
@@ -37,7 +38,7 @@ const getPostScore = (children: Post[], reactions: PostReaction[], createdAt: Da
     })
     .reduce((a, b) => a + b, 0)
 
-  return timingScore + repliesScore + reactionsScore
+  return Math.round(timingScore + repliesScore + reactionsScore)
 }
 
 @BullWorker({ queueName: APP_QUEUE })
@@ -46,43 +47,63 @@ export class CronWorker {
 
   @BullWorkerProcess()
   public async process(job: Job): Promise<{ status: string }> {
-    if (process.env.NODE_ENV === 'development' || !process.env.REDIS_HOST || !process.env.REDIS_PORT)
-      return Promise.resolve({ status: '' })
-
     console.log('APP_QUEUE CRON RUN', { date: new Date() })
 
-    const posts = await this.prismaService.post.findMany({
-      where: {
-        parent: null,
-      },
-      include: {
-        reactions: true,
-        children: true,
-        tags: true,
-        ranks: true,
-      },
-    })
+    try {
+      const posts = await this.prismaService.post.findMany({
+        where: {
+          parent: null,
+          tags: {
+            some: {
+              id: {
+                not: undefined,
+              },
+            },
+          },
+        },
+        include: {
+          reactions: true,
+          children: true,
+          tags: true,
+          ranks: true,
+        },
+      })
 
-    const scoredPosts: { postId: string; previousPosition: number | null; score: number }[] = posts.map((post) => {
-      const score = getPostScore(post.children, post.reactions, post.createdAt)
+      const scoredPosts: { postId: string; tagId: string; previousPosition: number | null; score: number }[] =
+        posts.map((post) => {
+          const score = getPostScore(post.children, post.reactions, post.createdAt)
 
-      return { postId: post.id, score, previousPosition: post.ranks[0].previousPosition }
-    })
+          return {
+            postId: post.id,
+            tagId: post.tags[0].id,
+            score,
+            previousPosition: post.ranks.length ? post.ranks[0].previousPosition : null,
+          }
+        })
 
-    const sortedScoredPosts = orderBy(scoredPosts, ['score'], ['desc'])
+      const sortedScoredPosts = orderBy(scoredPosts, ['score'], ['desc'])
 
-    const ranks = sortedScoredPosts.map(({ postId, score, previousPosition }, index) => {
-      return {
-        postId,
-        score,
-        position: index,
-      }
-    })
+      const ranks = sortedScoredPosts.map(({ postId, tagId, score, previousPosition }, index) => {
+        return {
+          postId,
+          tagId,
+          score,
+          position: index,
+        }
+      })
 
-    await this.prismaService.postTagRank.updateMany({
-      data: [ranks],
-    })
+      await this.prismaService.$transaction([
+        this.prismaService.postTagRank.deleteMany(),
+        this.prismaService.postTagRank.createMany({
+          data: ranks,
+        }),
+      ])
 
-    return { status: 'ok' }
+      return { status: 'ok' }
+    } catch (error) {
+      console.log({ error })
+
+      return { status: 'error' }
+    }
   }
 }
