@@ -170,9 +170,14 @@ export class TagService {
     })
   }
 
-  async delete(id: string) {
+  async delete(id: string): Promise<boolean> {
+    await this.prismaService.tag.delete({
+      where: { id },
+    })
+
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
     this.algoliaService.deleteObject(algoliaTagIndex, id)
+
     return true
   }
 
