@@ -85,6 +85,21 @@ export class TagResolver {
     return { items, nextSkip }
   }
 
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTags)
+  async newTags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
+    const { skip, limit, isEmoji } = tagsArgs
+
+    const { items, nextSkip } = await this.tagService.getNewTags({
+      authUser,
+      skip,
+      limit,
+      isEmoji,
+    })
+
+    return { items, nextSkip }
+  }
+
   @ResolveField()
   async posts(
     @Parent() tag: Tag,
