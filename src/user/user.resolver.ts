@@ -208,4 +208,14 @@ export class UserResolver {
 
     return { items, nextCursor }
   }
+
+  @ResolveField()
+  followers(@Parent() user: User, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
+    return this.userService.getFollowers(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+  }
+
+  @ResolveField()
+  followees(@Parent() user: User, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
+    return this.userService.getFollowees(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+  }
 }
