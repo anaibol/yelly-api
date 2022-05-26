@@ -10,6 +10,23 @@ export const PostSelect = {
   expiresIn: true,
   viewsCount: true,
   text: true,
+  ranks: {
+    select: {
+      id: true,
+      position: true,
+      previousPosition: true,
+      score: true,
+      tag: {
+        select: {
+          id: true,
+          createdAt: true,
+          text: true,
+          isLive: true,
+          isEmoji: true,
+        },
+      },
+    },
+  },
   pollOptions: {
     select: {
       id: true,

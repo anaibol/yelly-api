@@ -19,7 +19,8 @@ import { FeedModule } from './feed/feed.module'
 // import { GraphQLError, GraphQLFormattedError } from 'graphql'
 
 import { BigIntScalar } from './scalars/big-int.scalar'
-import { CronModule } from './core/cron.module'
+import { CronModule } from './cron/cron.module'
+import { RankingModule } from './ranking/ranking.module'
 
 @Module({
   providers: [UserModule, IsFollowedByAuthUserLoader, BigIntScalar], // CommonFriendsLoader
@@ -66,7 +67,8 @@ import { CronModule } from './core/cron.module'
         numberScalarMode: 'integer',
       },
     }),
-    CronModule,
+    RankingModule,
+    ...(process.env.REDIS_HOST && process.env.REDIS_PORT ? [CronModule] : []),
     UserModule,
     FeedModule,
     PostModule,

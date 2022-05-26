@@ -218,4 +218,10 @@ export class UserResolver {
   followees(@Parent() user: User, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
     return this.userService.getFollowees(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
   }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async trackPostViews(@Args('userId') userId: string): Promise<boolean> {
+    return this.userService.trackUserView(userId)
+  }
 }

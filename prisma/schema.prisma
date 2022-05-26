@@ -114,6 +114,7 @@ model User {
   followees                    Follower[]                        @relation("usersAsFollowees")
   followers                    Follower[]                        @relation("usersAsFollowers")
   feedItems                    FeedItem[]
+  viewsCount                   Int                               @default(0)
 
   @@index([birthdate], map: "User_birthdate")
 }
@@ -155,16 +156,17 @@ model Follower {
 }
 
 model Tag {
-  id        String    @id @default(dbgenerated("generate_id()"))
-  text      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
-  isLive    Boolean   @default(false)
+  id        String        @id @default(dbgenerated("generate_id()"))
+  text      String        @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now()) @updatedAt
+  isLive    Boolean       @default(false)
   posts     Post[]
   countryId String?
-  country   Country?  @relation(fields: [countryId], references: [id])
-  isEmoji   Boolean   @default(false)
+  country   Country?      @relation(fields: [countryId], references: [id])
+  isEmoji   Boolean       @default(false)
   ranks     PostTagRank[]
+  isHidden  Boolean       @default(false)
 
   @@index([createdAt])
   @@index([isLive, countryId])
@@ -196,7 +198,7 @@ model Post {
 }
 
 model PostTagRank {
-  id               String @id @default(dbgenerated("generate_id()"))
+  id               BigInt @id @default(dbgenerated("generate_id()"))
   tagId            String
   tag              Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
   postId           String

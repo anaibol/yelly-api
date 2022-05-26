@@ -6,6 +6,7 @@ import { AuthUser } from '../auth/auth.service'
 
 import { CreateOrUpdateLiveTagInput } from '../post/create-or-update-live-tag.input'
 import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
+import { BigIntCursorPaginationArgs } from 'src/common/big-int-cursor-pagination.args'
 
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
@@ -18,6 +19,7 @@ import { UserService } from 'src/user/user.service'
 import { TagsArgs } from './tags.args'
 import { TrendsArgs } from './trends.args'
 import { User } from 'src/user/user.model'
+import { PostTagRank } from '@prisma/client'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -104,38 +106,35 @@ export class TagResolver {
   async posts(
     @Parent() tag: Tag,
     @CurrentUser() authUser: AuthUser,
-    @Args() cursorPaginationArgs: CursorPaginationArgs
+    @Args() bigIntCursorPaginationArgs: BigIntCursorPaginationArgs
   ): Promise<PaginatedPosts> {
-    const { limit, after } = cursorPaginationArgs
+    const { limit, after } = bigIntCursorPaginationArgs
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
-    const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
-      where: {
-        author: {
-          isActive: true,
+    const ranks = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).ranks({
+      orderBy: { position: 'asc' },
+      select: {
+        post: {
+          // where: {
+          //   author: {
+          //     isActive: true,
+          //   },
+          //   ...getNotExpiredCondition(),
+          // },
+          select: PostSelectWithParent,
         },
-        ...getNotExpiredCondition(),
       },
       ...(after && {
         cursor: {
-          createdAt: new Date(+after),
+          id: after,
         },
         skip: 1,
       }),
-      orderBy: [
-        {
-          reactions: {
-            _count: 'desc',
-          },
-        },
-        { createdAt: 'desc' },
-      ],
       take: limit,
-      select: PostSelectWithParent,
     })
 
-    const items = posts.map(mapPost)
+    const items = ranks.map(({ post }) => post).map(mapPost)
 
     const lastItem = items.length === limit && items[limit - 1]
 

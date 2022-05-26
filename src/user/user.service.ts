@@ -35,6 +35,15 @@ export class UserService {
     private postService: PostService
   ) {}
 
+  async trackUserView(userId: string): Promise<boolean> {
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: { viewsCount: { increment: 1 } },
+    })
+
+    return true
+  }
+
   // async getUserLocale(userId: string): Promise<string> {
   //   const user = await this.prismaService.user.findUnique({
   //     where: { id: userId },

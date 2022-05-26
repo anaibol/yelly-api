@@ -37,4 +37,5 @@ export class Me {
   followersCount?: number
   followeesCount?: number
   postCount?: number
+  viewsCount?: number
 }

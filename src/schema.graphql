@@ -139,6 +139,7 @@ type Me {
   sendbirdAccessToken: String
   snapchat: String
   training: Training
+  viewsCount: Int
 }
 
 type Mutation {
@@ -220,6 +221,7 @@ type Post {
   id: ID!
   parent: Post
   pollOptions: [PostPollOption!]
+  ranks: [PostTagRank!]
   reactions: [PostReaction!]
   reactionsCount: Int
   tags: [Tag!]
@@ -245,6 +247,15 @@ type PostReaction {
   id: BigInt!
   post: Post
   text: String
+}
+
+type PostTagRank {
+  id: BigInt!
+  position: Int
+  post: Post
+  previousPosition: Int
+  score: Int
+  tag: Tag
 }
 
 type Query {
@@ -295,7 +306,7 @@ type Tag {
   isEmoji: Boolean
   isLive: Boolean
   postCount: Int
-  posts(after: String, limit: Int = 10): PaginatedPosts
+  posts(after: BigInt, limit: Int = 10): PaginatedPosts
   text: String!
 }
 
@@ -347,6 +358,7 @@ type User {
   school: School
   snapchat: String
   training: Training
+  viewsCount: Int
 }
 
 enum UserRole {
