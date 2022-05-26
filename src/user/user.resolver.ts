@@ -221,7 +221,7 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async trackPostViews(@Args('userId') userId: string): Promise<boolean> {
+  async trackUserView(@Args('userId') userId: string): Promise<boolean> {
     return this.userService.trackUserView(userId)
   }
 }

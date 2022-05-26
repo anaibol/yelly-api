@@ -169,6 +169,7 @@ type Mutation {
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
   trackPostViews(postsIds: [String!]!): Boolean!
+  trackUserView(userId: String!): Boolean!
   unFollow(otherUserId: String!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
 }
