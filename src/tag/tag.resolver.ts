@@ -1,25 +1,33 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
+import { Args, Field, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
 
 import { CreateOrUpdateLiveTagInput } from '../post/create-or-update-live-tag.input'
-import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 import { BigIntCursorPaginationArgs } from 'src/common/big-int-cursor-pagination.args'
 
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
-import { PostSelectWithParent, mapPost, getNotExpiredCondition } from '../post/post-select.constant'
+import { PostSelectWithParent, mapPost } from '../post/post-select.constant'
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import { PaginatedTags } from './paginated-tags.model'
 import { UserService } from 'src/user/user.service'
 import { TagsArgs } from './tags.args'
 import { TrendsArgs } from './trends.args'
 import { User } from 'src/user/user.model'
-import { PostTagRank } from '@prisma/client'
+
+import { ObjectType } from '@nestjs/graphql'
+import { Post } from 'src/post/post.model'
+
+@ObjectType()
+export class RankedTagPosts {
+  @Field(() => BigInt)
+  nextCursor: BigInt | null
+  items: Post[]
+}
 
 @Resolver(Tag)
 export class TagResolver {
@@ -107,7 +115,7 @@ export class TagResolver {
     @Parent() tag: Tag,
     @CurrentUser() authUser: AuthUser,
     @Args() bigIntCursorPaginationArgs: BigIntCursorPaginationArgs
-  ): Promise<PaginatedPosts> {
+  ): Promise<RankedTagPosts> {
     const { limit, after } = bigIntCursorPaginationArgs
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
@@ -115,6 +123,7 @@ export class TagResolver {
     const ranks = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).ranks({
       orderBy: { position: 'asc' },
       select: {
+        id: true,
         post: {
           // where: {
           //   author: {
@@ -136,11 +145,9 @@ export class TagResolver {
 
     const items = ranks.map(({ post }) => post).map(mapPost)
 
-    const lastItem = items.length === limit && items[limit - 1]
+    const lastItem = ranks.length === limit && ranks[limit - 1]
 
-    const lastCreatedAt = lastItem && lastItem.createdAt
-
-    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
+    const nextCursor = lastItem ? lastItem.id : null
 
     return { items, nextCursor }
   }
