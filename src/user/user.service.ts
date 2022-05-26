@@ -135,6 +135,7 @@ export class UserService {
             followees: true,
           },
         },
+        viewsCount: true,
       },
     })
 
@@ -503,6 +504,7 @@ export class UserService {
             posts: true,
           },
         },
+        viewsCount: true,
       },
     })
 
