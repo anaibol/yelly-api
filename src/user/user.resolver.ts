@@ -19,7 +19,6 @@ import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
 import { Loader } from '@tracworx/nestjs-dataloader'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
-import { IsFollowedByAuthUserLoader } from './is-followed-by-auth-user.loader'
 import DataLoader from 'dataloader'
 
 @Resolver(() => User)
@@ -125,15 +124,8 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async isFollowedByAuthUser(
-    @Parent() user: User,
-    @Loader(IsFollowedByAuthUserLoader) isFollowedByAuthUserLoader: DataLoader<string, boolean | undefined, string>
-  ): Promise<boolean> {
-    const isFollowedByAuthUser = await isFollowedByAuthUserLoader.load(user.id)
-
-    if (isFollowedByAuthUser === undefined) return Promise.reject(new Error('isFollowedByAuthUser undefined'))
-
-    return isFollowedByAuthUser
+  async isFollowedByAuthUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.isFollowedByUser(user.id, authUser.id)
   }
 
   @UseGuards(AuthGuard)

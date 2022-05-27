@@ -386,43 +386,18 @@ export class UserService {
     return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async areFollowedByUser(
-    followeesIds: string[],
-    userId: string
-  ): Promise<
-    {
-      followeeId: string
-      isFollowedByAuthUser: boolean
-    }[]
-  > {
-    if (followeesIds.length === 1) {
-      const [followeeId] = followeesIds
-
-      const follow = await this.prismaService.follower.findUnique({
+  async isFollowedByUser(followeeId: string, userId: string): Promise<boolean> {
+    const follow = await this.prismaService.user
+      .findUnique({
+        where: { id: followeeId },
+      })
+      .followers({
         where: {
-          userId_followeeId: {
-            followeeId,
-            userId,
-          },
+          userId,
         },
       })
 
-      return [{ followeeId, isFollowedByAuthUser: !!follow }]
-    }
-
-    const follows = await this.prismaService.follower.findMany({
-      where: {
-        userId,
-        followeeId: {
-          in: followeesIds as string[],
-        },
-      },
-    })
-
-    return followeesIds.map((followeeId) => ({
-      followeeId,
-      isFollowedByAuthUser: follows.map(({ followeeId }) => followeeId).includes(followeeId),
-    }))
+    return !!follow
   }
 
   async getPendingFollowRequest(requesterId: string, toFollowUserId: string): Promise<FollowRequest | null> {
