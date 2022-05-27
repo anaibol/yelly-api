@@ -387,15 +387,14 @@ export class UserService {
   }
 
   async isFollowedByUser(followeeId: string, userId: string): Promise<boolean> {
-    const follow = await this.prismaService.user
-      .findUnique({
-        where: { id: followeeId },
-      })
-      .followers({
-        where: {
+    const follow = await this.prismaService.follower.findUnique({
+      where: {
+        userId_followeeId: {
+          followeeId,
           userId,
         },
-      })
+      },
+    })
 
     return !!follow
   }
