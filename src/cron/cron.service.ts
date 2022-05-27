@@ -30,7 +30,7 @@ export class CronWorker {
         },
       })
 
-      tags.forEach(async (tag) => await this.rankingService.recalculateTagRank(tag))
+      // tags.forEach(async (tag) => await this.rankingService.recalculateTagRank(tag))
 
       return { status: 'ok' }
     } catch (error) {
