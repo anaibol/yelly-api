@@ -386,6 +386,8 @@ export class PostService {
     const post = await this.prismaService.post.create({
       data: {
         text,
+        charsCount: text.length,
+        wordsCount: text.split(/\s+/).length,
         expiresAt: parent ? parent.expiresAt : getExpiredAt(expiresIn),
         expiresIn: parent ? parent.expiresIn : expiresIn,
         ...(pollOptions &&

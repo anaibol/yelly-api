@@ -34,7 +34,7 @@ export class CronModule implements OnModuleInit {
 
     await this.queue.add('cron', undefined, {
       repeat: {
-        every: 30000,
+        every: process.env.NODE_ENV === 'development' ? 30000 : 3600000,
       },
     })
   }

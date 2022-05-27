@@ -192,6 +192,8 @@ model Post {
   threadId    String?
   feedItems   FeedItem[]
   ranks       PostTagRank[]
+  charsCount  Int?
+  wordsCount  Int?
 
   @@index([authorId])
   @@index([expiresAt])

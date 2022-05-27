@@ -10,6 +10,8 @@ export const PostSelect = {
   expiresIn: true,
   viewsCount: true,
   text: true,
+  charsCount: true,
+  wordsCount: true,
   ranks: {
     select: {
       id: true,

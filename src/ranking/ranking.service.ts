@@ -46,7 +46,11 @@ export class RankingService {
         reactions: true,
         children: true,
         tags: true,
-        ranks: true,
+        ranks: {
+          where: {
+            tagId: tag.id,
+          },
+        },
       },
     })
 
