@@ -214,6 +214,7 @@ type Post {
   authUserPollVote: PostPollVote
   authUserReaction: PostReaction
   author: User
+  charsCount: Int
   children: PaginatedPosts
   childrenCount: Int
   createdAt: DateTime
@@ -229,6 +230,7 @@ type Post {
   text: String
   threadId: String
   viewsCount: Int
+  wordsCount: Int
 }
 
 type PostPollOption {

@@ -17,8 +17,8 @@ export class Post {
   @Field(() => ID)
   id: string
   text?: string
-  charsCount?: number
-  wordsCount?: number
+  charsCount?: number | null
+  wordsCount?: number | null
   createdAt?: Date
   viewsCount?: number
   tags?: Tag[]
