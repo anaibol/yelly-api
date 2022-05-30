@@ -12,23 +12,6 @@ export const PostSelect = {
   text: true,
   charsCount: true,
   wordsCount: true,
-  ranks: {
-    select: {
-      id: true,
-      position: true,
-      previousPosition: true,
-      score: true,
-      tag: {
-        select: {
-          id: true,
-          createdAt: true,
-          text: true,
-          isLive: true,
-          isEmoji: true,
-        },
-      },
-    },
-  },
   pollOptions: {
     select: {
       id: true,
@@ -40,7 +23,7 @@ export const PostSelect = {
       },
     },
     orderBy: {
-      position: 'asc' as Prisma.SortOrder,
+      position: 'asc' as const,
     },
   },
   author: {
@@ -96,11 +79,9 @@ export const PostSelectWithParent = {
   },
 }
 
-const PostSelectWithParentT = {
-  select: PostSelectWithParent,
-}
-
-export type PostSelectWithParentTT = Prisma.PostGetPayload<typeof PostSelectWithParentT>
+export type PostWithParent = Prisma.PostGetPayload<{
+  select: typeof PostSelectWithParent
+}>
 
 export const PostChildSelect = {
   select: {
@@ -114,7 +95,7 @@ export const PostChildSelect = {
   },
 }
 
-export function mapPost(post: PostSelectWithParentTT): Post {
+export function mapPost(post: PostWithParent): Post {
   const { pollOptions, parent, _count, ...rest } = post
 
   return {
@@ -146,10 +127,9 @@ export function mapPost(post: PostSelectWithParentTT): Post {
   }
 }
 
-export function mapPostChild(
-  child: Prisma.PostGetPayload<typeof PostChildSelect>,
-  parent: PostSelectWithParentTT
-): Post {
+type PostChild = Prisma.PostGetPayload<typeof PostChildSelect>
+
+export function mapPostChild(child: PostChild, parent: PostWithParent): Post {
   const { _count, pollOptions, ...rest } = child
 
   return {

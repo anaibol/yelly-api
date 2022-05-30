@@ -5,7 +5,6 @@ import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
 
 import { CreateOrUpdateLiveTagInput } from '../post/create-or-update-live-tag.input'
-import { BigIntCursorPaginationArgs } from 'src/common/big-int-cursor-pagination.args'
 
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
@@ -19,15 +18,7 @@ import { TagsArgs } from './tags.args'
 import { TrendsArgs } from './trends.args'
 import { User } from 'src/user/user.model'
 
-import { ObjectType } from '@nestjs/graphql'
-import { Post } from 'src/post/post.model'
-
-@ObjectType()
-export class RankedTagPosts {
-  @Field(() => BigInt)
-  nextCursor: BigInt | null
-  items: Post[]
-}
+import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -114,26 +105,16 @@ export class TagResolver {
   async posts(
     @Parent() tag: Tag,
     @CurrentUser() authUser: AuthUser,
-    @Args() bigIntCursorPaginationArgs: BigIntCursorPaginationArgs
-  ): Promise<RankedTagPosts> {
-    const { limit, after } = bigIntCursorPaginationArgs
+    @Args() cursorPaginationArgs: CursorPaginationArgs
+  ): Promise<PaginatedPosts> {
+    const { limit, after } = cursorPaginationArgs
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
-    const ranks = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).ranks({
-      orderBy: { position: 'asc' },
-      select: {
-        id: true,
-        post: {
-          // where: {
-          //   author: {
-          //     isActive: true,
-          //   },
-          //   ...getNotExpiredCondition(),
-          // },
-          select: PostSelectWithParent,
-        },
-      },
+    const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
+      orderBy: { createdAt: 'asc' },
+
+      select: PostSelectWithParent,
       ...(after && {
         cursor: {
           id: after,
@@ -143,11 +124,13 @@ export class TagResolver {
       take: limit,
     })
 
-    const items = ranks.map(({ post }) => post).map(mapPost)
+    const items = posts.map(mapPost)
 
-    const lastItem = ranks.length === limit && ranks[limit - 1]
+    const lastItem = items.length === limit && items[limit - 1]
 
-    const nextCursor = lastItem ? lastItem.id : null
+    const lastCreatedAt = lastItem && lastItem.createdAt
+
+    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
 
     return { items, nextCursor }
   }

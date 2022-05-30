@@ -661,6 +661,16 @@ export class UserService {
   async createFollowRequest(authUser: AuthUser, otherUserId: string): Promise<FollowRequest> {
     if (authUser.id === otherUserId) return Promise.reject(new Error('AuthUserId and OtherUserId cant be equal'))
 
+    const existingFollowRequest = await this.prismaService.followRequest.findFirst({
+      where: {
+        requesterId: authUser.id,
+        toFollowUserId: authUser.id,
+        status: 'PENDING',
+      },
+    })
+
+    if (existingFollowRequest) return Promise.reject(new Error('Follow requests already exists'))
+
     const followRequest = await this.prismaService.followRequest.create({
       data: {
         requester: {
@@ -703,6 +713,11 @@ export class UserService {
     if (!exists) return Promise.reject(new Error("Follow request doesn't exists or is not from this user"))
 
     await Promise.all([
+      this.prismaService.followRequest.delete({
+        where: {
+          id: followRequestId,
+        },
+      }),
       this.prismaService.notification.deleteMany({
         where: {
           followRequestId,

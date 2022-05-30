@@ -34,7 +34,6 @@ export class Post {
   children?: PaginatedPosts
   childrenCount?: number
   authUserReaction?: PostReaction | null
-  ranks?: PostTagRank[]
 }
 
 @ObjectType()

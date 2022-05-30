@@ -25,18 +25,18 @@ export class CronWorker {
     console.log('APP_QUEUE CRON RUN', { date: new Date() })
 
     try {
-      const tags = await this.prismaService.tag.findMany({
-        where: {
-          isHidden: false,
-        },
-      })
+      // const tags = await this.prismaService.tag.findMany({
+      //   where: {
+      //     isHidden: false,
+      //   },
+      // })
 
-      // eslint-disable-next-line functional/no-loop-statement
-      for (let index = 0; index < tags.length; index++) {
-        const tag = tags[index]
+      // // eslint-disable-next-line functional/no-loop-statement
+      // for (let index = 0; index < tags.length; index++) {
+      //   const tag = tags[index]
 
-        await this.rankingService.recalculateTagRank(tag)
-      }
+      //   await this.rankingService.recalculateTagRank(tag)
+      // }
 
       return { status: 'ok' }
     } catch (error) {

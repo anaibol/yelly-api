@@ -129,7 +129,6 @@ model FollowRequest {
   toFollowUser   User                @relation("followRequestToUser", fields: [toFollowUserId], references: [id], onDelete: Cascade)
   notifications  Notification[]
 
-  @@unique([requesterId, toFollowUserId, status])
   @@index([requesterId, toFollowUserId])
 }
 
@@ -157,17 +156,16 @@ model Follower {
 }
 
 model Tag {
-  id        String        @id @default(dbgenerated("generate_id()"))
-  text      String        @unique
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @default(now()) @updatedAt
-  isLive    Boolean       @default(false)
+  id        String   @id @default(dbgenerated("generate_id()"))
+  text      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  isLive    Boolean  @default(false)
   posts     Post[]
   countryId String?
-  country   Country?      @relation(fields: [countryId], references: [id])
-  isEmoji   Boolean       @default(false)
-  ranks     PostTagRank[]
-  isHidden  Boolean       @default(false)
+  country   Country? @relation(fields: [countryId], references: [id])
+  isEmoji   Boolean  @default(false)
+  isHidden  Boolean  @default(false)
 
   @@index([createdAt])
   @@index([isLive, countryId])
@@ -192,27 +190,12 @@ model Post {
   thread      Thread?          @relation(fields: [threadId], references: [id])
   threadId    String?
   feedItems   FeedItem[]
-  ranks       PostTagRank[]
   charsCount  Int?
   wordsCount  Int?
+  events      PostEvent[]
 
   @@index([authorId])
   @@index([expiresAt])
-}
-
-model PostTagRank {
-  id               BigInt @id @default(dbgenerated("generate_id()"))
-  tagId            String
-  tag              Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  postId           String
-  post             Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  score            Int    @default(0)
-  position         Int?
-  previousPosition Int?
-
-  @@unique([tagId, position])
-  @@index([tagId, postId])
-  @@index([tagId])
 }
 
 model PostPollOption {
@@ -250,6 +233,7 @@ model PostReaction {
   author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
   post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   notification Notification?
+  events      PostEvent[]
 
   @@unique([authorId, postId])
 }
@@ -289,4 +273,21 @@ enum FeedItemType {
 model Thread {
   id    String @id @default(dbgenerated("generate_id()"))
   posts Post[]
+}
+
+model PostEvent {
+  id        BigInt        @id @default(dbgenerated("generate_id()"))
+  postId    String?
+  post      Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postReactionId    String?
+  postReaction      PostReaction?         @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  type      PostEventType
+  createdAt DateTime      @default(now())
+}
+
+enum PostEventType {
+  POST_CREATED
+  POST_REACTION_CREATED
+  POST_REPLY_CREATED
+  POST_SEEN
 }
