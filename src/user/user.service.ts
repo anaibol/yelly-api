@@ -89,7 +89,7 @@ export class UserService {
     })
   }
 
-  async findOne(userId: string): Promise<User> {
+  async getUser(userId: string): Promise<User> {
     const res = await this.prismaService.user.findUnique({
       where: {
         id: userId,
@@ -148,6 +148,70 @@ export class UserService {
       followersCount: _count.followers,
       followeesCount: _count.followees,
       postCount: _count.posts,
+    }
+  }
+
+  async getUsers(userIds: string[]): Promise<PaginatedUsers> {
+    const users = await this.prismaService.user.findMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        pictureId: true,
+        avatar3dId: true,
+        birthdate: true,
+        about: true,
+        instagram: true,
+        snapchat: true,
+        school: {
+          select: {
+            id: true,
+            name: true,
+            city: {
+              select: {
+                id: true,
+                name: true,
+                country: {
+                  select: {
+                    id: true,
+                    code: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        training: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            posts: true,
+            followers: true,
+            followees: true,
+          },
+        },
+        viewsCount: true,
+      },
+    })
+
+    const items = users.map(({ _count, ...user }) => ({
+      ...user,
+      followersCount: _count.followers,
+      followeesCount: _count.followees,
+      postCount: _count.posts,
+    }))
+
+    return {
+      items,
     }
   }
 

@@ -16,7 +16,7 @@ import { DeletePostReactionInput } from './delete-post-reaction.input'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
 import { PostReaction } from './post-reaction.model'
-@Resolver(() => Post)
+@Resolver(Post)
 export class PostResolver {
   constructor(private postService: PostService) {}
 

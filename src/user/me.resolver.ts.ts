@@ -33,7 +33,7 @@ import { PaginatedPosts } from 'src/post/paginated-posts.model'
 //   return regEx.test(phoneNumber)
 // }
 
-@Resolver(() => Me)
+@Resolver(Me)
 export class MeResolver {
   constructor(
     private prismaService: PrismaService,

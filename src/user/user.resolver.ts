@@ -16,19 +16,25 @@ import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { FollowRequest } from './follow-request.model'
 import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
-import { Loader } from '@tracworx/nestjs-dataloader'
+// import { Loader } from '@tracworx/nestjs-dataloader'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
-import DataLoader from 'dataloader'
+// import DataLoader from 'dataloader'
 
-@Resolver(() => User)
+@Resolver(User)
 export class UserResolver {
   constructor(private userService: UserService, private prismaService: PrismaService) {}
 
-  @Query(() => User, { name: 'user' })
+  @Query(() => User)
   @UseGuards(AuthGuard)
-  findOne(@Args('id') id: string): Promise<User> {
-    return this.userService.findOne(id)
+  user(@Args('id') id: string): Promise<User> {
+    return this.userService.getUser(id)
+  }
+
+  @Query(() => PaginatedUsers)
+  @UseGuards(AuthGuard)
+  users(@Args('ids', { type: () => [String] }) ids: string[]): Promise<PaginatedUsers> {
+    return this.userService.getUsers(ids)
   }
 
   @UseGuards(AuthGuard)

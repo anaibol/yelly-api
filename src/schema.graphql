@@ -277,6 +277,7 @@ type Query {
   trends(endDate: DateTime!, isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0, startDate: DateTime!): PaginatedTags!
   unreadNotificationsCount: Int!
   user(id: String!): User!
+  users(ids: [String!]!): PaginatedUsers!
 }
 
 input ResetPasswordInput {

@@ -129,6 +129,7 @@ model FollowRequest {
   toFollowUser   User                @relation("followRequestToUser", fields: [toFollowUserId], references: [id], onDelete: Cascade)
   notifications  Notification[]
 
+  @@unique([requesterId, toFollowUserId, status])
   @@index([requesterId, toFollowUserId])
 }
 
