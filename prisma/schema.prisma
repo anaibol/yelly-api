@@ -279,7 +279,7 @@ model PostEvent {
   id        BigInt        @id @default(dbgenerated("generate_id()"))
   postId    String?
   post      Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postReactionId    String?
+  postReactionId    BigInt?
   postReaction      PostReaction?         @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
   type      PostEventType
   createdAt DateTime      @default(now())
