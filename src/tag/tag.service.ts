@@ -324,17 +324,10 @@ export class TagService {
 
     if (!country) return Promise.reject(new Error('No country'))
 
-    const andCreatedBetween = Prisma.sql`AND P."createdAt" > ${sub(new Date(), {
-      days: 1,
-    })} AND P."createdAt" < ${new Date()}`
-
     const trendsQuery = Prisma.sql`
       SELECT
         T."id",
-        T."text",
-        T."isLive",
-        COUNT(*) as "newPostCount",
-        (SELECT COUNT(*) FROM "_PostToTag" PTG WHERE PTG. "B" = T. "id") as "postCount"
+        COUNT(*) as "newPostCount"
       FROM
         "Tag" T,
         "_PostToTag" PT,
@@ -342,44 +335,45 @@ export class TagService {
       WHERE
         PT. "B" = T. "id"
         AND PT. "A" = P. "id"
-        AND T."countryId" = ${country.id}
-        ${andCreatedBetween}
-        AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
+        AND P."createdAt" > ${sub(new Date(), {
+          days: 1,
+        })} AND P."createdAt" < ${new Date()}
       GROUP BY T."id"
       ORDER BY "newPostCount" desc
       OFFSET ${skip}
       LIMIT ${limit / 2}
     `
+    const trends = await this.prismaService.$queryRaw<{ id: string }[]>(trendsQuery)
+    const trendsTagsIds = trends.map(({ id }) => id)
 
-    type Trend = {
-      id: string
-      text: string
-      isLive: boolean
-    }
-
-    const [trendsItems, newTags]: [Trend[], Tag[]] = await Promise.all([
-      this.prismaService.$queryRaw<Trend[]>(trendsQuery),
-      this.prismaService.tag.findMany({
-        where: {
-          isLive: false,
-          countryId: country.id,
-          text: {
-            notIn: excludedTags,
-            mode: 'insensitive',
+    const tags: Tag[] = await this.prismaService.tag.findMany({
+      where: {
+        isHidden: false,
+        countryId: country.id,
+        text: {
+          notIn: excludedTags,
+          mode: 'insensitive',
+        },
+        OR: [
+          {
+            createdAt: sub(new Date(), {
+              days: 1,
+            }),
           },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        select: tagSelect,
-        take: limit / 2,
-        skip,
-      }),
-    ])
-
-    console.log([trendsItems, newTags])
-
-    const tags: (Trend | Tag)[] = [...trendsItems, ...newTags]
+          {
+            id: {
+              in: trendsTagsIds,
+            },
+          },
+        ],
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: tagSelect,
+      take: limit,
+      skip,
+    })
 
     const items = sampleSize(tags, tags.length)
 

@@ -130,8 +130,7 @@ export class TagResolver {
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
     const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
-      orderBy: { createdAt: 'asc' },
-
+      orderBy: { createdAt: 'desc' },
       select: PostSelectWithParent,
       ...(after && {
         cursor: {
