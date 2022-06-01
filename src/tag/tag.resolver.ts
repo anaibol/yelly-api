@@ -19,6 +19,7 @@ import { TrendsArgs } from './trends.args'
 import { User } from 'src/user/user.model'
 
 import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
+import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -81,6 +82,23 @@ export class TagResolver {
       skip,
       limit,
       isEmoji,
+    })
+
+    return { items, nextSkip }
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTags)
+  async trendsFeed(
+    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PaginatedTags> {
+    const { skip, limit } = offsetPaginationArgs
+
+    const { items, nextSkip } = await this.tagService.getTrendsFeed({
+      authUser,
+      skip,
+      limit,
     })
 
     return { items, nextSkip }

@@ -11,6 +11,8 @@ import { tagSelect } from './tag-select.constant'
 import { excludedTags } from './excluded-tags.constant'
 import { Prisma } from '@prisma/client'
 import { User } from 'src/user/user.model'
+import { sub } from 'date-fns'
+import { sampleSize } from 'lodash'
 
 @Injectable()
 export class TagService {
@@ -302,6 +304,88 @@ export class TagService {
     return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
+  async getTrendsFeed({
+    skip,
+    limit,
+    authUser,
+  }: {
+    authUser: AuthUser
+    skip: number
+    limit: number
+  }): Promise<PaginatedTags> {
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+
+    const country = await this.prismaService.school
+      .findUnique({
+        where: { id: authUser.schoolId },
+      })
+      .city()
+      .country()
+
+    if (!country) return Promise.reject(new Error('No country'))
+
+    const andCreatedBetween = Prisma.sql`AND P."createdAt" > ${sub(new Date(), {
+      days: 1,
+    })} AND P."createdAt" < ${new Date()}`
+
+    const trendsQuery = Prisma.sql`
+      SELECT
+        T."id",
+        T."text",
+        T."isLive",
+        COUNT(*) as "newPostCount",
+        (SELECT COUNT(*) FROM "_PostToTag" PTG WHERE PTG. "B" = T. "id") as "postCount"
+      FROM
+        "Tag" T,
+        "_PostToTag" PT,
+        "Post" P
+      WHERE
+        PT. "B" = T. "id"
+        AND PT. "A" = P. "id"
+        AND T."countryId" = ${country.id}
+        ${andCreatedBetween}
+        AND LOWER(T."text") NOT IN (${Prisma.join(excludedTags)})
+      GROUP BY T."id"
+      ORDER BY "newPostCount" desc
+      OFFSET ${skip}
+      LIMIT ${limit / 2}
+    `
+
+    type Trend = {
+      id: string
+      text: string
+      isLive: boolean
+    }
+
+    const [trendsItems, newTags]: [Trend[], Tag[]] = await Promise.all([
+      this.prismaService.$queryRaw<Trend[]>(trendsQuery),
+      this.prismaService.tag.findMany({
+        where: {
+          isLive: false,
+          countryId: country.id,
+          text: {
+            notIn: excludedTags,
+            mode: 'insensitive',
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        select: tagSelect,
+        take: limit,
+        skip,
+      }),
+    ])
+
+    const tags: (Trend | Tag)[] = [...trendsItems, ...newTags]
+
+    const items = sampleSize(tags)
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: tags.length === limit ? nextSkip : 0 }
+  }
+
   async getNewTags({
     authUser,
     skip,
@@ -341,7 +425,17 @@ export class TagService {
         where,
       }),
       this.prismaService.tag.findMany({
-        where,
+        where: {
+          isLive: false,
+          countryId: country.id,
+          ...(isEmoji !== undefined && {
+            isEmoji,
+          }),
+          text: {
+            notIn: excludedTags,
+            mode: 'insensitive',
+          },
+        },
         orderBy: {
           createdAt: 'desc',
         },
