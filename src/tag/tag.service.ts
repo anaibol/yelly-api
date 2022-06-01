@@ -372,14 +372,16 @@ export class TagService {
           createdAt: 'desc',
         },
         select: tagSelect,
-        take: limit,
+        take: limit / 2,
         skip,
       }),
     ])
 
+    console.log([trendsItems, newTags])
+
     const tags: (Trend | Tag)[] = [...trendsItems, ...newTags]
 
-    const items = sampleSize(tags)
+    const items = sampleSize(tags, tags.length)
 
     const nextSkip = skip + limit
 
