@@ -266,6 +266,7 @@ type Query {
   tags(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
   trends(endDate: DateTime!, isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0, startDate: DateTime!): PaginatedTags!
   trendsFeed(limit: Int = 10, skip: Int = 0): PaginatedTags!
+  unreadFeedItemsCount: Int!
   unreadNotificationsCount: Int!
   user(id: String!): User!
   users(ids: [String!]!): PaginatedUsers!
