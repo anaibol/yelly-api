@@ -151,4 +151,37 @@ export class TagResolver {
 
     return { items, nextCursor }
   }
+
+  @ResolveField()
+  async postsFeed(
+    @Parent() tag: Tag,
+    @CurrentUser() authUser: AuthUser,
+    @Args() cursorPaginationArgs: CursorPaginationArgs
+  ): Promise<PaginatedPosts> {
+    const { limit, after } = cursorPaginationArgs
+
+    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
+
+    const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
+      orderBy: { createdAt: 'desc' },
+      select: PostSelectWithParent,
+      ...(after && {
+        cursor: {
+          id: after,
+        },
+        skip: 1,
+      }),
+      take: limit,
+    })
+
+    const items = posts.map(mapPost)
+
+    const lastItem = items.length === limit && items[limit - 1]
+
+    const lastCreatedAt = lastItem && lastItem.createdAt
+
+    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
+
+    return { items, nextCursor }
+  }
 }

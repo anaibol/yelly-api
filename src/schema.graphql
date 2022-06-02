@@ -302,6 +302,7 @@ type Tag {
   isLive: Boolean
   postCount: Int
   posts(after: String, limit: Int = 10): PaginatedPosts
+  postsFeed(after: String, limit: Int = 10): PaginatedPosts
   text: String!
 }
 
