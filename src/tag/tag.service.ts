@@ -346,7 +346,7 @@ export class TagService {
     const trends = await this.prismaService.$queryRaw<{ id: string }[]>(trendsQuery)
     const trendsTagsIds = trends.map(({ id }) => id)
 
-    const tags: Tag[] = await this.prismaService.tag.findMany({
+    const tags = await this.prismaService.tag.findMany({
       where: {
         isHidden: false,
         countryId: country.id,
@@ -375,7 +375,12 @@ export class TagService {
       skip,
     })
 
-    const items = sampleSize(tags, tags.length)
+    const items = sampleSize(
+      tags.map(({ _count, ...tag }) => ({
+        ...tag,
+        postCount: _count.posts,
+      }))
+    )
 
     const nextSkip = skip + limit
 
