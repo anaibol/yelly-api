@@ -343,9 +343,9 @@ export class TagService {
       OFFSET ${skip}
       LIMIT ${limit / 2}
     `
+
     const trends = await this.prismaService.$queryRaw<{ id: string }[]>(trendsQuery)
     const trendsTagsIds = trends.map(({ id }) => id)
-
     const tags = await this.prismaService.tag.findMany({
       where: {
         isHidden: false,
@@ -379,7 +379,8 @@ export class TagService {
       tags.map(({ _count, ...tag }) => ({
         ...tag,
         postCount: _count.posts,
-      }))
+      })),
+      tags.length
     )
 
     const nextSkip = skip + limit
