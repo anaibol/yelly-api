@@ -185,7 +185,7 @@ export class UserResolver {
         },
         ...(after && {
           cursor: {
-            createdAt: new Date(+after),
+            id: after,
           },
           skip: 1,
         }),
@@ -198,11 +198,9 @@ export class UserResolver {
 
     const items = posts.map(mapPost)
 
-    const lastItem = items.length === limit && items[limit - 1]
+    const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const lastCreatedAt = lastItem && lastItem.createdAt
-
-    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
+    const nextCursor = lastItem ? lastItem.id : ''
 
     return { items, nextCursor }
   }
