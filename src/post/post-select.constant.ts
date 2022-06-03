@@ -34,12 +34,6 @@ export const PostSelect = {
       lastName: true,
       birthdate: true,
       pictureId: true,
-      training: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
       school: {
         select: {
           id: true,
@@ -58,6 +52,12 @@ export const PostSelect = {
               },
             },
           },
+        },
+      },
+      training: {
+        select: {
+          id: true,
+          name: true,
         },
       },
     },
