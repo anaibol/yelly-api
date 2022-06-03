@@ -107,6 +107,7 @@ export class FeedService {
         isSeen: true,
       },
       where: {
+        isSeen: false,
         userId: authUser.id,
         ...(feedItemId && {
           id: feedItemId,

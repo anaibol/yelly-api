@@ -343,7 +343,8 @@ export class TagService {
         "_PostToTag" PT,
         "Post" P
       WHERE
-        PT. "B" = T. "id"
+        T. "isEmoji" = false
+        AND PT. "B" = T. "id"
         AND PT. "A" = P. "id"
         AND P."createdAt" > ${sub(new Date(), {
           days: 1,

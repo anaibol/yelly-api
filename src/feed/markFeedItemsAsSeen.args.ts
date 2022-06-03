@@ -1,5 +1,4 @@
 import { ArgsType, Field } from '@nestjs/graphql'
-
 @ArgsType()
 export class MarkFeedItemsAsSeenArgs {
   after?: Date
