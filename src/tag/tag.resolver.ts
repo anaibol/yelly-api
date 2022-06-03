@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Field, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
@@ -8,7 +8,6 @@ import { CreateOrUpdateLiveTagInput } from '../post/create-or-update-live-tag.in
 
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
-import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
 import { PostSelectWithParent, mapPost } from '../post/post-select.constant'
 import { PaginatedPosts } from '../post/paginated-posts.model'
@@ -52,12 +51,8 @@ export class TagResolver {
 
   @Query(() => Tag)
   @UseGuards(AuthGuard)
-  async tag(@Args() tagArgs: TagArgs): Promise<Tag> {
-    const tag = await this.tagService.findByText(tagArgs)
-
-    if (!tag) return Promise.reject(new Error('No tag'))
-
-    return tag
+  tag(@Args('text') tagText: string): Promise<Tag> {
+    return this.tagService.getTag(tagText)
   }
 
   @UseGuards(AuthGuard)

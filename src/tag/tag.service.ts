@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
-import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
 import { PaginatedTags } from './paginated-tags.model'
@@ -157,10 +156,10 @@ export class TagService {
     return posts[0].author
   }
 
-  async findByText(tagArgs: TagArgs) {
-    return this.prismaService.tag.findUnique({
+  async getTag(text: string): Promise<Tag> {
+    const result = await this.prismaService.tag.findUnique({
       where: {
-        text: tagArgs.text,
+        text,
       },
       select: {
         id: true,
@@ -168,8 +167,19 @@ export class TagService {
         createdAt: true,
         isLive: true,
         isEmoji: true,
+        _count: {
+          select: {
+            posts: true,
+          },
+        },
       },
     })
+
+    if (!result) return Promise.reject(new Error('No tag'))
+
+    const { _count, ...tag } = result
+
+    return { ...tag, postCount: _count.posts }
   }
 
   async delete(id: string): Promise<boolean> {
