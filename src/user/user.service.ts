@@ -35,6 +35,15 @@ export class UserService {
     private postService: PostService
   ) {}
 
+  async trackUserView(userId: string): Promise<boolean> {
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: { viewsCount: { increment: 1 } },
+    })
+
+    return true
+  }
+
   // async getUserLocale(userId: string): Promise<string> {
   //   const user = await this.prismaService.user.findUnique({
   //     where: { id: userId },
@@ -80,7 +89,7 @@ export class UserService {
     })
   }
 
-  async findOne(userId: string): Promise<User> {
+  async getUser(userId: string): Promise<User> {
     const res = await this.prismaService.user.findUnique({
       where: {
         id: userId,
@@ -126,6 +135,7 @@ export class UserService {
             followees: true,
           },
         },
+        viewsCount: true,
       },
     })
 
@@ -138,6 +148,70 @@ export class UserService {
       followersCount: _count.followers,
       followeesCount: _count.followees,
       postCount: _count.posts,
+    }
+  }
+
+  async getUsers(userIds: string[]): Promise<PaginatedUsers> {
+    const users = await this.prismaService.user.findMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        pictureId: true,
+        avatar3dId: true,
+        birthdate: true,
+        about: true,
+        instagram: true,
+        snapchat: true,
+        school: {
+          select: {
+            id: true,
+            name: true,
+            city: {
+              select: {
+                id: true,
+                name: true,
+                country: {
+                  select: {
+                    id: true,
+                    code: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        training: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            posts: true,
+            followers: true,
+            followees: true,
+          },
+        },
+        viewsCount: true,
+      },
+    })
+
+    const items = users.map(({ _count, ...user }) => ({
+      ...user,
+      followersCount: _count.followers,
+      followeesCount: _count.followees,
+      postCount: _count.posts,
+    }))
+
+    return {
+      items,
     }
   }
 
@@ -376,43 +450,17 @@ export class UserService {
     return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async areFollowedByUser(
-    followeesIds: string[],
-    userId: string
-  ): Promise<
-    {
-      followeeId: string
-      isFollowedByAuthUser: boolean
-    }[]
-  > {
-    if (followeesIds.length === 1) {
-      const [followeeId] = followeesIds
-
-      const follow = await this.prismaService.follower.findUnique({
-        where: {
-          userId_followeeId: {
-            followeeId,
-            userId,
-          },
-        },
-      })
-
-      return [{ followeeId, isFollowedByAuthUser: !!follow }]
-    }
-
-    const follows = await this.prismaService.follower.findMany({
+  async isFollowedByUser(followeeId: string, userId: string): Promise<boolean> {
+    const follow = await this.prismaService.follower.findUnique({
       where: {
-        userId,
-        followeeId: {
-          in: followeesIds as string[],
+        userId_followeeId: {
+          followeeId,
+          userId,
         },
       },
     })
 
-    return followeesIds.map((followeeId) => ({
-      followeeId,
-      isFollowedByAuthUser: follows.map(({ followeeId }) => followeeId).includes(followeeId),
-    }))
+    return !!follow
   }
 
   async getPendingFollowRequest(requesterId: string, toFollowUserId: string): Promise<FollowRequest | null> {
@@ -494,6 +542,7 @@ export class UserService {
             posts: true,
           },
         },
+        viewsCount: true,
       },
     })
 
@@ -612,6 +661,16 @@ export class UserService {
   async createFollowRequest(authUser: AuthUser, otherUserId: string): Promise<FollowRequest> {
     if (authUser.id === otherUserId) return Promise.reject(new Error('AuthUserId and OtherUserId cant be equal'))
 
+    const existingFollowRequest = await this.prismaService.followRequest.findFirst({
+      where: {
+        requesterId: authUser.id,
+        toFollowUserId: authUser.id,
+        status: 'PENDING',
+      },
+    })
+
+    if (existingFollowRequest) return Promise.reject(new Error('Follow requests already exists'))
+
     const followRequest = await this.prismaService.followRequest.create({
       data: {
         requester: {
@@ -654,6 +713,11 @@ export class UserService {
     if (!exists) return Promise.reject(new Error("Follow request doesn't exists or is not from this user"))
 
     await Promise.all([
+      this.prismaService.followRequest.delete({
+        where: {
+          id: followRequestId,
+        },
+      }),
       this.prismaService.notification.deleteMany({
         where: {
           followRequestId,

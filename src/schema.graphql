@@ -139,6 +139,7 @@ type Me {
   sendbirdAccessToken: String
   snapchat: String
   training: Training
+  viewsCount: Int
 }
 
 type Mutation {
@@ -168,6 +169,7 @@ type Mutation {
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
   trackPostViews(postsIds: [String!]!): Boolean!
+  trackUserView(userId: String!): Boolean!
   unFollow(otherUserId: String!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
 }
@@ -212,6 +214,7 @@ type Post {
   authUserPollVote: PostPollVote
   authUserReaction: PostReaction
   author: User
+  charsCount: Int
   children: PaginatedPosts
   childrenCount: Int
   createdAt: DateTime
@@ -226,6 +229,7 @@ type Post {
   text: String
   threadId: String
   viewsCount: Int
+  wordsCount: Int
 }
 
 type PostPollOption {
@@ -261,8 +265,11 @@ type Query {
   tag(text: String!): Tag!
   tags(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
   trends(endDate: DateTime!, isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0, startDate: DateTime!): PaginatedTags!
+  trendsFeed(limit: Int = 10, skip: Int = 0): PaginatedTags!
+  unreadFeedItemsCount: Int!
   unreadNotificationsCount: Int!
   user(id: String!): User!
+  users(ids: [String!]!): PaginatedUsers!
 }
 
 input ResetPasswordInput {
@@ -296,6 +303,7 @@ type Tag {
   isLive: Boolean
   postCount: Int
   posts(after: String, limit: Int = 10): PaginatedPosts
+  postsFeed(after: String, limit: Int = 10): PaginatedPosts
   text: String!
 }
 
@@ -347,6 +355,7 @@ type User {
   school: School
   snapchat: String
   training: Training
+  viewsCount: Int
 }
 
 enum UserRole {

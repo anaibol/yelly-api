@@ -142,6 +142,7 @@ export class PushNotificationService {
             args: { firstName: post.author.firstName },
           }
         ),
+        data: { url: `${process.env.APP_BASE_URL}/post/${postId}` },
         sound: 'default' as const,
       }
     })
@@ -196,6 +197,7 @@ export class PushNotificationService {
         ...(lang && { lang }),
         args: { firstName: author.firstName },
       }),
+      data: { url: `${process.env.APP_BASE_URL}/post/${parent.id}` },
       sound: 'default' as const,
     }
 
@@ -232,6 +234,7 @@ export class PushNotificationService {
           ...(lang && { lang }),
           args: { firstName: author.firstName },
         }),
+        data: { url: `${process.env.APP_BASE_URL}/post/${parent.id}` },
         sound: 'default' as const,
       }
     })

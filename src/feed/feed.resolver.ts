@@ -21,6 +21,12 @@ export class FeedResolver {
   }
 
   @UseGuards(AuthGuard)
+  @Query(() => Number)
+  unreadFeedItemsCount(@CurrentUser() authUser: AuthUser): Promise<number> {
+    return this.feedService.getUnreadCount(authUser.id)
+  }
+
+  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   markFeedItemsAsSeen(
     @CurrentUser() authUser: AuthUser,

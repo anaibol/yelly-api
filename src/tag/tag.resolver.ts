@@ -5,19 +5,20 @@ import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
 
 import { CreateOrUpdateLiveTagInput } from '../post/create-or-update-live-tag.input'
-import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
-import { TagArgs } from './tag.args'
 import { PrismaService } from 'src/core/prisma.service'
-import { PostSelectWithParent, mapPost, getNotExpiredCondition } from '../post/post-select.constant'
+import { PostSelectWithParent, mapPost } from '../post/post-select.constant'
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import { PaginatedTags } from './paginated-tags.model'
 import { UserService } from 'src/user/user.service'
 import { TagsArgs } from './tags.args'
 import { TrendsArgs } from './trends.args'
 import { User } from 'src/user/user.model'
+
+import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
+import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -50,12 +51,8 @@ export class TagResolver {
 
   @Query(() => Tag)
   @UseGuards(AuthGuard)
-  async tag(@Args() tagArgs: TagArgs): Promise<Tag> {
-    const tag = await this.tagService.findByText(tagArgs)
-
-    if (!tag) return Promise.reject(new Error('No tag'))
-
-    return tag
+  tag(@Args('text') tagText: string): Promise<Tag> {
+    return this.tagService.getTag(tagText)
   }
 
   @UseGuards(AuthGuard)
@@ -87,6 +84,23 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
+  async trendsFeed(
+    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PaginatedTags> {
+    const { skip, limit } = offsetPaginationArgs
+
+    const { items, nextSkip } = await this.tagService.getTrendsFeed({
+      authUser,
+      skip,
+      limit,
+    })
+
+    return { items, nextSkip }
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTags)
   async newTags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
     const { skip, limit, isEmoji } = tagsArgs
 
@@ -111,37 +125,53 @@ export class TagResolver {
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
     const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
-      where: {
-        author: {
-          isActive: true,
-        },
-        ...getNotExpiredCondition(),
-      },
+      orderBy: { createdAt: 'desc' },
+      select: PostSelectWithParent,
       ...(after && {
         cursor: {
-          createdAt: new Date(+after),
+          id: after,
         },
         skip: 1,
       }),
-      orderBy: [
-        {
-          reactions: {
-            _count: 'desc',
-          },
-        },
-        { createdAt: 'desc' },
-      ],
       take: limit,
-      select: PostSelectWithParent,
     })
 
     const items = posts.map(mapPost)
 
-    const lastItem = items.length === limit && items[limit - 1]
+    const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const lastCreatedAt = lastItem && lastItem.createdAt
+    const nextCursor = lastItem ? lastItem.id : ''
 
-    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
+    return { items, nextCursor }
+  }
+
+  @ResolveField()
+  async postsFeed(
+    @Parent() tag: Tag,
+    @CurrentUser() authUser: AuthUser,
+    @Args() cursorPaginationArgs: CursorPaginationArgs
+  ): Promise<PaginatedPosts> {
+    const { limit, after } = cursorPaginationArgs
+
+    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
+
+    const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
+      orderBy: { createdAt: 'desc' },
+      select: PostSelectWithParent,
+      ...(after && {
+        cursor: {
+          id: after,
+        },
+        skip: 1,
+      }),
+      take: limit,
+    })
+
+    const items = posts.map(mapPost)
+
+    const lastItem = items.length === limit ? items[limit - 1] : null
+
+    const nextCursor = lastItem ? lastItem.id : ''
 
     return { items, nextCursor }
   }

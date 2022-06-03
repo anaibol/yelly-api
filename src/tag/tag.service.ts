@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
-import { TagArgs } from './tag.args'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
 import { PaginatedTags } from './paginated-tags.model'
@@ -11,6 +10,8 @@ import { tagSelect } from './tag-select.constant'
 import { excludedTags } from './excluded-tags.constant'
 import { Prisma } from '@prisma/client'
 import { User } from 'src/user/user.model'
+import { sub } from 'date-fns'
+import { sampleSize } from 'lodash'
 
 @Injectable()
 export class TagService {
@@ -155,10 +156,10 @@ export class TagService {
     return posts[0].author
   }
 
-  async findByText(tagArgs: TagArgs) {
-    return this.prismaService.tag.findUnique({
+  async getTag(text: string): Promise<Tag> {
+    const result = await this.prismaService.tag.findUnique({
       where: {
-        text: tagArgs.text,
+        text,
       },
       select: {
         id: true,
@@ -166,8 +167,19 @@ export class TagService {
         createdAt: true,
         isLive: true,
         isEmoji: true,
+        _count: {
+          select: {
+            posts: true,
+          },
+        },
       },
     })
+
+    if (!result) return Promise.reject(new Error('No tag'))
+
+    const { _count, ...tag } = result
+
+    return { ...tag, postCount: _count.posts }
   }
 
   async delete(id: string): Promise<boolean> {
@@ -302,6 +314,90 @@ export class TagService {
     return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
+  async getTrendsFeed({
+    skip,
+    limit,
+    authUser,
+  }: {
+    authUser: AuthUser
+    skip: number
+    limit: number
+  }): Promise<PaginatedTags> {
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+
+    const country = await this.prismaService.school
+      .findUnique({
+        where: { id: authUser.schoolId },
+      })
+      .city()
+      .country()
+
+    if (!country) return Promise.reject(new Error('No country'))
+
+    const trendsQuery = Prisma.sql`
+      SELECT
+        T."id",
+        COUNT(*) as "newPostCount"
+      FROM
+        "Tag" T,
+        "_PostToTag" PT,
+        "Post" P
+      WHERE
+        PT. "B" = T. "id"
+        AND PT. "A" = P. "id"
+        AND P."createdAt" > ${sub(new Date(), {
+          days: 1,
+        })} AND P."createdAt" < ${new Date()}
+      GROUP BY T."id"
+      ORDER BY "newPostCount" desc
+      OFFSET ${skip}
+      LIMIT ${limit / 2}
+    `
+
+    const trends = await this.prismaService.$queryRaw<{ id: string }[]>(trendsQuery)
+    const trendsTagsIds = trends.map(({ id }) => id)
+    const tags = await this.prismaService.tag.findMany({
+      where: {
+        isHidden: false,
+        countryId: country.id,
+        text: {
+          notIn: excludedTags,
+          mode: 'insensitive',
+        },
+        OR: [
+          {
+            createdAt: sub(new Date(), {
+              days: 1,
+            }),
+          },
+          {
+            id: {
+              in: trendsTagsIds,
+            },
+          },
+        ],
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: tagSelect,
+      take: limit,
+      skip,
+    })
+
+    const items = sampleSize(
+      tags.map(({ _count, ...tag }) => ({
+        ...tag,
+        postCount: _count.posts,
+      })),
+      tags.length
+    )
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: tags.length === limit ? nextSkip : 0 }
+  }
+
   async getNewTags({
     authUser,
     skip,
@@ -341,7 +437,17 @@ export class TagService {
         where,
       }),
       this.prismaService.tag.findMany({
-        where,
+        where: {
+          isLive: false,
+          countryId: country.id,
+          ...(isEmoji !== undefined && {
+            isEmoji,
+          }),
+          text: {
+            notIn: excludedTags,
+            mode: 'insensitive',
+          },
+        },
         orderBy: {
           createdAt: 'desc',
         },

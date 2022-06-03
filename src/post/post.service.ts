@@ -147,7 +147,7 @@ export class PostService {
   //     },
   //     ...(currentCursor && {
   //       cursor: {
-  //         createdAt: new Date(+currentCursor),
+  //         id: currentCursor,
   //       },
   //       skip: 1,
   //     }),
@@ -238,7 +238,7 @@ export class PostService {
       },
       ...(currentCursor && {
         cursor: {
-          createdAt: new Date(+currentCursor),
+          id: currentCursor,
         },
         skip: 1,
       }),
@@ -274,11 +274,9 @@ export class PostService {
 
     const items = mappedPosts
 
-    const lastItem = items.length === limit && items[limit - 1]
+    const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const lastCreatedAt = lastItem && lastItem.createdAt
-
-    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
+    const nextCursor = lastItem ? lastItem.id : ''
 
     return { items, nextCursor }
   }
@@ -295,7 +293,7 @@ export class PostService {
           },
           ...(currentCursor && {
             cursor: {
-              createdAt: new Date(+currentCursor),
+              id: currentCursor,
             },
             skip: 1,
           }),
@@ -308,11 +306,9 @@ export class PostService {
 
     const items = post.children.map((child) => mapPostChild(child, post))
 
-    const lastItem = items.length === limit && items[limit - 1]
+    const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const lastCreatedAt = lastItem && lastItem.createdAt
-
-    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
+    const nextCursor = lastItem ? lastItem.id : ''
 
     return {
       ...mapPost(post),
@@ -386,6 +382,8 @@ export class PostService {
     const post = await this.prismaService.post.create({
       data: {
         text,
+        charsCount: text.length,
+        wordsCount: text.split(/\s+/).length,
         expiresAt: parent ? parent.expiresAt : getExpiredAt(expiresIn),
         expiresIn: parent ? parent.expiresIn : expiresIn,
         ...(pollOptions &&

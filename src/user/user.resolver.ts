@@ -16,20 +16,25 @@ import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { FollowRequest } from './follow-request.model'
 import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
-import { Loader } from '@tracworx/nestjs-dataloader'
+// import { Loader } from '@tracworx/nestjs-dataloader'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
-import { IsFollowedByAuthUserLoader } from './is-followed-by-auth-user.loader'
-import DataLoader from 'dataloader'
+// import DataLoader from 'dataloader'
 
-@Resolver(() => User)
+@Resolver(User)
 export class UserResolver {
   constructor(private userService: UserService, private prismaService: PrismaService) {}
 
-  @Query(() => User, { name: 'user' })
+  @Query(() => User)
   @UseGuards(AuthGuard)
-  findOne(@Args('id') id: string): Promise<User> {
-    return this.userService.findOne(id)
+  user(@Args('id') id: string): Promise<User> {
+    return this.userService.getUser(id)
+  }
+
+  @Query(() => PaginatedUsers)
+  @UseGuards(AuthGuard)
+  users(@Args('ids', { type: () => [String] }) ids: string[]): Promise<PaginatedUsers> {
+    return this.userService.getUsers(ids)
   }
 
   @UseGuards(AuthGuard)
@@ -125,15 +130,8 @@ export class UserResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async isFollowedByAuthUser(
-    @Parent() user: User,
-    @Loader(IsFollowedByAuthUserLoader) isFollowedByAuthUserLoader: DataLoader<string, boolean | undefined, string>
-  ): Promise<boolean> {
-    const isFollowedByAuthUser = await isFollowedByAuthUserLoader.load(user.id)
-
-    if (isFollowedByAuthUser === undefined) return Promise.reject(new Error('isFollowedByAuthUser undefined'))
-
-    return isFollowedByAuthUser
+  async isFollowedByAuthUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.isFollowedByUser(user.id, authUser.id)
   }
 
   @UseGuards(AuthGuard)
@@ -187,7 +185,7 @@ export class UserResolver {
         },
         ...(after && {
           cursor: {
-            createdAt: new Date(+after),
+            id: after,
           },
           skip: 1,
         }),
@@ -200,11 +198,9 @@ export class UserResolver {
 
     const items = posts.map(mapPost)
 
-    const lastItem = items.length === limit && items[limit - 1]
+    const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const lastCreatedAt = lastItem && lastItem.createdAt
-
-    const nextCursor = lastCreatedAt ? lastCreatedAt.getTime().toString() : ''
+    const nextCursor = lastItem ? lastItem.id : ''
 
     return { items, nextCursor }
   }
@@ -217,5 +213,11 @@ export class UserResolver {
   @ResolveField()
   followees(@Parent() user: User, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
     return this.userService.getFollowees(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async trackUserView(@Args('userId') userId: string): Promise<boolean> {
+    return this.userService.trackUserView(userId)
   }
 }

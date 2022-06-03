@@ -11,6 +11,7 @@ export class Tag {
   isLive?: boolean
   isEmoji?: boolean
   posts?: PaginatedPosts
+  postsFeed?: PaginatedPosts
   postCount?: number
   authUserPosted?: boolean
   author?: User

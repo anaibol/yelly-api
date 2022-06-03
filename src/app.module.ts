@@ -14,14 +14,15 @@ import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageRepor
 import { SendbirdWebhookModule } from './sendbird-webhook/sendbird-webhook.module'
 import { SchoolModule } from './school/school.module'
 // import { CommonFriendsLoader } from './user/common-friends.loader'
-import { IsFollowedByAuthUserLoader } from './user/is-followed-by-auth-user.loader'
 import { FeedModule } from './feed/feed.module'
 // import { GraphQLError, GraphQLFormattedError } from 'graphql'
 
 import { BigIntScalar } from './scalars/big-int.scalar'
+import { CronModule } from './cron/cron.module'
+import { RankingModule } from './ranking/ranking.module'
 
 @Module({
-  providers: [UserModule, IsFollowedByAuthUserLoader, BigIntScalar], // CommonFriendsLoader
+  providers: [UserModule, BigIntScalar], // CommonFriendsLoader
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
@@ -65,6 +66,8 @@ import { BigIntScalar } from './scalars/big-int.scalar'
         numberScalarMode: 'integer',
       },
     }),
+    RankingModule,
+    ...(process.env.REDIS_HOST && process.env.REDIS_PORT ? [CronModule] : []),
     UserModule,
     FeedModule,
     PostModule,
