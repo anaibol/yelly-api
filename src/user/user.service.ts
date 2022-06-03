@@ -96,6 +96,7 @@ export class UserService {
       },
       select: {
         id: true,
+        createdAt: true,
         firstName: true,
         lastName: true,
         pictureId: true,
@@ -160,6 +161,7 @@ export class UserService {
       },
       select: {
         id: true,
+        createdAt: true,
         firstName: true,
         lastName: true,
         pictureId: true,
@@ -495,6 +497,7 @@ export class UserService {
       },
       select: {
         id: true,
+        createdAt: true,
         role: true,
         email: true,
         firstName: true,
@@ -902,13 +905,14 @@ export class UserService {
 
   async update(userId: string, data: UpdateUserInput): Promise<Me> {
     const schoolData = data.schoolGooglePlaceId && (await this.schoolService.getOrCreate(data.schoolGooglePlaceId))
-    console.log({ data })
+
     const updatedUser = await this.prismaService.user.update({
       where: {
         id: userId,
       },
       select: {
         id: true,
+        createdAt: true,
         role: true,
         isFilled: true,
         email: true,

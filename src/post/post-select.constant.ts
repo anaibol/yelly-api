@@ -29,10 +29,17 @@ export const PostSelect = {
   author: {
     select: {
       id: true,
+      createdAt: true,
       firstName: true,
       lastName: true,
       birthdate: true,
       pictureId: true,
+      training: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       school: {
         select: {
           id: true,

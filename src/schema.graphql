@@ -118,6 +118,7 @@ type Me {
   about: String
   avatar3dId: String
   birthdate: DateTime
+  createdAt: DateTime
   email: String
   expoPushNotificationTokens: [String!]
   firstName: String
@@ -337,6 +338,7 @@ type User {
   about: String
   avatar3dId: String
   birthdate: DateTime
+  createdAt: DateTime
   firstName: String
   followees(limit: Int = 10, skip: Int = 0): PaginatedUsers
   followeesCount: Int

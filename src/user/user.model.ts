@@ -9,6 +9,7 @@ import { Training } from './training.model'
 export class User {
   @Field(() => ID)
   id: string
+  createdAt?: Date | null
   firstName?: string | null
   lastName?: string | null
   birthdate?: Date | null

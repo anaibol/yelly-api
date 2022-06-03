@@ -15,6 +15,7 @@ export class Me {
   id: string
   @Field(() => UserRole)
   role: UserRole
+  createdAt?: Date | null
   email?: string | null
   phoneNumber?: string | null
   firstName?: string | null

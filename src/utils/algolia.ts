@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client'
 
 export type UserIndexAlgoliaInterface = {
   id: string
+  createdAt: Date
   objectID: string
   firstName: string | null
   lastName: string | null
@@ -43,6 +44,7 @@ export type PostIndexAlgoliaInterface = {
   text: string
   author: {
     id: string
+    createdAt: Date
     firstName: string
     lastName: string
     birthdate: string
@@ -61,6 +63,10 @@ export type PostIndexAlgoliaInterface = {
         }
       }
     }
+    training: {
+      id: string
+      name: string
+    }
   }
   tags: {
     id: string
@@ -73,18 +79,12 @@ export type PostIndexAlgoliaInterface = {
 
 export const algoliaUserSelect = {
   id: true,
+  createdAt: true,
   firstName: true,
   lastName: true,
   isFilled: true,
   pictureId: true,
   birthdate: true,
-  createdAt: true,
-  training: {
-    select: {
-      id: true,
-      name: true,
-    },
-  },
   school: {
     select: {
       id: true,
@@ -107,6 +107,12 @@ export const algoliaUserSelect = {
           },
         },
       },
+    },
+  },
+  training: {
+    select: {
+      id: true,
+      name: true,
     },
   },
 }
@@ -145,6 +151,7 @@ export const algoliaPostSelect = {
   author: {
     select: {
       id: true,
+      createdAt: true,
       firstName: true,
       lastName: true,
       birthdate: true,
@@ -169,6 +176,12 @@ export const algoliaPostSelect = {
           },
         },
       },
+      training: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   },
   tags: {
@@ -190,6 +203,7 @@ type UserWithPosts = Prisma.UserGetPayload<typeof userWithPosts>
 export function mapAlgoliaUser(user: UserWithPosts): UserIndexAlgoliaInterface {
   return {
     id: user.id,
+    createdAt: user.createdAt,
     objectID: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
@@ -233,9 +247,10 @@ const algoliaPost = Prisma.validator<Prisma.PostArgs>()({
 type AlgoliaPost = Prisma.PostGetPayload<typeof algoliaPost>
 
 export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | null {
-  const { id, firstName, lastName, birthdate, pictureId, school } = post.author
+  const { id, createdAt, firstName, lastName, birthdate, pictureId, school, training } = post.author
 
-  if (!firstName || !lastName || !birthdate || !lastName || !school?.city?.country) return null
+  if (!createdAt || !firstName || !lastName || !birthdate || !lastName || !school?.city?.country || !training)
+    return null
 
   return {
     id: post.id,
@@ -244,6 +259,7 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
     text: post.text,
     author: {
       id,
+      createdAt,
       firstName,
       lastName,
       birthdate: birthdate.toDateString(),
@@ -261,6 +277,10 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
             code: school.city.country.code,
           },
         },
+      },
+      training: {
+        id: training.id,
+        name: training.name,
       },
     },
     tags: post.tags.map((tag) => {
