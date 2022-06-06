@@ -1,6 +1,6 @@
 {
-  "POST_REACTION_TITLE": "{firstName} upped your yelly!",
-  "POST_REACTION_BODY": "{firstName} upped your yelly!",
+  "POST_REACTION_TITLE": "{firstName} liked your yelly!",
+  "POST_REACTION_BODY": "{firstName} liked your yelly!",
   "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} requested to follow your yellys",
   "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} accepted your request to follow his/her yellys",
   "NEW_LIVE_TAG_BODY": "Yelly trend live",
