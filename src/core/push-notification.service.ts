@@ -460,7 +460,7 @@ export class PushNotificationService {
       return {
         ...message,
         to: expoPushNotificationToken.token,
-        data: { url: `${process.env.APP_BASE_URL}/post/${postReaction.postId}` },
+        data: { url: `${process.env.APP_BASE_URL}/notifications/notifications` },
         sound: 'default' as const,
       }
     })
