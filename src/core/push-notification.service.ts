@@ -249,7 +249,7 @@ export class PushNotificationService {
   }
 
   async createFollowRequestPushNotification(followRequest: FollowRequest) {
-    const url = `${process.env.APP_BASE_URL}/users/${followRequest.requesterId}`
+    const url = `${process.env.APP_BASE_URL}/notifications/notifications`
 
     const receiverUser = await this.prismaService.user.findUnique({
       select: UserPushTokenSelect,
