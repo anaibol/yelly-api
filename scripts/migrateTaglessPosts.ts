@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable functional/no-let */
-/* eslint-disable functional/no-loop-statement */
 import { PrismaClient } from '.prisma/client'
 const pAll = require('p-all')
-// import pAll from 'p-all'
 
 async function main() {
   const prisma = new PrismaClient()
