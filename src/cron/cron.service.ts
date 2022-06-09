@@ -3,7 +3,6 @@
 import { BullQueueInject, BullWorker, BullWorkerProcess } from '@anchan828/nest-bullmq'
 import { Injectable } from '@nestjs/common'
 import { Job, Queue } from 'bullmq'
-import { RankingService } from 'src/ranking/ranking.service'
 import { PrismaService } from '../core/prisma.service'
 
 const APP_QUEUE = 'APP_QUEUE'
@@ -18,7 +17,7 @@ export class CronQueue {
 
 @BullWorker({ queueName: APP_QUEUE, options: { concurrency: 1 } })
 export class CronWorker {
-  constructor(private prismaService: PrismaService, private rankingService: RankingService) {}
+  constructor(private prismaService: PrismaService) {}
 
   @BullWorkerProcess()
   public async process(job: Job): Promise<{ status: string }> {
@@ -35,7 +34,7 @@ export class CronWorker {
       // for (let index = 0; index < tags.length; index++) {
       //   const tag = tags[index]
 
-      //   await this.rankingService.recalculateTagRank(tag)
+      //   await this.ScoringService.recalculateTagRank(tag)
       // }
 
       return { status: 'ok' }

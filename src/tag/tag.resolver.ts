@@ -8,27 +8,20 @@ import { CreateOrUpdateLiveTagInput } from '../post/create-or-update-live-tag.in
 
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
-import { PrismaService } from 'src/core/prisma.service'
 import { PostSelectWithParent, mapPost } from '../post/post-select.constant'
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import { PaginatedTags } from './paginated-tags.model'
-import { UserService } from 'src/user/user.service'
+// import { UserService } from 'src/user/user.service'
 import { TagsArgs } from './tags.args'
-import { TrendsArgs } from './trends.args'
-import { User } from 'src/user/user.model'
 
 import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
-import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
+import { UserService } from '../user/user.service'
+import { User } from '../user/user.model'
+import { PrismaService } from '../core/prisma.service'
 
 @Resolver(Tag)
 export class TagResolver {
   constructor(private tagService: TagService, private userService: UserService, private prismaService: PrismaService) {}
-
-  @UseGuards(AuthGuard)
-  @Query(() => [Tag])
-  async liveTags(@CurrentUser() authUser: AuthUser): Promise<Tag[]> {
-    return this.tagService.getLiveTags(authUser)
-  }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Tag)
@@ -65,88 +58,8 @@ export class TagResolver {
     return { items, nextSkip }
   }
 
-  @UseGuards(AuthGuard)
-  @Query(() => PaginatedTags)
-  async trends(@Args() trendsArgs: TrendsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { startDate, endDate, skip, limit, isEmoji } = trendsArgs
-
-    const { items, nextSkip } = await this.tagService.getTrends({
-      startDate,
-      endDate,
-      authUser,
-      skip,
-      limit,
-      isEmoji,
-    })
-
-    return { items, nextSkip }
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => PaginatedTags)
-  async trendsFeed(
-    @Args() offsetPaginationArgs: OffsetPaginationArgs,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<PaginatedTags> {
-    const { skip, limit } = offsetPaginationArgs
-
-    const { items, nextSkip } = await this.tagService.getTrendsFeed({
-      authUser,
-      skip,
-      limit,
-    })
-
-    return { items, nextSkip }
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => PaginatedTags)
-  async newTags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { skip, limit, isEmoji } = tagsArgs
-
-    const { items, nextSkip } = await this.tagService.getNewTags({
-      authUser,
-      skip,
-      limit,
-      isEmoji,
-    })
-
-    return { items, nextSkip }
-  }
-
   @ResolveField()
   async posts(
-    @Parent() tag: Tag,
-    @CurrentUser() authUser: AuthUser,
-    @Args() cursorPaginationArgs: CursorPaginationArgs
-  ): Promise<PaginatedPosts> {
-    const { limit, after } = cursorPaginationArgs
-
-    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
-
-    const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
-      orderBy: { createdAt: 'desc' },
-      select: PostSelectWithParent,
-      ...(after && {
-        cursor: {
-          id: after,
-        },
-        skip: 1,
-      }),
-      take: limit,
-    })
-
-    const items = posts.map(mapPost)
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : ''
-
-    return { items, nextCursor }
-  }
-
-  @ResolveField()
-  async postsFeed(
     @Parent() tag: Tag,
     @CurrentUser() authUser: AuthUser,
     @Args() cursorPaginationArgs: CursorPaginationArgs

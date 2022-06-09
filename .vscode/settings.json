@@ -3,5 +3,6 @@
     "editor.codeActionsOnSave": {
         "source.fixAll": true
     },
-    "eslint.lintTask.enable": true
+    "eslint.lintTask.enable": true,
+    "typescript.preferences.importModuleSpecifier": "relative"
 }

@@ -19,7 +19,6 @@ import { FeedModule } from './feed/feed.module'
 
 import { BigIntScalar } from './scalars/big-int.scalar'
 import { CronModule } from './cron/cron.module'
-import { RankingModule } from './ranking/ranking.module'
 
 @Module({
   providers: [UserModule, BigIntScalar], // CommonFriendsLoader
@@ -66,7 +65,6 @@ import { RankingModule } from './ranking/ranking.module'
         numberScalarMode: 'integer',
       },
     }),
-    RankingModule,
     ...(process.env.REDIS_HOST && process.env.REDIS_PORT ? [CronModule] : []),
     UserModule,
     FeedModule,

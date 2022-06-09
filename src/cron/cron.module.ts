@@ -1,7 +1,6 @@
 import { BullModule, BullQueueInject } from '@anchan828/nest-bullmq'
 import { Module, OnModuleInit } from '@nestjs/common'
 import { Queue } from 'bullmq'
-import { RankingService } from 'src/ranking/ranking.service'
 import { CoreModule } from '../core/core.module'
 import { CronQueue, CronWorker } from './cron.service'
 
@@ -20,8 +19,8 @@ const APP_QUEUE = 'APP_QUEUE'
     }),
     BullModule.registerQueue(APP_QUEUE),
   ],
-  providers: [RankingService, CronQueue, CronWorker],
-  exports: [RankingService, CronQueue, CronWorker],
+  providers: [CronQueue, CronWorker],
+  exports: [CronQueue, CronWorker],
 })
 export class CronModule implements OnModuleInit {
   constructor(

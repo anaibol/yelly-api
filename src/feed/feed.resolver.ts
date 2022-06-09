@@ -6,7 +6,10 @@ import { AuthUser } from '../auth/auth.service'
 import { CurrentUser } from '../auth/user.decorator'
 import { Feed } from './feed.model'
 import { FeedArgs } from './feed.args'
-import { MarkFeedItemsAsSeenArgs } from './markFeedItemsAsSeen.args'
+import { MarkFeedItemsAsSeenArgs } from './mark-feed-items-as-seen.args'
+import { MarkTrendAsSeenArgs } from './mark-trend-as-seen.args'
+import { PaginatedTags } from 'src/tag/paginated-tags.model'
+import { TrendsFeedArgs } from './trends-feed.args'
 
 @Resolver()
 export class FeedResolver {
@@ -35,5 +38,28 @@ export class FeedResolver {
     const { after, before, feedItemId } = markFeedItemsAsSeen
 
     return this.feedService.markAsSeen(authUser, after, before, feedItemId)
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTags)
+  async trendsFeed(@Args() trendsFeedArgs: TrendsFeedArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
+    const { skip, limit, postLimit } = trendsFeedArgs
+
+    const { items, nextSkip } = await this.feedService.getTrendsFeed({
+      authUser,
+      skip,
+      limit,
+      postLimit,
+    })
+
+    return { items, nextSkip }
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  markTrendAsSeen(@CurrentUser() authUser: AuthUser, @Args() markTrendAsSeen: MarkTrendAsSeenArgs): Promise<boolean> {
+    const { before, tagId } = markTrendAsSeen
+
+    return this.feedService.markTrendAsSeen(authUser, tagId, before)
   }
 }

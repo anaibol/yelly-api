@@ -380,6 +380,9 @@ export class PostService {
         ).id)
 
     const post = await this.prismaService.post.create({
+      include: {
+        tags: true,
+      },
       data: {
         text,
         charsCount: text.length,
@@ -417,7 +420,26 @@ export class PostService {
         tags: {
           connectOrCreate: [...connectOrCreateTags, ...connectOrCreateEmojis],
         },
+        events: {
+          create: {
+            type: parentId ? 'POST_REPLY_CREATED' : 'POST_CREATED',
+          },
+        },
       },
+    })
+
+    await this.prismaService.postEvent.create({
+      data: parentId
+        ? {
+            postId: parentId,
+            tagId: post.tags[0].id,
+            type: 'POST_REPLY_CREATED',
+          }
+        : {
+            postId: post.id,
+            tagId: post.tags[0].id,
+            type: 'POST_CREATED',
+          },
     })
 
     uniqueTags.map((tag) => this.tagService.syncTagIndexWithAlgolia(tag))
@@ -501,6 +523,11 @@ export class PostService {
         post: {
           connect: {
             id: postId,
+          },
+        },
+        events: {
+          create: {
+            type: 'POST_REACTION_CREATED',
           },
         },
       },
