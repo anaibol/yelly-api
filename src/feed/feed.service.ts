@@ -5,13 +5,13 @@ import { PostSelectWithParent, mapPost, getNotExpiredCondition } from '../post/p
 import { AuthUser } from 'src/auth/auth.service'
 
 import { Feed } from './feed.model'
-import { PostEvent, Prisma } from '@prisma/client'
+import { FeedEvent, Prisma } from '@prisma/client'
 import { differenceInHours, sub } from 'date-fns'
 import { excludedTags } from '../tag/excluded-tags.constant'
 import { PaginatedTags } from '../tag/paginated-tags.model'
 import { uniqBy } from 'lodash'
 
-const PostEventsInclude = {
+const FeedEventsInclude = {
   post: {
     include: {
       author: true,
@@ -29,8 +29,8 @@ const PostEventsInclude = {
   },
 }
 
-type PostEventPayload = Prisma.PostEventGetPayload<{
-  include: typeof PostEventsInclude
+type FeedEventPayload = Prisma.FeedEventGetPayload<{
+  include: typeof FeedEventsInclude
 }>
 
 type ScoreParams = {
@@ -61,22 +61,22 @@ const getPostActivityScoreX = ({ followed, followedByFollowee, sameSchool, sameY
   return 4
 }
 
-const getPostCreationScore = (e: PostEvent, scoreParams: ScoreParams): number => {
+const getPostCreationScore = (e: FeedEvent, scoreParams: ScoreParams): number => {
   const X = getPostCreationScoreX(scoreParams)
 
   return 100 * (1 - differenceInHours(e.createdAt, new Date()) / X)
 }
 
-const getPostActivityScore = (e: PostEvent, y: number, scoreParams: ScoreParams): number => {
+const getPostActivityScore = (e: FeedEvent, y: number, scoreParams: ScoreParams): number => {
   const X = getPostActivityScoreX(scoreParams)
 
   return y * Math.exp(X * (-differenceInHours(e.createdAt, new Date()) / 24))
 }
 
-const getPostScore = (authUser: AuthUser, events: PostEventPayload[]): number => {
-  if (events.some((e) => e.userId === authUser.id && e.type === 'TREND_SEEN')) return 0
+const getPostScore = (authUser: AuthUser, feedEvents: FeedEventPayload[]): number => {
+  if (feedEvents.some((e) => e.userId === authUser.id && e.type === 'TREND_SEEN')) return 0
 
-  const score: number = events
+  const score: number = feedEvents
     .map((e) => {
       const { type } = e
 
@@ -274,7 +274,7 @@ export class FeedService {
             },
           },
         },
-        events: {
+        feedEvents: {
           some: {},
           every: {
             createdAt: {
@@ -311,8 +311,8 @@ export class FeedService {
       },
       select: {
         ...PostSelectWithParent,
-        events: {
-          include: PostEventsInclude,
+        feedEvents: {
+          include: FeedEventsInclude,
         },
       },
     })
@@ -366,14 +366,14 @@ export class FeedService {
 
     // const followedByFolloweesIds = followedByFollowees.map((f) => f.id)
 
-    const scoredPosts = postsWithEvents.map(({ events, ...post }) => {
+    const scoredPosts = postsWithEvents.map(({ feedEvents, ...post }) => {
       // if (find events by tag(e))
       // e.tag
 
       // const isPostAuthorFollowed = followedIds.includes(post.author.id)
       // const isPostAuthorFollowedByFollowee = followedByFolloweesIds.includes(post.author.id)
 
-      const score = getPostScore(authUser, events)
+      const score = getPostScore(authUser, feedEvents)
 
       return {
         ...post,
@@ -420,16 +420,16 @@ export class FeedService {
     return { items, nextSkip }
   }
 
-  async markTrendAsSeen(authUser: AuthUser, tagId: string, before: Date): Promise<boolean> {
-    const update = await this.prismaService.postEvent.create({
+  async markTrendAsSeen(authUser: AuthUser, tagId: string, cursor: string): Promise<boolean> {
+    await this.prismaService.feedEvent.create({
       data: {
         type: 'TREND_SEEN',
         tagId,
-        createdAt: before,
+        cursor,
         userId: authUser.id,
       },
     })
 
-    return !!update
+    return true
   }
 }

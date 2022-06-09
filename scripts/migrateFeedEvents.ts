@@ -21,9 +21,7 @@ async function main() {
     },
   })
 
-  console.log({ postReactions })
-
-  await prisma.postEvent.createMany({
+  await prisma.feedEvent.createMany({
     data: postReactions.map(({ id, createdAt, post }) => ({
       createdAt,
       type: 'POST_REACTION_CREATED' as const,
@@ -50,9 +48,7 @@ async function main() {
     },
   })
 
-  console.log({ postReplies })
-
-  await prisma.postEvent.createMany({
+  await prisma.feedEvent.createMany({
     data: postReplies.map(({ id, createdAt, parent }) => ({
       createdAt,
       type: 'POST_REPLY_CREATED' as const,
@@ -73,9 +69,7 @@ async function main() {
     },
   })
 
-  console.log({ newPosts })
-
-  await prisma.postEvent.createMany({
+  await prisma.feedEvent.createMany({
     data: newPosts.map(({ id, createdAt, tags }) => ({
       createdAt,
       type: 'POST_CREATED' as const,

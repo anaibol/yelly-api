@@ -420,7 +420,7 @@ export class PostService {
         tags: {
           connectOrCreate: [...connectOrCreateTags, ...connectOrCreateEmojis],
         },
-        events: {
+        feedEvents: {
           create: {
             type: parentId ? 'POST_REPLY_CREATED' : 'POST_CREATED',
           },
@@ -428,7 +428,7 @@ export class PostService {
       },
     })
 
-    await this.prismaService.postEvent.create({
+    await this.prismaService.feedEvent.create({
       data: parentId
         ? {
             postId: parentId,
@@ -525,7 +525,7 @@ export class PostService {
             id: postId,
           },
         },
-        events: {
+        feedEvents: {
           create: {
             type: 'POST_REACTION_CREATED',
           },

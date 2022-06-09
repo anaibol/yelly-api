@@ -58,8 +58,8 @@ export class FeedResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   markTrendAsSeen(@CurrentUser() authUser: AuthUser, @Args() markTrendAsSeen: MarkTrendAsSeenArgs): Promise<boolean> {
-    const { before, tagId } = markTrendAsSeen
+    const { tagId, cursor } = markTrendAsSeen
 
-    return this.feedService.markTrendAsSeen(authUser, tagId, before)
+    return this.feedService.markTrendAsSeen(authUser, tagId, cursor)
   }
 }

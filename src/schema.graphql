@@ -166,7 +166,7 @@ type Mutation {
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
   markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: BigInt): Boolean!
   markNotificationAsSeen(notificationId: String!): Boolean!
-  markTrendAsSeen(before: DateTime!, tagId: String!): Boolean!
+  markTrendAsSeen(cursor: String!, tagId: String!): Boolean!
   refreshAccessToken(refreshToken: String!): AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
