@@ -420,11 +420,6 @@ export class PostService {
         tags: {
           connectOrCreate: [...connectOrCreateTags, ...connectOrCreateEmojis],
         },
-        feedEvents: {
-          create: {
-            type: parentId ? 'POST_REPLY_CREATED' : 'POST_CREATED',
-          },
-        },
       },
     })
 
@@ -525,11 +520,6 @@ export class PostService {
             id: postId,
           },
         },
-        feedEvents: {
-          create: {
-            type: 'POST_REACTION_CREATED',
-          },
-        },
       },
       update: {
         text,
@@ -540,6 +530,15 @@ export class PostService {
         post: {
           select: PostSelectWithParent,
         },
+      },
+    })
+
+    await this.prismaService.feedEvent.create({
+      data: {
+        postId,
+        postReactionId: reaction.id,
+        tagId: post.tags[0].id,
+        type: 'POST_REACTION_CREATED',
       },
     })
 

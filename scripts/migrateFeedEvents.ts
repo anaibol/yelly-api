@@ -26,6 +26,7 @@ async function main() {
       createdAt,
       type: 'POST_REACTION_CREATED' as const,
       postReactionId: id,
+      postId: post.id,
       tagId: post.tags[0].id,
     })),
   })
@@ -53,7 +54,8 @@ async function main() {
       createdAt,
       type: 'POST_REPLY_CREATED' as const,
       postId: id,
-      tagId: parent?.tags[0].id,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      tagId: parent!.tags[0].id,
     })),
   })
 
