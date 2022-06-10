@@ -333,11 +333,14 @@ export class PostService {
       .city()
       .country()
 
-    const parent =
-      parentId &&
-      (await this.prismaService.post.findUnique({
-        where: { id: parentId },
-      }))
+    const parent = parentId
+      ? await this.prismaService.post.findUnique({
+          where: { id: parentId },
+          include: {
+            tags: true,
+          },
+        })
+      : null
 
     const connectOrCreateTags = uniq(tags).map(
       (tagText): Prisma.TagCreateOrConnectWithoutPostsInput => ({
@@ -402,14 +405,14 @@ export class PostService {
             id: authUser.id,
           },
         },
-        ...(parentId && {
+        ...(parent && {
           parent: {
             connect: {
-              id: parentId,
+              id: parent.id,
             },
           },
         }),
-        ...(parentId &&
+        ...(parent &&
           threadId && {
             thread: {
               connect: {
@@ -424,10 +427,10 @@ export class PostService {
     })
 
     await this.prismaService.feedEvent.create({
-      data: parentId
+      data: parent
         ? {
             postId: parentId,
-            tagId: post.tags[0].id,
+            tagId: parent.tags[0].id,
             type: 'POST_REPLY_CREATED',
           }
         : {
