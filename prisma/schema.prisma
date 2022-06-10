@@ -142,17 +142,17 @@ model Follower {
 }
 
 model Tag {
-  id        String      @id @default(dbgenerated("generate_id()"))
-  text      String      @unique
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @default(now()) @updatedAt
-  isLive    Boolean     @default(false)
-  posts     Post[]
-  countryId String?
-  country   Country?    @relation(fields: [countryId], references: [id])
-  isEmoji   Boolean     @default(false)
-  isHidden  Boolean     @default(false)
-  feedEvent FeedEvent[]
+  id         String      @id @default(dbgenerated("generate_id()"))
+  text       String      @unique
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @default(now()) @updatedAt
+  isLive     Boolean     @default(false)
+  posts      Post[]
+  countryId  String?
+  country    Country?    @relation(fields: [countryId], references: [id])
+  isEmoji    Boolean     @default(false)
+  isHidden   Boolean     @default(false)
+  feedEvents FeedEvent[]
 
   @@index([createdAt])
   @@index([isLive, countryId])
@@ -213,7 +213,7 @@ model PostPollVote {
 
 model PostReaction {
   id           BigInt        @id @default(dbgenerated("generate_id()"))
-  createdAt    DateTime      @unique @default(now())
+  createdAt    DateTime      @default(now())
   text         String
   postId       String
   authorId     String
@@ -275,6 +275,12 @@ model FeedEvent {
   postReaction   PostReaction? @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
   type           FeedEventType
   createdAt      DateTime      @default(now())
+
+  @@index([createdAt])
+  @@index([postId])
+  @@index([postReactionId])
+  @@index([tagId])
+  @@index([userId])
 }
 
 enum FeedEventType {

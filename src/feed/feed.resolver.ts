@@ -8,8 +8,8 @@ import { Feed } from './feed.model'
 import { FeedArgs } from './feed.args'
 import { MarkFeedItemsAsSeenArgs } from './mark-feed-items-as-seen.args'
 import { MarkTrendAsSeenArgs } from './mark-trend-as-seen.args'
-import { PaginatedTags } from 'src/tag/paginated-tags.model'
 import { TrendsFeedArgs } from './trends-feed.args'
+import { TrendsFeed } from './trends-feed.model'
 
 @Resolver()
 export class FeedResolver {
@@ -41,8 +41,8 @@ export class FeedResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => PaginatedTags)
-  async trendsFeed(@Args() trendsFeedArgs: TrendsFeedArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
+  @Query(() => TrendsFeed)
+  async trendsFeed(@Args() trendsFeedArgs: TrendsFeedArgs, @CurrentUser() authUser: AuthUser): Promise<TrendsFeed> {
     const { skip, limit, postLimit } = trendsFeedArgs
 
     const { items, nextSkip } = await this.feedService.getTrendsFeed({

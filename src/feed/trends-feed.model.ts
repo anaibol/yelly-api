@@ -1,12 +1,18 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { User } from 'src/user/user.model'
 import { PaginatedPosts } from '../post/paginated-posts.model'
-import { Tag } from '../tag/tag.model'
 
 @ObjectType()
-class Trend {
+export class Trend {
+  @Field(() => ID)
+  id: string
+  text: string
+  createdAt?: Date
+  isLive?: boolean
+  isEmoji?: boolean
   posts?: PaginatedPosts
-  tag: Tag
+  postCount?: number
+  author?: User
 }
 
 @ObjectType()

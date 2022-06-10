@@ -41,7 +41,7 @@ async function main() {
 
   const actions = posts.map(updatePost)
 
-  await pAll(actions, { concurrency: 15 })
+  await pAll(actions, { concurrency: 10 })
 
   console.log(posts.length)
 }

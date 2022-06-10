@@ -264,7 +264,7 @@ type Query {
   school(googlePlaceId: String, id: String): School
   tag(text: String!): Tag!
   tags(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
-  trendsFeed(limit: Int = 10, postLimit: Int = 10, skip: Int = 0): PaginatedTags!
+  trendsFeed(limit: Int = 10, postLimit: Int = 10, skip: Int = 0): TrendsFeed!
   unreadFeedItemsCount: Int!
   unreadNotificationsCount: Int!
   user(id: String!): User!
@@ -308,6 +308,22 @@ type Tag {
 type Training {
   id: ID!
   name: String!
+}
+
+type Trend {
+  author: User
+  createdAt: DateTime
+  id: ID!
+  isEmoji: Boolean
+  isLive: Boolean
+  postCount: Int
+  posts: PaginatedPosts
+  text: String!
+}
+
+type TrendsFeed {
+  items: [Trend!]!
+  nextSkip: Int!
 }
 
 input UpdateUserInput {
