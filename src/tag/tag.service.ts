@@ -9,6 +9,7 @@ import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
 import { Prisma } from '@prisma/client'
 import { User } from 'src/user/user.model'
+import { SortBy, SortDirection } from './tags.args'
 
 @Injectable()
 export class TagService {
@@ -166,7 +167,14 @@ export class TagService {
     return true
   }
 
-  async getTags(authUser: AuthUser, skip: number, limit: number, isEmoji?: boolean): Promise<PaginatedTags> {
+  async getTags(
+    authUser: AuthUser,
+    skip: number,
+    limit: number,
+    isEmoji?: boolean,
+    sortBy?: SortBy,
+    sortDirection?: SortDirection
+  ): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     const country = await this.prismaService.school
@@ -187,6 +195,17 @@ export class TagService {
       isHidden: false,
     }
 
+    const orderBy =
+      sortBy === 'postCount'
+        ? {
+            posts: {
+              _count: sortDirection,
+            },
+          }
+        : {
+            createdAt: sortDirection,
+          }
+
     const [totalCount, tags] = await Promise.all([
       this.prismaService.tag.count({
         where,
@@ -194,11 +213,7 @@ export class TagService {
       this.prismaService.tag.findMany({
         where,
         skip,
-        orderBy: {
-          posts: {
-            _count: 'desc',
-          },
-        },
+        orderBy,
         take: limit,
         select: tagSelect,
       }),

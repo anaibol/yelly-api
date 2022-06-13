@@ -263,7 +263,7 @@ type Query {
   posts(after: String, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String!): Tag!
-  tags(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTags!
+  tags(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0, sortBy: SortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   trendsFeed(limit: Int = 10, postLimit: Int = 10, skip: Int = 0): TrendsFeed!
   unreadFeedItemsCount: Int!
   unreadNotificationsCount: Int!
@@ -291,6 +291,16 @@ type School {
 
 type SendbirdAccessToken {
   sendbirdAccessToken: String!
+}
+
+enum SortBy {
+  createdAt
+  postCount
+}
+
+enum SortDirection {
+  asc
+  desc
 }
 
 type Tag {
