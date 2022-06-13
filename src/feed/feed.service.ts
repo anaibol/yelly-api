@@ -270,50 +270,72 @@ export class FeedService {
     if (!country) return Promise.reject(new Error('No country'))
 
     const trendsQuery = Prisma.sql`
-      SELECT
-        T."id",
-        COUNT(*) as "newPostCount"
-      FROM
-        "Tag" T,
-        "_PostToTag" PT,
-        "Post" P
-      WHERE
-        T. "isEmoji" = false
-        AND PT. "B" = T. "id"
-        AND PT. "A" = P. "id"
-        AND P."createdAt" > ${sub(new Date(), {
-          days: 1,
-        })} AND P."createdAt" < ${new Date()}
-      GROUP BY T."id"
-      ORDER BY "newPostCount" desc
+      SELECT 
+        subquery."id",
+        subquery."newPostCount"
+      FROM (
+        SELECT
+          T."id",
+          COUNT(*) as "newPostCount"
+        FROM
+          "Tag" T,
+          "_PostToTag" PT,
+          "Post" P
+        WHERE
+          T. "isEmoji" = false
+          AND PT. "B" = T. "id"
+          AND PT. "A" = P. "id"
+          AND P."createdAt" > ${sub(new Date(), {
+            days: 1,
+          })} 
+        GROUP BY T."id"
+        ORDER BY "newPostCount" desc
+      ) subquery
+      WHERE "newPostCount" > 2
       OFFSET ${skip}
       LIMIT ${limit / 2}
     `
 
-    const trends = await this.prismaService.$queryRaw<{ id: string }[]>(trendsQuery)
-    const trendsTagsIds = trends.map(({ id }) => id)
+    const recentTagsQuery = Prisma.sql`
+      SELECT 
+        subquery."id",
+        subquery."postCount"
+      FROM (
+        SELECT
+          T."id",
+          COUNT(*) as "postCount"
+        FROM
+          "Tag" T,
+          "_PostToTag" PT,
+          "Post" P
+        WHERE
+          T. "isEmoji" = false
+          AND PT. "B" = T. "id"
+          AND PT. "A" = P. "id"
+          AND T."createdAt" > ${sub(new Date(), {
+            days: 1,
+          })} 
+        GROUP BY T."id"
+      ) subquery
+      WHERE "postCount" > 2
+      OFFSET ${skip}
+      LIMIT ${limit / 2}
+    `
+
+    const [trends, recentTags] = await Promise.all([
+      this.prismaService.$queryRaw<{ id: string }[]>(trendsQuery),
+      this.prismaService.$queryRaw<{ id: string }[]>(recentTagsQuery),
+    ])
+
+    const trendsTagsIds = uniq([...trends, ...recentTags].map(({ id }) => id))
 
     const tags = await this.prismaService.tag.findMany({
       where: {
         isHidden: false,
         countryId: country.id,
-        OR: [
-          // {
-          // createdAt: {
-          //   gt: sub(new Date(), {
-          //     days: 1,
-          //   }),
-          // },
-          // },
-          {
-            id: {
-              in: trendsTagsIds,
-            },
-          },
-        ],
-      },
-      orderBy: {
-        createdAt: 'desc',
+        id: {
+          in: trendsTagsIds,
+        },
       },
       select: tagSelect,
       take: limit,
