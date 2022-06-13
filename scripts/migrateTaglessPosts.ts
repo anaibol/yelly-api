@@ -19,6 +19,8 @@ async function main() {
     },
   })
 
+  console.log({ 'no tag': posts.length })
+
   const updatePost = (post: any) => {
     return async () => {
       await prisma.post.update({

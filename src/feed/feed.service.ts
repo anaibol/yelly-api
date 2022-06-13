@@ -15,10 +15,6 @@ function isNotNull<T>(argument: T | null): argument is T {
   return argument !== null
 }
 
-;(BigInt.prototype as any).toJSON = function () {
-  return this.toString()
-}
-
 const FeedEventsInclude = {
   post: {
     include: {
@@ -322,6 +318,7 @@ export class FeedService {
         }
       })
       .filter(isNotNull)
+
     // const lastEventCreatedAt =
     // notSeenEvents.length > 0
     //     ? notSeenEvents
@@ -418,9 +415,18 @@ export class FeedService {
     // const followedByFolloweesIds = followedByFollowees.map((f) => f.id)
 
     const scoredTags = tagsWithEventsAndPosts.map(({ tagId, postIds, events }) => {
-      const scoredPosts = posts
-        .map(mapPost)
+      const mappedPosts = posts.map(mapPost)
+
+      const postsWithScore = mappedPosts
         .filter((p) => postIds.includes(p.id))
+        .filter(
+          (post) =>
+            post.createdAt &&
+            post.createdAt <
+              sub(new Date(), {
+                hours: 1,
+              })
+        )
         .map((post) => {
           // const isPostAuthorFollowed = followedIds.includes(post.author.id)
           // const isPostAuthorFollowedByFollowee = followedByFolloweesIds.includes(post.author.id)
@@ -436,14 +442,16 @@ export class FeedService {
         })
 
       // GET POSTS CREATED LESS THAN AN HOUR AGO
-      const recentPosts = scoredPosts.filter(
-        ({ post }) =>
+      const recentPosts = mappedPosts.filter(
+        (post) =>
           post.createdAt &&
-          post?.createdAt >
+          post.createdAt >
             sub(new Date(), {
               hours: 1,
             })
       )
+
+      const scoredPosts = sortBy(postsWithScore, 'score')
 
       const currentTag = tags.find((t) => t.id === tagId)
 
@@ -460,22 +468,22 @@ export class FeedService {
           author,
         },
         score: scoredPosts.reduce((partialSum, { score }) => partialSum + score, 0),
-        posts: [...recentPosts, ...scoredPosts].map(({ post }) => post).slice(0, postLimit),
+        posts: [...recentPosts, ...scoredPosts.map(({ post }) => post)].slice(0, postLimit),
       }
     })
 
     const nextSkip = skip + limit
 
-    const items = sortBy(scoredTags, 'score').map(({ tag, posts }) => {
+    const items = sortBy(scoredTags, 'score').map(({ tag, posts: tagPosts }) => {
       // const lastItem = tagPosts.length === limit ? tagPosts[limit - 1] : null
 
       // const nextCursor = lastItem ? lastItem.id : ''
 
       return {
         ...tag,
-        postCount: posts.length,
+        postCount: tagPosts.length,
         posts: {
-          items: posts,
+          items: tagPosts,
           nextCursor: '',
         },
       }
