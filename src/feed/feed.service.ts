@@ -299,11 +299,11 @@ export class FeedService {
         countryId: country.id,
         OR: [
           // {
-          //   createdAt: {
-          //     gt: sub(new Date(), {
-          //       days: 1,
-          //     }),
-          //   },
+          // createdAt: {
+          //   gt: sub(new Date(), {
+          //     days: 1,
+          //   }),
+          // },
           // },
           {
             id: {
@@ -321,13 +321,11 @@ export class FeedService {
     })
 
     const items = sampleSize(
-      tags.map(
-        ({ _count, ...tag }) => ({
-          ...tag,
-          postCount: _count.posts,
-        }),
-        tags.length
-      )
+      tags.map(({ _count, ...tag }) => ({
+        ...tag,
+        postCount: _count.posts,
+      })),
+      tags.length
     )
 
     const nextSkip = skip + limit
