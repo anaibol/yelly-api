@@ -429,7 +429,7 @@ export class PostService {
     await this.prismaService.feedEvent.create({
       data: parent
         ? {
-            postId: parentId,
+            postId: parent.id,
             tagId: parent.tags[0].id,
             type: 'POST_REPLY_CREATED',
           }

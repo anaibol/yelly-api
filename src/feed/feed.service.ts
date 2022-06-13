@@ -8,8 +8,11 @@ import { AuthUser } from 'src/auth/auth.service'
 import { Feed } from './feed.model'
 import { FeedEvent, Prisma } from '@prisma/client'
 import { differenceInHours, sub } from 'date-fns'
-import { findLastIndex, sortBy, uniq } from 'lodash'
+import { findLastIndex, sampleSize, sortBy, uniq } from 'lodash'
 import { TrendsFeed } from './trends-feed.model'
+import { tagSelect } from '../tag/tag-select.constant'
+import { excludedTags } from '../tag/excluded-tags.constant'
+import { PaginatedTags } from '../tag/paginated-tags.model'
 
 function isNotNull<T>(argument: T | null): argument is T {
   return argument !== null
@@ -246,251 +249,334 @@ export class FeedService {
   }
 
   async getTrendsFeed({
+    authUser,
     skip,
     limit,
-    authUser,
     postLimit,
   }: {
     authUser: AuthUser
     skip: number
     limit: number
     postLimit: number
-  }): Promise<TrendsFeed> {
+  }): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
-    const getAuthUserCountry = this.prismaService.school
+    const country = await this.prismaService.school
       .findUnique({
         where: { id: authUser.schoolId },
       })
       .city()
       .country()
 
-    const getFeedEvents = this.prismaService.feedEvent.findMany({
+    if (!country) return Promise.reject(new Error('No country'))
+
+    const trendsQuery = Prisma.sql`
+      SELECT
+        T."id",
+        COUNT(*) as "newPostCount"
+      FROM
+        "Tag" T,
+        "_PostToTag" PT,
+        "Post" P
+      WHERE
+        T. "isEmoji" = false
+        AND PT. "B" = T. "id"
+        AND PT. "A" = P. "id"
+        AND P."createdAt" > ${sub(new Date(), {
+          days: 1,
+        })} AND P."createdAt" < ${new Date()}
+      GROUP BY T."id"
+      ORDER BY "newPostCount" desc
+      OFFSET ${skip}
+      LIMIT ${limit / 2}
+    `
+
+    const trends = await this.prismaService.$queryRaw<{ id: string }[]>(trendsQuery)
+    const trendsTagsIds = trends.map(({ id }) => id)
+    const tags = await this.prismaService.tag.findMany({
       where: {
+        isHidden: false,
+        countryId: country.id,
         OR: [
           {
-            type: {
-              not: 'TREND_SEEN',
-            },
+            createdAt: sub(new Date(), {
+              days: 1,
+            }),
           },
           {
-            userId: authUser.id,
+            id: {
+              in: trendsTagsIds,
+            },
           },
         ],
-        createdAt: {
-          gt: sub(new Date(), { days: 1 }),
-        },
-        tag: {
-          isEmoji: false,
-          isHidden: false,
-        },
       },
-      include: FeedEventsInclude,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: tagSelect,
+      take: limit,
+      skip,
     })
 
-    const [authUserCountry, feedEvents] = await Promise.all([getAuthUserCountry, getFeedEvents])
-
-    if (!authUserCountry) return Promise.reject(new Error('No country'))
-
-    // GET UNIQUE TAGS
-    const tagIds = uniq(feedEvents.map((e) => e.tagId))
-
-    // GROUP EVENTS BY TAG
-    const tagsWithEventsAndPosts = tagIds
-      .map((tagId) => {
-        // GET EVENTS FOR TAG
-        const tagEvents = feedEvents.filter((e) => e.tagId === tagId)
-
-        // GET LAST TREND SEEN EVENT
-        const lastTrendSeenEventIndex = findLastIndex(tagEvents, (e) => e.type === 'TREND_SEEN')
-
-        // GET ALL EVENTS AFTER LAST SEEN EVENT
-        const events = tagEvents.slice(lastTrendSeenEventIndex + 1, tagEvents.length)
-
-        if (!events.length) return null
-
-        const postIds = uniq(events.map((e) => e.postId)).filter(isNotNull)
-
-        return {
-          tagId,
-          events,
-          postIds,
-        }
-      })
-      .filter(isNotNull)
-
-    // const lastEventCreatedAt =
-    // notSeenEvents.length > 0
-    //     ? notSeenEvents
-    //         .map((e) => e.createdAt)
-    //         .flat()
-    //         .reduce((a, b) => {
-    //           return a > b ? a : b
-    //         })
-    //     : new Date()
-
-    const [posts, tags] = await Promise.all([
-      this.prismaService.post.findMany({
-        where: {
-          id: {
-            in: tagsWithEventsAndPosts.map(({ postIds }) => postIds).flat(),
-          },
-          author: {
-            school: {
-              city: {
-                countryId: authUserCountry.id,
-              },
-            },
-          },
-        },
-        select: PostSelectWithParent,
-      }),
-      this.prismaService.tag.findMany({
-        where: {
-          id: {
-            in: tagsWithEventsAndPosts.map(({ tagId }) => tagId),
-          },
-        },
-        include: {
-          posts: {
-            take: 1,
-            orderBy: {
-              createdAt: 'asc',
-            },
-            include: {
-              author: true,
-            },
-          },
-        },
-      }),
-    ])
-
-    // function isDefined<T>(argument: T | undefined): argument is T {
-    //   return argument !== undefined
-    // }
-
-    // const usersIds = postsWithEvents
-    //   .map((p) =>
-    //     p.events.map((e) => {
-    //       if (e.type === 'POST_REACTION_CREATED') return e.postReaction?.author.id
-    //       if (e.type === 'POST_REPLY_CREATED') return e.post?.author.id
-    //       if (e.type === 'POST_CREATED') return e.post?.author.id
-    //     })
-    //   )
-    //   .flat()
-    //   .filter(isDefined)
-
-    // const followed = await this.prismaService.user.findMany({
-    //   where: {
-    //     id: {
-    //       in: usersIds,
-    //     },
-    //     followers: {
-    //       some: {
-    //         userId: authUser.id,
-    //       },
-    //     },
-    //   },
-    // })
-
-    // const followedIds = followed.map((f) => f.id)
-
-    // const followedByFollowees = await this.prismaService.user.findMany({
-    //   where: {
-    //     id: {
-    //       in: usersIds,
-    //     },
-    //     followers: {
-    //       some: {
-    //         followee: {
-    //           userId: {
-    //             in: authUser.id,
-    //           },
-    //         },
-    //       },
-    //     },
-    //   },
-    // })
-
-    // const followedByFolloweesIds = followedByFollowees.map((f) => f.id)
-
-    const scoredTags = tagsWithEventsAndPosts.map(({ tagId, postIds, events }) => {
-      const mappedPosts = posts.map(mapPost)
-
-      const postsWithScore = mappedPosts
-        .filter((p) => postIds.includes(p.id))
-        .filter(
-          (post) =>
-            post.createdAt &&
-            post.createdAt <
-              sub(new Date(), {
-                hours: 1,
-              })
-        )
-        .map((post) => {
-          // const isPostAuthorFollowed = followedIds.includes(post.author.id)
-          // const isPostAuthorFollowedByFollowee = followedByFolloweesIds.includes(post.author.id)
-
-          const feedEvents = events.filter((e) => e.postId === post.id)
-
-          const score = getPostScore(authUser, feedEvents)
-
-          return {
-            post,
-            score,
-          }
-        })
-
-      // GET POSTS CREATED LESS THAN AN HOUR AGO
-      const recentPosts = mappedPosts.filter(
-        (post) =>
-          post.createdAt &&
-          post.createdAt >
-            sub(new Date(), {
-              hours: 1,
-            })
-      )
-
-      const scoredPosts = sortBy(postsWithScore, 'score')
-
-      const currentTag = tags.find((t) => t.id === tagId)
-
-      if (!currentTag) throw new Error('No tag')
-
-      const {
-        posts: [{ author }],
-        ...tag
-      } = currentTag
-
-      return {
-        tag: {
-          ...tag,
-          author,
-        },
-        score: scoredPosts.reduce((partialSum, { score }) => partialSum + score, 0),
-        posts: [...recentPosts, ...scoredPosts.map(({ post }) => post)].slice(0, postLimit),
-      }
-    })
+    const items = sampleSize(
+      tags.map(({ _count, ...tag }) => ({
+        ...tag,
+        postCount: _count.posts,
+      })),
+      tags.length
+    )
 
     const nextSkip = skip + limit
 
-    const items = sortBy(scoredTags, 'score').map(({ tag, posts: tagPosts }) => {
-      // const lastItem = tagPosts.length === limit ? tagPosts[limit - 1] : null
-
-      // const nextCursor = lastItem ? lastItem.id : ''
-
-      return {
-        ...tag,
-        postCount: tagPosts.length,
-        posts: {
-          items: tagPosts,
-          nextCursor: '',
-        },
-      }
-    })
-
-    return { items, nextSkip }
+    return { items, nextSkip: tags.length === limit ? nextSkip : 0 }
   }
+
+  // async getTrendsFeed({
+  //   skip,
+  //   limit,
+  //   authUser,
+  //   postLimit,
+  // }: {
+  //   authUser: AuthUser
+  //   skip: number
+  //   limit: number
+  //   postLimit: number
+  // }): Promise<TrendsFeed> {
+  //   if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+
+  //   const getAuthUserCountry = this.prismaService.school
+  //     .findUnique({
+  //       where: { id: authUser.schoolId },
+  //     })
+  //     .city()
+  //     .country()
+
+  //   const getFeedEvents = this.prismaService.feedEvent.findMany({
+  //     where: {
+  //       OR: [
+  //         {
+  //           type: {
+  //             not: 'TREND_SEEN',
+  //           },
+  //         },
+  //         {
+  //           userId: authUser.id,
+  //         },
+  //       ],
+  //       createdAt: {
+  //         gt: sub(new Date(), { days: 1 }),
+  //       },
+  //       tag: {
+  //         isEmoji: false,
+  //         isHidden: false,
+  //       },
+  //     },
+  //     include: FeedEventsInclude,
+  //   })
+
+  //   const [authUserCountry, feedEvents] = await Promise.all([getAuthUserCountry, getFeedEvents])
+
+  //   if (!authUserCountry) return Promise.reject(new Error('No country'))
+
+  //   // GET UNIQUE TAGS
+  //   const tagIds = uniq(feedEvents.map((e) => e.tagId))
+
+  //   // GROUP EVENTS BY TAG
+  //   const tagsWithEventsAndPosts = tagIds
+  //     .map((tagId) => {
+  //       // GET EVENTS FOR TAG
+  //       const tagEvents = feedEvents.filter((e) => e.tagId === tagId)
+
+  //       // GET LAST TREND SEEN EVENT
+  //       const lastTrendSeenEventIndex = findLastIndex(tagEvents, (e) => e.type === 'TREND_SEEN')
+
+  //       // GET ALL EVENTS AFTER LAST SEEN EVENT
+  //       const events = tagEvents.slice(lastTrendSeenEventIndex + 1, tagEvents.length)
+
+  //       if (!events.length) return null
+
+  //       const postIds = uniq(events.map((e) => e.postId)).filter(isNotNull)
+
+  //       return {
+  //         tagId,
+  //         events,
+  //         postIds,
+  //       }
+  //     })
+  //     .filter(isNotNull)
+
+  //   // const lastEventCreatedAt =
+  //   // notSeenEvents.length > 0
+  //   //     ? notSeenEvents
+  //   //         .map((e) => e.createdAt)
+  //   //         .flat()
+  //   //         .reduce((a, b) => {
+  //   //           return a > b ? a : b
+  //   //         })
+  //   //     : new Date()
+
+  //   const [posts, tags] = await Promise.all([
+  //     this.prismaService.post.findMany({
+  //       where: {
+  //         id: {
+  //           in: tagsWithEventsAndPosts.map(({ postIds }) => postIds).flat(),
+  //         },
+  //         author: {
+  //           school: {
+  //             city: {
+  //               countryId: authUserCountry.id,
+  //             },
+  //           },
+  //         },
+  //       },
+  //       select: PostSelectWithParent,
+  //     }),
+  //     this.prismaService.tag.findMany({
+  //       where: {
+  //         id: {
+  //           in: tagsWithEventsAndPosts.map(({ tagId }) => tagId),
+  //         },
+  //       },
+  //       include: {
+  //         posts: {
+  //           take: 1,
+  //           orderBy: {
+  //             createdAt: 'asc',
+  //           },
+  //           include: {
+  //             author: true,
+  //           },
+  //         },
+  //       },
+  //     }),
+  //   ])
+
+  //   // function isDefined<T>(argument: T | undefined): argument is T {
+  //   //   return argument !== undefined
+  //   // }
+
+  //   // const usersIds = postsWithEvents
+  //   //   .map((p) =>
+  //   //     p.events.map((e) => {
+  //   //       if (e.type === 'POST_REACTION_CREATED') return e.postReaction?.author.id
+  //   //       if (e.type === 'POST_REPLY_CREATED') return e.post?.author.id
+  //   //       if (e.type === 'POST_CREATED') return e.post?.author.id
+  //   //     })
+  //   //   )
+  //   //   .flat()
+  //   //   .filter(isDefined)
+
+  //   // const followed = await this.prismaService.user.findMany({
+  //   //   where: {
+  //   //     id: {
+  //   //       in: usersIds,
+  //   //     },
+  //   //     followers: {
+  //   //       some: {
+  //   //         userId: authUser.id,
+  //   //       },
+  //   //     },
+  //   //   },
+  //   // })
+
+  //   // const followedIds = followed.map((f) => f.id)
+
+  //   // const followedByFollowees = await this.prismaService.user.findMany({
+  //   //   where: {
+  //   //     id: {
+  //   //       in: usersIds,
+  //   //     },
+  //   //     followers: {
+  //   //       some: {
+  //   //         followee: {
+  //   //           userId: {
+  //   //             in: authUser.id,
+  //   //           },
+  //   //         },
+  //   //       },
+  //   //     },
+  //   //   },
+  //   // })
+
+  //   // const followedByFolloweesIds = followedByFollowees.map((f) => f.id)
+
+  //   const scoredTags = tagsWithEventsAndPosts.map(({ tagId, postIds, events }) => {
+  //     const mappedPosts = posts.map(mapPost)
+
+  //     const postsWithScore = mappedPosts
+  //       .filter((p) => postIds.includes(p.id))
+  //       .filter(
+  //         (post) =>
+  //           post.createdAt &&
+  //           post.createdAt <
+  //             sub(new Date(), {
+  //               hours: 1,
+  //             })
+  //       )
+  //       .map((post) => {
+  //         // const isPostAuthorFollowed = followedIds.includes(post.author.id)
+  //         // const isPostAuthorFollowedByFollowee = followedByFolloweesIds.includes(post.author.id)
+
+  //         const feedEvents = events.filter((e) => e.postId === post.id)
+
+  //         const score = getPostScore(authUser, feedEvents)
+
+  //         return {
+  //           post,
+  //           score,
+  //         }
+  //       })
+
+  //     // GET POSTS CREATED LESS THAN AN HOUR AGO
+  //     const recentPosts = mappedPosts.filter(
+  //       (post) =>
+  //         post.createdAt &&
+  //         post.createdAt >
+  //           sub(new Date(), {
+  //             hours: 1,
+  //           })
+  //     )
+
+  //     const scoredPosts = sortBy(postsWithScore, 'score')
+
+  //     const currentTag = tags.find((t) => t.id === tagId)
+
+  //     if (!currentTag) throw new Error('No tag')
+
+  //     const {
+  //       posts: [{ author }],
+  //       ...tag
+  //     } = currentTag
+
+  //     return {
+  //       tag: {
+  //         ...tag,
+  //         author,
+  //       },
+  //       score: scoredPosts.reduce((partialSum, { score }) => partialSum + score, 0),
+  //       posts: [...recentPosts, ...scoredPosts.map(({ post }) => post)].slice(0, postLimit),
+  //     }
+  //   })
+
+  //   const nextSkip = skip + limit
+
+  //   const items = sortBy(scoredTags, 'score').map(({ tag, posts: tagPosts }) => {
+  //     // const lastItem = tagPosts.length === limit ? tagPosts[limit - 1] : null
+
+  //     // const nextCursor = lastItem ? lastItem.id : ''
+
+  //     return {
+  //       ...tag,
+  //       postCount: tagPosts.length,
+  //       posts: {
+  //         items: tagPosts,
+  //         nextCursor: '',
+  //       },
+  //     }
+  //   })
+
+  //   return { items, nextSkip }
+  // }
 
   async markTrendAsSeen(authUser: AuthUser, tagId: string, cursor: string): Promise<boolean> {
     await this.prismaService.feedEvent.create({
