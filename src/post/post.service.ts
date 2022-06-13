@@ -322,7 +322,7 @@ export class PostService {
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
     const { text, emojis, expiresIn, tags, pollOptions, parentId } = createPostInput
 
-    const uniqueTags = uniq(tags)
+    const uniqueTags = tags && tags.length > 0 ? uniq(tags) : ['NoTag']
 
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 

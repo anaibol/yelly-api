@@ -65,4 +65,9 @@ export const excludedTags = [
   'viensparler',
   'quipoourparleroucoco',
   'sivousvoulezparlerajoutezmoisursnap',
+  'zizi',
+  'kekette',
+  'pd',
+  'pourbaiser78',
+  'levretteousodomie',
 ]
