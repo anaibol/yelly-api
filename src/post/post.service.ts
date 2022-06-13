@@ -342,7 +342,7 @@ export class PostService {
         })
       : null
 
-    const connectOrCreateTags = uniq(tags).map(
+    const connectOrCreateTags = uniqueTags.map(
       (tagText): Prisma.TagCreateOrConnectWithoutPostsInput => ({
         where: {
           text: tagText,
