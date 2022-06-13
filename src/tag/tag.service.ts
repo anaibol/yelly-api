@@ -197,7 +197,9 @@ export class TagService {
       ...(isEmoji !== undefined && {
         isEmoji,
       }),
-      isHidden: !showHidden,
+      ...(!showHidden && {
+        isHidden: false,
+      }),
     }
 
     const orderBy =
