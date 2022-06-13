@@ -174,7 +174,7 @@ type Mutation {
   trackUserView(userId: String!): Boolean!
   unFollow(otherUserId: String!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
-  updateTag(isHidden: Boolean!, tagId: String!): Tag!
+  updateTag(input: UpdateTagInput!, tagId: String!): Tag!
 }
 
 type Notification {
@@ -264,7 +264,7 @@ type Query {
   posts(after: String, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(text: String!): Tag!
-  tags(isEmoji: Boolean = false, limit: Int = 10, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
+  tags(isEmoji: Boolean = false, limit: Int = 10, showHidden: Boolean = false, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   trends(limit: Int = 10, skip: Int = 0): PaginatedTags!
   trendsFeed(limit: Int = 10, postLimit: Int = 10, skip: Int = 0): TrendsFeed!
   unreadFeedItemsCount: Int!
@@ -336,6 +336,10 @@ type Trend {
 type TrendsFeed {
   items: [Trend!]!
   nextSkip: Int!
+}
+
+input UpdateTagInput {
+  isHidden: Boolean
 }
 
 input UpdateUserInput {

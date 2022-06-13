@@ -19,6 +19,7 @@ import { UserService } from '../user/user.service'
 import { User } from '../user/user.model'
 import { PrismaService } from '../core/prisma.service'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
+import { UpdateTagInput } from './update-tag.input'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -47,9 +48,17 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
   async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { skip, limit, isEmoji, sortBy, sortDirection } = tagsArgs
+    const { skip, limit, isEmoji, sortBy, sortDirection, showHidden } = tagsArgs
 
-    const { items, nextSkip } = await this.tagService.getTags(authUser, skip, limit, isEmoji, sortBy, sortDirection)
+    const { items, nextSkip } = await this.tagService.getTags(
+      authUser,
+      skip,
+      limit,
+      isEmoji,
+      sortBy,
+      sortDirection,
+      showHidden
+    )
 
     return { items, nextSkip }
   }
@@ -103,10 +112,10 @@ export class TagResolver {
   updateTag(
     @CurrentUser() authUser: AuthUser,
     @Args('tagId') tagId: string,
-    @Args('isHidden') isHidden: boolean
+    @Args('input') updateTagInput: UpdateTagInput
   ): Promise<Tag> {
     if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
 
-    return this.tagService.updateTag(tagId, { isHidden })
+    return this.tagService.updateTag(tagId, updateTagInput)
   }
 }
