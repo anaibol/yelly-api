@@ -10,6 +10,7 @@ export class Tag {
   createdAt?: Date
   isLive?: boolean
   isEmoji?: boolean
+  isHidden?: boolean
   posts?: PaginatedPosts
   postCount?: number
   author?: User

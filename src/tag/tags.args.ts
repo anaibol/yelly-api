@@ -22,6 +22,7 @@ registerEnumType(SortDirection, {
 @ArgsType()
 export class TagsArgs extends OffsetPaginationArgs {
   isEmoji: boolean = false
+  showHidden: boolean = false
   @Field(() => TagSortBy)
   sortBy?: TagSortBy = TagSortBy.createdAt
   @Field(() => SortDirection)
