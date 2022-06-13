@@ -14,10 +14,12 @@ import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import { PrismaService } from '../core/prisma.service'
 import { mapPost, PostSelectWithParent } from '../post/post-select.constant'
+import { User } from '../user/user.model'
+import { TagService } from '../tag/tag.service'
 
 @Resolver(Trend)
 export class FeedResolver {
-  constructor(private feedService: FeedService, private prismaService: PrismaService) {}
+  constructor(private feedService: FeedService, private tagService: TagService, private prismaService: PrismaService) {}
 
   @UseGuards(AuthGuard)
   @Query(() => Feed)
@@ -65,6 +67,11 @@ export class FeedResolver {
     const { tagId, cursor } = markTrendAsSeen
 
     return this.feedService.markTrendAsSeen(authUser, tagId, cursor)
+  }
+
+  @ResolveField()
+  async author(@Parent() trend: Trend): Promise<User | null> {
+    return this.tagService.getTagAuthor(trend.id)
   }
 
   @ResolveField()
