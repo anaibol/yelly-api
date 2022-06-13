@@ -7,11 +7,8 @@ import { PaginatedTags } from './paginated-tags.model'
 import { AuthUser } from 'src/auth/auth.service'
 import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
-import { excludedTags } from './excluded-tags.constant'
 import { Prisma } from '@prisma/client'
 import { User } from 'src/user/user.model'
-import { sub } from 'date-fns'
-import { sampleSize } from 'lodash'
 
 @Injectable()
 export class TagService {
@@ -187,10 +184,7 @@ export class TagService {
       ...(isEmoji !== undefined && {
         isEmoji,
       }),
-      text: {
-        notIn: excludedTags,
-        mode: 'insensitive',
-      },
+      isHidden: false,
     }
 
     const [totalCount, tags] = await Promise.all([

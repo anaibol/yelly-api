@@ -287,10 +287,6 @@ export class FeedService {
         tag: {
           isEmoji: false,
           isHidden: false,
-          // text: {
-          //   notIn: [...excludedTags, 'NoTag'],
-          //   mode: 'insensitive',
-          // },
         },
       },
       include: FeedEventsInclude,
