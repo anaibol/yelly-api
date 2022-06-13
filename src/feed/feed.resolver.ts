@@ -86,7 +86,7 @@ export class FeedResolver {
         },
         skip: 1,
       }),
-      take: limit,
+      take: 5,
     })
 
     const items = posts.map(mapPost)
