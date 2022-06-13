@@ -12,6 +12,5 @@ export class Tag {
   isEmoji?: boolean
   posts?: PaginatedPosts
   postCount?: number
-  authUserPosted?: boolean
   author?: User
 }

@@ -18,6 +18,7 @@ import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 import { UserService } from '../user/user.service'
 import { User } from '../user/user.model'
 import { PrismaService } from '../core/prisma.service'
+import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -30,11 +31,6 @@ export class TagResolver {
     @CurrentUser() authUser: AuthUser
   ): Promise<Tag> {
     return this.tagService.createOrUpdateLiveTag(createOrUpdateLiveTag.text, createOrUpdateLiveTag.isLive, authUser)
-  }
-
-  @ResolveField()
-  async authUserPosted(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.hasUserPostedOnTag(authUser.id, tag.id)
   }
 
   @ResolveField()
@@ -54,6 +50,19 @@ export class TagResolver {
     const { skip, limit, isEmoji, sortBy, sortDirection } = tagsArgs
 
     const { items, nextSkip } = await this.tagService.getTags(authUser, skip, limit, isEmoji, sortBy, sortDirection)
+
+    return { items, nextSkip }
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTags)
+  async trends(
+    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PaginatedTags> {
+    const { skip, limit } = offsetPaginationArgs
+
+    const { items, nextSkip } = await this.tagService.getTrends(authUser, skip, limit)
 
     return { items, nextSkip }
   }

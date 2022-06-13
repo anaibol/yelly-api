@@ -9,7 +9,8 @@ import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
 import { Prisma } from '@prisma/client'
 import { User } from 'src/user/user.model'
-import { SortBy, SortDirection } from './tags.args'
+import { TagSortBy, SortDirection } from './tags.args'
+import { sub } from 'date-fns'
 
 @Injectable()
 export class TagService {
@@ -172,7 +173,7 @@ export class TagService {
     skip: number,
     limit: number,
     isEmoji?: boolean,
-    sortBy?: SortBy,
+    sortBy?: TagSortBy,
     sortDirection?: SortDirection
   ): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
@@ -229,5 +230,67 @@ export class TagService {
     })
 
     return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+  }
+
+  async getTrends(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedTags> {
+    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+
+    const country = await this.prismaService.school
+      .findUnique({
+        where: { id: authUser.schoolId },
+      })
+      .city()
+      .country()
+
+    if (!country) return Promise.reject(new Error('No country'))
+
+    const trendsQuery = Prisma.sql`
+      SELECT
+        T."id",
+        COUNT(*) as "newPostCount"
+      FROM
+        "Tag" T,
+        "_PostToTag" PT,
+        "Post" P
+      WHERE
+        T. "isEmoji" = false
+        AND PT. "B" = T. "id"
+        AND PT. "A" = P. "id"
+        AND P."createdAt" > ${sub(new Date(), {
+          days: 7,
+        })}
+      GROUP BY T."id"
+      ORDER BY "newPostCount" desc
+      OFFSET ${skip}
+      LIMIT ${limit}
+    `
+
+    const trends = await this.prismaService.$queryRaw<{ id: string }[]>(trendsQuery)
+    const trendsTagsIds = trends.map(({ id }) => id)
+
+    const tags = await this.prismaService.tag.findMany({
+      where: {
+        isHidden: false,
+        countryId: country.id,
+        id: {
+          in: trendsTagsIds,
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: tagSelect,
+      take: limit,
+      skip,
+    })
+
+    const items = tags.map(({ _count, ...tag }) => ({
+      ...tag,
+      postCount: _count.posts,
+    }))
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: tags.length === limit ? nextSkip : 0 }
   }
 }
