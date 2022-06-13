@@ -97,4 +97,16 @@ export class TagResolver {
 
     return { items, nextCursor }
   }
+
+  @Mutation(() => Tag)
+  @UseGuards(AuthGuard)
+  updateTag(
+    @CurrentUser() authUser: AuthUser,
+    @Args('tagId') tagId: string,
+    @Args('isHidden') isHidden: boolean
+  ): Promise<Tag> {
+    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
+
+    return this.tagService.updateTag(tagId, { isHidden })
+  }
 }

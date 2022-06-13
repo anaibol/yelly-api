@@ -4,6 +4,7 @@ export const tagSelect = {
   createdAt: true,
   isLive: true,
   isEmoji: true,
+  isHidden: true,
   _count: {
     select: {
       posts: true,

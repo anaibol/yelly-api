@@ -293,4 +293,15 @@ export class TagService {
 
     return { items, nextSkip: tags.length === limit ? nextSkip : 0 }
   }
+
+  async updateTag(tagId: string, { isHidden }: { isHidden: boolean }): Promise<Tag> {
+    return this.prismaService.tag.update({
+      where: {
+        id: tagId,
+      },
+      data: {
+        isHidden,
+      },
+    })
+  }
 }
