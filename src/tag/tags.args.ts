@@ -12,7 +12,7 @@ export enum SortDirection {
 }
 
 registerEnumType(TagSortBy, {
-  name: 'SortBy',
+  name: 'TagSortBy',
 })
 
 registerEnumType(SortDirection, {
