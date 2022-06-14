@@ -155,8 +155,8 @@ export class MeResolver {
 
   @Mutation(() => Me)
   @UseGuards(AuthGuard)
-  updateMe(@Args('input') updateUserData: UpdateUserInput, @CurrentUser() authUser: AuthUser): Promise<Me> {
-    return this.userService.update(authUser.id, updateUserData)
+  updateMe(@Args('input') updateUserInput: UpdateUserInput, @CurrentUser() authUser: AuthUser): Promise<Me> {
+    return this.userService.update(authUser.id, updateUserInput)
   }
 
   @Mutation(() => Boolean)

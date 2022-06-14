@@ -11,6 +11,7 @@ import { Prisma } from '@prisma/client'
 import { User } from 'src/user/user.model'
 import { TagSortBy, SortDirection } from './tags.args'
 import { sub } from 'date-fns'
+import { UpdateTagInput } from './update-tag.input'
 
 @Injectable()
 export class TagService {
@@ -174,7 +175,8 @@ export class TagService {
     limit: number,
     isEmoji?: boolean,
     sortBy?: TagSortBy,
-    sortDirection?: SortDirection
+    sortDirection?: SortDirection,
+    showHidden?: boolean
   ): Promise<PaginatedTags> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
@@ -187,13 +189,17 @@ export class TagService {
 
     if (!country) return Promise.reject(new Error('No country'))
 
+    if (showHidden && !authUser.isAdmin) return Promise.reject(new Error('No admin'))
+
     const where: Prisma.TagWhereInput = {
       isLive: false,
       countryId: country.id,
       ...(isEmoji !== undefined && {
         isEmoji,
       }),
-      isHidden: false,
+      ...(!showHidden && {
+        isHidden: false,
+      }),
     }
 
     const orderBy =
@@ -292,5 +298,16 @@ export class TagService {
     const nextSkip = skip + limit
 
     return { items, nextSkip: tags.length === limit ? nextSkip : 0 }
+  }
+
+  async updateTag(tagId: string, { isHidden }: UpdateTagInput): Promise<Tag> {
+    return this.prismaService.tag.update({
+      where: {
+        id: tagId,
+      },
+      data: {
+        isHidden,
+      },
+    })
   }
 }
