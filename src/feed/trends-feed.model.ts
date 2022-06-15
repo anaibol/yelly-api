@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql'
+import { Field, Float, ID, ObjectType } from '@nestjs/graphql'
 import { User } from 'src/user/user.model'
 import { PaginatedPosts } from '../post/paginated-posts.model'
 
@@ -14,6 +14,8 @@ export class Trend {
   postCount?: number
   author?: User
   nextCursor?: string
+  @Field(() => Float)
+  score?: number | null
 }
 
 @ObjectType()

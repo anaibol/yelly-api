@@ -10,14 +10,10 @@ import { AuthUser } from 'src/auth/auth.service'
 import { Feed } from './feed.model'
 import { FeedEvent, Prisma } from '@prisma/client'
 import { differenceInHours, sub } from 'date-fns'
-import { sampleSize, sortBy, uniq } from 'lodash'
+import { sampleSize, orderBy, uniq } from 'lodash'
 import { TrendsFeed } from './trends-feed.model'
 import { tagSelect } from '../tag/tag-select.constant'
 import { PaginatedTags } from '../tag/paginated-tags.model'
-
-function isDefined<T>(argument: T | undefined): argument is T {
-  return argument !== undefined
-}
 
 type ScoreParams = {
   followed?: boolean
@@ -50,7 +46,7 @@ const getPostActivityScoreX = ({ followed, followedByFollowee, sameSchool, sameY
 const getPostCreationScore = (event: FeedEvent, scoreParams: ScoreParams): number => {
   if (
     event?.type === 'POST_CREATED' &&
-    event.createdAt <
+    event.createdAt >
       sub(new Date(), {
         hours: 1,
       })
@@ -388,6 +384,9 @@ export class FeedService {
               gt: sub(new Date(), { days: 1 }),
             },
           },
+          orderBy: {
+            createdAt: 'desc',
+          },
           select: {
             id: true,
             postId: true,
@@ -467,33 +466,42 @@ export class FeedService {
 
     // const followedByFolloweesIds = followedByFollowees.map((f) => f.id)
 
-    const scoredTags = tagsWithFeedEvents.map(({ feedEvents, feedCursors, ...tag }) => {
-      const postIds = uniq(feedEvents.map(({ postId }) => postId))
+    const scoredTags = tagsWithFeedEvents
+      .map(({ feedEvents, feedCursors, ...tag }) => {
+        const postIds = uniq(feedEvents.map(({ postId }) => postId))
 
-      const postScores = postIds.map((postId) => {
-        const events = feedEvents.filter((event) => event.postId === postId)
-        const scores = events.map((event) => {
-          const cursor = feedCursors.length > 0 ? feedCursors[0] : null
+        const postScores = postIds.map((postId) => {
+          const events = feedEvents.filter((event) => event.postId === postId)
 
-          if (cursor && event.createdAt < cursor.createdAt) return 0
+          const scores = events.map((event) => {
+            const cursor = feedCursors.length > 0 ? feedCursors[0] : null
 
-          return getEventScore(event, authUser)
+            if (cursor && event.createdAt <= new Date(cursor.cursor)) return 0
+
+            return getEventScore(event, authUser)
+          })
+
+          return {
+            postId,
+            score: scores.reduce((a, b) => a + b),
+          }
         })
 
+        const sortedPostScores = orderBy(postScores, 'score', 'desc').slice(0, 4) // postLimit
+        const score = sortedPostScores.map(({ score }) => score).reduce((a, b) => a + b)
+        const finalPostIds = sortedPostScores.map(({ postId }) => postId)
+
         return {
-          postId,
-          score: scores.reduce((a, b) => a + b),
+          tag,
+          score,
+          postIds: finalPostIds,
+          postScores: sortedPostScores,
+          nextCursor: feedEvents[0].createdAt.toISOString(),
         }
       })
+      .filter(({ score }) => score > 0)
 
-      const sortedPostScores = sortBy(postScores, 'score').slice(0, 4) // postLimit
-      const score = sortedPostScores.map(({ score }) => score).reduce((a, b) => a + b)
-      const finalPostIds = sortedPostScores.map(({ postId }) => postId)
-
-      return { tag, score, postIds: finalPostIds }
-    })
-
-    const sortedTagScores = sortBy(scoredTags, 'score').slice(skip, limit)
+    const sortedTagScores = orderBy(scoredTags, 'score', 'desc').slice(skip, limit)
     const postIds = scoredTags.map(({ postIds }) => postIds).flat()
 
     const posts = await this.prismaService.post.findMany({
@@ -502,22 +510,21 @@ export class FeedService {
           in: postIds,
         },
       },
+      select: PostSelectWithParent,
     })
 
-    const items = sortedTagScores.map(({ tag, postIds }) => {
-      const tagPosts = posts.filter((p) => postIds.includes(p.id))
+    const items = sortedTagScores.map(({ tag, score, nextCursor, postIds, postScores }) => {
+      const tagPosts = posts.filter((p) => postIds.includes(p.id)).map(mapPost)
 
-      const lastItem = tagPosts[tagPosts.length - 1]
-
-      const nextCursor = lastItem.createdAt.getTime().toString()
       const postCount = posts.length
 
       return {
         ...tag,
+        score,
         nextCursor,
         postCount,
         posts: {
-          items: tagPosts,
+          items: tagPosts.map((p) => ({ ...p, score: postScores.find((s) => s.postId === p.id)?.score })),
           nextCursor: '',
         },
       }
@@ -534,6 +541,7 @@ export class FeedService {
         userId: authUser.id,
         tagId,
         cursor,
+        createdAt: new Date(cursor),
       },
     })
 
