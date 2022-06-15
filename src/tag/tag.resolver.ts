@@ -25,15 +25,6 @@ import { UpdateTagInput } from './update-tag.input'
 export class TagResolver {
   constructor(private tagService: TagService, private userService: UserService, private prismaService: PrismaService) {}
 
-  @UseGuards(AuthGuard)
-  @Mutation(() => Tag)
-  createOrUpdateLiveTag(
-    @Args('input') createOrUpdateLiveTag: CreateOrUpdateLiveTagInput,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<Tag> {
-    return this.tagService.createOrUpdateLiveTag(createOrUpdateLiveTag.text, createOrUpdateLiveTag.isLive, authUser)
-  }
-
   @ResolveField()
   async author(@Parent() tag: Tag): Promise<User | null> {
     return this.tagService.getTagAuthor(tag.id)
@@ -117,5 +108,13 @@ export class TagResolver {
     if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
 
     return this.tagService.updateTag(tagId, updateTagInput)
+  }
+
+  @Mutation(() => Tag)
+  @UseGuards(AuthGuard)
+  createPromotedTag(@CurrentUser() authUser: AuthUser, @Args('tagText') tagText: string): Promise<Tag> {
+    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
+
+    return this.tagService.createPromotedTag(tagText, authUser)
   }
 }
