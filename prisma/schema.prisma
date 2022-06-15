@@ -112,7 +112,8 @@ model User {
   followers                    Follower[]                        @relation("usersAsFollowers")
   feedItems                    FeedItem[]
   viewsCount                   Int                               @default(0)
-  feedEvents                   FeedEvent[]
+  tags                         Tag[]
+  feedCursor                   UserFeedCursor[]
 
   @@index([birthdate], map: "User_birthdate")
 }
@@ -142,17 +143,20 @@ model Follower {
 }
 
 model Tag {
-  id         String      @id @default(dbgenerated("generate_id()"))
-  text       String      @unique
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @default(now()) @updatedAt
-  isLive     Boolean     @default(false)
-  posts      Post[]
-  countryId  String?
-  country    Country?    @relation(fields: [countryId], references: [id])
-  isEmoji    Boolean     @default(false)
-  isHidden   Boolean     @default(false)
-  feedEvents FeedEvent[]
+  id          String           @id @default(dbgenerated("generate_id()"))
+  text        String           @unique
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now()) @updatedAt
+  isLive      Boolean          @default(false)
+  posts       Post[]
+  countryId   String?
+  country     Country?         @relation(fields: [countryId], references: [id])
+  isEmoji     Boolean          @default(false)
+  isHidden    Boolean          @default(false)
+  feedEvents  FeedEvent[]
+  author      User?            @relation(fields: [authorId], references: [id])
+  authorId    String?
+  feedCursors UserFeedCursor[]
 
   @@index([createdAt])
   @@index([isLive, countryId])
@@ -218,7 +222,7 @@ model PostReaction {
   postId       String
   authorId     String
   author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
   notification Notification?
   feedEvents   FeedEvent[]
 
@@ -263,31 +267,37 @@ model Thread {
 }
 
 model FeedEvent {
-  id             BigInt        @id @default(dbgenerated("generate_id()"))
-  cursor         String?
-  postId         String?
-  post           Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tagId          String
-  tag            Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  userId         String?
-  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  postReactionId BigInt?
-  postReaction   PostReaction? @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
-  type           FeedEventType
-  createdAt      DateTime      @default(now())
+  id                          BigInt           @id @default(dbgenerated("generate_id()"))
+  postId                      String
+  post                        Post            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tagId                       String
+  tag                         Tag              @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  postReactionAuthorBirthdate DateTime?        @db.Date
+  postAuthorBirthdate         DateTime?        @db.Date
+  postReactionAuthorSchoolId  String?
+  postAuthorSchoolId          String?
+  postReactionId              BigInt?
+  postReaction                PostReaction?    @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  type                        FeedEventType
+  createdAt                   DateTime         @default(now())
 
   @@index([createdAt])
-  @@index([postId])
-  @@index([postReactionId])
-  @@index([tagId])
-  @@index([userId])
+}
+
+model UserFeedCursor {
+  id          BigInt    @id @default(dbgenerated("generate_id()"))
+  tagId       String
+  tag         Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cursor      String
 }
 
 enum FeedEventType {
   POST_CREATED
   POST_REACTION_CREATED
   POST_REPLY_CREATED
-  TREND_SEEN
 }
 
 // < 24hs

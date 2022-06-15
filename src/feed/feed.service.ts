@@ -1,3 +1,5 @@
+/* eslint-disable functional/no-return-void */
+/* eslint-disable functional/no-let */
 /* eslint-disable functional/immutable-data */
 /* eslint-disable functional/no-throw-statement */
 import { Injectable } from '@nestjs/common'
@@ -8,36 +10,14 @@ import { AuthUser } from 'src/auth/auth.service'
 import { Feed } from './feed.model'
 import { FeedEvent, Prisma } from '@prisma/client'
 import { differenceInHours, sub } from 'date-fns'
-import { findLastIndex, sampleSize, sortBy, uniq } from 'lodash'
+import { sampleSize, sortBy, uniq } from 'lodash'
 import { TrendsFeed } from './trends-feed.model'
 import { tagSelect } from '../tag/tag-select.constant'
 import { PaginatedTags } from '../tag/paginated-tags.model'
 
-function isNotNull<T>(argument: T | null): argument is T {
-  return argument !== null
+function isDefined<T>(argument: T | undefined): argument is T {
+  return argument !== undefined
 }
-
-const FeedEventsInclude = {
-  post: {
-    include: {
-      author: true,
-      parent: {
-        include: {
-          author: true,
-        },
-      },
-    },
-  },
-  postReaction: {
-    include: {
-      author: true,
-    },
-  },
-}
-
-type FeedEventPayload = Prisma.FeedEventGetPayload<{
-  include: typeof FeedEventsInclude
-}>
 
 type ScoreParams = {
   followed?: boolean
@@ -67,63 +47,135 @@ const getPostActivityScoreX = ({ followed, followedByFollowee, sameSchool, sameY
   return 4
 }
 
-const getPostCreationScore = (e: FeedEvent, scoreParams: ScoreParams): number => {
+const getPostCreationScore = (event: FeedEvent, scoreParams: ScoreParams): number => {
+  if (
+    event?.type === 'POST_CREATED' &&
+    event.createdAt <
+      sub(new Date(), {
+        hours: 1,
+      })
+  ) {
+    return event.createdAt.getTime()
+  }
+
   const X = getPostCreationScoreX(scoreParams)
 
-  return 100 * (1 - differenceInHours(e.createdAt, new Date()) / X)
+  return 100 * (1 - differenceInHours(event.createdAt, new Date()) / X)
 }
 
-const getPostActivityScore = (e: FeedEvent, y: number, scoreParams: ScoreParams): number => {
+const getPostActivityScore = (event: FeedEvent, y: number, scoreParams: ScoreParams): number => {
   const X = getPostActivityScoreX(scoreParams)
 
-  return y * Math.exp(X * (-differenceInHours(e.createdAt, new Date()) / 24))
+  return y * Math.exp(X * (-differenceInHours(event.createdAt, new Date()) / 24))
 }
 
-const getPostScore = (authUser: AuthUser, postEvents: FeedEventPayload[]): number => {
-  const score: number = postEvents
-    .map((e) => {
-      const { type } = e
+const getEventScore = (event: FeedEvent, authUser: AuthUser): number => {
+  const { type } = event
 
-      if (type === 'POST_CREATED') {
-        if (!authUser.birthdate || !e.post?.author.birthdate) throw new Error('No birthdate')
+  if (type === 'POST_CREATED') {
+    if (!authUser.birthdate || !event.postAuthorBirthdate) throw new Error('No birthdate')
 
-        const sameSchool = authUser.schoolId === e.post?.author.schoolId
-        const sameYearOrOlder = authUser.birthdate.getFullYear() >= e.post?.author.birthdate?.getFullYear()
+    const sameSchool = authUser.schoolId === event.postAuthorSchoolId
+    const sameYearOrOlder = authUser.birthdate.getFullYear() >= event.postAuthorBirthdate.getFullYear()
 
-        return getPostCreationScore(e, {
-          sameSchool,
-          sameYearOrOlder,
-        })
-      }
-      if (type === 'POST_REPLY_CREATED') {
-        if (!authUser.birthdate || !e.post?.parent?.author.birthdate) throw new Error('No birthdate')
-
-        const sameSchool = authUser.schoolId === e.post?.parent?.author.schoolId
-        const sameYearOrOlder = authUser.birthdate.getFullYear() >= e.post?.parent?.author.birthdate.getFullYear()
-
-        return getPostActivityScore(e, 15, {
-          sameSchool,
-          sameYearOrOlder,
-        })
-      }
-
-      if (type === 'POST_REACTION_CREATED') {
-        if (!authUser.birthdate || !e.postReaction?.author.birthdate) throw new Error('No birthdate')
-
-        const sameSchool = authUser.schoolId === e.postReaction?.author.schoolId
-        const sameYearOrOlder = authUser.birthdate.getFullYear() >= e.postReaction?.author.birthdate.getFullYear()
-
-        return getPostActivityScore(e, 7.5, {
-          sameSchool,
-          sameYearOrOlder,
-        })
-      }
-
-      return 0
+    return getPostCreationScore(event, {
+      sameSchool,
+      sameYearOrOlder,
     })
-    .reduce((partialSum, a) => partialSum + a, 0)
+  }
+  if (type === 'POST_REPLY_CREATED') {
+    if (!authUser.birthdate || !event.postAuthorBirthdate) throw new Error('No birthdate')
 
-  return score
+    const sameSchool = authUser.schoolId === event.postAuthorSchoolId
+    const sameYearOrOlder = authUser.birthdate.getFullYear() >= event.postAuthorBirthdate.getFullYear()
+
+    return getPostActivityScore(event, 15, {
+      sameSchool,
+      sameYearOrOlder,
+    })
+  }
+
+  if (type === 'POST_REACTION_CREATED') {
+    if (!authUser.birthdate || !event.postReactionAuthorBirthdate) throw new Error('No birthdate')
+
+    const sameSchool = authUser.schoolId === event.postReactionAuthorSchoolId
+    const sameYearOrOlder = authUser.birthdate.getFullYear() >= event.postReactionAuthorBirthdate.getFullYear()
+
+    return getPostActivityScore(event, 7.5, {
+      sameSchool,
+      sameYearOrOlder,
+    })
+  }
+
+  return 0
+}
+
+type TagScore = {
+  tag: FeedEventPayload['tag']
+  score: number
+}
+
+type PostScore = {
+  tag: FeedEventPayload['tag']
+  postId: string
+  score: number
+}
+
+const FeedEventsInclude = {
+  tag: {
+    select: tagSelect,
+  },
+}
+type FeedEventPayload = Prisma.FeedEventGetPayload<{
+  include: typeof FeedEventsInclude
+}>
+
+const getScoresByTag = (
+  feedEvents: FeedEventPayload[],
+  authUser: AuthUser
+): { tagScores: TagScore[]; postScores: PostScore[] } => {
+  const tagScores: TagScore[] = []
+  const postScores: PostScore[] = []
+
+  let currentTag: FeedEventPayload['tag']
+  let prevTag: FeedEventPayload['tag']
+  let currentTagScore: number = 0
+
+  feedEvents.forEach((event: FeedEventPayload) => {
+    if (currentTag.id === null) currentTag = event.tag
+
+    if (event.tag.id === currentTag.id) {
+      const eventScore = getEventScore(event, authUser)
+
+      const index = postScores.findIndex((p) => p.tag.id === currentTag.id && p.postId === event.postId)
+
+      if (!index) {
+        postScores.push({ tag: currentTag, postId: event.postId, score: eventScore })
+      } else {
+        postScores[index] = {
+          tag: currentTag,
+          postId: event.postId,
+          score: postScores[index].score + eventScore,
+        }
+      }
+
+      currentTagScore += eventScore
+    } else {
+      tagScores.push({
+        tag: prevTag,
+        score: currentTagScore,
+      })
+
+      prevTag = currentTag
+      currentTagScore = 0
+      currentTag = event.tag
+    }
+  })
+
+  return {
+    tagScores,
+    postScores,
+  }
 }
 
 @Injectable()
@@ -375,105 +427,52 @@ export class FeedService {
       .city()
       .country()
 
-    const getFeedEvents = this.prismaService.feedEvent.findMany({
-      where: {
-        OR: [
-          {
-            type: {
-              not: 'TREND_SEEN',
-            },
-          },
-          {
-            userId: authUser.id,
-          },
-        ],
-        createdAt: {
-          gt: sub(new Date(), { days: 1 }),
-        },
-        tag: {
-          isEmoji: false,
-          isHidden: false,
-        },
-      },
-      include: FeedEventsInclude,
-    })
+    const getFeedEvents: FeedEventPayload[] = await this.prismaService.$queryRaw`
+      SELECT
+      f."id",
+      f."createdAt",
+      f."tagId",
+      f."postId",
+      f."postReactionAuthorBirthdate",
+      f."postAuthorBirthdate",
+      f."postReactionAuthorSchoolId",
+      f."postAuthorSchoolId",
+      f."type",
+      tc."cursor"
+    FROM "FeedEvent" f,
+      "Tag" t,
+      (SELECT "cursor", "tagId" FROM "UserFeedCursor" WHERE "userId" = ${authUser.id} ORDER BY "createdAt" DESC) tc
+    WHERE f."tagId" = t.id AND tc."tagId" = f."tagId"
+      AND f."createdAt" > (CURRENT_DATE - '1 day'::interval)::date
+      AND ((
+        SELECT count(*) AS count
+        FROM "_PostToTag" pt
+        WHERE pt."B" = t.id
+      )) > 3
+    `
+
+    // const getUserSeen = this.prismaService.userFeedCursor.findMany({
+    //   where: {
+    //     userId: authUser.id,
+    //     createdAt: {
+    //       gt: sub(new Date(), { days: 1 }),
+    //     },
+    //   },
+    // })
 
     const [authUserCountry, feedEvents] = await Promise.all([getAuthUserCountry, getFeedEvents])
 
     if (!authUserCountry) return Promise.reject(new Error('No country'))
 
-    // GET UNIQUE TAGS
-    const tagIds = uniq(feedEvents.map((e) => e.tagId))
-
-    // GROUP EVENTS BY TAG
-    const tagsWithEventsAndPosts = tagIds
-      .map((tagId) => {
-        // GET EVENTS FOR TAG
-        const tagEvents = feedEvents.filter((e) => e.tagId === tagId)
-
-        // GET LAST TREND SEEN EVENT
-        const lastTrendSeenEventIndex = findLastIndex(tagEvents, (e) => e.type === 'TREND_SEEN')
-
-        // GET ALL EVENTS AFTER LAST SEEN EVENT
-        const events = tagEvents.slice(lastTrendSeenEventIndex + 1, tagEvents.length)
-
-        if (!events.length) return null
-
-        const postIds = uniq(events.map((e) => e.postId)).filter(isNotNull)
-
-        return {
-          tagId,
-          events,
-          postIds,
-        }
-      })
-      .filter(isNotNull)
-
     // const lastEventCreatedAt =
-    // notSeenEvents.length > 0
+    //   notSeenEvents.length > 0
     //     ? notSeenEvents
-    //         .map((e) => e.createdAt)
+    //         .map((e) => event.createdAt)
     //         .flat()
     //         .reduce((a, b) => {
     //           return a > b ? a : b
     //         })
     //     : new Date()
-
-    const [posts, tags] = await Promise.all([
-      this.prismaService.post.findMany({
-        where: {
-          id: {
-            in: tagsWithEventsAndPosts.map(({ postIds }) => postIds).flat(),
-          },
-          author: {
-            school: {
-              city: {
-                countryId: authUserCountry.id,
-              },
-            },
-          },
-        },
-        select: PostSelectWithParent,
-      }),
-      this.prismaService.tag.findMany({
-        where: {
-          id: {
-            in: tagsWithEventsAndPosts.map(({ tagId }) => tagId),
-          },
-        },
-        include: {
-          posts: {
-            take: 1,
-            orderBy: {
-              createdAt: 'asc',
-            },
-            include: {
-              author: true,
-            },
-          },
-        },
-      }),
-    ])
 
     // function isDefined<T>(argument: T | undefined): argument is T {
     //   return argument !== undefined
@@ -482,9 +481,9 @@ export class FeedService {
     // const usersIds = postsWithEvents
     //   .map((p) =>
     //     p.events.map((e) => {
-    //       if (e.type === 'POST_REACTION_CREATED') return e.postReaction?.author.id
-    //       if (e.type === 'POST_REPLY_CREATED') return e.post?.author.id
-    //       if (e.type === 'POST_CREATED') return e.post?.author.id
+    //       if (e.type === 'POST_REACTION_CREATED') return event.postReaction?.author.id
+    //       if (e.type === 'POST_REPLY_CREATED') return event.post?.author.id
+    //       if (e.type === 'POST_CREATED') return event.post?.author.id
     //     })
     //   )
     //   .flat()
@@ -524,76 +523,46 @@ export class FeedService {
 
     // const followedByFolloweesIds = followedByFollowees.map((f) => f.id)
 
-    const scoredTags = tagsWithEventsAndPosts.map(({ tagId, postIds, events }) => {
-      const mappedPosts = posts.map(mapPost)
+    const { tagScores, postScores } = getScoresByTag(feedEvents, authUser)
 
-      const postsWithScore = mappedPosts
-        .filter((p) => postIds.includes(p.id))
-        .filter(
-          (post) =>
-            post.createdAt &&
-            post.createdAt <
-              sub(new Date(), {
-                hours: 1,
-              })
-        )
-        .map((post) => {
-          // const isPostAuthorFollowed = followedIds.includes(post.author.id)
-          // const isPostAuthorFollowedByFollowee = followedByFolloweesIds.includes(post.author.id)
+    const sortedTagScores = sortBy(tagScores, 'score')
+    const tagsWithPostIds = sortedTagScores.map((tagScore) => {
+      const tagPosts = postScores.filter((p) => p.tag.id === tagScore.tag.id)
 
-          const feedEvents = events.filter((e) => e.postId === post.id)
-
-          const score = getPostScore(authUser, feedEvents)
-
-          return {
-            post,
-            score,
-          }
-        })
-
-      // GET POSTS CREATED LESS THAN AN HOUR AGO
-      const recentPosts = mappedPosts.filter(
-        (post) =>
-          post.createdAt &&
-          post.createdAt >
-            sub(new Date(), {
-              hours: 1,
-            })
-      )
-
-      const scoredPosts = sortBy(postsWithScore, 'score')
-
-      const currentTag = tags.find((t) => t.id === tagId)
-
-      if (!currentTag) throw new Error('No tag')
-
-      const {
-        posts: [{ author }],
-        ...tag
-      } = currentTag
+      const postIds = sortBy(tagPosts, 'score')
+        .slice(0, 4)
+        .map(({ postId }) => postId)
 
       return {
-        tag: {
-          ...tag,
-          author,
-        },
-        score: scoredPosts.reduce((partialSum, { score }) => partialSum + score, 0),
-        posts: [...recentPosts, ...scoredPosts.map(({ post }) => post)].slice(0, postLimit),
+        ...tagScore,
+        postIds,
       }
+    })
+
+    const postIds = tagsWithPostIds.map(({ postIds }) => postIds).flat()
+
+    const allPosts = await this.prismaService.post.findMany({
+      where: {
+        id: {
+          in: postIds,
+        },
+      },
     })
 
     const nextSkip = skip + limit
 
-    const items = sortBy(scoredTags, 'score').map(({ tag, posts: tagPosts }) => {
+    const items = tagsWithPostIds.map(({ tag, postIds }) => {
       // const lastItem = tagPosts.length === limit ? tagPosts[limit - 1] : null
 
       // const nextCursor = lastItem ? lastItem.id : ''
 
+      const posts = postIds.map((id) => allPosts.find((p) => p.id === id)).filter(isDefined)
+
       return {
         ...tag,
-        postCount: tagPosts.length,
+        postCount: posts.length,
         posts: {
-          items: tagPosts,
+          items: posts,
           nextCursor: '',
         },
       }
@@ -603,10 +572,9 @@ export class FeedService {
   }
 
   async markTrendAsSeen(authUser: AuthUser, tagId: string, cursor: string): Promise<boolean> {
-    await this.prismaService.feedEvent.create({
+    await this.prismaService.userFeedCursor.create({
       data: {
         userId: authUser.id,
-        type: 'TREND_SEEN',
         tagId,
         cursor,
       },

@@ -10,4 +10,13 @@ export const tagSelect = {
       posts: true,
     },
   },
+  author: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      birthdate: true,
+      pictureId: true,
+    },
+  },
 }

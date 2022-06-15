@@ -4,31 +4,21 @@ import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { AuthUser } from '../auth/auth.service'
 
-import { CreateOrUpdateLiveTagInput } from '../post/create-or-update-live-tag.input'
-
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { PostSelectWithParent, mapPost } from '../post/post-select.constant'
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import { PaginatedTags } from './paginated-tags.model'
-// import { UserService } from 'src/user/user.service'
 import { TagsArgs } from './tags.args'
 
 import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
-import { UserService } from '../user/user.service'
-import { User } from '../user/user.model'
 import { PrismaService } from '../core/prisma.service'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { UpdateTagInput } from './update-tag.input'
 
 @Resolver(Tag)
 export class TagResolver {
-  constructor(private tagService: TagService, private userService: UserService, private prismaService: PrismaService) {}
-
-  @ResolveField()
-  async author(@Parent() tag: Tag): Promise<User | null> {
-    return this.tagService.getTagAuthor(tag.id)
-  }
+  constructor(private tagService: TagService, private prismaService: PrismaService) {}
 
   @Query(() => Tag)
   @UseGuards(AuthGuard)

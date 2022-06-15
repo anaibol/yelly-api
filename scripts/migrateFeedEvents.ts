@@ -1,10 +1,13 @@
 /* eslint-disable functional/no-let */
 /* eslint-disable functional/no-loop-statement */
 import { PrismaClient } from '.prisma/client'
+import { FeedEventType } from '@prisma/client'
 import { sub } from 'date-fns'
 
 async function main() {
   const prisma = new PrismaClient()
+
+  await prisma.feedEvent.deleteMany({})
 
   const postReactions = await prisma.postReaction.findMany({
     where: {
@@ -13,6 +16,7 @@ async function main() {
       },
     },
     include: {
+      author: true,
       post: {
         include: {
           tags: true,
@@ -22,44 +26,20 @@ async function main() {
   })
 
   await prisma.feedEvent.createMany({
-    data: postReactions.map(({ id, createdAt, post }) => ({
+    data: postReactions.map(({ id, createdAt, post, author }) => ({
       createdAt,
-      type: 'POST_REACTION_CREATED' as const,
+      type: FeedEventType.POST_REACTION_CREATED,
       postReactionId: id,
       postId: post.id,
       tagId: post.tags[0].id,
+      postReactionAuthorBirthdate: author.birthdate,
+      postReactionAuthorSchoolId: author.schoolId,
     })),
   })
 
-  const postReplies = await prisma.post.findMany({
-    where: {
-      parentId: {
-        not: null,
-      },
-      createdAt: {
-        gt: sub(new Date(), { days: 1 }),
-      },
-    },
-    include: {
-      parent: {
-        include: {
-          tags: true,
-        },
-      },
-    },
-  })
+  console.log({ postReactions: postReactions.length })
 
-  await prisma.feedEvent.createMany({
-    data: postReplies.map(({ id, createdAt, parent }) => ({
-      createdAt,
-      type: 'POST_REPLY_CREATED' as const,
-      postId: id,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      tagId: parent!.tags[0].id,
-    })),
-  })
-
-  const newPosts = await prisma.post.findMany({
+  const posts = await prisma.post.findMany({
     where: {
       createdAt: {
         gt: sub(new Date(), { days: 1 }),
@@ -68,17 +48,30 @@ async function main() {
     },
     include: {
       tags: true,
+      author: true,
+      parent: {
+        include: {
+          tags: true,
+          author: true,
+        },
+      },
     },
   })
 
   await prisma.feedEvent.createMany({
-    data: newPosts.map(({ id, createdAt, tags }) => ({
-      createdAt,
-      type: 'POST_CREATED' as const,
-      postId: id,
-      tagId: tags[0].id,
-    })),
+    data: posts.map(({ id, createdAt, tags, parent }) => {
+      return {
+        createdAt,
+        type: parent ? FeedEventType.POST_REPLY_CREATED : FeedEventType.POST_CREATED,
+        postId: parent ? parent.id : id,
+        tagId: tags[0].id,
+        postAuthorBirthdate: parent?.author.birthdate,
+        postAuthorSchoolId: parent?.author.schoolId,
+      }
+    }),
   })
+
+  console.log({ posts: posts.length })
 }
 
 main()
