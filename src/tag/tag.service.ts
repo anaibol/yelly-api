@@ -341,7 +341,7 @@ export class TagService {
 
     if (!tag) return Promise.reject(new Error('No tag'))
 
-    await this.pushNotificationService.promotedTag(tag)
+    this.pushNotificationService.promotedTag(tag)
 
     return tag
   }
