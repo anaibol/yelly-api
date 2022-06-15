@@ -63,10 +63,6 @@ export type PostIndexAlgoliaInterface = {
         }
       }
     }
-    training: {
-      id: string
-      name: string
-    }
   }
   tags: {
     id: string
@@ -176,12 +172,6 @@ export const algoliaPostSelect = {
           },
         },
       },
-      training: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
     },
   },
   tags: {
@@ -247,10 +237,9 @@ const algoliaPost = Prisma.validator<Prisma.PostArgs>()({
 type AlgoliaPost = Prisma.PostGetPayload<typeof algoliaPost>
 
 export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | null {
-  const { id, createdAt, firstName, lastName, birthdate, pictureId, school, training } = post.author
+  const { id, createdAt, firstName, lastName, birthdate, pictureId, school } = post.author
 
-  if (!createdAt || !firstName || !lastName || !birthdate || !lastName || !school?.city?.country || !training)
-    return null
+  if (!createdAt || !firstName || !lastName || !birthdate || !lastName || !school?.city?.country) return null
 
   return {
     id: post.id,
@@ -277,10 +266,6 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
             code: school.city.country.code,
           },
         },
-      },
-      training: {
-        id: training.id,
-        name: training.name,
       },
     },
     tags: post.tags.map((tag) => {
