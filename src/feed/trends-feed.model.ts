@@ -12,7 +12,7 @@ export class Trend {
   isEmoji?: boolean
   posts?: PaginatedPosts
   postCount?: number
-  author?: User
+  author?: User | null
 }
 
 @ObjectType()

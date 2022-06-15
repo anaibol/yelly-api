@@ -11,7 +11,6 @@ import {
   getNotExpiredCondition,
 } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
-// import { SendbirdService } from 'src/sendbird/sendbird.service'
 import dates from 'src/utils/dates'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { AuthUser } from 'src/auth/auth.service'
@@ -20,7 +19,6 @@ import { PaginatedPosts } from './paginated-posts.model'
 import { Post } from './post.model'
 import { PostPollVote } from './post.model'
 import { Prisma } from '@prisma/client'
-import { excludedTags } from 'src/tag/excluded-tags.constant'
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { PostReaction } from './post-reaction.model'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
@@ -222,11 +220,8 @@ export class PostService {
           OR: [
             {
               tags: {
-                none: {
-                  text: {
-                    in: excludedTags,
-                    mode: 'insensitive',
-                  },
+                every: {
+                  isHidden: false,
                 },
               },
             },
@@ -338,6 +333,7 @@ export class PostService {
           where: { id: parentId },
           include: {
             tags: true,
+            author: true,
           },
         })
       : null
@@ -350,6 +346,7 @@ export class PostService {
         create: {
           text: tagText,
           countryId: authUserCountry?.id,
+          authorId: authUser.id,
         },
       })
     )
@@ -363,6 +360,7 @@ export class PostService {
           text: emoji,
           countryId: authUserCountry?.id,
           isEmoji: true,
+          authorId: authUser.id,
         },
       })
     )
@@ -412,14 +410,13 @@ export class PostService {
             },
           },
         }),
-        ...(parent &&
-          threadId && {
-            thread: {
-              connect: {
-                id: threadId,
-              },
+        ...(threadId && {
+          thread: {
+            connect: {
+              id: threadId,
             },
-          }),
+          },
+        }),
         tags: {
           connectOrCreate: [...connectOrCreateTags, ...connectOrCreateEmojis],
         },
@@ -432,11 +429,15 @@ export class PostService {
             postId: parent.id,
             tagId: parent.tags[0].id,
             type: 'POST_REPLY_CREATED',
+            postAuthorBirthdate: parent.author.birthdate,
+            postAuthorSchoolId: parent.author.schoolId,
           }
         : {
             postId: post.id,
             tagId: post.tags[0].id,
             type: 'POST_CREATED',
+            postAuthorBirthdate: authUser.birthdate,
+            postAuthorSchoolId: authUser.schoolId,
           },
     })
 
@@ -444,7 +445,7 @@ export class PostService {
 
     this.syncPostIndexWithAlgolia(post.id)
 
-    const hasExcludedTags = tags?.some((tag) => excludedTags.includes(tag.toLowerCase()))
+    const hasExcludedTags = post.tags?.some((tag) => tag.isHidden)
 
     if (parentId && !hasExcludedTags) {
       this.pushNotificationService.postReplied(post.id)
@@ -542,6 +543,8 @@ export class PostService {
         postReactionId: reaction.id,
         tagId: post.tags[0].id,
         type: 'POST_REACTION_CREATED',
+        postReactionAuthorBirthdate: authUser.birthdate,
+        postReactionAuthorSchoolId: authUser.schoolId,
       },
     })
 

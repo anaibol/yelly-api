@@ -7,10 +7,8 @@ import { AuthUser } from '../auth/auth.service'
 import { CreatePostInput } from './create-post.input'
 import { DeletePostInput } from './delete-post.input'
 import { PostArgs } from './post.args'
-import { PaginatedPosts } from './paginated-posts.model'
 import { Post, PostPollVote } from './post.model'
 import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
-import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
 // import { CommonFriendsLoader } from './common-friends.loader'
@@ -19,14 +17,6 @@ import { PostReaction } from './post-reaction.model'
 @Resolver(Post)
 export class PostResolver {
   constructor(private postService: PostService) {}
-
-  @UseGuards(AuthGuard)
-  @Query(() => PaginatedPosts)
-  posts(@Args() cursorPaginationArgs: CursorPaginationArgs, @CurrentUser() authUser: AuthUser) {
-    const { after, limit } = cursorPaginationArgs
-
-    return this.postService.getPosts(authUser, limit, after)
-  }
 
   @UseGuards(AuthGuard)
   @Query(() => Post)
