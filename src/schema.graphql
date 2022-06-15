@@ -322,6 +322,7 @@ type Trend {
   id: ID!
   isEmoji: Boolean
   isLive: Boolean
+  nextCursor: String
   postCount: Int
   posts: PaginatedPosts
   text: String!

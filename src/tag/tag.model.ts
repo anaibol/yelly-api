@@ -13,5 +13,5 @@ export class Tag {
   isHidden?: boolean
   posts?: PaginatedPosts
   postCount?: number
-  author?: User | null
+  author?: User
 }

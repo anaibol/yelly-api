@@ -47,7 +47,7 @@ export class FeedResolver {
   async trendsFeed(@Args() trendsFeedArgs: TrendsFeedArgs, @CurrentUser() authUser: AuthUser): Promise<TrendsFeed> {
     const { skip, limit, postLimit } = trendsFeedArgs
 
-    const { items, nextSkip } = await this.feedService.getTrendsFeed({
+    const { items, nextSkip } = await this.feedService.getTrendsFeed2({
       authUser,
       skip,
       limit,

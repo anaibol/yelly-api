@@ -110,74 +110,6 @@ const getEventScore = (event: FeedEvent, authUser: AuthUser): number => {
   return 0
 }
 
-type TagScore = {
-  tag: FeedEventPayload['tag']
-  score: number
-}
-
-type PostScore = {
-  tag: FeedEventPayload['tag']
-  postId: string
-  score: number
-}
-
-const FeedEventsInclude = {
-  tag: {
-    select: tagSelect,
-  },
-}
-type FeedEventPayload = Prisma.FeedEventGetPayload<{
-  include: typeof FeedEventsInclude
-}>
-
-const getScoresByTag = (
-  feedEvents: FeedEventPayload[],
-  authUser: AuthUser
-): { tagScores: TagScore[]; postScores: PostScore[] } => {
-  const tagScores: TagScore[] = []
-  const postScores: PostScore[] = []
-
-  let currentTag: FeedEventPayload['tag']
-  let prevTag: FeedEventPayload['tag']
-  let currentTagScore: number = 0
-
-  feedEvents.forEach((event: FeedEventPayload) => {
-    if (currentTag.id === null) currentTag = event.tag
-
-    if (event.tag.id === currentTag.id) {
-      const eventScore = getEventScore(event, authUser)
-
-      const index = postScores.findIndex((p) => p.tag.id === currentTag.id && p.postId === event.postId)
-
-      if (!index) {
-        postScores.push({ tag: currentTag, postId: event.postId, score: eventScore })
-      } else {
-        postScores[index] = {
-          tag: currentTag,
-          postId: event.postId,
-          score: postScores[index].score + eventScore,
-        }
-      }
-
-      currentTagScore += eventScore
-    } else {
-      tagScores.push({
-        tag: prevTag,
-        score: currentTagScore,
-      })
-
-      prevTag = currentTag
-      currentTagScore = 0
-      currentTag = event.tag
-    }
-  })
-
-  return {
-    tagScores,
-    postScores,
-  }
-}
-
 @Injectable()
 export class FeedService {
   constructor(private prismaService: PrismaService) {}
@@ -427,40 +359,52 @@ export class FeedService {
       .city()
       .country()
 
-    const getFeedEvents: FeedEventPayload[] = await this.prismaService.$queryRaw`
-      SELECT
-      f."id",
-      f."createdAt",
-      f."tagId",
-      f."postId",
-      f."postReactionAuthorBirthdate",
-      f."postAuthorBirthdate",
-      f."postReactionAuthorSchoolId",
-      f."postAuthorSchoolId",
-      f."type",
-      tc."cursor"
-    FROM "FeedEvent" f,
-      "Tag" t,
-      (SELECT "cursor", "tagId" FROM "UserFeedCursor" WHERE "userId" = ${authUser.id} ORDER BY "createdAt" DESC) tc
-    WHERE f."tagId" = t.id AND tc."tagId" = f."tagId"
-      AND f."createdAt" > (CURRENT_DATE - '1 day'::interval)::date
-      AND ((
-        SELECT count(*) AS count
-        FROM "_PostToTag" pt
-        WHERE pt."B" = t.id
-      )) > 3
-    `
+    const getTagsWithFeedEvents = await this.prismaService.tag.findMany({
+      where: {
+        isEmoji: false,
+        isHidden: false,
+        feedEvents: {
+          some: {
+            createdAt: {
+              gt: sub(new Date(), { days: 1 }),
+            },
+          },
+        },
+      },
+      select: {
+        ...tagSelect,
+        feedCursors: {
+          where: {
+            userId: authUser.id,
+          },
+          take: 1,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+        feedEvents: {
+          where: {
+            createdAt: {
+              gt: sub(new Date(), { days: 1 }),
+            },
+          },
+          select: {
+            id: true,
+            postId: true,
+            tagId: true,
+            postReactionId: true,
+            postReactionAuthorBirthdate: true,
+            postAuthorBirthdate: true,
+            postReactionAuthorSchoolId: true,
+            postAuthorSchoolId: true,
+            type: true,
+            createdAt: true,
+          },
+        },
+      },
+    })
 
-    // const getUserSeen = this.prismaService.userFeedCursor.findMany({
-    //   where: {
-    //     userId: authUser.id,
-    //     createdAt: {
-    //       gt: sub(new Date(), { days: 1 }),
-    //     },
-    //   },
-    // })
-
-    const [authUserCountry, feedEvents] = await Promise.all([getAuthUserCountry, getFeedEvents])
+    const [authUserCountry, tagsWithFeedEvents] = await Promise.all([getAuthUserCountry, getTagsWithFeedEvents])
 
     if (!authUserCountry) return Promise.reject(new Error('No country'))
 
@@ -523,25 +467,36 @@ export class FeedService {
 
     // const followedByFolloweesIds = followedByFollowees.map((f) => f.id)
 
-    const { tagScores, postScores } = getScoresByTag(feedEvents, authUser)
+    const scoredTags = tagsWithFeedEvents.map(({ feedEvents, feedCursors, ...tag }) => {
+      const postIds = uniq(feedEvents.map(({ postId }) => postId))
 
-    const sortedTagScores = sortBy(tagScores, 'score')
-    const tagsWithPostIds = sortedTagScores.map((tagScore) => {
-      const tagPosts = postScores.filter((p) => p.tag.id === tagScore.tag.id)
+      const postScores = postIds.map((postId) => {
+        const events = feedEvents.filter((event) => event.postId === postId)
+        const scores = events.map((event) => {
+          const cursor = feedCursors.length > 0 ? feedCursors[0] : null
 
-      const postIds = sortBy(tagPosts, 'score')
-        .slice(0, 4)
-        .map(({ postId }) => postId)
+          if (cursor && event.createdAt < cursor.createdAt) return 0
 
-      return {
-        ...tagScore,
-        postIds,
-      }
+          return getEventScore(event, authUser)
+        })
+
+        return {
+          postId,
+          score: scores.reduce((a, b) => a + b),
+        }
+      })
+
+      const sortedPostScores = sortBy(postScores, 'score').slice(0, 4) // postLimit
+      const score = sortedPostScores.map(({ score }) => score).reduce((a, b) => a + b)
+      const finalPostIds = sortedPostScores.map(({ postId }) => postId)
+
+      return { tag, score, postIds: finalPostIds }
     })
 
-    const postIds = tagsWithPostIds.map(({ postIds }) => postIds).flat()
+    const sortedTagScores = sortBy(scoredTags, 'score').slice(skip, limit)
+    const postIds = scoredTags.map(({ postIds }) => postIds).flat()
 
-    const allPosts = await this.prismaService.post.findMany({
+    const posts = await this.prismaService.post.findMany({
       where: {
         id: {
           in: postIds,
@@ -549,24 +504,26 @@ export class FeedService {
       },
     })
 
-    const nextSkip = skip + limit
+    const items = sortedTagScores.map(({ tag, postIds }) => {
+      const tagPosts = posts.filter((p) => postIds.includes(p.id))
 
-    const items = tagsWithPostIds.map(({ tag, postIds }) => {
-      // const lastItem = tagPosts.length === limit ? tagPosts[limit - 1] : null
+      const lastItem = tagPosts[tagPosts.length - 1]
 
-      // const nextCursor = lastItem ? lastItem.id : ''
-
-      const posts = postIds.map((id) => allPosts.find((p) => p.id === id)).filter(isDefined)
+      const nextCursor = lastItem.createdAt.getTime().toString()
+      const postCount = posts.length
 
       return {
         ...tag,
-        postCount: posts.length,
+        nextCursor,
+        postCount,
         posts: {
-          items: posts,
+          items: tagPosts,
           nextCursor: '',
         },
       }
     })
+
+    const nextSkip = skip + limit
 
     return { items, nextSkip }
   }

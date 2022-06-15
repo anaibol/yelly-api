@@ -6,9 +6,9 @@ async function main() {
   const prisma = new PrismaClient()
 
   const tags = await prisma.tag.findMany({
-    where: {
-      authorId: null,
-    },
+    // where: {
+    //   authorId: null,
+    // },
     include: {
       posts: {
         take: 1,
