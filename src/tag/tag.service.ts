@@ -46,61 +46,61 @@ export class TagService {
     return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id)
   }
 
-  async createOrUpdateLiveTag(text: string, isLive: boolean, authUser: AuthUser): Promise<Tag> {
-    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+  // async createOrUpdateLiveTag(text: string, isLive: boolean, authUser: AuthUser): Promise<Tag> {
+  //   if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
-    const authUserCountry = await this.prismaService.school
-      .findUnique({
-        where: { id: authUser.schoolId },
-      })
-      .city()
-      .country()
+  //   const authUserCountry = await this.prismaService.school
+  //     .findUnique({
+  //       where: { id: authUser.schoolId },
+  //     })
+  //     .city()
+  //     .country()
 
-    // Get tag from text
-    const tag = await this.prismaService.tag.findUnique({
-      where: {
-        text,
-      },
-    })
+  //   // Get tag from text
+  //   const tag = await this.prismaService.tag.findUnique({
+  //     where: {
+  //       text,
+  //     },
+  //   })
 
-    const newTag = tag
-      ? // If tag exists update isLive
-        await this.prismaService.tag.update({
-          where: {
-            id: tag.id,
-          },
-          data: {
-            isLive,
-            countryId: authUserCountry?.id,
-          },
-        })
-      : // Else create it with isLive: true
-        await this.prismaService.tag.create({
-          data: {
-            text,
-            isLive,
-            countryId: authUserCountry?.id,
-          },
-        })
+  //   const newTag = tag
+  //     ? // If tag exists update isLive
+  //       await this.prismaService.tag.update({
+  //         where: {
+  //           id: tag.id,
+  //         },
+  //         data: {
+  //           isLive,
+  //           countryId: authUserCountry?.id,
+  //         },
+  //       })
+  //     : // Else create it with isLive: true
+  //       await this.prismaService.tag.create({
+  //         data: {
+  //           text,
+  //           isLive,
+  //           countryId: authUserCountry?.id,
+  //         },
+  //       })
 
-    // Delete all tags without posts and isLive: false
-    await this.prismaService.tag.deleteMany({
-      where: {
-        isLive: false,
-        posts: {
-          every: {
-            id: {
-              in: [],
-            },
-          },
-        },
-      },
-    })
+  //   // Delete all tags without posts and isLive: false
+  //   await this.prismaService.tag.deleteMany({
+  //     where: {
+  //       isLive: false,
+  //       posts: {
+  //         every: {
+  //           id: {
+  //             in: [],
+  //           },
+  //         },
+  //       },
+  //     },
+  //   })
 
-    if (isLive) this.pushNotificationService.newLiveTag(newTag.id)
+  //   if (isLive) this.pushNotificationService.newLiveTag(newTag.id)
 
-    return newTag
-  }
+  //   return newTag
+  // }
 
   async getTagAuthor(tagId: string): Promise<User | null> {
     const posts = await this.prismaService.tag
@@ -309,5 +309,40 @@ export class TagService {
         isHidden,
       },
     })
+  }
+
+  async createPromotedTag(tagText: string, authUser: AuthUser): Promise<Tag> {
+    // if (!authUser.schoolId) return Promise.reject(new Error('No school'))
+
+    // const authUserCountry = await this.prismaService.school
+    //   .findUnique({
+    //     where: { id: authUser.schoolId },
+    //   })
+    //   .city()
+    //   .country()
+
+    // Get tag from text
+    // const tag = await this.prismaService.tag.upsert({
+    //   where: {
+    //     text: tagText,
+    //   },
+    //   create: {
+    //     text: tagText,
+    //     countryId: authUserCountry?.id,
+    //   },
+    //   update: {},
+    // })
+
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        text: tagText,
+      },
+    })
+
+    if (!tag) return Promise.reject(new Error('No tag'))
+
+    await this.pushNotificationService.promotedTag(tag)
+
+    return tag
   }
 }

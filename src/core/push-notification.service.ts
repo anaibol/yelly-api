@@ -5,6 +5,7 @@ import {
   FeedItemType,
   PostReaction,
   NotificationType,
+  Tag,
 } from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
@@ -368,12 +369,8 @@ export class PushNotificationService {
     return Promise.allSettled(promises)
   }
 
-  async newLiveTag(tagId: string): Promise<void> {
+  async promotedTag(tag: Tag): Promise<void> {
     if (process.env.NODE_ENV === 'development') return
-
-    const tag = await this.prismaService.tag.findUnique({
-      where: { id: tagId },
-    })
 
     if (!tag?.countryId) return Promise.reject(new Error('No tag'))
 
@@ -384,8 +381,7 @@ export class PushNotificationService {
     AND "User"."schoolId" = "School"."id"
     AND "School"."cityId" = "City"."id"
     AND "City"."countryId" =  ${tag.countryId}`
-
-    const url = `${process.env.APP_BASE_URL}/posts/create/${tag.text}`
+    const url = `${process.env.APP_BASE_URL}/tags/${tag.text}`
 
     // eslint-disable-next-line functional/no-try-statement
     try {
@@ -395,18 +391,24 @@ export class PushNotificationService {
             return {
               to: token,
               sound: 'default' as const,
-              title: await this.i18n
-                .translate('notifications.NEW_LIVE_TAG_BODY', { ...(lang && { lang }) })
-                .catch(() => null),
-              body: '#' + tag.text,
+              body: 'Debrief ton bac philo sur Yelly! #DebriefBacPhilo',
               data: { url },
             }
+            // return {
+            //   to: token,
+            //   sound: 'default' as const,
+            //   title: await this.i18n
+            //     .translate('notifications.PROMOTED_TAG_BODY', { ...(lang && { lang }) })
+            //     .catch(() => null),
+            //   body: '#' + tag.text,
+            //   data: { url },
+            // }
           })
           .filter((v) => v)
       )
 
       // Typescript is not smart to recognize it will never be undefined
-      await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_NEW_LIVE_TAG')
+      await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_PROMOTED_TAG')
     } catch (e) {
       // eslint-disable-next-line functional/no-throw-statement
       throw e

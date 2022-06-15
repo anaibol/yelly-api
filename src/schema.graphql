@@ -31,11 +31,6 @@ type Country {
   id: ID!
 }
 
-input CreateOrUpdateLiveTagInput {
-  isLive: Boolean!
-  text: String!
-}
-
 input CreateOrUpdatePostReactionInput {
   postId: String!
   text: String!
@@ -149,10 +144,10 @@ type Mutation {
   banUser(userId: String!): Boolean!
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createFollowRequest(otherUserId: String!): FollowRequest!
-  createOrUpdateLiveTag(input: CreateOrUpdateLiveTagInput!): Tag!
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): PostReaction!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
+  createPromotedTag(tagText: String!): Tag!
   declineFollowRequest(followRequestId: String!): Boolean!
   deleteAuthUser: Boolean!
   deleteExpoPushNotificationsToken(input: String!): Boolean!
