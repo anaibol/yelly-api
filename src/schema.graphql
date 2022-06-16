@@ -222,7 +222,7 @@ type Post {
   pollOptions: [PostPollOption!]
   reactions: [PostReaction!]
   reactionsCount: Int
-  score: Float
+  score: Int
   tags: [Tag!]
   text: String
   threadId: String
@@ -325,7 +325,7 @@ type Trend {
   nextCursor: String
   postCount: Int
   posts: PaginatedPosts
-  score: Float
+  score: Int
   text: String!
 }
 

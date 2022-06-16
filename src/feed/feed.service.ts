@@ -22,6 +22,14 @@ type ScoreParams = {
   sameYearOrOlder: boolean
 }
 
+function isNotNull<TValue>(value: TValue | null): value is TValue {
+  return value !== null
+}
+
+function isDefined<TValue>(value: TValue | undefined): value is TValue {
+  return value !== undefined
+}
+
 const getPostCreationScoreX = ({
   followed = false,
   followedByFollowee = false,
@@ -51,7 +59,7 @@ const getPostCreationScore = (event: FeedEvent, scoreParams: ScoreParams): numbe
         hours: 1,
       })
   ) {
-    return event.createdAt.getTime()
+    return Number(event.createdAt.getTime().toString().substring(4, 13))
   }
 
   const X = getPostCreationScoreX(scoreParams)
@@ -413,49 +421,59 @@ export class FeedService {
       .map(({ feedEvents, feedCursors, ...tag }) => {
         const eventsByPost = groupBy(feedEvents, (event) => event.postId)
 
-        const posts = Object.entries(eventsByPost).map(([id, events]) => {
-          const scores = events.map((event) => {
-            const cursor = feedCursors.length > 0 ? feedCursors[0] : null
+        const posts = Object.entries(eventsByPost)
+          .map(([id, events]) => {
+            const scores = events.map((event) => {
+              const cursor = feedCursors.length > 0 ? feedCursors[0] : null
 
-            if (cursor && event.createdAt <= new Date(cursor.cursor)) return 0
+              if (cursor && event.createdAt <= new Date(cursor.cursor)) return 0
 
-            return getEventScore(event, authUser)
+              return Math.round(getEventScore(event, authUser))
+            })
+
+            return {
+              id,
+              score: scores.reduce((a, b) => a + b),
+            }
           })
+          .filter(({ score }) => score > 0)
 
-          return {
-            id,
-            score: scores.reduce((a, b) => a + b),
-          }
-        })
+        if (!posts.length) return null
 
-        const sortedPosts = orderBy(posts, 'score', 'desc').slice(0, 4) // postLimit
+        const sortedPosts = orderBy(posts, 'score', 'desc').slice(0, postLimit)
+
         const score = sortedPosts.map(({ score }) => score).reduce((a, b) => a + b)
-        const finalPostIds = sortedPosts.map(({ id }) => id)
 
         return {
           tag,
           score,
-          postIds: finalPostIds,
           posts: sortedPosts,
           nextCursor: feedEvents[0].createdAt.toISOString(),
         }
       })
+      .filter(isNotNull)
       .filter(({ score }) => score > 0)
 
     const sortedTagScores = orderBy(scoredTags, 'score', 'desc').slice(skip, limit)
-    const postIds = scoredTags.map(({ postIds }) => postIds).flat()
+    const allPostIds = scoredTags.map(({ posts }) => posts.map(({ id }) => id)).flat()
 
     const allPosts = await this.prismaService.post.findMany({
       where: {
         id: {
-          in: postIds,
+          in: allPostIds,
         },
       },
       select: PostSelectWithParent,
     })
 
-    const items = sortedTagScores.map(({ tag, score, nextCursor, postIds, posts }) => {
-      const tagPosts = allPosts.filter((p) => postIds.includes(p.id)).map(mapPost)
+    const items = sortedTagScores.map(({ tag, score, nextCursor, posts }) => {
+      const tagPosts = posts
+        .map(({ id, score }) => {
+          const post = allPosts.find((p) => id === p.id)
+
+          if (post) return { ...mapPost(post), score }
+        })
+        .filter(isDefined)
 
       const postCount = posts.length
 
@@ -465,7 +483,7 @@ export class FeedService {
         nextCursor,
         postCount,
         posts: {
-          items: tagPosts.map((p) => ({ ...p, score: posts.find((s) => s.id === p.id)?.score })),
+          items: tagPosts,
           nextCursor: '',
         },
       }
