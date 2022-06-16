@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { City, School } from '@prisma/client'
+import { City, Country, Prisma, School } from '@prisma/client'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { algoliaSchoolSelect } from 'src/utils/algolia'
 import { PrismaService } from '../core/prisma.service'
@@ -90,7 +90,13 @@ export class SchoolService {
     }
   }
 
-  async getOrCreate(googlePlaceId: string): Promise<School> {
+  async getOrCreate(googlePlaceId: string): Promise<
+    School & {
+      city: City & {
+        country: Country
+      }
+    }
+  > {
     const school = await this.prismaService.school.findUnique({
       where: {
         googlePlaceId,
@@ -139,6 +145,13 @@ export class SchoolService {
         lat: schoolData.lat,
         lng: schoolData.lng,
         cityId: schoolData.cityId,
+      },
+      include: {
+        city: {
+          include: {
+            country: true,
+          },
+        },
       },
     })
   }

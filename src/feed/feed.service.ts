@@ -10,7 +10,7 @@ import { AuthUser } from 'src/auth/auth.service'
 import { Feed } from './feed.model'
 import { FeedEvent, Prisma } from '@prisma/client'
 import { differenceInHours, sub } from 'date-fns'
-import { sampleSize, orderBy, uniq } from 'lodash'
+import { sampleSize, orderBy, uniq, groupBy } from 'lodash'
 import { TrendsFeed } from './trends-feed.model'
 import { tagSelect } from '../tag/tag-select.constant'
 import { PaginatedTags } from '../tag/paginated-tags.model'
@@ -111,15 +111,6 @@ export class FeedService {
   constructor(private prismaService: PrismaService) {}
   async getFeed(authUser: AuthUser, limit: number, currentCursor?: bigint, isSeen?: boolean): Promise<Feed> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-    const authUserCountry = await this.prismaService.school
-      .findUnique({
-        where: { id: authUser.schoolId },
-      })
-      .city()
-      .country()
-
-    if (!authUserCountry) return Promise.reject(new Error('No country'))
 
     const where: Prisma.FeedItemWhereInput = {
       userId: authUser.id,
@@ -238,17 +229,6 @@ export class FeedService {
     limit: number
     postLimit: number
   }): Promise<PaginatedTags> {
-    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-    const country = await this.prismaService.school
-      .findUnique({
-        where: { id: authUser.schoolId },
-      })
-      .city()
-      .country()
-
-    if (!country) return Promise.reject(new Error('No country'))
-
     const trendsQuery = Prisma.sql`
       SELECT 
         subquery."id",
@@ -312,7 +292,7 @@ export class FeedService {
     const tags = await this.prismaService.tag.findMany({
       where: {
         isHidden: false,
-        countryId: country.id,
+        countryId: authUser.countryId,
         id: {
           in: trendsTagsIds,
         },
@@ -346,17 +326,9 @@ export class FeedService {
     limit: number
     postLimit: number
   }): Promise<TrendsFeed> {
-    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-    const getAuthUserCountry = this.prismaService.school
-      .findUnique({
-        where: { id: authUser.schoolId },
-      })
-      .city()
-      .country()
-
-    const getTagsWithFeedEvents = await this.prismaService.tag.findMany({
+    const tags = await this.prismaService.tag.findMany({
       where: {
+        countryId: authUser.countryId,
         isEmoji: false,
         isHidden: false,
         feedEvents: {
@@ -403,35 +375,6 @@ export class FeedService {
       },
     })
 
-    const [authUserCountry, tagsWithFeedEvents] = await Promise.all([getAuthUserCountry, getTagsWithFeedEvents])
-
-    if (!authUserCountry) return Promise.reject(new Error('No country'))
-
-    // const lastEventCreatedAt =
-    //   notSeenEvents.length > 0
-    //     ? notSeenEvents
-    //         .map((e) => event.createdAt)
-    //         .flat()
-    //         .reduce((a, b) => {
-    //           return a > b ? a : b
-    //         })
-    //     : new Date()
-
-    // function isDefined<T>(argument: T | undefined): argument is T {
-    //   return argument !== undefined
-    // }
-
-    // const usersIds = postsWithEvents
-    //   .map((p) =>
-    //     p.events.map((e) => {
-    //       if (e.type === 'POST_REACTION_CREATED') return event.postReaction?.author.id
-    //       if (e.type === 'POST_REPLY_CREATED') return event.post?.author.id
-    //       if (e.type === 'POST_CREATED') return event.post?.author.id
-    //     })
-    //   )
-    //   .flat()
-    //   .filter(isDefined)
-
     // const followed = await this.prismaService.user.findMany({
     //   where: {
     //     id: {
@@ -466,13 +409,11 @@ export class FeedService {
 
     // const followedByFolloweesIds = followedByFollowees.map((f) => f.id)
 
-    const scoredTags = tagsWithFeedEvents
+    const scoredTags = tags
       .map(({ feedEvents, feedCursors, ...tag }) => {
-        const postIds = uniq(feedEvents.map(({ postId }) => postId))
+        const eventsByPost = groupBy(feedEvents, (event) => event.postId)
 
-        const postScores = postIds.map((postId) => {
-          const events = feedEvents.filter((event) => event.postId === postId)
-
+        const posts = Object.entries(eventsByPost).map(([id, events]) => {
           const scores = events.map((event) => {
             const cursor = feedCursors.length > 0 ? feedCursors[0] : null
 
@@ -482,20 +423,20 @@ export class FeedService {
           })
 
           return {
-            postId,
+            id,
             score: scores.reduce((a, b) => a + b),
           }
         })
 
-        const sortedPostScores = orderBy(postScores, 'score', 'desc').slice(0, 4) // postLimit
-        const score = sortedPostScores.map(({ score }) => score).reduce((a, b) => a + b)
-        const finalPostIds = sortedPostScores.map(({ postId }) => postId)
+        const sortedPosts = orderBy(posts, 'score', 'desc').slice(0, 4) // postLimit
+        const score = sortedPosts.map(({ score }) => score).reduce((a, b) => a + b)
+        const finalPostIds = sortedPosts.map(({ id }) => id)
 
         return {
           tag,
           score,
           postIds: finalPostIds,
-          postScores: sortedPostScores,
+          posts: sortedPosts,
           nextCursor: feedEvents[0].createdAt.toISOString(),
         }
       })
@@ -504,7 +445,7 @@ export class FeedService {
     const sortedTagScores = orderBy(scoredTags, 'score', 'desc').slice(skip, limit)
     const postIds = scoredTags.map(({ postIds }) => postIds).flat()
 
-    const posts = await this.prismaService.post.findMany({
+    const allPosts = await this.prismaService.post.findMany({
       where: {
         id: {
           in: postIds,
@@ -513,8 +454,8 @@ export class FeedService {
       select: PostSelectWithParent,
     })
 
-    const items = sortedTagScores.map(({ tag, score, nextCursor, postIds, postScores }) => {
-      const tagPosts = posts.filter((p) => postIds.includes(p.id)).map(mapPost)
+    const items = sortedTagScores.map(({ tag, score, nextCursor, postIds, posts }) => {
+      const tagPosts = allPosts.filter((p) => postIds.includes(p.id)).map(mapPost)
 
       const postCount = posts.length
 
@@ -524,7 +465,7 @@ export class FeedService {
         nextCursor,
         postCount,
         posts: {
-          items: tagPosts.map((p) => ({ ...p, score: postScores.find((s) => s.postId === p.id)?.score })),
+          items: tagPosts.map((p) => ({ ...p, score: posts.find((s) => s.id === p.id)?.score })),
           nextCursor: '',
         },
       }
@@ -536,10 +477,20 @@ export class FeedService {
   }
 
   async markTrendAsSeen(authUser: AuthUser, tagId: string, cursor: string): Promise<boolean> {
-    await this.prismaService.userFeedCursor.create({
-      data: {
+    await this.prismaService.userFeedCursor.upsert({
+      where: {
+        tagId_userId: {
+          tagId,
+          userId: authUser.id,
+        },
+      },
+      create: {
         userId: authUser.id,
         tagId,
+        cursor,
+        createdAt: new Date(cursor),
+      },
+      update: {
         cursor,
         createdAt: new Date(cursor),
       },

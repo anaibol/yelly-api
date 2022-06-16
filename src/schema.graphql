@@ -111,7 +111,6 @@ input InitPhoneNumberVerificationInput {
 
 type Me {
   about: String
-  avatar3dId: String
   birthdate: DateTime
   createdAt: DateTime
   email: String
@@ -341,7 +340,6 @@ input UpdateTagInput {
 
 input UpdateUserInput {
   about: String
-  avatar3dId: String
   birthdate: DateTime
   email: String
   firstName: String
@@ -362,7 +360,6 @@ type Upload {
 
 type User {
   about: String
-  avatar3dId: String
   birthdate: DateTime
   createdAt: DateTime
   firstName: String

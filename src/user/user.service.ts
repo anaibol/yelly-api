@@ -100,7 +100,6 @@ export class UserService {
         firstName: true,
         lastName: true,
         pictureId: true,
-        avatar3dId: true,
         birthdate: true,
         about: true,
         instagram: true,
@@ -165,7 +164,6 @@ export class UserService {
         firstName: true,
         lastName: true,
         pictureId: true,
-        avatar3dId: true,
         birthdate: true,
         about: true,
         instagram: true,
@@ -503,7 +501,6 @@ export class UserService {
         firstName: true,
         lastName: true,
         pictureId: true,
-        avatar3dId: true,
         birthdate: true,
         about: true,
         isFilled: true,
@@ -919,7 +916,6 @@ export class UserService {
         firstName: true,
         lastName: true,
         pictureId: true,
-        avatar3dId: true,
         birthdate: true,
         instagram: true,
         snapchat: true,
@@ -959,13 +955,17 @@ export class UserService {
         instagram: data.instagram,
         snapchat: data.snapchat,
         pictureId: data.pictureId,
-        avatar3dId: data.avatar3dId,
         about: data.about,
         isFilled: data.isFilled,
         ...(schoolData && {
           school: {
             connect: {
               id: schoolData.id,
+            },
+          },
+          country: {
+            connect: {
+              id: schoolData.city.countryId,
             },
           },
         }),

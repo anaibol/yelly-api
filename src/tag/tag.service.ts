@@ -178,22 +178,11 @@ export class TagService {
     sortDirection?: SortDirection,
     showHidden?: boolean
   ): Promise<PaginatedTags> {
-    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-    const country = await this.prismaService.school
-      .findUnique({
-        where: { id: authUser.schoolId },
-      })
-      .city()
-      .country()
-
-    if (!country) return Promise.reject(new Error('No country'))
-
     if (showHidden && !authUser.isAdmin) return Promise.reject(new Error('No admin'))
 
     const where: Prisma.TagWhereInput = {
       isLive: false,
-      countryId: country.id,
+      countryId: authUser.countryId,
       ...(isEmoji !== undefined && {
         isEmoji,
       }),
@@ -239,17 +228,6 @@ export class TagService {
   }
 
   async getTrends(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedTags> {
-    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-    const country = await this.prismaService.school
-      .findUnique({
-        where: { id: authUser.schoolId },
-      })
-      .city()
-      .country()
-
-    if (!country) return Promise.reject(new Error('No country'))
-
     const trendsQuery = Prisma.sql`
       SELECT
         T."id",
@@ -277,7 +255,7 @@ export class TagService {
     const tags = await this.prismaService.tag.findMany({
       where: {
         isHidden: false,
-        countryId: country.id,
+        countryId: authUser.countryId,
         id: {
           in: trendsTagsIds,
         },
