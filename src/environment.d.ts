@@ -12,7 +12,6 @@ declare global {
       ALGOLIA_APP_ID: string
       ALGOLIA_INDEX_PREFIX: string
       EMAIL_PROVIDER_API_KEY: string
-      SAMUEL_ADMIN_ID: string
       EXPO_ACCESS_TOKEN: string
       APP_BASE_URL: string
       TWILIO_ACCOUNT_SID: string
