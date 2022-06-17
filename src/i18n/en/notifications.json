@@ -8,6 +8,6 @@
   "FOLLOWEE_POSTED_EPHEMERAL": "{firstName} published a new ephemeral yelly ⚡",
   "POST_REPLIED": "{firstName} replied your yelly 💬",
   "SAME_POST_REPLIED": "{firstName} replied to the same yelly as you 💬",
-  "SAME_SCHOOL_POSTED": "Une nouvelle personne de ton école a posté 💬",
+  "SAME_SCHOOL_POSTED": "Someone from your school posted a yelly 💬",
   "YOUR_POST_WILL_VANISH": "Your yelly will vanish in 5 minutes ⚡ Come and share what you're doing 💬"
 }
