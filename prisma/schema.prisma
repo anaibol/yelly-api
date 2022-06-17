@@ -259,6 +259,7 @@ enum FeedItemType {
   FOLLOWEE_POSTED
   POST_REPLIED
   SAME_POST_REPLIED
+  SAME_SCHOOL_POSTED
 }
 
 model Thread {

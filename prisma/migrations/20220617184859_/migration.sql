@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "FeedItemType" ADD VALUE 'SAME_SCHOOL_POSTED';
