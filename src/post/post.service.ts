@@ -453,7 +453,7 @@ export class PostService {
       this.pushNotificationService.followeePosted(post.id)
     }
 
-    this.pushNotificationService.sameSchoolPosted(post.id)
+    this.pushNotificationService.sameSchoolPosted(post.id, authUser.id)
 
     return post
   }
