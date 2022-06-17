@@ -157,7 +157,7 @@ export class PushNotificationService {
     )
   }
 
-  async sameSchoolPosted(postId: string) {
+  async sameSchoolPosted(postId: string, userId: string) {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
@@ -168,6 +168,11 @@ export class PushNotificationService {
             school: {
               select: {
                 users: {
+                  where: {
+                    id: {
+                      not: userId,
+                    },
+                  },
                   select: UserPushTokenSelect,
                 },
               },
