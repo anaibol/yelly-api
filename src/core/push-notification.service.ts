@@ -157,6 +157,62 @@ export class PushNotificationService {
     )
   }
 
+  async sameSchoolPosted(postId: string) {
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+      select: {
+        expiresIn: true,
+        author: {
+          select: {
+            ...UserPushTokenSelect,
+            school: {
+              select: {
+                users: {
+                  select: UserPushTokenSelect,
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!post) return Promise.reject(new Error('Post not found'))
+    if (!post.author.school) return Promise.reject(new Error('Post author no school found'))
+
+    const sameSchoolUsers = post.author.school?.users
+
+    await this.prismaService.feedItem.createMany({
+      data: sameSchoolUsers.map((user) => ({
+        userId: user.id,
+        type: FeedItemType.SAME_SCHOOL_POSTED,
+        postId,
+      })),
+    })
+
+    const sameSchoolUsersPushNotifications = sameSchoolUsers.map(async (user) => {
+      const lang = user.locale
+
+      return {
+        to: user.expoPushNotificationTokens.map(({ token }) => token),
+        body: await this.i18n.translate(`notifications.SAME_SCHOOL_POSTED`, {
+          ...(lang && { lang }),
+          args: { firstName: post.author.firstName },
+        }),
+        data: { url: `${process.env.APP_BASE_URL}/notifications/feed` },
+        sound: 'default' as const,
+      }
+    })
+
+    const notificationsToSend = await Promise.all(sameSchoolUsersPushNotifications)
+
+    await this.sendNotifications(
+      notificationsToSend,
+      sameSchoolUsers.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
+      'PUSH_NOTIFICATION_SAME_SCHOOL_POSTED'
+    )
+  }
+
   async postReplied(postId: string) {
     const postReply = await this.prismaService.post.findUnique({
       where: { id: postId },
