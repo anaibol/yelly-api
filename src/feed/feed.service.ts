@@ -52,16 +52,6 @@ const getPostActivityScoreX = ({ followed, followedByFollowee, sameSchool, sameY
 }
 
 const getPostCreationScore = (event: FeedEvent, scoreParams: ScoreParams): number => {
-  if (
-    event?.type === 'POST_CREATED' &&
-    event.createdAt >
-      sub(new Date(), {
-        hours: 1,
-      })
-  ) {
-    return Number(event.createdAt.getTime().toString().substring(4, 13))
-  }
-
   const X = getPostCreationScoreX(scoreParams)
 
   return 100 * (1 - differenceInHours(event.createdAt, new Date()) / X)
@@ -73,8 +63,10 @@ const getPostActivityScore = (event: FeedEvent, y: number, scoreParams: ScorePar
   return y * Math.exp(X * (-differenceInHours(event.createdAt, new Date()) / 24))
 }
 
-const getEventScore = (event: FeedEvent, authUser: AuthUser): number => {
+const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | null): number => {
   const { type } = event
+
+  const cursorFactor = cursor && event.createdAt <= new Date(cursor) ? 100 : 1
 
   if (type === 'POST_CREATED') {
     if (!authUser.birthdate || !event.postAuthorBirthdate) throw new Error('No birthdate')
@@ -82,10 +74,23 @@ const getEventScore = (event: FeedEvent, authUser: AuthUser): number => {
     const sameSchool = authUser.schoolId === event.postAuthorSchoolId
     const sameYearOrOlder = authUser.birthdate.getFullYear() >= event.postAuthorBirthdate.getFullYear()
 
-    return getPostCreationScore(event, {
-      sameSchool,
-      sameYearOrOlder,
-    })
+    const createdLessThanAnHourAgoMultiplier =
+      event?.type === 'POST_CREATED' &&
+      event.createdAt >
+        sub(new Date(), {
+          hours: 1,
+        })
+        ? 100
+        : 1
+
+    return (
+      getPostCreationScore(event, {
+        sameSchool,
+        sameYearOrOlder,
+      }) *
+      cursorFactor *
+      createdLessThanAnHourAgoMultiplier
+    )
   }
   if (type === 'POST_REPLY_CREATED') {
     if (!authUser.birthdate || !event.postAuthorBirthdate) throw new Error('No birthdate')
@@ -93,10 +98,12 @@ const getEventScore = (event: FeedEvent, authUser: AuthUser): number => {
     const sameSchool = authUser.schoolId === event.postAuthorSchoolId
     const sameYearOrOlder = authUser.birthdate.getFullYear() >= event.postAuthorBirthdate.getFullYear()
 
-    return getPostActivityScore(event, 15, {
-      sameSchool,
-      sameYearOrOlder,
-    })
+    return (
+      getPostActivityScore(event, 15, {
+        sameSchool,
+        sameYearOrOlder,
+      }) * cursorFactor
+    )
   }
 
   if (type === 'POST_REACTION_CREATED') {
@@ -105,10 +112,12 @@ const getEventScore = (event: FeedEvent, authUser: AuthUser): number => {
     const sameSchool = authUser.schoolId === event.postReactionAuthorSchoolId
     const sameYearOrOlder = authUser.birthdate.getFullYear() >= event.postReactionAuthorBirthdate.getFullYear()
 
-    return getPostActivityScore(event, 7.5, {
-      sameSchool,
-      sameYearOrOlder,
-    })
+    return (
+      getPostActivityScore(event, 7.5, {
+        sameSchool,
+        sameYearOrOlder,
+      }) * cursorFactor
+    )
   }
 
   return 0
@@ -419,30 +428,25 @@ export class FeedService {
 
     const scoredTags = tags
       .map(({ feedEvents, feedCursors, ...tag }) => {
-        const eventsByPost = groupBy(feedEvents, (event) => event.postId)
+        const cursor = feedCursors.length > 0 ? feedCursors[0] : null
 
-        const posts = Object.entries(eventsByPost)
-          .map(([id, events]) => {
-            const scores = events.map((event) => {
-              const cursor = feedCursors.length > 0 ? feedCursors[0] : null
+        const tagScores = feedEvents.map((event) => ({
+          ...event,
+          score: Math.round(getEventScore(event, authUser, cursor ? cursor.cursor : null)),
+        }))
 
-              if (cursor && event.createdAt <= new Date(cursor.cursor)) return 0
+        const eventsByPost = groupBy(tagScores, (tagScore) => tagScore.postId)
 
-              return Math.round(getEventScore(event, authUser))
-            })
-
-            return {
-              id,
-              score: scores.reduce((a, b) => a + b),
-            }
-          })
-          .filter(({ score }) => score > 0)
+        const posts = Object.entries(eventsByPost).map(([id, events]) => ({
+          id,
+          score: events.reduce<number>((currentScore, { score }) => currentScore + score, 0),
+        }))
 
         if (!posts.length) return null
 
         const sortedPosts = orderBy(posts, 'score', 'desc').slice(0, postLimit)
 
-        const score = sortedPosts.map(({ score }) => score).reduce((a, b) => a + b)
+        const score = sortedPosts.reduce<number>((currentScore, { score }) => currentScore + score, 0)
 
         return {
           tag,
@@ -455,6 +459,7 @@ export class FeedService {
       .filter(({ score }) => score > 0)
 
     const sortedTagScores = orderBy(scoredTags, 'score', 'desc').slice(skip, limit)
+
     const allPostIds = scoredTags.map(({ posts }) => posts.map(({ id }) => id)).flat()
 
     const allPosts = await this.prismaService.post.findMany({
