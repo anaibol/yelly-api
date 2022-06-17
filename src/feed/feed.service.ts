@@ -1,6 +1,3 @@
-/* eslint-disable functional/no-return-void */
-/* eslint-disable functional/no-let */
-/* eslint-disable functional/immutable-data */
 /* eslint-disable functional/no-throw-statement */
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
