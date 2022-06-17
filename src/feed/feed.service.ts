@@ -57,7 +57,9 @@ const getPostCreationScore = (event: FeedEvent, scoreParams: ScoreParams): numbe
 const getPostActivityScore = (event: FeedEvent, y: number, scoreParams: ScoreParams): number => {
   const X = getPostActivityScoreX(scoreParams)
 
-  return y * Math.exp(X * (-differenceInHours(event.createdAt, new Date()) / 24))
+  const A = -differenceInHours(event.createdAt, new Date()) / 24
+
+  return y * Math.exp(X * A)
 }
 
 const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | null): number => {
