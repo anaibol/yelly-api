@@ -179,8 +179,9 @@ export class MeResolver {
   async posts(@Parent() me: Me, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedPosts> {
     const { after, limit } = cursorPaginationArgs
 
-    const posts = await this.prismaService.user.findUnique({ where: { id: me.id } }).posts({
+    const posts = await this.prismaService.post.findMany({
       where: {
+        authorId: me.id,
         ...getNotExpiredCondition(),
       },
       ...(after && {
