@@ -172,6 +172,11 @@ export class PushNotificationService {
                     id: {
                       not: userId,
                     },
+                    followees: {
+                      none: {
+                        followeeId: userId,
+                      },
+                    },
                   },
                   select: UserPushTokenSelect,
                 },
