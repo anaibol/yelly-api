@@ -1,6 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { User } from 'src/user/user.model'
-import { PaginatedPosts } from '../post/paginated-posts.model'
+import { Post } from '../post/post.model'
 
 @ObjectType()
 export class Trend {
@@ -10,15 +10,21 @@ export class Trend {
   createdAt?: Date
   isLive?: boolean
   isEmoji?: boolean
-  posts?: PaginatedPosts
+  posts?: OffsetPaginatedPosts
   postCount?: number
-  author?: User
+  author?: User | null
   nextCursor?: string
   score?: number | null
 }
 
 @ObjectType()
-export class TrendsFeed {
+export class PaginatedTrends {
   nextSkip: number
   items: Trend[]
+}
+
+@ObjectType()
+class OffsetPaginatedPosts {
+  nextSkip: number
+  items: Post[]
 }

@@ -8,10 +8,11 @@ import { Feed } from './feed.model'
 import { FeedArgs } from './feed.args'
 import { MarkFeedItemsAsSeenArgs } from './mark-feed-items-as-seen.args'
 import { MarkTrendAsSeenArgs } from './mark-trend-as-seen.args'
-import { TrendsFeedArgs } from './trends-feed.args'
-import { TrendsFeed } from './trends-feed.model'
+import { TrendArgs } from './trend.args'
+import { PaginatedTrends, Trend } from './trend.model'
 import { PrismaService } from '../core/prisma.service'
 import { TagService } from '../tag/tag.service'
+import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 
 @Resolver()
 export class FeedResolver {
@@ -43,18 +44,33 @@ export class FeedResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => TrendsFeed)
-  async trendsFeed(@Args() trendsFeedArgs: TrendsFeedArgs, @CurrentUser() authUser: AuthUser): Promise<TrendsFeed> {
-    const { skip, limit, postLimit } = trendsFeedArgs
+  @Query(() => PaginatedTrends)
+  async trends(
+    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PaginatedTrends> {
+    const { skip, limit } = offsetPaginationArgs
 
-    const { items, nextSkip } = await this.feedService.getTrendsFeed2({
+    const { items, nextSkip } = await this.feedService.getTrends({
       authUser,
       skip,
       limit,
-      postLimit,
     })
 
     return { items, nextSkip }
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => Trend)
+  async trend(@Args() trendsArgs: TrendArgs, @CurrentUser() authUser: AuthUser): Promise<Trend> {
+    const { tagId, skip, limit } = trendsArgs
+
+    return this.feedService.getTrend({
+      tagId,
+      authUser,
+      skip,
+      limit,
+    })
   }
 
   @UseGuards(AuthGuard)

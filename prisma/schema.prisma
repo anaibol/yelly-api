@@ -156,8 +156,8 @@ model Tag {
   isEmoji     Boolean          @default(false)
   isHidden    Boolean          @default(false)
   feedEvents  FeedEvent[]
-  author      User             @relation(fields: [authorId], references: [id])
-  authorId    String
+  author      User?             @relation(fields: [authorId], references: [id])
+  authorId    String?          
   feedCursors UserFeedCursor[]
 
   @@index([createdAt])

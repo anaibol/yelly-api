@@ -31,6 +31,7 @@ export class Me {
   locale?: string
   training?: Training | null
   school?: School | null
+  countryId?: string | null
   posts?: PaginatedPosts
   followers?: PaginatedUsers
   followees?: PaginatedUsers

@@ -44,19 +44,6 @@ export class TagResolver {
     return { items, nextSkip }
   }
 
-  @UseGuards(AuthGuard)
-  @Query(() => PaginatedTags)
-  async trends(
-    @Args() offsetPaginationArgs: OffsetPaginationArgs,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<PaginatedTags> {
-    const { skip, limit } = offsetPaginationArgs
-
-    const { items, nextSkip } = await this.tagService.getTrends(authUser, skip, limit)
-
-    return { items, nextSkip }
-  }
-
   @ResolveField()
   async posts(
     @Parent() tag: Tag,

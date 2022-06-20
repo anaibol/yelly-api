@@ -122,6 +122,7 @@ export class UserService {
             },
           },
         },
+        countryId: true,
         training: {
           select: {
             id: true,
@@ -529,6 +530,7 @@ export class UserService {
             },
           },
         },
+        countryId: true,
         training: {
           select: {
             id: true,

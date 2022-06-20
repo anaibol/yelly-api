@@ -20,6 +20,7 @@ export class User {
   locale?: string | null
   training?: Training | null
   school?: School | null
+  countryId?: string | null
   posts?: PaginatedPosts
   isFollowedByAuthUser?: boolean
   pendingFollowRequestFromUser?: FollowRequest | null
