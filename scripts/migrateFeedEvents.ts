@@ -59,14 +59,14 @@ async function main() {
   })
 
   await prisma.feedEvent.createMany({
-    data: posts.map(({ id, createdAt, tags, parent }) => {
+    data: posts.map(({ id, author, createdAt, tags, parent }) => {
       return {
         createdAt,
         type: parent ? FeedEventType.POST_REPLY_CREATED : FeedEventType.POST_CREATED,
         postId: parent ? parent.id : id,
         tagId: tags[0].id,
-        postAuthorBirthdate: parent?.author.birthdate,
-        postAuthorSchoolId: parent?.author.schoolId,
+        postAuthorBirthdate: parent ? parent?.author.birthdate : author.birthdate,
+        postAuthorSchoolId: parent ? parent?.author.schoolId : author.schoolId,
       }
     }),
   })

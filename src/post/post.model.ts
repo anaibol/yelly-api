@@ -1,7 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { User } from '../user/user.model'
 import { Tag } from '../tag/tag.model'
-import { PostTagRank } from './post-tag-rank.model'
 import { PaginatedPosts } from './paginated-posts.model'
 import { PostReaction } from './post-reaction.model'
 
@@ -34,6 +33,7 @@ export class Post {
   children?: PaginatedPosts
   childrenCount?: number
   authUserReaction?: PostReaction | null
+  score?: number | null
 }
 
 @ObjectType()

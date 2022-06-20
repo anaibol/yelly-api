@@ -10,7 +10,6 @@ export class UpdateUserInput {
   instagram?: string
   snapchat?: string
   pictureId?: string
-  avatar3dId?: string
   trainingName?: string
   schoolGooglePlaceId?: string
   about?: string

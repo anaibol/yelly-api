@@ -54,12 +54,6 @@ export const PostSelect = {
           },
         },
       },
-      training: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
     },
   },
   tags: {

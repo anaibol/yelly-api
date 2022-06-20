@@ -188,94 +188,6 @@ export class PostService {
   //   return { items, nextCursor }
   // }
 
-  async getPosts(authUser: AuthUser, limit: number, currentCursor?: string): Promise<PaginatedPosts> {
-    const userAge = authUser.birthdate && dates.getAge(authUser.birthdate)
-    const datesRanges = userAge ? dates.getDateRanges(userAge) : undefined
-
-    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-    const authUserCountry = await this.prismaService.school
-      .findUnique({
-        where: { id: authUser.schoolId },
-      })
-      .city()
-      .country()
-
-    if (!authUserCountry) return Promise.reject(new Error('No country'))
-
-    const posts = await this.prismaService.post.findMany({
-      where: {
-        ...getNotExpiredCondition(),
-        author: {
-          isActive: true,
-          school: {
-            city: {
-              countryId: authUserCountry.id,
-            },
-          },
-          birthdate: datesRanges,
-        },
-        parent: null,
-        AND: {
-          OR: [
-            {
-              tags: {
-                every: {
-                  isHidden: false,
-                },
-              },
-            },
-            {
-              authorId: authUser.id,
-            },
-          ],
-        },
-      },
-      ...(currentCursor && {
-        cursor: {
-          id: currentCursor,
-        },
-        skip: 1,
-      }),
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: PostSelectWithParent,
-    })
-
-    const mappedPosts = posts.map(mapPost)
-
-    // eslint-disable-next-line prefer-const
-    // let threads: string[] = []
-
-    // const items = mappedPosts
-    //   .map((post): Post | Post[] => {
-    //     if (post.threadId && !threads.includes(post.threadId)) {
-    //       // eslint-disable-next-line functional/immutable-data
-    //       threads.push(post.threadId)
-    //       return [
-    //         post,
-    //         ...posts.filter(
-    //           ({ threadId, id }) =>
-    //             post.threadId && !threads.includes(post.threadId) && threadId === post.threadId && id !== post.id
-    //         ),
-    //       ]
-    //     }
-
-    //     return post
-    //   })
-    //   .flat()
-
-    const items = mappedPosts
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : ''
-
-    return { items, nextCursor }
-  }
-
   async getPost(postId: string, limit: number, currentCursor?: string): Promise<Post | null> {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
@@ -319,15 +231,6 @@ export class PostService {
 
     const uniqueTags = tags && tags.length > 0 ? uniq(tags) : ['NoTag']
 
-    if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-    const authUserCountry = await this.prismaService.school
-      .findUnique({
-        where: { id: authUser.schoolId },
-      })
-      .city()
-      .country()
-
     const parent = parentId
       ? await this.prismaService.post.findUnique({
           where: { id: parentId },
@@ -345,7 +248,7 @@ export class PostService {
         },
         create: {
           text: tagText,
-          countryId: authUserCountry?.id,
+          countryId: authUser.countryId,
           authorId: authUser.id,
         },
       })
@@ -358,7 +261,7 @@ export class PostService {
         },
         create: {
           text: emoji,
-          countryId: authUserCountry?.id,
+          countryId: authUser.countryId,
           isEmoji: true,
           authorId: authUser.id,
         },

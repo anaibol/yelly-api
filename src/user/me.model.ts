@@ -22,7 +22,6 @@ export class Me {
   lastName?: string | null
   birthdate?: Date | null
   pictureId?: string | null
-  avatar3dId?: string | null
   snapchat?: string | null
   instagram?: string | null
   isFilled?: boolean
@@ -32,6 +31,7 @@ export class Me {
   locale?: string
   training?: Training | null
   school?: School | null
+  countryId?: string | null
   posts?: PaginatedPosts
   followers?: PaginatedUsers
   followees?: PaginatedUsers

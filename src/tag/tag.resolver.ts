@@ -44,19 +44,6 @@ export class TagResolver {
     return { items, nextSkip }
   }
 
-  @UseGuards(AuthGuard)
-  @Query(() => PaginatedTags)
-  async trends(
-    @Args() offsetPaginationArgs: OffsetPaginationArgs,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<PaginatedTags> {
-    const { skip, limit } = offsetPaginationArgs
-
-    const { items, nextSkip } = await this.tagService.getTrends(authUser, skip, limit)
-
-    return { items, nextSkip }
-  }
-
   @ResolveField()
   async posts(
     @Parent() tag: Tag,
@@ -67,7 +54,14 @@ export class TagResolver {
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
-    const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
+    const posts = await this.prismaService.post.findMany({
+      where: {
+        tags: {
+          some: {
+            id: tag.id,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
       select: PostSelectWithParent,
       ...(after && {

@@ -175,26 +175,23 @@ export class UserResolver {
   async posts(@Parent() user: User, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedPosts> {
     const { after, limit } = cursorPaginationArgs
 
-    const posts = await this.prismaService.user
-      .findUnique({
-        where: { id: user.id },
-      })
-      .posts({
-        where: {
-          ...getNotExpiredCondition(),
+    const posts = await this.prismaService.post.findMany({
+      where: {
+        authorId: user.id,
+        ...getNotExpiredCondition(),
+      },
+      ...(after && {
+        cursor: {
+          id: after,
         },
-        ...(after && {
-          cursor: {
-            id: after,
-          },
-          skip: 1,
-        }),
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: limit,
-        select: PostSelectWithParent,
-      })
+        skip: 1,
+      }),
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
+      select: PostSelectWithParent,
+    })
 
     const items = posts.map(mapPost)
 

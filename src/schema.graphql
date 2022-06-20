@@ -112,8 +112,8 @@ input InitPhoneNumberVerificationInput {
 
 type Me {
   about: String
-  avatar3dId: String
   birthdate: DateTime
+  countryId: String
   createdAt: DateTime
   email: String
   expoPushNotificationTokens: [String!]
@@ -188,6 +188,11 @@ enum NotificationType {
   POST_REACTION
 }
 
+type OffsetPaginatedPosts {
+  items: [Post!]!
+  nextSkip: Int!
+}
+
 type PaginatedNotifications {
   items: [Notification!]!
   nextSkip: Int
@@ -200,6 +205,11 @@ type PaginatedPosts {
 
 type PaginatedTags {
   items: [Tag!]!
+  nextSkip: Int!
+}
+
+type PaginatedTrends {
+  items: [Trend!]!
   nextSkip: Int!
 }
 
@@ -224,6 +234,7 @@ type Post {
   pollOptions: [PostPollOption!]
   reactions: [PostReaction!]
   reactionsCount: Int
+  score: Int
   tags: [Tag!]
   text: String
   threadId: String
@@ -260,8 +271,8 @@ type Query {
   school(googlePlaceId: String, id: String): School
   tag(text: String!): Tag!
   tags(isEmoji: Boolean = false, limit: Int = 10, showHidden: Boolean = false, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
-  trends(limit: Int = 10, skip: Int = 0): PaginatedTags!
-  trendsFeed(limit: Int = 10, postLimit: Int = 10, skip: Int = 0): TrendsFeed!
+  trend(limit: Int = 10, skip: Int = 0, tagId: String!): Trend!
+  trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadFeedItemsCount: Int!
   unreadNotificationsCount: Int!
   user(id: String!): User!
@@ -323,14 +334,11 @@ type Trend {
   id: ID!
   isEmoji: Boolean
   isLive: Boolean
+  nextCursor: String
   postCount: Int
-  posts(after: String, limit: Int = 10): PaginatedPosts
+  posts: OffsetPaginatedPosts
+  score: Int
   text: String!
-}
-
-type TrendsFeed {
-  items: [Trend!]!
-  nextSkip: Int!
 }
 
 input UpdateTagInput {
@@ -339,7 +347,6 @@ input UpdateTagInput {
 
 input UpdateUserInput {
   about: String
-  avatar3dId: String
   birthdate: DateTime
   email: String
   firstName: String
@@ -360,8 +367,8 @@ type Upload {
 
 type User {
   about: String
-  avatar3dId: String
   birthdate: DateTime
+  countryId: String
   createdAt: DateTime
   firstName: String
   followees(limit: Int = 10, skip: Int = 0): PaginatedUsers

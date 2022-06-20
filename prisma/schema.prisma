@@ -26,6 +26,7 @@ model Country {
   code String @unique
   city City[]
   tag  Tag[]
+  user User[]
 }
 
 model Notification {
@@ -98,7 +99,8 @@ model User {
   locale                       String?
   trainingId                   String?
   schoolId                     String?
-  avatar3dId                   String?
+  countryId                    String?
+  country                      Country?                          @relation(fields: [countryId], references: [id])
   phoneNumber                  String?                           @unique
   school                       School?                           @relation(fields: [schoolId], references: [id])
   training                     Training?                         @relation(fields: [trainingId], references: [id])
@@ -270,7 +272,7 @@ model Thread {
 model FeedEvent {
   id                          BigInt           @id @default(dbgenerated("generate_id()"))
   postId                      String
-  post                        Post            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post                        Post             @relation(fields: [postId], references: [id], onDelete: Cascade)
   tagId                       String
   tag                         Tag              @relation(fields: [tagId], references: [id], onDelete: Cascade)
   postReactionAuthorBirthdate DateTime?        @db.Date

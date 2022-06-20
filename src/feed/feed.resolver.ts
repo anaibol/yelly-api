@@ -8,15 +8,13 @@ import { Feed } from './feed.model'
 import { FeedArgs } from './feed.args'
 import { MarkFeedItemsAsSeenArgs } from './mark-feed-items-as-seen.args'
 import { MarkTrendAsSeenArgs } from './mark-trend-as-seen.args'
-import { TrendsFeedArgs } from './trends-feed.args'
-import { Trend, TrendsFeed } from './trends-feed.model'
+import { TrendArgs } from './trend.args'
+import { PaginatedTrends, Trend } from './trend.model'
 import { PrismaService } from '../core/prisma.service'
 import { TagService } from '../tag/tag.service'
-import { PaginatedPosts } from '../post/paginated-posts.model'
-import { CursorPaginationArgs } from '../common/cursor-pagination.args'
-import { mapPost, PostSelectWithParent } from '../post/post-select.constant'
+import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 
-@Resolver(Trend)
+@Resolver()
 export class FeedResolver {
   constructor(private feedService: FeedService, private tagService: TagService, private prismaService: PrismaService) {}
 
@@ -46,18 +44,33 @@ export class FeedResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => TrendsFeed)
-  async trendsFeed(@Args() trendsFeedArgs: TrendsFeedArgs, @CurrentUser() authUser: AuthUser): Promise<TrendsFeed> {
-    const { skip, limit, postLimit } = trendsFeedArgs
+  @Query(() => PaginatedTrends)
+  async trends(
+    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PaginatedTrends> {
+    const { skip, limit } = offsetPaginationArgs
 
-    const { items, nextSkip } = await this.feedService.getTrendsFeed({
+    const { items, nextSkip } = await this.feedService.getTrends({
       authUser,
       skip,
       limit,
-      postLimit,
     })
 
     return { items, nextSkip }
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => Trend)
+  async trend(@Args() trendsArgs: TrendArgs, @CurrentUser() authUser: AuthUser): Promise<Trend> {
+    const { tagId, skip, limit } = trendsArgs
+
+    return this.feedService.getTrend({
+      tagId,
+      authUser,
+      skip,
+      limit,
+    })
   }
 
   @UseGuards(AuthGuard)
@@ -66,36 +79,5 @@ export class FeedResolver {
     const { tagId, cursor } = markTrendAsSeen
 
     return this.feedService.markTrendAsSeen(authUser, tagId, cursor)
-  }
-
-  @ResolveField()
-  async posts(
-    @Parent() tag: Trend,
-    @CurrentUser() authUser: AuthUser,
-    @Args() cursorPaginationArgs: CursorPaginationArgs
-  ): Promise<PaginatedPosts> {
-    const { limit, after } = cursorPaginationArgs
-
-    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
-
-    const posts = await this.prismaService.tag.findUnique({ where: { id: tag.id } }).posts({
-      orderBy: { createdAt: 'desc' },
-      select: PostSelectWithParent,
-      ...(after && {
-        cursor: {
-          id: after,
-        },
-        skip: 1,
-      }),
-      take: limit,
-    })
-
-    const items = posts.map(mapPost)
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : ''
-
-    return { items, nextCursor }
   }
 }

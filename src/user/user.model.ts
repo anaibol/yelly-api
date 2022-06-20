@@ -14,13 +14,13 @@ export class User {
   lastName?: string | null
   birthdate?: Date | null
   pictureId?: string | null
-  avatar3dId?: string | null
   snapchat?: string | null
   instagram?: string | null
   about?: string | null
   locale?: string | null
   training?: Training | null
   school?: School | null
+  countryId?: string | null
   posts?: PaginatedPosts
   isFollowedByAuthUser?: boolean
   pendingFollowRequestFromUser?: FollowRequest | null

@@ -100,7 +100,6 @@ export class UserService {
         firstName: true,
         lastName: true,
         pictureId: true,
-        avatar3dId: true,
         birthdate: true,
         about: true,
         instagram: true,
@@ -123,6 +122,7 @@ export class UserService {
             },
           },
         },
+        countryId: true,
         training: {
           select: {
             id: true,
@@ -165,7 +165,6 @@ export class UserService {
         firstName: true,
         lastName: true,
         pictureId: true,
-        avatar3dId: true,
         birthdate: true,
         about: true,
         instagram: true,
@@ -503,7 +502,6 @@ export class UserService {
         firstName: true,
         lastName: true,
         pictureId: true,
-        avatar3dId: true,
         birthdate: true,
         about: true,
         isFilled: true,
@@ -532,6 +530,7 @@ export class UserService {
             },
           },
         },
+        countryId: true,
         training: {
           select: {
             id: true,
@@ -656,7 +655,7 @@ export class UserService {
     const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
     this.algoliaService.deleteObject(algoliaUserIndex, userId)
-    this.sendbirdService.deactivateUser(userId)
+    // this.sendbirdService.deactivateUser(userId)
 
     return true
   }
@@ -919,7 +918,6 @@ export class UserService {
         firstName: true,
         lastName: true,
         pictureId: true,
-        avatar3dId: true,
         birthdate: true,
         instagram: true,
         snapchat: true,
@@ -959,13 +957,17 @@ export class UserService {
         instagram: data.instagram,
         snapchat: data.snapchat,
         pictureId: data.pictureId,
-        avatar3dId: data.avatar3dId,
         about: data.about,
         isFilled: data.isFilled,
         ...(schoolData && {
           school: {
             connect: {
               id: schoolData.id,
+            },
+          },
+          country: {
+            connect: {
+              id: schoolData.city.countryId,
             },
           },
         }),
@@ -989,22 +991,18 @@ export class UserService {
     if (data.isFilled) {
       // eslint-disable-next-line functional/no-try-statement
       try {
-        const sendbirdAccessToken = updatedUser && (await this.sendbirdService.createUser(updatedUser))
-
-        await this.prismaService.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            sendbirdAccessToken,
-          },
-        })
-
+        // const sendbirdAccessToken = updatedUser && (await this.sendbirdService.createUser(updatedUser))
+        // await this.prismaService.user.update({
+        //   where: {
+        //     id: userId,
+        //   },
+        //   data: {
+        //     sendbirdAccessToken,
+        //   },
+        // })
         // eslint-disable-next-line functional/immutable-data
-        updatedUser.sendbirdAccessToken = sendbirdAccessToken
+        // updatedUser.sendbirdAccessToken = sendbirdAccessToken
       } catch (error) {
-        console.log(33)
-
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
@@ -1031,7 +1029,7 @@ export class UserService {
     } else if (updatedUser.isFilled) {
       // eslint-disable-next-line functional/no-try-statement
       try {
-        await this.updateSenbirdUser(updatedUser)
+        // await this.updateSenbirdUser(updatedUser)
       } catch (error) {
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
@@ -1066,14 +1064,14 @@ export class UserService {
     return updatedUser
   }
 
-  async updateSenbirdUser(user: User): Promise<void> {
-    if (user.firstName || user.lastName || user.pictureId) {
-      await this.sendbirdService.updateUser({
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        pictureId: user.pictureId,
-      })
-    }
-  }
+  // async updateSenbirdUser(user: User): Promise<void> {
+  //   if (user.firstName || user.lastName || user.pictureId) {
+  //     await this.sendbirdService.updateUser({
+  //       id: user.id,
+  //       firstName: user.firstName,
+  //       lastName: user.lastName,
+  //       pictureId: user.pictureId,
+  //     })
+  //   }
+  // }
 }
