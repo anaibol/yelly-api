@@ -361,6 +361,9 @@ export class FeedService {
                 },
               },
             },
+            author: {
+              isActive: true,
+            },
           },
           select: {
             ...PostSelectWithParent,

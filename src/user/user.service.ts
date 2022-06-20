@@ -655,7 +655,7 @@ export class UserService {
     const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
     this.algoliaService.deleteObject(algoliaUserIndex, userId)
-    this.sendbirdService.deactivateUser(userId)
+    // this.sendbirdService.deactivateUser(userId)
 
     return true
   }
@@ -991,22 +991,18 @@ export class UserService {
     if (data.isFilled) {
       // eslint-disable-next-line functional/no-try-statement
       try {
-        const sendbirdAccessToken = updatedUser && (await this.sendbirdService.createUser(updatedUser))
-
-        await this.prismaService.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            sendbirdAccessToken,
-          },
-        })
-
+        // const sendbirdAccessToken = updatedUser && (await this.sendbirdService.createUser(updatedUser))
+        // await this.prismaService.user.update({
+        //   where: {
+        //     id: userId,
+        //   },
+        //   data: {
+        //     sendbirdAccessToken,
+        //   },
+        // })
         // eslint-disable-next-line functional/immutable-data
-        updatedUser.sendbirdAccessToken = sendbirdAccessToken
+        // updatedUser.sendbirdAccessToken = sendbirdAccessToken
       } catch (error) {
-        console.log(33)
-
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
@@ -1033,7 +1029,7 @@ export class UserService {
     } else if (updatedUser.isFilled) {
       // eslint-disable-next-line functional/no-try-statement
       try {
-        await this.updateSenbirdUser(updatedUser)
+        // await this.updateSenbirdUser(updatedUser)
       } catch (error) {
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
@@ -1068,14 +1064,14 @@ export class UserService {
     return updatedUser
   }
 
-  async updateSenbirdUser(user: User): Promise<void> {
-    if (user.firstName || user.lastName || user.pictureId) {
-      await this.sendbirdService.updateUser({
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        pictureId: user.pictureId,
-      })
-    }
-  }
+  // async updateSenbirdUser(user: User): Promise<void> {
+  //   if (user.firstName || user.lastName || user.pictureId) {
+  //     await this.sendbirdService.updateUser({
+  //       id: user.id,
+  //       firstName: user.firstName,
+  //       lastName: user.lastName,
+  //       pictureId: user.pictureId,
+  //     })
+  //   }
+  // }
 }
