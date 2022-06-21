@@ -81,9 +81,9 @@ export class FeedResolver {
     return this.feedService.markTrendAsSeen(authUser, tagId, cursor)
   }
 
-  // @UseGuards(AuthGuard)
-  // @Mutation(() => Boolean)
-  // markAllTrendsAsUnSeen(@CurrentUser() authUser: AuthUser): Promise<boolean> {
-  //   return this.feedService.markAllTrendsAsUnSeen(authUser)
-  // }
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  deleteUserFeedCursors(@CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.feedService.deleteUserFeedCursors(authUser)
+  }
 }

@@ -233,15 +233,15 @@ export class FeedService {
     return !!update
   }
 
-  // async deleteAuth(authUser: AuthUser): Promise<boolean> {
-  //   const update = await this.prismaService.feedEvent.deleteMany({
-  //     where: {
-  //       userId: authUser.id,
-  //     },
-  //   })
+  async deleteUserFeedCursors(authUser: AuthUser): Promise<boolean> {
+    await this.prismaService.userFeedCursor.deleteMany({
+      where: {
+        userId: authUser.id,
+      },
+    })
 
-  //   return !!update
-  // }
+    return true
+  }
 
   async getTrends({
     skip,
