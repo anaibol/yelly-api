@@ -156,8 +156,8 @@ model Tag {
   isEmoji     Boolean          @default(false)
   isHidden    Boolean          @default(false)
   feedEvents  FeedEvent[]
-  author      User?            @relation(fields: [authorId], references: [id])
-  authorId    String?
+  author      User?             @relation(fields: [authorId], references: [id])
+  authorId    String?          
   feedCursors UserFeedCursor[]
 
   @@index([createdAt])
@@ -270,31 +270,33 @@ model Thread {
 }
 
 model FeedEvent {
-  id                          BigInt           @id @default(dbgenerated("generate_id()"))
+  id                          BigInt        @id @default(dbgenerated("generate_id()"))
   postId                      String
-  post                        Post             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post                        Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
   tagId                       String
-  tag                         Tag              @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  postReactionAuthorBirthdate DateTime?        @db.Date
-  postAuthorBirthdate         DateTime?        @db.Date
+  tag                         Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  postReactionAuthorBirthdate DateTime?     @db.Date
+  postAuthorBirthdate         DateTime?     @db.Date
   postReactionAuthorSchoolId  String?
   postAuthorSchoolId          String?
   postReactionId              BigInt?
-  postReaction                PostReaction?    @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  postReaction                PostReaction? @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
   type                        FeedEventType
-  createdAt                   DateTime         @default(now())
+  createdAt                   DateTime      @default(now())
 
   @@index([createdAt])
 }
 
 model UserFeedCursor {
-  id          BigInt    @id @default(dbgenerated("generate_id()"))
-  tagId       String
-  tag         Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
-  userId      String?
-  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cursor      String
+  id        BigInt   @id @default(dbgenerated("generate_id()"))
+  tagId     String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cursor    String
+
+  @@unique([tagId, userId])
 }
 
 enum FeedEventType {
@@ -302,26 +304,3 @@ enum FeedEventType {
   POST_REACTION_CREATED
   POST_REPLY_CREATED
 }
-
-// < 24hs
-// [
-//   D posted p at T2 (D follow status / same school / followed by someone i follow / birth year <= my year of birth)
-//   A (followee) liked p  at T3
-//   B (same scholl) reacted to p at T4
-//   C liked p2 at T5
-//   E seen p2.tag
-// ]
-
-// followed: false
-// same school: true
-// same year: false
-
-// E following A
-
-// getAllPostsByTag = [
-//   postsByFollowed order by reactions count,
-//   postsFroSameSchool order by reactions count,
-//   postsByFollowedByFollowed order by reactions count,
-//   postsFromSameYear order by reactions count,
-//   otherPosts order by reactions count
-// ] = unique by postId
