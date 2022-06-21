@@ -64,7 +64,7 @@ async function main() {
         createdAt,
         type: parent ? FeedEventType.POST_REPLY_CREATED : FeedEventType.POST_CREATED,
         postId: parent ? parent.id : id,
-        tagId: tags[0].id,
+        tagId: parent ? parent.tags[0].id : tags[0].id,
         postAuthorBirthdate: parent ? parent?.author.birthdate : author.birthdate,
         postAuthorSchoolId: parent ? parent?.author.schoolId : author.schoolId,
       }
