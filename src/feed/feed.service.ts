@@ -6,7 +6,7 @@ import { AuthUser } from 'src/auth/auth.service'
 
 import { Feed } from './feed.model'
 import { FeedEvent, Prisma } from '@prisma/client'
-import { differenceInHours, sub } from 'date-fns'
+import { differenceInHours, differenceInSeconds, sub } from 'date-fns'
 import { sampleSize, orderBy, uniq, groupBy } from 'lodash'
 import { Trend, PaginatedTrends } from './trend.model'
 import { tagSelect } from '../tag/tag-select.constant'
@@ -43,16 +43,20 @@ const getPostActivityScoreX = ({ followed, followedByFollowee, sameSchool, sameY
   return 4
 }
 
+const diffInHours = (date1: Date, date2: Date) => {
+  return differenceInHours(date1, date2) / 3600
+}
+
 const getPostCreationScore = (event: FeedEvent, scoreParams: ScoreParams): number => {
   const X = getPostCreationScoreX(scoreParams)
 
-  return 100 * (1 - differenceInHours(event.createdAt, new Date()) / X)
+  return 100 * (1 - differenceInSeconds(event.createdAt, new Date()) / 3600 / X)
 }
 
 const getPostActivityScore = (event: FeedEvent, y: number, scoreParams: ScoreParams): number => {
   const X = getPostActivityScoreX(scoreParams)
 
-  const A = -differenceInHours(event.createdAt, new Date()) / 24
+  const A = -diffInHours(event.createdAt, new Date()) / 24
 
   return y * Math.exp(X * A)
 }
