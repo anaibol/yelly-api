@@ -294,6 +294,10 @@ export class FeedService {
       .map(({ feedEvents, feedCursors, _count, ...tag }) => {
         const cursor = feedCursors.length > 0 ? feedCursors[0] : null
 
+        const alreadySeen = cursor && feedEvents[0].createdAt <= new Date(cursor.cursor)
+
+        if (alreadySeen) return null
+
         const score = Math.round(
           feedEvents.reduce<number>(
             (currentScore, event) => currentScore + getEventScore(event, authUser, cursor ? cursor.cursor : null),
@@ -310,7 +314,7 @@ export class FeedService {
           nextCursor: feedEvents[0].createdAt.toISOString(),
         }
       })
-      .filter(({ score }) => score > 0)
+      .filter(isNotNull)
 
     const sortedTagScores = orderBy(scoredTags, 'score', 'desc').slice(skip, limit)
 
