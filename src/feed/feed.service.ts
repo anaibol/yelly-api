@@ -6,8 +6,8 @@ import { AuthUser } from 'src/auth/auth.service'
 
 import { Feed } from './feed.model'
 import { FeedEvent, Prisma } from '@prisma/client'
-import { differenceInHours, sub } from 'date-fns'
-import { sampleSize, orderBy, uniq, groupBy } from 'lodash'
+import { differenceInHours, differenceInSeconds, sub } from 'date-fns'
+import { orderBy } from 'lodash'
 import { Trend, PaginatedTrends } from './trend.model'
 import { tagSelect } from '../tag/tag-select.constant'
 
@@ -43,16 +43,20 @@ const getPostActivityScoreX = ({ followed, followedByFollowee, sameSchool, sameY
   return 4
 }
 
+const diffInHours = (date1: Date, date2: Date) => {
+  return -(differenceInSeconds(date1, date2) / 3600)
+}
+
 const getPostCreationScore = (event: FeedEvent, scoreParams: ScoreParams): number => {
   const X = getPostCreationScoreX(scoreParams)
 
-  return 100 * (1 - differenceInHours(event.createdAt, new Date()) / X)
+  return 100 * (1 - diffInHours(event.createdAt, new Date()) / X)
 }
 
 const getPostActivityScore = (event: FeedEvent, y: number, scoreParams: ScoreParams): number => {
   const X = getPostActivityScoreX(scoreParams)
 
-  const A = -differenceInHours(event.createdAt, new Date()) / 24
+  const A = diffInHours(event.createdAt, new Date()) / 24
 
   return y * Math.exp(X * A)
 }
@@ -229,6 +233,16 @@ export class FeedService {
     return !!update
   }
 
+  async deleteUserFeedCursors(authUser: AuthUser): Promise<boolean> {
+    await this.prismaService.userFeedCursor.deleteMany({
+      where: {
+        userId: authUser.id,
+      },
+    })
+
+    return true
+  }
+
   async getTrends({
     skip,
     limit,
@@ -294,6 +308,10 @@ export class FeedService {
       .map(({ feedEvents, feedCursors, _count, ...tag }) => {
         const cursor = feedCursors.length > 0 ? feedCursors[0] : null
 
+        const alreadySeen = cursor && feedEvents[0].createdAt <= new Date(cursor.cursor)
+
+        if (alreadySeen) return null
+
         const score = Math.round(
           feedEvents.reduce<number>(
             (currentScore, event) => currentScore + getEventScore(event, authUser, cursor ? cursor.cursor : null),
@@ -310,7 +328,7 @@ export class FeedService {
           nextCursor: feedEvents[0].createdAt.toISOString(),
         }
       })
-      .filter(({ score }) => score > 0)
+      .filter(isNotNull)
 
     const sortedTagScores = orderBy(scoredTags, 'score', 'desc').slice(skip, limit)
 

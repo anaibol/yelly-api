@@ -4,6 +4,10 @@ import { PrismaClient } from '.prisma/client'
 import { FeedEventType } from '@prisma/client'
 import { sub } from 'date-fns'
 
+function isNotNull<TValue>(value: TValue | null): value is TValue {
+  return value !== null
+}
+
 async function main() {
   const prisma = new PrismaClient()
 
@@ -59,16 +63,20 @@ async function main() {
   })
 
   await prisma.feedEvent.createMany({
-    data: posts.map(({ id, author, createdAt, tags, parent }) => {
-      return {
-        createdAt,
-        type: parent ? FeedEventType.POST_REPLY_CREATED : FeedEventType.POST_CREATED,
-        postId: parent ? parent.id : id,
-        tagId: tags[0].id,
-        postAuthorBirthdate: parent ? parent?.author.birthdate : author.birthdate,
-        postAuthorSchoolId: parent ? parent?.author.schoolId : author.schoolId,
-      }
-    }),
+    data: posts
+      .map(({ id, author, createdAt, tags, parent }) => {
+        if (parent?.parentId) return null
+
+        return {
+          createdAt,
+          type: parent ? FeedEventType.POST_REPLY_CREATED : FeedEventType.POST_CREATED,
+          postId: parent ? parent.id : id,
+          tagId: parent ? parent.tags[0].id : tags[0].id,
+          postAuthorBirthdate: parent ? parent?.author.birthdate : author.birthdate,
+          postAuthorSchoolId: parent ? parent?.author.schoolId : author.schoolId,
+        }
+      })
+      .filter(isNotNull),
   })
 
   console.log({ posts: posts.length })

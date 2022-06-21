@@ -326,23 +326,29 @@ export class PostService {
       },
     })
 
-    await this.prismaService.feedEvent.create({
-      data: parent
-        ? {
+    if (parent) {
+      if (!parent?.parentId) {
+        await this.prismaService.feedEvent.create({
+          data: {
             postId: parent.id,
             tagId: parent.tags[0].id,
             type: 'POST_REPLY_CREATED',
             postAuthorBirthdate: parent.author.birthdate,
             postAuthorSchoolId: parent.author.schoolId,
-          }
-        : {
-            postId: post.id,
-            tagId: post.tags[0].id,
-            type: 'POST_CREATED',
-            postAuthorBirthdate: authUser.birthdate,
-            postAuthorSchoolId: authUser.schoolId,
           },
-    })
+        })
+      }
+    } else {
+      await this.prismaService.feedEvent.create({
+        data: {
+          postId: post.id,
+          tagId: post.tags[0].id,
+          type: 'POST_CREATED',
+          postAuthorBirthdate: authUser.birthdate,
+          postAuthorSchoolId: authUser.schoolId,
+        },
+      })
+    }
 
     uniqueTags.map((tag) => this.tagService.syncTagIndexWithAlgolia(tag))
 
