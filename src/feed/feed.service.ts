@@ -431,16 +431,6 @@ export class FeedService {
 
     const sortedPosts = orderBy(scoredPosts, 'score', 'desc')
 
-    const postIds = tagsWithPostIds.map(({ postIds }) => postIds).flat()
-
-    const allPosts = await this.prismaService.post.findMany({
-      where: {
-        id: {
-          in: postIds,
-        },
-      },
-    })
-
     const nextSkip = skip + limit
 
     return {
