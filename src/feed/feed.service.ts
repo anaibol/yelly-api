@@ -58,7 +58,7 @@ const getPostActivityScore = (event: FeedEvent, y: number, scoreParams: ScorePar
 
   const A = diffInHours(event.createdAt, new Date()) / 24
 
-  return y * Math.exp(X * A)
+  return y * Math.exp(-X * A)
 }
 
 const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | null): number => {
