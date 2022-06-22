@@ -295,7 +295,7 @@ export class UserService {
   //     ],
   //   }
 
-  //   const [totalCount, items] = await this.prismaService.$transaction([
+  //   const [totalCount, items] = await Promise.all([
   //     this.prismaService.user.count({
   //       where,
   //     }),
@@ -392,7 +392,7 @@ export class UserService {
   // }
 
   async getFollowers(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
-    const [totalCount, follows] = await this.prismaService.$transaction([
+    const [totalCount, follows] = await Promise.all([
       this.prismaService.follower.count({
         where: {
           followeeId: userId,
@@ -422,7 +422,7 @@ export class UserService {
   }
 
   async getFollowees(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
-    const [totalCount, follows] = await this.prismaService.$transaction([
+    const [totalCount, follows] = await Promise.all([
       this.prismaService.follower.count({
         where: {
           userId,
