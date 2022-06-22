@@ -304,26 +304,3 @@ enum FeedEventType {
   POST_REACTION_CREATED
   POST_REPLY_CREATED
 }
-
-// < 24hs
-// [
-//   D posted p at T2 (D follow status / same school / followed by someone i follow / birth year <= my year of birth)
-//   A (followee) liked p  at T3
-//   B (same scholl) reacted to p at T4
-//   C liked p2 at T5
-//   E seen p2.tag
-// ]
-
-// followed: false
-// same school: true
-// same year: false
-
-// E following A
-
-// getAllPostsByTag = [
-//   postsByFollowed order by reactions count,
-//   postsFroSameSchool order by reactions count,
-//   postsByFollowedByFollowed order by reactions count,
-//   postsFromSameYear order by reactions count,
-//   otherPosts order by reactions count
-// ] = unique by postId
