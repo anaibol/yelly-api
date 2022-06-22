@@ -33,14 +33,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
     if (this.readonlyInstance) {
       this.$use(async (params, next) => {
-        if (params.action.includes('find')) {
+        if (!params.runInTransaction && params.action.includes('find')) {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           const res = await this.readonlyInstance[camelCase(params.model)][params.action](params.args)
           return res
         }
-        const result = await next(params)
-        return result
+
+        const res = await next(params)
+        return res
       })
     }
 

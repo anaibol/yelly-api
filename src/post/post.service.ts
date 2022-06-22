@@ -520,48 +520,34 @@ export class PostService {
     return mapPost(post)
   }
 
-  async getAuthUserPollVote(postId: string, authUser: AuthUser): Promise<PostPollVote | null> {
-    const authUserVotes = await this.prismaService.user
-      .findUnique({
-        where: {
-          id: authUser.id,
-        },
-      })
-      .postPollVotes({
-        where: {
+  getAuthUserPollVote(postId: string, authUser: AuthUser): Promise<PostPollVote | null> {
+    return this.prismaService.postPollVote.findUnique({
+      where: {
+        authorId_postId: {
+          authorId: authUser.id,
           postId,
         },
-        select: {
-          id: true,
-          option: {
-            select: {
-              id: true,
-            },
+      },
+      select: {
+        id: true,
+        option: {
+          select: {
+            id: true,
           },
         },
-      })
-
-    if (!authUserVotes.length) return null
-
-    return authUserVotes[0]
+      },
+    })
   }
 
-  async getAuthUserReaction(postId: string, authUser: AuthUser): Promise<PostReaction | null> {
-    const authUserPostReaction = await this.prismaService.user
-      .findUnique({
-        where: {
-          id: authUser.id,
-        },
-      })
-      .postReactions({
-        where: {
+  getAuthUserReaction(postId: string, authUser: AuthUser): Promise<PostReaction | null> {
+    return this.prismaService.postReaction.findUnique({
+      where: {
+        authorId_postId: {
+          authorId: authUser.id,
           postId,
         },
-      })
-
-    if (!authUserPostReaction.length) return null
-
-    return authUserPostReaction[0]
+      },
+    })
   }
 
   async syncPostIndexWithAlgolia(id: string): Promise<PartialUpdateObjectResponse | undefined> {
