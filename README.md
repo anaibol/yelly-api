@@ -6,6 +6,7 @@ Yelly API powered by Nestjs
 
 ```bash
 $ yarn
+$ yarn prisma generate
 ```
 ## Local development with database in Docker
 
