@@ -96,12 +96,10 @@ const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | nu
     const sameSchool = authUser.schoolId === event.postAuthorSchoolId
     const sameYearOrOlder = authUser.birthdate.getFullYear() >= event.postAuthorBirthdate.getFullYear()
 
-    return (
-      getPostActivityScore(event, 15, {
-        sameSchool,
-        sameYearOrOlder,
-      }) * cursorFactor
-    )
+    return getPostActivityScore(event, 15, {
+      sameSchool,
+      sameYearOrOlder,
+    })
   }
 
   if (type === 'POST_REACTION_CREATED') {
@@ -110,12 +108,10 @@ const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | nu
     const sameSchool = authUser.schoolId === event.postReactionAuthorSchoolId
     const sameYearOrOlder = authUser.birthdate.getFullYear() >= event.postReactionAuthorBirthdate.getFullYear()
 
-    return (
-      getPostActivityScore(event, 7.5, {
-        sameSchool,
-        sameYearOrOlder,
-      }) * cursorFactor
-    )
+    return getPostActivityScore(event, 7.5, {
+      sameSchool,
+      sameYearOrOlder,
+    })
   }
 
   return 0
