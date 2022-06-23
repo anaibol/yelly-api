@@ -64,7 +64,7 @@ const getPostActivityScore = (event: FeedEvent, y: number, scoreParams: ScorePar
 const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | null): number => {
   const { type } = event
 
-  const cursorFactor = cursor && event.createdAt <= new Date(cursor) ? 100 : 1
+  const cursorFactor = !cursor || (cursor && event.createdAt >= new Date(cursor)) ? 100 : 1
 
   if (type === 'POST_CREATED') {
     if (!authUser.birthdate || !event.postAuthorBirthdate) throw new Error('No birthdate')
@@ -309,10 +309,9 @@ export class FeedService {
         if (alreadySeen) return null
 
         const score = Math.round(
-          feedEvents.reduce<number>(
-            (currentScore, event) => currentScore + getEventScore(event, authUser, cursor ? cursor.cursor : null),
-            0
-          )
+          feedEvents.reduce<number>((currentScore, event) => {
+            return currentScore + getEventScore(event, authUser, cursor ? cursor.cursor : null)
+          }, 0)
         )
 
         return {
