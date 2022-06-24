@@ -90,6 +90,7 @@ const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | nu
       createdLessThanAnHourAgoMultiplier
     )
   }
+
   if (type === 'POST_REPLY_CREATED') {
     if (!authUser.birthdate || !event.postAuthorBirthdate) throw new Error('No birthdate')
 
@@ -302,15 +303,11 @@ export class FeedService {
 
     const scoredTags = tags
       .map(({ feedEvents, feedCursors, _count, ...tag }) => {
-        const cursor = feedCursors.length > 0 ? feedCursors[0] : null
-
-        const alreadySeen = cursor && feedEvents[0].createdAt <= new Date(cursor.cursor)
-
-        if (alreadySeen) return null
+        const cursor = feedCursors.length > 0 ? feedCursors[0].cursor : null
 
         const score = Math.round(
           feedEvents.reduce<number>((currentScore, event) => {
-            return currentScore + getEventScore(event, authUser, cursor ? cursor.cursor : null)
+            return currentScore + getEventScore(event, authUser, cursor)
           }, 0)
         )
 
@@ -368,7 +365,7 @@ export class FeedService {
         },
         posts: {
           skip,
-          take: limit,
+          // take: limit,
           where: {
             feedEvents: {
               some: {
@@ -412,14 +409,15 @@ export class FeedService {
 
     if (!tag) throw new Error('No tag')
 
-    const userCursor = tag.feedCursors.length > 0 ? tag.feedCursors[0].cursor : null
+    const cursor = tag.feedCursors.length > 0 ? tag.feedCursors[0].cursor : null
 
     const scoredPosts = tag?.posts
       .map(({ feedEvents, ...post }) => ({
         ...mapPost(post),
-        score: feedEvents.reduce<number>(
-          (currentScore, feedEvent) => Math.round(currentScore + getEventScore(feedEvent, authUser, userCursor)),
-          0
+        score: Math.round(
+          feedEvents.reduce<number>((currentScore, event) => {
+            return currentScore + getEventScore(event, authUser, cursor)
+          }, 0)
         ),
       }))
       .filter(({ score }) => score > 0)
