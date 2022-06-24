@@ -364,7 +364,7 @@ export class FeedService {
           },
         },
         posts: {
-          skip,
+          // skip,
           // take: limit,
           where: {
             feedEvents: {
@@ -422,7 +422,7 @@ export class FeedService {
       }))
       .filter(({ score }) => score > 0)
 
-    const sortedPosts = orderBy(scoredPosts, 'score', 'desc')
+    const sortedPosts = orderBy(scoredPosts, 'score', 'desc').slice(skip, limit)
 
     const nextSkip = skip + limit
 
