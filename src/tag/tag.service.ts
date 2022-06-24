@@ -8,11 +8,10 @@ import { AuthUser } from 'src/auth/auth.service'
 import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
 import { Prisma } from '@prisma/client'
-import { User } from 'src/user/user.model'
 import { TagSortBy, SortDirection } from './tags.args'
-import { sub } from 'date-fns'
 import { UpdateTagInput } from './update-tag.input'
 import { Post } from '../post/post.model'
+import { mapPost, PostSelectWithParent } from '../post/post-select.constant'
 
 @Injectable()
 export class TagService {
@@ -243,8 +242,9 @@ export class TagService {
         orderBy: {
           createdAt: 'asc',
         },
+        select: PostSelectWithParent,
       })
 
-    return posts[0]
+    return mapPost(posts[0])
   }
 }
