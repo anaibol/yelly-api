@@ -6,7 +6,7 @@ import { AuthUser } from 'src/auth/auth.service'
 
 import { Feed } from './feed.model'
 import { FeedEvent, Prisma } from '@prisma/client'
-import { differenceInHours, differenceInSeconds, sub } from 'date-fns'
+import { differenceInSeconds, sub } from 'date-fns'
 import { orderBy } from 'lodash'
 import { Trend, PaginatedTrends } from './trend.model'
 import { tagSelect } from '../tag/tag-select.constant'
