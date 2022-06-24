@@ -13,6 +13,7 @@ import { PaginatedTrends, Trend } from './trend.model'
 import { PrismaService } from '../core/prisma.service'
 import { TagService } from '../tag/tag.service'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
+import { Post } from '../post/post.model'
 
 @Resolver()
 export class FeedResolver {
@@ -44,6 +45,38 @@ export class FeedResolver {
   }
 
   @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  markTrendAsSeen(@CurrentUser() authUser: AuthUser, @Args() markTrendAsSeen: MarkTrendAsSeenArgs): Promise<boolean> {
+    const { tagId, cursor } = markTrendAsSeen
+
+    return this.feedService.markTrendAsSeen(authUser, tagId, cursor)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  deleteUserFeedCursors(@CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.feedService.deleteUserFeedCursors(authUser)
+  }
+}
+
+@Resolver(Trend)
+export class TrendResolver {
+  constructor(private feedService: FeedService, private tagService: TagService) {}
+
+  @UseGuards(AuthGuard)
+  @Query(() => Trend)
+  async trend(@Args() trendsArgs: TrendArgs, @CurrentUser() authUser: AuthUser): Promise<Trend> {
+    const { tagId, skip, limit } = trendsArgs
+
+    return this.feedService.getTrend({
+      tagId,
+      authUser,
+      skip,
+      limit,
+    })
+  }
+
+  @UseGuards(AuthGuard)
   @Query(() => PaginatedTrends)
   async trends(
     @Args() offsetPaginationArgs: OffsetPaginationArgs,
@@ -60,30 +93,8 @@ export class FeedResolver {
     return { items, nextSkip }
   }
 
-  @UseGuards(AuthGuard)
-  @Query(() => Trend)
-  async trend(@Args() trendsArgs: TrendArgs, @CurrentUser() authUser: AuthUser): Promise<Trend> {
-    const { tagId, skip, limit } = trendsArgs
-
-    return this.feedService.getTrend({
-      tagId,
-      authUser,
-      skip,
-      limit,
-    })
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
-  markTrendAsSeen(@CurrentUser() authUser: AuthUser, @Args() markTrendAsSeen: MarkTrendAsSeenArgs): Promise<boolean> {
-    const { tagId, cursor } = markTrendAsSeen
-
-    return this.feedService.markTrendAsSeen(authUser, tagId, cursor)
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
-  deleteUserFeedCursors(@CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.feedService.deleteUserFeedCursors(authUser)
+  @ResolveField()
+  firstPost(@Parent() trend: Trend): Promise<Post> {
+    return this.tagService.getFirstPost(trend.id)
   }
 }

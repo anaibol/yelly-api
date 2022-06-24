@@ -12,6 +12,7 @@ import { User } from 'src/user/user.model'
 import { TagSortBy, SortDirection } from './tags.args'
 import { sub } from 'date-fns'
 import { UpdateTagInput } from './update-tag.input'
+import { Post } from '../post/post.model'
 
 @Injectable()
 export class TagService {
@@ -102,53 +103,12 @@ export class TagService {
   //   return newTag
   // }
 
-  async getTagAuthor(tagId: string): Promise<User | null> {
-    const posts = await this.prismaService.tag
-      .findUnique({
-        where: {
-          id: tagId,
-        },
-      })
-      .posts({
-        take: 1,
-        orderBy: {
-          createdAt: 'asc',
-        },
-        select: {
-          author: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              pictureId: true,
-              birthdate: true,
-            },
-          },
-        },
-      })
-
-    if (!posts.length) return null
-
-    return posts[0].author
-  }
-
   async getTag(text: string): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         text,
       },
-      select: {
-        id: true,
-        text: true,
-        createdAt: true,
-        isLive: true,
-        isEmoji: true,
-        _count: {
-          select: {
-            posts: true,
-          },
-        },
-      },
+      select: tagSelect,
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -227,57 +187,6 @@ export class TagService {
     return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async getTrends(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedTags> {
-    const trendsQuery = Prisma.sql`
-      SELECT
-        T."id",
-        COUNT(*) as "newPostCount"
-      FROM
-        "Tag" T,
-        "_PostToTag" PT,
-        "Post" P
-      WHERE
-        T. "isEmoji" = false
-        AND PT. "B" = T. "id"
-        AND PT. "A" = P. "id"
-        AND P."createdAt" > ${sub(new Date(), {
-          days: 7,
-        })}
-      GROUP BY T."id"
-      ORDER BY "newPostCount" desc
-      OFFSET ${skip}
-      LIMIT ${limit}
-    `
-
-    const trends = await this.prismaService.$queryRaw<{ id: string }[]>(trendsQuery)
-    const trendsTagsIds = trends.map(({ id }) => id)
-
-    const tags = await this.prismaService.tag.findMany({
-      where: {
-        isHidden: false,
-        countryId: authUser.countryId,
-        id: {
-          in: trendsTagsIds,
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: tagSelect,
-      take: limit,
-      skip,
-    })
-
-    const items = tags.map(({ _count, ...tag }) => ({
-      ...tag,
-      postCount: _count.posts,
-    }))
-
-    const nextSkip = skip + limit
-
-    return { items, nextSkip: tags.length === limit ? nextSkip : 0 }
-  }
-
   async updateTag(tagId: string, { isHidden }: UpdateTagInput): Promise<Tag> {
     return this.prismaService.tag.update({
       where: {
@@ -322,5 +231,20 @@ export class TagService {
     this.pushNotificationService.promotedTag(tag)
 
     return tag
+  }
+
+  async getFirstPost(tagId: string): Promise<Post> {
+    const posts = await this.prismaService.tag
+      .findUnique({
+        where: { id: tagId },
+      })
+      .posts({
+        take: 1,
+        orderBy: {
+          createdAt: 'asc',
+        },
+      })
+
+    return posts[0]
   }
 }
