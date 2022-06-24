@@ -58,13 +58,11 @@ const getPostActivityScore = (event: FeedEvent, y: number, scoreParams: ScorePar
 
   const A = diffInHours(event.createdAt, new Date()) / 24
 
-  return y * Math.exp(X * A)
+  return y * Math.exp(-X * A)
 }
 
 const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | null): number => {
   const { type } = event
-
-  const cursorFactor = cursor && event.createdAt <= new Date(cursor) ? 100 : 1
 
   if (type === 'POST_CREATED') {
     if (!authUser.birthdate || !event.postAuthorBirthdate) throw new Error('No birthdate')
@@ -81,6 +79,8 @@ const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | nu
         ? 100
         : 1
 
+    const cursorFactor = !cursor || (cursor && event.createdAt >= new Date(cursor)) ? 100 : 1
+
     return (
       getPostCreationScore(event, {
         sameSchool,
@@ -90,18 +90,17 @@ const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | nu
       createdLessThanAnHourAgoMultiplier
     )
   }
+
   if (type === 'POST_REPLY_CREATED') {
     if (!authUser.birthdate || !event.postAuthorBirthdate) throw new Error('No birthdate')
 
     const sameSchool = authUser.schoolId === event.postAuthorSchoolId
     const sameYearOrOlder = authUser.birthdate.getFullYear() >= event.postAuthorBirthdate.getFullYear()
 
-    return (
-      getPostActivityScore(event, 15, {
-        sameSchool,
-        sameYearOrOlder,
-      }) * cursorFactor
-    )
+    return getPostActivityScore(event, 15, {
+      sameSchool,
+      sameYearOrOlder,
+    })
   }
 
   if (type === 'POST_REACTION_CREATED') {
@@ -110,12 +109,10 @@ const getEventScore = (event: FeedEvent, authUser: AuthUser, cursor: string | nu
     const sameSchool = authUser.schoolId === event.postReactionAuthorSchoolId
     const sameYearOrOlder = authUser.birthdate.getFullYear() >= event.postReactionAuthorBirthdate.getFullYear()
 
-    return (
-      getPostActivityScore(event, 7.5, {
-        sameSchool,
-        sameYearOrOlder,
-      }) * cursorFactor
-    )
+    return getPostActivityScore(event, 7.5, {
+      sameSchool,
+      sameYearOrOlder,
+    })
   }
 
   return 0
@@ -306,17 +303,12 @@ export class FeedService {
 
     const scoredTags = tags
       .map(({ feedEvents, feedCursors, _count, ...tag }) => {
-        const cursor = feedCursors.length > 0 ? feedCursors[0] : null
-
-        const alreadySeen = cursor && feedEvents[0].createdAt <= new Date(cursor.cursor)
-
-        if (alreadySeen) return null
+        const cursor = feedCursors.length > 0 ? feedCursors[0].cursor : null
 
         const score = Math.round(
-          feedEvents.reduce<number>(
-            (currentScore, event) => currentScore + getEventScore(event, authUser, cursor ? cursor.cursor : null),
-            0
-          )
+          feedEvents.reduce<number>((currentScore, event) => {
+            return currentScore + getEventScore(event, authUser, cursor)
+          }, 0)
         )
 
         return {
@@ -373,7 +365,7 @@ export class FeedService {
         },
         posts: {
           skip,
-          take: limit,
+          // take: limit,
           where: {
             feedEvents: {
               some: {
@@ -417,14 +409,15 @@ export class FeedService {
 
     if (!tag) throw new Error('No tag')
 
-    const userCursor = tag.feedCursors.length > 0 ? tag.feedCursors[0].cursor : null
+    const cursor = tag.feedCursors.length > 0 ? tag.feedCursors[0].cursor : null
 
     const scoredPosts = tag?.posts
       .map(({ feedEvents, ...post }) => ({
         ...mapPost(post),
-        score: feedEvents.reduce<number>(
-          (currentScore, feedEvent) => Math.round(currentScore + getEventScore(feedEvent, authUser, userCursor)),
-          0
+        score: Math.round(
+          feedEvents.reduce<number>((currentScore, event) => {
+            return currentScore + getEventScore(event, authUser, cursor)
+          }, 0)
         ),
       }))
       .filter(({ score }) => score > 0)
