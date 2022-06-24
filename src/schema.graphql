@@ -310,6 +310,7 @@ enum SortDirection {
 type Tag {
   author: User
   createdAt: DateTime
+  firstPost: Post
   id: ID!
   isEmoji: Boolean
   isHidden: Boolean
@@ -332,6 +333,7 @@ type Training {
 type Trend {
   author: User
   createdAt: DateTime
+  firstPost: Post
   id: ID!
   isEmoji: Boolean
   isLive: Boolean

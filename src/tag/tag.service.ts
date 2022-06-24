@@ -12,6 +12,7 @@ import { User } from 'src/user/user.model'
 import { TagSortBy, SortDirection } from './tags.args'
 import { sub } from 'date-fns'
 import { UpdateTagInput } from './update-tag.input'
+import { Post } from '../post/post.model'
 
 @Injectable()
 export class TagService {
@@ -322,5 +323,20 @@ export class TagService {
     this.pushNotificationService.promotedTag(tag)
 
     return tag
+  }
+
+  async getFirstPost(tagId: string): Promise<Post> {
+    const posts = await this.prismaService.tag
+      .findUnique({
+        where: { id: tagId },
+      })
+      .posts({
+        take: 1,
+        orderBy: {
+          createdAt: 'asc',
+        },
+      })
+
+    return posts[0]
   }
 }

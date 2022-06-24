@@ -15,6 +15,7 @@ export class Trend {
   author?: User | null
   nextCursor?: string
   score?: number | null
+  firstPost?: Post | null
 }
 
 @ObjectType()

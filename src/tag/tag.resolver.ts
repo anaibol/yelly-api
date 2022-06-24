@@ -15,6 +15,7 @@ import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 import { PrismaService } from '../core/prisma.service'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { UpdateTagInput } from './update-tag.input'
+import { Post } from '../post/post.model'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -100,5 +101,10 @@ export class TagResolver {
     if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
 
     return this.tagService.createPromotedTag(tagText, authUser)
+  }
+
+  @ResolveField()
+  firstPost(@Parent() tag: Tag): Promise<Post> {
+    return this.tagService.getFirstPost(tag.id)
   }
 }
