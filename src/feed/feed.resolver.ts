@@ -45,23 +45,6 @@ export class FeedResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => PaginatedTrends)
-  async trends(
-    @Args() offsetPaginationArgs: OffsetPaginationArgs,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<PaginatedTrends> {
-    const { skip, limit } = offsetPaginationArgs
-
-    const { items, nextSkip } = await this.feedService.getTrends({
-      authUser,
-      skip,
-      limit,
-    })
-
-    return { items, nextSkip }
-  }
-
-  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   markTrendAsSeen(@CurrentUser() authUser: AuthUser, @Args() markTrendAsSeen: MarkTrendAsSeenArgs): Promise<boolean> {
     const { tagId, cursor } = markTrendAsSeen
@@ -91,6 +74,23 @@ export class TrendResolver {
       skip,
       limit,
     })
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTrends)
+  async trends(
+    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PaginatedTrends> {
+    const { skip, limit } = offsetPaginationArgs
+
+    const { items, nextSkip } = await this.feedService.getTrends({
+      authUser,
+      skip,
+      limit,
+    })
+
+    return { items, nextSkip }
   }
 
   @ResolveField()
