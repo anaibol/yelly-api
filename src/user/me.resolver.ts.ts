@@ -2,7 +2,7 @@ import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
 import { SendbirdAccessToken } from './sendbirdAccessToken'
 
-import { Me } from './me.model'
+import { AgeVerificationResult, Me } from './me.model'
 import { AccessToken } from './accessToken.model'
 
 import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
@@ -160,12 +160,12 @@ export class MeResolver {
     return this.userService.update(authUser.id, updateUserInput)
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => AgeVerificationResult)
   @UseGuards(AuthGuard)
   updateAgeVerification(
     @Args('facePictureId') facePictureId: string,
     @CurrentUser() authUser: AuthUser
-  ): Promise<boolean> {
+  ): Promise<AgeVerificationResult> {
     return this.userService.updateAgeVerification(authUser, facePictureId)
   }
 
@@ -215,4 +215,9 @@ export class MeResolver {
 
     return { items, nextCursor }
   }
+
+  // @ResolveField()
+  // canCreateTag(@Parent() user: Me, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
+  //   return this.userService.canCreateTag(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+  // }
 }
