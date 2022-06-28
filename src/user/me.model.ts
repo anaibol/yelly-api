@@ -41,3 +41,12 @@ export class Me {
   viewsCount?: number
   isAgeApproved?: boolean | null
 }
+
+@ObjectType()
+export class AgeVerificationResult {
+  isAgeApproved: boolean
+  ageEstimation: number
+  agePredictionResult: null | string
+}
+
+export type AgePredictionResult = 'real' | 'fake' | 'undetermined'

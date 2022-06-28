@@ -25,6 +25,7 @@ declare global {
       REDIS_PORT: string
       REDIS_HOST: string
       YOTI_CLIEND_SDK_ID: string
+      YOTI_KEY_FILE_PATH: string
     }
   }
 }
