@@ -24,6 +24,7 @@ declare global {
       AMPLITUDE_API_KEY: string
       REDIS_PORT: string
       REDIS_HOST: string
+      YOTI_CLIEND_SDK_ID: string
     }
   }
 }

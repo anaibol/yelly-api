@@ -18,6 +18,7 @@ import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.
 import { ForgotPasswordInput } from './forgot-password.input'
 import { EmailSignInInput } from './email-sign-in.input'
 import { UpdateUserInput } from './update-user.input'
+
 import { ResetPasswordInput } from './reset-password.input'
 import { PostSelectWithParent, mapPost, getNotExpiredCondition } from 'src/post/post-select.constant'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
@@ -157,6 +158,15 @@ export class MeResolver {
   @UseGuards(AuthGuard)
   updateMe(@Args('input') updateUserInput: UpdateUserInput, @CurrentUser() authUser: AuthUser): Promise<Me> {
     return this.userService.update(authUser.id, updateUserInput)
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  updateAgeVerification(
+    @Args('facePictureId') facePictureId: string,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<boolean> {
+    return this.userService.updateAgeVerification(authUser, facePictureId)
   }
 
   @Mutation(() => Boolean)

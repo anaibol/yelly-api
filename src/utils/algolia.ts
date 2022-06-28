@@ -79,6 +79,7 @@ export const algoliaUserSelect = {
   firstName: true,
   lastName: true,
   isFilled: true,
+  isAgeApproved: true,
   pictureId: true,
   birthdate: true,
   school: {

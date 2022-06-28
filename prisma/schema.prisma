@@ -83,6 +83,10 @@ model User {
   password                     String?
   birthdate                    DateTime?                         @db.Date
   pictureId                    String?
+  facePictureId                String?
+  isAgeApproved                Boolean                           @default(false)
+  ageEstimation                Int?
+  agePredictionResult          String?
   snapchat                     String?
   instagram                    String?
   resetToken                   String?

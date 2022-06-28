@@ -124,6 +124,7 @@ type Me {
   followersCount: Int
   id: ID!
   instagram: String
+  isAgeApproved: Boolean
   isFilled: Boolean
   lastName: String
   locale: String
@@ -170,6 +171,7 @@ type Mutation {
   trackPostViews(postsIds: [String!]!): Boolean!
   trackUserView(userId: String!): Boolean!
   unFollow(otherUserId: String!): Boolean!
+  updateAgeVerification(facePictureId: String!): Boolean!
   updateMe(input: UpdateUserInput!): Me!
   updateTag(input: UpdateTagInput!, tagId: String!): Tag!
 }
