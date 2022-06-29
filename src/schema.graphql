@@ -61,6 +61,10 @@ input CreatePostPollVoteInput {
   postId: BigInt!
 }
 
+input CreateTagInput {
+  tagText: String!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -167,6 +171,7 @@ type Mutation {
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   createPromotedTag(tagText: String!): Tag!
+  createTag(input: CreateTagInput!): Tag!
   declineFollowRequest(followRequestId: String!): Boolean!
   deleteAuthUser: Boolean!
   deleteExpoPushNotificationsToken(input: String!): Boolean!

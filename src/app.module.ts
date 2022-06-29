@@ -20,6 +20,11 @@ import { FeedModule } from './feed/feed.module'
 import { BigIntScalar } from './scalars/big-int.scalar'
 import { CronModule } from './cron/cron.module'
 
+// eslint-disable-next-line functional/immutable-data
+BigInt.prototype.toJSON = function () {
+  return this.toString()
+}
+
 @Module({
   providers: [BigIntScalar, UserModule], // CommonFriendsLoader
   imports: [

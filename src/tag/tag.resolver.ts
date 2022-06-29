@@ -14,6 +14,7 @@ import { TagsArgs } from './tags.args'
 import { PrismaService } from '../core/prisma.service'
 import { UpdateTagInput } from './update-tag.input'
 import { TagReaction } from './tag-reaction.model'
+import { CreateTagInput } from './create-tag.input'
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { DeleteTagReactionInput } from './delete-tag-reaction.input'
 import { CursorPaginationArgs } from '../common/cursor-pagination.args'
@@ -26,6 +27,12 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   tag(@Args('tagId') tagId: bigint): Promise<Tag> {
     return this.tagService.getTag(tagId)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Tag)
+  async createTag(@Args('input') createTagInput: CreateTagInput, @CurrentUser() authUser: AuthUser) {
+    return this.tagService.create(createTagInput.tagText, authUser)
   }
 
   @UseGuards(AuthGuard)

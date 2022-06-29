@@ -159,6 +159,20 @@ export class TagService {
     return !!result
   }
 
+  async create(tagText: string, authUser: AuthUser): Promise<Tag> {
+    const tag = await this.prismaService.tag.create({
+      data: {
+        text: tagText,
+        countryId: authUser.countryId,
+        authorId: authUser.id,
+      },
+    })
+
+    this.syncTagIndexWithAlgolia(tagText)
+
+    return tag
+  }
+
   async delete(tagId: bigint): Promise<boolean> {
     await this.prismaService.tag.delete({
       where: { id: tagId },

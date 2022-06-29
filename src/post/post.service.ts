@@ -566,9 +566,11 @@ export class PostService {
 
     if (!post || post.expiresAt) return
 
+    const postIdString = post.id.toString()
+
     const objectToCreate = {
-      id: post.id,
-      objectID: post.id,
+      id: postIdString,
+      objectID: postIdString,
       createdAt: post.createdAt,
       createdAtTimestamp: Date.parse(post.createdAt.toString()),
       text: post.text,
@@ -576,7 +578,7 @@ export class PostService {
       tags: post.tags,
     }
 
-    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, post.id.toString())
+    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, postIdString)
   }
 
   async deletePostFromAlgolia(postId: bigint): Promise<void> {
