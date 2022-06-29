@@ -119,7 +119,10 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async deleteTagReaction(deleteTagReactionInput: DeleteTagReactionInput, authUser: AuthUser): Promise<boolean> {
+  async deleteTagReaction(
+    @Args('input') deleteTagReactionInput: DeleteTagReactionInput,
+    authUser: AuthUser
+  ): Promise<boolean> {
     return this.tagService.deleteTagReaction(deleteTagReactionInput.tagId, authUser)
   }
 
