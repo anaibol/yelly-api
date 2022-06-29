@@ -28,8 +28,8 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Post)
-  async createPost(@Args('input') createPostData: CreatePostInput, @CurrentUser() authUser: AuthUser) {
-    return this.postService.create(createPostData, authUser)
+  async createPost(@Args('input') createPostInput: CreatePostInput, @CurrentUser() authUser: AuthUser) {
+    return this.postService.create(createPostInput, authUser)
   }
 
   @UseGuards(AuthGuard)
@@ -56,10 +56,10 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => PostReaction)
   async createOrUpdatePostReaction(
-    @Args('input') createPostReactionData: CreateOrUpdatePostReactionInput,
+    @Args('input') createPostReactionInput: CreateOrUpdatePostReactionInput,
     @CurrentUser() authUser: AuthUser
   ): Promise<PostReaction> {
-    return this.postService.createOrUpdatePostReaction(createPostReactionData, authUser)
+    return this.postService.createOrUpdatePostReaction(createPostReactionInput, authUser)
   }
 
   @UseGuards(AuthGuard)

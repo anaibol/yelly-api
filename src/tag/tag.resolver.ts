@@ -119,10 +119,10 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => TagReaction)
   async createOrUpdateTagReaction(
-    @Args('input') createTagReactionData: CreateOrUpdateTagReactionInput,
+    @Args('input') createTagReactionInput: CreateOrUpdateTagReactionInput,
     @CurrentUser() authUser: AuthUser
   ): Promise<TagReaction> {
-    return this.tagService.createOrUpdateTagReaction(createTagReactionData, authUser)
+    return this.tagService.createOrUpdateTagReaction(createTagReactionInput, authUser)
   }
 
   @ResolveField()

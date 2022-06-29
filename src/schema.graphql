@@ -9,7 +9,7 @@ type AccessToken {
 }
 
 type AgeVerificationResult {
-  ageEstimation: Int!
+  ageEstimation: Int
   agePredictionResult: String
   isAgeApproved: Boolean!
 }
