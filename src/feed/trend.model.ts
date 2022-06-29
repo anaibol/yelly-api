@@ -13,6 +13,7 @@ export class Trend {
   posts?: OffsetPaginatedPosts
   postCount?: number
   reactionsCount?: number
+  viewsCount?: number
   author?: User | null
   nextCursor?: string
   score?: number | null

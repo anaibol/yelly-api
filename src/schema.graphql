@@ -336,6 +336,7 @@ type Tag {
   posts(after: BigInt, limit: Int = 10): PaginatedPosts
   reactionsCount: Int
   text: String!
+  viewsCount: Int
 }
 
 type TagReaction {
@@ -368,6 +369,7 @@ type Trend {
   reactionsCount: Int
   score: Int
   text: String!
+  viewsCount: Int
 }
 
 input UpdateTagInput {

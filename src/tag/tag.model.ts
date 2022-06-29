@@ -15,6 +15,7 @@ export class Tag {
   posts?: PaginatedPosts
   postCount?: number
   reactionsCount?: number
+  viewsCount?: number
   author?: User | null
   authUserReaction?: TagReaction | null
 }
