@@ -128,7 +128,7 @@ input InitPhoneNumberVerificationInput {
 type Me {
   about: String
   birthdate: DateTime
-  canCreateTag: Boolean!
+  canCreateTag: Boolean
   countryId: String
   createdAt: DateTime
   email: String
