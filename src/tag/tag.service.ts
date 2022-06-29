@@ -143,11 +143,11 @@ export class TagService {
     return { ...tag, postCount: _count.posts, reactionsCount: _count.reactions }
   }
 
-  async getTagExists(text: string): Promise<boolean> {
+  async getTagExists(tagText: string): Promise<boolean> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         text_date: {
-          text,
+          text: tagText,
           date: new Date(),
         },
       },

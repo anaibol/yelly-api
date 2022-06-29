@@ -36,7 +36,7 @@ export class TagResolver {
 
   @Query(() => Boolean)
   @UseGuards(AuthGuard)
-  tagExists(@Args('text') tagText: string): Promise<boolean> {
+  tagExists(@Args('tagText') tagText: string): Promise<boolean> {
     return this.tagService.getTagExists(tagText)
   }
 

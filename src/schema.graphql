@@ -292,7 +292,7 @@ type Query {
   post(after: BigInt, limit: Int = 10, postId: BigInt!): Post!
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
-  tagExists(text: String!): Boolean!
+  tagExists(tagText: String!): Boolean!
   tags(date: String = "2022-06-29", isEmoji: Boolean = false, limit: Int = 10, showHidden: Boolean = false, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   trend(limit: Int = 10, skip: Int = 0, tagId: BigInt!): Trend!
   trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
