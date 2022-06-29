@@ -1119,6 +1119,8 @@ export class UserService {
 
     const { isAgeApproved, ageEstimation, agePredictionResult } = await checkAge(facePictureId)
 
+    await deleteObject(facePictureId)
+
     if (isAgeApproved) {
       await this.prismaService.user.update({
         where: {
@@ -1131,8 +1133,6 @@ export class UserService {
           facePictureId: null,
         },
       })
-
-      deleteObject(facePictureId)
     }
 
     if (authUser.isAdmin) {
