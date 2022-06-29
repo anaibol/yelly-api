@@ -12,6 +12,7 @@ export class Trend {
   isEmoji?: boolean
   posts?: OffsetPaginatedPosts
   postCount?: number
+  reactionsCount?: number
   author?: User | null
   nextCursor?: string
   score?: number | null

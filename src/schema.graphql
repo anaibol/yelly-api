@@ -364,6 +364,7 @@ type Trend {
   nextCursor: String
   postCount: Int
   posts: OffsetPaginatedPosts
+  reactionsCount: Int
   score: Int
   text: String!
 }
