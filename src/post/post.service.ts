@@ -40,7 +40,7 @@ export class PostService {
     private pushNotificationService: PushNotificationService,
     private algoliaService: AlgoliaService
   ) {}
-  async trackPostViews(postsIds: string[]): Promise<boolean> {
+  async trackPostViews(postsIds: bigint[]): Promise<boolean> {
     await this.prismaService.post.updateMany({
       where: { id: { in: postsIds } },
       data: { viewsCount: { increment: 1 } },
@@ -187,7 +187,7 @@ export class PostService {
   //   return { items, nextCursor }
   // }
 
-  async getPost(postId: string, limit: number, currentCursor?: string): Promise<Post | null> {
+  async getPost(postId: bigint, limit: number, currentCursor?: bigint): Promise<Post | null> {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
@@ -214,7 +214,7 @@ export class PostService {
 
     const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const nextCursor = lastItem ? lastItem.id : ''
+    const nextCursor = lastItem ? lastItem.id : null
 
     return {
       ...mapPost(post),
@@ -372,7 +372,7 @@ export class PostService {
     return post
   }
 
-  async delete(postId: string, authUser: AuthUser): Promise<boolean> {
+  async delete(postId: bigint, authUser: AuthUser): Promise<boolean> {
     const post = await this.prismaService.post.findUnique({
       where: {
         id: postId,
@@ -472,7 +472,7 @@ export class PostService {
     }
   }
 
-  async deletePostReaction(postId: string, authUser: AuthUser): Promise<boolean> {
+  async deletePostReaction(postId: bigint, authUser: AuthUser): Promise<boolean> {
     const authorId = authUser.id
 
     await this.prismaService.postReaction.delete({
@@ -484,7 +484,7 @@ export class PostService {
     return true
   }
 
-  async createPollVote(postId: string, optionId: string, authUser: AuthUser): Promise<Post> {
+  async createPollVote(postId: bigint, optionId: bigint, authUser: AuthUser): Promise<Post> {
     const pollWithOption = this.prismaService.postPollOption.findFirst({
       where: {
         id: optionId,
@@ -524,7 +524,7 @@ export class PostService {
     return mapPost(post)
   }
 
-  getAuthUserPollVote(postId: string, authUser: AuthUser): Promise<PostPollVote | null> {
+  getAuthUserPollVote(postId: bigint, authUser: AuthUser): Promise<PostPollVote | null> {
     return this.prismaService.postPollVote.findUnique({
       where: {
         authorId_postId: {
@@ -543,7 +543,7 @@ export class PostService {
     })
   }
 
-  getAuthUserReaction(postId: string, authUser: AuthUser): Promise<PostReaction | null> {
+  getAuthUserReaction(postId: bigint, authUser: AuthUser): Promise<PostReaction | null> {
     return this.prismaService.postReaction.findUnique({
       where: {
         authorId_postId: {
@@ -554,12 +554,12 @@ export class PostService {
     })
   }
 
-  async syncPostIndexWithAlgolia(id: string): Promise<PartialUpdateObjectResponse | undefined> {
+  async syncPostIndexWithAlgolia(postId: bigint): Promise<PartialUpdateObjectResponse | undefined> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
 
     const post = await this.prismaService.post.findUnique({
       where: {
-        id,
+        id: postId,
       },
       select: PostSelectWithParent,
     })
@@ -576,20 +576,20 @@ export class PostService {
       tags: post.tags,
     }
 
-    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, post.id)
+    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, post.id.toString())
   }
 
-  async deletePostFromAlgolia(id: string): Promise<void> {
+  async deletePostFromAlgolia(postId: bigint): Promise<void> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
-    this.algoliaService.deleteObject(algoliaTagIndex, id)
+    this.algoliaService.deleteObject(algoliaTagIndex, postId.toString())
   }
 
   async postsUserReactions(
-    postIds: string[],
+    postIds: bigint[],
     userId: string
   ): Promise<
     {
-      postId: string
+      postId: bigint
       reaction?: PostReaction
     }[]
   > {
@@ -619,7 +619,7 @@ export class PostService {
       where: {
         authorId: userId,
         postId: {
-          in: postIds as string[],
+          in: postIds as bigint[],
         },
       },
     })

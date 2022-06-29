@@ -21,9 +21,9 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Query(() => Post)
   post(@Args() postArgs: PostArgs) {
-    const { id, after, limit } = postArgs
+    const { postId, after, limit } = postArgs
 
-    return this.postService.getPost(id, limit, after)
+    return this.postService.getPost(postId, limit, after)
   }
 
   @UseGuards(AuthGuard)
@@ -34,14 +34,14 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async trackPostViews(@Args({ name: 'postsIds', type: () => [String] }) postsIds: string[]) {
+  async trackPostViews(@Args({ name: 'postsIds', type: () => [BigInt] }) postsIds: bigint[]) {
     return this.postService.trackPostViews(postsIds)
   }
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   async deletePost(@Args('input') deletePostInput: DeletePostInput, @CurrentUser() authUser: AuthUser) {
-    return this.postService.delete(deletePostInput.id, authUser)
+    return this.postService.delete(deletePostInput.postId, authUser)
   }
 
   @UseGuards(AuthGuard)

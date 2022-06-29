@@ -69,7 +69,7 @@ export class TagService {
       createdAt: tag.createdAt,
     }
 
-    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id)
+    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id.toString())
   }
 
   // async createOrUpdateLiveTag(text: string, isLive: boolean, authUser: AuthUser): Promise<Tag> {
@@ -128,7 +128,7 @@ export class TagService {
   //   return newTag
   // }
 
-  async getTag(tagId: string): Promise<Tag> {
+  async getTag(tagId: bigint): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         id: tagId,
@@ -159,18 +159,19 @@ export class TagService {
     return !!result
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(tagId: bigint): Promise<boolean> {
     await this.prismaService.tag.delete({
-      where: { id },
+      where: { id: tagId },
     })
 
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
-    this.algoliaService.deleteObject(algoliaTagIndex, id)
+    this.algoliaService.deleteObject(algoliaTagIndex, tagId.toString())
 
     return true
   }
 
   async getTags(
+    date: string,
     authUser: AuthUser,
     skip: number,
     limit: number,
@@ -183,6 +184,7 @@ export class TagService {
 
     const where: Prisma.TagWhereInput = {
       isLive: false,
+      date: new Date(date),
       countryId: authUser.countryId,
       ...(isEmoji !== undefined && {
         isEmoji,
@@ -217,7 +219,7 @@ export class TagService {
     return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async updateTag(tagId: string, { isHidden }: UpdateTagInput): Promise<Tag> {
+  async updateTag(tagId: bigint, { isHidden }: UpdateTagInput): Promise<Tag> {
     return this.prismaService.tag.update({
       where: {
         id: tagId,
@@ -266,7 +268,7 @@ export class TagService {
     return tag
   }
 
-  getAuthUserReaction(tagId: string, authUser: AuthUser): Promise<TagReaction | null> {
+  getAuthUserReaction(tagId: bigint, authUser: AuthUser): Promise<TagReaction | null> {
     return this.prismaService.tagReaction.findUnique({
       where: {
         authorId_tagId: {
@@ -334,7 +336,7 @@ export class TagService {
     }
   }
 
-  async deleteTagReaction(tagId: string, authUser: AuthUser): Promise<boolean> {
+  async deleteTagReaction(tagId: bigint, authUser: AuthUser): Promise<boolean> {
     const authorId = authUser.id
 
     await this.prismaService.tagReaction.delete({

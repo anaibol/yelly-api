@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 import { FeedService } from './feed.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { AuthUser } from '../auth/auth.service'

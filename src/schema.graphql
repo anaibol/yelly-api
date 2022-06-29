@@ -38,27 +38,27 @@ type Country {
 }
 
 input CreateOrUpdatePostReactionInput {
-  postId: String!
+  postId: BigInt!
   text: String!
 }
 
 input CreateOrUpdateTagReactionInput {
-  tagId: String!
+  tagId: BigInt!
   text: String!
 }
 
 input CreatePostInput {
   emojis: [String!]
   expiresIn: Int
-  parentId: String
+  parentId: BigInt
   pollOptions: [String!]
   tags: [String!]
   text: String!
 }
 
 input CreatePostPollVoteInput {
-  optionId: String!
-  postId: String!
+  optionId: BigInt!
+  postId: BigInt!
 }
 
 """
@@ -67,11 +67,11 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 input DeletePostInput {
-  id: String!
+  postId: BigInt!
 }
 
 input DeletePostReactionInput {
-  postId: String!
+  postId: BigInt!
 }
 
 input EmailSignInInput {
@@ -143,7 +143,7 @@ type Me {
   phoneNumber: String
   pictureId: String
   postCount: Int
-  posts(after: String, limit: Int = 10): PaginatedPosts
+  posts(after: BigInt, limit: Int = 10): PaginatedPosts
   role: UserRole!
   school: School
   sendbirdAccessToken: String
@@ -177,16 +177,16 @@ type Mutation {
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
   markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: BigInt): Boolean!
   markNotificationAsSeen(notificationId: String!): Boolean!
-  markTrendAsSeen(cursor: String!, tagId: String!): Boolean!
+  markTrendAsSeen(cursor: String!, tagId: BigInt!): Boolean!
   refreshAccessToken(refreshToken: String!): AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
-  trackPostViews(postsIds: [String!]!): Boolean!
+  trackPostViews(postsIds: [BigInt!]!): Boolean!
   trackUserView(userId: String!): Boolean!
   unFollow(otherUserId: String!): Boolean!
   updateAgeVerification(facePictureId: String!): AgeVerificationResult!
   updateMe(input: UpdateUserInput!): Me!
-  updateTag(input: UpdateTagInput!, tagId: String!): Tag!
+  updateTag(input: UpdateTagInput!, tagId: BigInt!): Tag!
 }
 
 type Notification {
@@ -216,7 +216,7 @@ type PaginatedNotifications {
 
 type PaginatedPosts {
   items: [Post!]!
-  nextCursor: String!
+  nextCursor: BigInt
 }
 
 type PaginatedTags {
@@ -245,7 +245,7 @@ type Post {
   createdAt: DateTime
   expiresAt: DateTime
   expiresIn: Int
-  id: ID!
+  id: BigInt!
   parent: Post
   pollOptions: [PostPollOption!]
   reactions: [PostReaction!]
@@ -253,19 +253,19 @@ type Post {
   score: Int
   tags: [Tag!]
   text: String
-  threadId: String
+  threadId: BigInt
   viewsCount: Int
   wordsCount: Int
 }
 
 type PostPollOption {
-  id: ID!
+  id: BigInt!
   text: String
   votesCount: Int
 }
 
 type PostPollVote {
-  id: ID!
+  id: BigInt!
   option: PostPollOption
   post: Post
 }
@@ -283,12 +283,12 @@ type Query {
   getS3PresignedUploadUrl: Upload!
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
-  post(after: String, id: String!, limit: Int = 10): Post!
+  post(after: BigInt, limit: Int = 10, postId: BigInt!): Post!
   school(googlePlaceId: String, id: String): School
-  tag(tagId: String!): Tag!
+  tag(tagId: BigInt!): Tag!
   tagExists(text: String!): Boolean!
-  tags(isEmoji: Boolean = false, limit: Int = 10, showHidden: Boolean = false, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
-  trend(limit: Int = 10, skip: Int = 0, tagId: String!): Trend!
+  tags(date: String = "2022-06-29", isEmoji: Boolean = false, limit: Int = 10, showHidden: Boolean = false, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
+  trend(limit: Int = 10, skip: Int = 0, tagId: BigInt!): Trend!
   trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadFeedItemsCount: Int!
   unreadNotificationsCount: Int!
@@ -327,12 +327,12 @@ type Tag {
   authUserReaction: TagReaction
   author: User
   createdAt: DateTime
-  id: ID!
+  id: BigInt!
   isEmoji: Boolean
   isHidden: Boolean
   isLive: Boolean
   postCount: Int
-  posts(after: String, limit: Int = 10): PaginatedPosts
+  posts(after: BigInt, limit: Int = 10): PaginatedPosts
   reactionsCount: Int
   text: String!
 }
@@ -358,8 +358,7 @@ type Training {
 type Trend {
   author: User
   createdAt: DateTime
-  firstPost: Post
-  id: ID!
+  id: BigInt!
   isEmoji: Boolean
   isLive: Boolean
   nextCursor: String
@@ -412,7 +411,7 @@ type User {
   pendingFollowRequestToUser: FollowRequest
   pictureId: String
   postCount: Int
-  posts(after: String, limit: Int = 10): PaginatedPosts
+  posts(after: BigInt, limit: Int = 10): PaginatedPosts
   school: School
   snapchat: String
   training: Training

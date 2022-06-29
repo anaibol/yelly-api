@@ -3,8 +3,6 @@ import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/g
 
 import { User } from './user.model'
 
-import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
-
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 
@@ -16,6 +14,7 @@ import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { FollowRequest } from './follow-request.model'
 import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
+import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 // import { Loader } from '@tracworx/nestjs-dataloader'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
@@ -197,7 +196,7 @@ export class UserResolver {
 
     const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const nextCursor = lastItem ? lastItem.id : ''
+    const nextCursor = lastItem ? lastItem.id : null
 
     return { items, nextCursor }
   }

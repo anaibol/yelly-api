@@ -98,7 +98,7 @@ export class UserService {
   //   return user.locale ? user.locale.split('-')[0] : 'en'
   // }
 
-  async hasUserPostedOnTag(userId: string, tagId: string): Promise<boolean> {
+  async hasUserPostedOnTag(userId: string, tagId: bigint): Promise<boolean> {
     const post = await this.prismaService.post.findFirst({
       select: {
         id: true,

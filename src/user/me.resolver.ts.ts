@@ -5,8 +5,6 @@ import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { AgeVerificationResult, Me } from './me.model'
 import { AccessToken } from './accessToken.model'
 
-import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
-
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 
@@ -27,6 +25,7 @@ import { InitPhoneNumberVerificationInput } from './init-phone-number-verificati
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
 import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
+import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 
 // function validatePhoneNumberForE164(phoneNumber: string) {
 //   const regEx = /^\+[1-9]\d{10,14}$/
@@ -211,7 +210,7 @@ export class MeResolver {
 
     const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const nextCursor = lastItem ? lastItem.id : ''
+    const nextCursor = lastItem ? lastItem.id : null
 
     return { items, nextCursor }
   }

@@ -243,8 +243,8 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
   if (!createdAt || !firstName || !lastName || !birthdate || !lastName || !school?.city?.country) return null
 
   return {
-    id: post.id,
-    objectID: post.id,
+    id: post.id.toString(),
+    objectID: post.id.toString(),
     createdAt: post.createdAt,
     text: post.text,
     author: {
@@ -271,7 +271,7 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
     },
     tags: post.tags.map((tag) => {
       return {
-        id: tag.id,
+        id: tag.id.toString(),
         createdAt: tag.createdAt,
         text: tag.text,
         isEmoji: tag.isEmoji,

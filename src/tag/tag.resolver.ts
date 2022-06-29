@@ -11,12 +11,12 @@ import { PaginatedPosts } from '../post/paginated-posts.model'
 import { PaginatedTags } from './paginated-tags.model'
 import { TagsArgs } from './tags.args'
 
-import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 import { PrismaService } from '../core/prisma.service'
 import { UpdateTagInput } from './update-tag.input'
 import { TagReaction } from './tag-reaction.model'
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { DeleteTagReactionInput } from './delete-tag-reaction.input'
+import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -24,7 +24,7 @@ export class TagResolver {
 
   @Query(() => Tag)
   @UseGuards(AuthGuard)
-  tag(@Args('tagId') tagId: string): Promise<Tag> {
+  tag(@Args('tagId') tagId: bigint): Promise<Tag> {
     return this.tagService.getTag(tagId)
   }
 
@@ -37,9 +37,10 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
   async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { skip, limit, isEmoji, sortBy, sortDirection, showHidden } = tagsArgs
+    const { date, skip, limit, isEmoji, sortBy, sortDirection, showHidden } = tagsArgs
 
     const { items, nextSkip } = await this.tagService.getTags(
+      date,
       authUser,
       skip,
       limit,
@@ -85,7 +86,7 @@ export class TagResolver {
 
     const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const nextCursor = lastItem ? lastItem.id : ''
+    const nextCursor = lastItem ? lastItem.id : null
 
     return { items, nextCursor }
   }
@@ -94,7 +95,7 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   updateTag(
     @CurrentUser() authUser: AuthUser,
-    @Args('tagId') tagId: string,
+    @Args('tagId') tagId: bigint,
     @Args('input') updateTagInput: UpdateTagInput
   ): Promise<Tag> {
     if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))

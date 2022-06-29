@@ -4,8 +4,8 @@ import { Post } from '../post/post.model'
 
 @ObjectType()
 export class Trend {
-  @Field(() => ID)
-  id: string
+  @Field(() => BigInt)
+  id: BigInt
   text: string
   createdAt?: Date
   isLive?: boolean
@@ -15,7 +15,6 @@ export class Trend {
   author?: User | null
   nextCursor?: string
   score?: number | null
-  firstPost?: Post | null
 }
 
 @ObjectType()

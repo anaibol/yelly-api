@@ -345,7 +345,7 @@ export class FeedService {
     skip,
     limit,
   }: {
-    tagId: string
+    tagId: bigint
     authUser: AuthUser
     skip: number
     limit: number
@@ -444,7 +444,7 @@ export class FeedService {
     }
   }
 
-  async markTrendAsSeen(authUser: AuthUser, tagId: string, cursor: string): Promise<boolean> {
+  async markTrendAsSeen(authUser: AuthUser, tagId: bigint, cursor: string): Promise<boolean> {
     await this.prismaService.userFeedCursor.upsert({
       where: {
         tagId_userId: {

@@ -99,7 +99,7 @@ export class PushNotificationService {
     // await this.sendNotifications(notificationsToSend, tokens, 'PUSH_NOTIFICATION_POST_VANISHING')
   }
 
-  async followeePosted(postId: string) {
+  async followeePosted(postId: bigint) {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
@@ -157,7 +157,7 @@ export class PushNotificationService {
     )
   }
 
-  async sameSchoolPosted(postId: string, userId: string) {
+  async sameSchoolPosted(postId: bigint, userId: string) {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
@@ -223,7 +223,7 @@ export class PushNotificationService {
     )
   }
 
-  async postReplied(postId: string) {
+  async postReplied(postId: bigint) {
     const postReply = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {

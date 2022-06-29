@@ -21,7 +21,7 @@ import { BigIntScalar } from './scalars/big-int.scalar'
 import { CronModule } from './cron/cron.module'
 
 @Module({
-  providers: [UserModule, BigIntScalar], // CommonFriendsLoader
+  providers: [BigIntScalar, UserModule], // CommonFriendsLoader
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,

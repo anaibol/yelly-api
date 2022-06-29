@@ -1,6 +1,7 @@
-import { ArgsType } from '@nestjs/graphql'
+import { ArgsType, Field } from '@nestjs/graphql'
 @ArgsType()
 export class MarkTrendAsSeenArgs {
-  tagId: string
+  @Field(() => BigInt)
+  tagId: bigint
   cursor: string
 }

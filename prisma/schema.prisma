@@ -50,7 +50,7 @@ model FeedItem {
   id        BigInt       @id @default(dbgenerated("generate_id()"))
   isSeen    Boolean      @default(false)
   createdAt DateTime     @default(now())
-  postId    String?
+  postId    BigInt?
   post      Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
   user      User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      FeedItemType
@@ -152,7 +152,7 @@ model Follower {
 }
 
 model Tag {
-  id          String           @id @default(dbgenerated("generate_id()"))
+  id          BigInt        @id @default(dbgenerated("generate_id()"))
   text        String
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @default(now()) @updatedAt
@@ -176,7 +176,7 @@ model Tag {
 }
 
 model Post {
-  id          String           @id @default(dbgenerated("generate_id()"))
+  id          BigInt        @id @default(dbgenerated("generate_id()"))
   text        String           @db.Text
   createdAt   DateTime         @unique @default(now())
   authorId    String
@@ -190,9 +190,9 @@ model Post {
   expiresAt   DateTime?
   children    Post[]           @relation("parentChildren")
   parent      Post?            @relation("parentChildren", fields: [parentId], references: [id])
-  parentId    String?
+  parentId    BigInt?
   thread      Thread?          @relation(fields: [threadId], references: [id])
-  threadId    String?
+  threadId    BigInt?
   feedItems   FeedItem[]
   feedEvents  FeedEvent[]
   charsCount  Int?
@@ -203,10 +203,10 @@ model Post {
 }
 
 model PostPollOption {
-  id       String         @id @default(dbgenerated("generate_id()"))
+  id           BigInt        @id @default(dbgenerated("generate_id()"))
   text     String
   post     Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId   String
+  postId   BigInt
   position Int
   votes    PostPollVote[]
 
@@ -214,11 +214,11 @@ model PostPollOption {
 }
 
 model PostPollVote {
-  id        String         @id @default(dbgenerated("generate_id()"))
+  id           BigInt        @id @default(dbgenerated("generate_id()"))
   option    PostPollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
-  optionId  String
+  optionId  BigInt
   post      Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    String
+  postId    BigInt
   authorId  String
   author    User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt DateTime       @default(now())
@@ -232,7 +232,7 @@ model PostReaction {
   id           BigInt        @id @default(dbgenerated("generate_id()"))
   createdAt    DateTime      @default(now())
   text         String
-  postId       String
+  postId       BigInt
   authorId     String
   author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
   post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -246,7 +246,7 @@ model TagReaction {
   id             BigInt        @id @default(dbgenerated("generate_id()"))
   createdAt      DateTime      @default(now())
   text           String
-  tagId          String
+  tagId          BigInt
   authorId       String
   author         User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
   tag            Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
@@ -291,15 +291,15 @@ enum FeedItemType {
 }
 
 model Thread {
-  id    String @id @default(dbgenerated("generate_id()"))
+  id    BigInt @id @default(dbgenerated("generate_id()"))
   posts Post[]
 }
 
 model FeedEvent {
   id                          BigInt        @id @default(dbgenerated("generate_id()"))
-  postId                      String
+  postId                      BigInt
   post                        Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tagId                       String
+  tagId                       BigInt
   tag                         Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
   postReactionAuthorBirthdate DateTime?     @db.Date
   postAuthorBirthdate         DateTime?     @db.Date
@@ -317,7 +317,7 @@ model FeedEvent {
 
 model UserFeedCursor {
   id        BigInt   @id @default(dbgenerated("generate_id()"))
-  tagId     String
+  tagId     BigInt
   tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   userId    String
