@@ -34,8 +34,8 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  async trackPostViews(@Args({ name: 'postsIds', type: () => [BigInt] }) postsIds: bigint[]) {
-    return this.postService.trackPostViews(postsIds)
+  async trackPostViews(@Args({ name: 'postIds', type: () => [BigInt] }) postIds: bigint[]) {
+    return this.postService.trackPostViews(postIds)
   }
 
   @UseGuards(AuthGuard)

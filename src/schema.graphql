@@ -181,7 +181,8 @@ type Mutation {
   refreshAccessToken(refreshToken: String!): AccessToken!
   refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
-  trackPostViews(postsIds: [BigInt!]!): Boolean!
+  trackPostViews(postIds: [BigInt!]!): Boolean!
+  trackTagViews(tagIds: [BigInt!]!): Boolean!
   trackUserView(userId: String!): Boolean!
   unFollow(otherUserId: String!): Boolean!
   updateAgeVerification(facePictureId: String!): AgeVerificationResult!

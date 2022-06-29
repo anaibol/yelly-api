@@ -347,4 +347,13 @@ export class TagService {
 
     return true
   }
+
+  async trackTagViews(tagsIds: bigint[]): Promise<boolean> {
+    await this.prismaService.tag.updateMany({
+      where: { id: { in: tagsIds } },
+      data: { viewsCount: { increment: 1 } },
+    })
+
+    return true
+  }
 }

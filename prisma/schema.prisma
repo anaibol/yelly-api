@@ -152,7 +152,7 @@ model Follower {
 }
 
 model Tag {
-  id          BigInt        @id @default(dbgenerated("generate_id()"))
+  id          BigInt           @id @default(dbgenerated("generate_id()"))
   text        String
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @default(now()) @updatedAt
@@ -168,6 +168,7 @@ model Tag {
   feedCursors UserFeedCursor[]
   date        DateTime         @default(now()) @db.Date
   reactions   TagReaction[]
+  viewsCount  Int              @default(0)
 
   @@unique([text, date])
   @@unique([authorId, date])
@@ -176,7 +177,7 @@ model Tag {
 }
 
 model Post {
-  id          BigInt        @id @default(dbgenerated("generate_id()"))
+  id          BigInt           @id @default(dbgenerated("generate_id()"))
   text        String           @db.Text
   createdAt   DateTime         @unique @default(now())
   authorId    String
@@ -203,7 +204,7 @@ model Post {
 }
 
 model PostPollOption {
-  id           BigInt        @id @default(dbgenerated("generate_id()"))
+  id       BigInt         @id @default(dbgenerated("generate_id()"))
   text     String
   post     Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId   BigInt
@@ -214,7 +215,7 @@ model PostPollOption {
 }
 
 model PostPollVote {
-  id           BigInt        @id @default(dbgenerated("generate_id()"))
+  id        BigInt         @id @default(dbgenerated("generate_id()"))
   option    PostPollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
   optionId  BigInt
   post      Post           @relation(fields: [postId], references: [id], onDelete: Cascade)

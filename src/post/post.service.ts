@@ -40,9 +40,9 @@ export class PostService {
     private pushNotificationService: PushNotificationService,
     private algoliaService: AlgoliaService
   ) {}
-  async trackPostViews(postsIds: bigint[]): Promise<boolean> {
+  async trackPostViews(postIds: bigint[]): Promise<boolean> {
     await this.prismaService.post.updateMany({
-      where: { id: { in: postsIds } },
+      where: { id: { in: postIds } },
       data: { viewsCount: { increment: 1 } },
     })
 

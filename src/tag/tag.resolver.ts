@@ -28,6 +28,12 @@ export class TagResolver {
     return this.tagService.getTag(tagId)
   }
 
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async trackTagViews(@Args({ name: 'tagIds', type: () => [BigInt] }) tagIds: bigint[]) {
+    return this.tagService.trackTagViews(tagIds)
+  }
+
   @Query(() => Boolean)
   @UseGuards(AuthGuard)
   tagExists(@Args('text') tagText: string): Promise<boolean> {
