@@ -1,12 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql'
 import { User } from 'src/user/user.model'
-import { Post } from './post.model'
+import { Tag } from './tag.model'
 
 @ObjectType()
-export class PostReaction {
+export class TagReaction {
   @Field(() => BigInt)
   id: BigInt
   text?: string
   author?: User
-  post?: Post
+  tag?: Tag
 }

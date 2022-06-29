@@ -4,6 +4,7 @@ import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
 export enum TagSortBy {
   createdAt = 'createdAt',
   postCount = 'postCount',
+  reactionsCount = 'reactionsCount',
 }
 
 export enum SortDirection {

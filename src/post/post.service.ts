@@ -21,7 +21,6 @@ import { PostPollVote } from './post.model'
 import { Prisma } from '@prisma/client'
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { PostReaction } from './post-reaction.model'
-import { DeletePostReactionInput } from './delete-post-reaction.input'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 
 const getExpiredAt = (expiresIn?: number | null): Date | undefined => {
@@ -244,7 +243,10 @@ export class PostService {
     const connectOrCreateTags = uniqueTags.map(
       (tagText): Prisma.TagCreateOrConnectWithoutPostsInput => ({
         where: {
-          text: tagText,
+          text_date: {
+            text: tagText,
+            date: new Date(),
+          },
         },
         create: {
           text: tagText,
@@ -257,7 +259,10 @@ export class PostService {
     const connectOrCreateEmojis = uniq(emojis).map(
       (emoji): Prisma.TagCreateOrConnectWithoutPostsInput => ({
         where: {
-          text: emoji,
+          text_date: {
+            text: emoji,
+            date: new Date(),
+          },
         },
         create: {
           text: emoji,
@@ -467,8 +472,7 @@ export class PostService {
     }
   }
 
-  async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUser: AuthUser): Promise<boolean> {
-    const { postId } = deletePostReactionInput
+  async deletePostReaction(postId: string, authUser: AuthUser): Promise<boolean> {
     const authorId = authUser.id
 
     await this.prismaService.postReaction.delete({

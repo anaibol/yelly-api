@@ -216,8 +216,8 @@ export class MeResolver {
     return { items, nextCursor }
   }
 
-  // @ResolveField()
-  // canCreateTag(@Parent() user: Me, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
-  //   return this.userService.canCreateTag(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
-  // }
+  @ResolveField(() => Boolean)
+  canCreateTag(@Parent() user: Me): Promise<boolean> {
+    return this.userService.canCreateTag(user.id)
+  }
 }

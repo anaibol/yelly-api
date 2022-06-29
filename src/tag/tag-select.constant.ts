@@ -8,6 +8,7 @@ export const tagSelect = {
   _count: {
     select: {
       posts: true,
+      reactions: true,
     },
   },
   author: {

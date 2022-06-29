@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "FeedEventType" ADD VALUE 'TAG_REACTION_CREATED';

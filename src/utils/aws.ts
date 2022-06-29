@@ -2,7 +2,7 @@
 /* eslint-disable functional/no-return-void */
 import { v4 as uuidv4 } from 'uuid'
 
-import { S3Client, S3ClientConfig, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, S3ClientConfig, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { Readable } from 'stream'
 
@@ -51,6 +51,16 @@ export const getObject = async (pictureId: string): Promise<string> => {
   const response = (await s3.send(getObjectCommand)).Body as Readable
 
   return streamToString(response)
+}
+
+export const deleteObject = async (pictureId: string): Promise<void> => {
+  const prefix = isLocalEnvironment ? 'test/' : ''
+
+  const key: string = prefix + pictureId
+
+  const delteObjectCommand = new DeleteObjectCommand({ Bucket: BUCKET, Key: key })
+
+  await s3.send(delteObjectCommand)
 }
 
 async function streamToString(stream: Readable): Promise<string> {

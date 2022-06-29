@@ -47,10 +47,10 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   async deletePostReaction(
-    @Args('input') deletePostReactionData: DeletePostReactionInput,
+    @Args('input') deletePostReactionInput: DeletePostReactionInput,
     @CurrentUser() authUser: AuthUser
   ) {
-    return this.postService.deletePostReaction(deletePostReactionData, authUser)
+    return this.postService.deletePostReaction(deletePostReactionInput.postId, authUser)
   }
 
   @UseGuards(AuthGuard)

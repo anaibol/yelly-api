@@ -39,6 +39,8 @@ model Notification {
   type            NotificationType?
   postReactionId  BigInt?           @unique
   postReaction    PostReaction?     @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  tagReactionId   BigInt?           @unique
+  tagReaction     TagReaction?      @relation(fields: [tagReactionId], references: [id], onDelete: Cascade)
 
   @@index([createdAt], map: "Notification_createdAt")
   @@index([userId])
@@ -114,6 +116,7 @@ model User {
   posts                        Post[]
   postReactions                PostReaction[]
   postPollVotes                PostPollVote[]
+  tagReactions                 TagReaction[]
   followees                    Follower[]                        @relation("usersAsFollowees")
   followers                    Follower[]                        @relation("usersAsFollowers")
   feedItems                    FeedItem[]
@@ -150,7 +153,7 @@ model Follower {
 
 model Tag {
   id          String           @id @default(dbgenerated("generate_id()"))
-  text        String           @unique
+  text        String
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @default(now()) @updatedAt
   isLive      Boolean          @default(false)
@@ -160,10 +163,14 @@ model Tag {
   isEmoji     Boolean          @default(false)
   isHidden    Boolean          @default(false)
   feedEvents  FeedEvent[]
-  author      User?             @relation(fields: [authorId], references: [id])
-  authorId    String?          
+  author      User?            @relation(fields: [authorId], references: [id])
+  authorId    String?
   feedCursors UserFeedCursor[]
+  date        DateTime         @default(now()) @db.Date
+  reactions   TagReaction[]
 
+  @@unique([text, date])
+  @@unique([authorId, date])
   @@index([createdAt])
   @@index([isLive, countryId])
 }
@@ -235,6 +242,21 @@ model PostReaction {
   @@unique([authorId, postId])
 }
 
+model TagReaction {
+  id             BigInt        @id @default(dbgenerated("generate_id()"))
+  createdAt      DateTime      @default(now())
+  text           String
+  tagId          String
+  authorId       String
+  author         User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tag            Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  notification   Notification?
+  feedEvents     FeedEvent[]
+  notificationId String?
+
+  @@unique([authorId, tagId])
+}
+
 model ExpoPushNotificationAccessToken {
   id     String @id @default(dbgenerated("generate_id()"))
   userId String
@@ -285,6 +307,8 @@ model FeedEvent {
   postAuthorSchoolId          String?
   postReactionId              BigInt?
   postReaction                PostReaction? @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  tagReactionId               BigInt?
+  tagReaction                 TagReaction?  @relation(fields: [tagReactionId], references: [id])
   type                        FeedEventType
   createdAt                   DateTime      @default(now())
 
@@ -305,6 +329,7 @@ model UserFeedCursor {
 
 enum FeedEventType {
   POST_CREATED
+  TAG_REACTION_CREATED
   POST_REACTION_CREATED
   POST_REPLY_CREATED
 }

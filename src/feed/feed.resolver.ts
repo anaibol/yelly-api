@@ -13,7 +13,6 @@ import { PaginatedTrends, Trend } from './trend.model'
 import { PrismaService } from '../core/prisma.service'
 import { TagService } from '../tag/tag.service'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
-import { Post } from '../post/post.model'
 
 @Resolver()
 export class FeedResolver {
@@ -91,10 +90,5 @@ export class TrendResolver {
     })
 
     return { items, nextSkip }
-  }
-
-  @ResolveField()
-  firstPost(@Parent() trend: Trend): Promise<Post> {
-    return this.tagService.getFirstPost(trend.id)
   }
 }

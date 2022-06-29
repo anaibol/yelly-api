@@ -20,7 +20,7 @@ import { PostService } from 'src/post/post.service'
 import { Prisma } from '@prisma/client'
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { RequestBuilder, Payload } from 'yoti'
-import { getObject } from '../utils/aws'
+import { deleteObject, getObject } from '../utils/aws'
 
 type YotiResponse = {
   antispoofing: {
@@ -1119,7 +1119,7 @@ export class UserService {
 
     const { isAgeApproved, ageEstimation, agePredictionResult } = await checkAge(facePictureId)
 
-    if (isAgeApproved)
+    if (isAgeApproved) {
       await this.prismaService.user.update({
         where: {
           id: authUser.id,
@@ -1128,8 +1128,12 @@ export class UserService {
           isAgeApproved,
           ageEstimation,
           agePredictionResult,
+          facePictureId: null,
         },
       })
+
+      deleteObject(facePictureId)
+    }
 
     if (authUser.isAdmin) {
       return {
@@ -1142,5 +1146,21 @@ export class UserService {
         isAgeApproved,
       }
     }
+  }
+
+  async canCreateTag(userId: string): Promise<boolean> {
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        authorId_date: {
+          authorId: userId,
+          date: new Date(),
+        },
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    return !!!tag
   }
 }

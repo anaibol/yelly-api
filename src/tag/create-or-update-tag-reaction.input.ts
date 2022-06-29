@@ -1,7 +1,7 @@
 import { InputType } from '@nestjs/graphql'
 
 @InputType()
-export class CreateOrUpdatePostReactionInput {
-  postId: string
+export class CreateOrUpdateTagReactionInput {
+  tagId: string
   text: string
 }

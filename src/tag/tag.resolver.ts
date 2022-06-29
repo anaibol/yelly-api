@@ -13,9 +13,10 @@ import { TagsArgs } from './tags.args'
 
 import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
 import { PrismaService } from '../core/prisma.service'
-import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { UpdateTagInput } from './update-tag.input'
-import { Post } from '../post/post.model'
+import { TagReaction } from './tag-reaction.model'
+import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
+import { DeleteTagReactionInput } from './delete-tag-reaction.input'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -23,8 +24,14 @@ export class TagResolver {
 
   @Query(() => Tag)
   @UseGuards(AuthGuard)
-  tag(@Args('text') tagText: string): Promise<Tag> {
-    return this.tagService.getTag(tagText)
+  tag(@Args('tagId') tagId: string): Promise<Tag> {
+    return this.tagService.getTag(tagId)
+  }
+
+  @Query(() => Boolean)
+  @UseGuards(AuthGuard)
+  tagExists(@Args('text') tagText: string): Promise<boolean> {
+    return this.tagService.getTagExists(tagText)
   }
 
   @UseGuards(AuthGuard)
@@ -103,8 +110,23 @@ export class TagResolver {
     return this.tagService.createPromotedTag(tagText, authUser)
   }
 
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async deletePostReaction(deleteTagReactionInput: DeleteTagReactionInput, authUser: AuthUser): Promise<boolean> {
+    return this.tagService.deleteTagReaction(deleteTagReactionInput.tagId, authUser)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => TagReaction)
+  async createOrUpdateTagReaction(
+    @Args('input') createTagReactionData: CreateOrUpdateTagReactionInput,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<TagReaction> {
+    return this.tagService.createOrUpdateTagReaction(createTagReactionData, authUser)
+  }
+
   @ResolveField()
-  firstPost(@Parent() tag: Tag): Promise<Post> {
-    return this.tagService.getFirstPost(tag.id)
+  async authUserReaction(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<TagReaction | null> {
+    return this.tagService.getAuthUserReaction(tag.id, authUser)
   }
 }
