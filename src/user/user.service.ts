@@ -1131,10 +1131,16 @@ export class UserService {
         },
       })
 
-    return {
-      isAgeApproved,
-      ageEstimation,
-      agePredictionResult,
+    if (authUser.isAdmin) {
+      return {
+        isAgeApproved,
+        ageEstimation,
+        agePredictionResult,
+      }
+    } else {
+      return {
+        isAgeApproved,
+      }
     }
   }
 }
