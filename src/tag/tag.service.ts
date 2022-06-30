@@ -13,7 +13,10 @@ import { UpdateTagInput } from './update-tag.input'
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { TagReaction } from './tag-reaction.model'
 
-const getSort = (sortBy?: TagSortBy, sortDirection?: SortDirection): Prisma.TagOrderByWithRelationInput => {
+const getTagSort = (
+  sortBy?: TagSortBy,
+  sortDirection?: SortDirection
+): Prisma.Enumerable<Prisma.TagOrderByWithRelationInput> => {
   switch (sortBy) {
     case 'postCount':
       return {
@@ -23,11 +26,16 @@ const getSort = (sortBy?: TagSortBy, sortDirection?: SortDirection): Prisma.TagO
       }
 
     case 'reactionsCount':
-      return {
-        reactions: {
-          _count: sortDirection,
+      return [
+        {
+          reactions: {
+            _count: sortDirection,
+          },
         },
-      }
+        {
+          createdAt: 'desc' as const,
+        },
+      ]
 
     default:
       return {
@@ -210,7 +218,7 @@ export class TagService {
       this.prismaService.tag.findMany({
         where,
         skip,
-        orderBy: getSort(sortBy, sortDirection),
+        orderBy: getTagSort(sortBy, sortDirection),
         take: limit,
         select: tagSelect,
       }),
