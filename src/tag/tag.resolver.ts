@@ -127,7 +127,7 @@ export class TagResolver {
   @Mutation(() => Boolean)
   async deleteTagReaction(
     @Args('input') deleteTagReactionInput: DeleteTagReactionInput,
-    authUser: AuthUser
+    @CurrentUser() authUser: AuthUser
   ): Promise<boolean> {
     return this.tagService.deleteTagReaction(deleteTagReactionInput.tagId, authUser)
   }
