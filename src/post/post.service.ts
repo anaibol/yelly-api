@@ -267,26 +267,10 @@ export class PostService {
         create: {
           text: emoji,
           countryId: authUser.countryId,
-          isEmoji: true,
           authorId: authUser.id,
         },
       })
     )
-
-    const threadId =
-      parent &&
-      (parent.threadId ||
-        (
-          await this.prismaService.thread.create({
-            data: {
-              posts: {
-                connect: {
-                  id: parent.id,
-                },
-              },
-            },
-          })
-        ).id)
 
     const post = await this.prismaService.post.create({
       include: {
@@ -315,13 +299,6 @@ export class PostService {
           parent: {
             connect: {
               id: parent.id,
-            },
-          },
-        }),
-        ...(threadId && {
-          thread: {
-            connect: {
-              id: threadId,
             },
           },
         }),
@@ -391,7 +368,6 @@ export class PostService {
         tags: {
           select: {
             id: true,
-            isLive: true,
             posts: {
               select: {
                 id: true,
@@ -408,7 +384,7 @@ export class PostService {
     this.deletePostFromAlgolia(postId)
 
     deletedPost.tags.forEach(async (tag) => {
-      if (!tag.isLive && tag.posts.length === 1) this.tagService.delete(tag.id)
+      if (tag.posts.length === 1) this.tagService.delete(tag.id)
     })
 
     return true

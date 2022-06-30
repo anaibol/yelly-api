@@ -4,7 +4,6 @@ import { Post } from './post.model'
 export const PostSelect = {
   id: true,
   parentId: true,
-  threadId: true,
   createdAt: true,
   expiresAt: true,
   expiresIn: true,
@@ -61,8 +60,6 @@ export const PostSelect = {
       id: true,
       createdAt: true,
       text: true,
-      isLive: true,
-      isEmoji: true,
     },
   },
   _count: {

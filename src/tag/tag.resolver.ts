@@ -50,14 +50,13 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
   async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { date, skip, limit, isEmoji, sortBy, sortDirection, showHidden } = tagsArgs
+    const { date, skip, limit, sortBy, sortDirection, showHidden } = tagsArgs
 
     const { items, nextSkip } = await this.tagService.getTags(
       date,
       authUser,
       skip,
       limit,
-      isEmoji,
       sortBy,
       sortDirection,
       showHidden

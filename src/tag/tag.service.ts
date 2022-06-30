@@ -189,7 +189,6 @@ export class TagService {
     authUser: AuthUser,
     skip: number,
     limit: number,
-    isEmoji?: boolean,
     sortBy?: TagSortBy,
     sortDirection?: SortDirection,
     showHidden?: boolean
@@ -197,12 +196,8 @@ export class TagService {
     if (showHidden && !authUser.isAdmin) return Promise.reject(new Error('No admin'))
 
     const where: Prisma.TagWhereInput = {
-      isLive: false,
       date: new Date(date),
       countryId: authUser.countryId,
-      ...(isEmoji !== undefined && {
-        isEmoji,
-      }),
       ...(!showHidden && {
         isHidden: false,
       }),
@@ -227,6 +222,7 @@ export class TagService {
       return {
         ...tag,
         postCount: tag._count.posts,
+        reactionsCount: tag._count.reactions,
       }
     })
 

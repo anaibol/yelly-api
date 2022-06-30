@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
 import { FeedService } from './feed.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { AuthUser } from '../auth/auth.service'
@@ -13,6 +13,7 @@ import { PaginatedTrends, Trend } from './trend.model'
 import { PrismaService } from '../core/prisma.service'
 import { TagService } from '../tag/tag.service'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
+import { TagReaction } from '../tag/tag-reaction.model'
 
 @Resolver()
 export class FeedResolver {
@@ -90,5 +91,10 @@ export class TrendResolver {
     })
 
     return { items, nextSkip }
+  }
+
+  @ResolveField()
+  async authUserReaction(@Parent() trend: Trend, @CurrentUser() authUser: AuthUser): Promise<TagReaction | null> {
+    return this.tagService.getAuthUserReaction(trend.id, authUser)
   }
 }

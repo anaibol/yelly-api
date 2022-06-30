@@ -169,24 +169,6 @@ export class FeedService {
       ...(post && { post: mapPost(post) }),
     }))
 
-    // eslint-disable-next-line prefer-const
-    // let threads: string[] = []
-
-    // const items: FeedItem[] = mappedPosts
-    //   .map((item) => {
-    //     if (item && item.post && item.post.threadId && !threads.includes(item.post.threadId)) {
-    //       // eslint-disable-next-line functional/immutable-data
-    //       threads.push(item.post.threadId)
-    //       return [
-    //         item,
-    //         ...mappedPosts.filter((i) => i.post?.threadId === item.post?.threadId && i.post?.id !== item.post?.id),
-    //       ]
-    //     }
-
-    //     return item
-    //   })
-    //   .flat()
-
     const items = mappedPosts
 
     const lastItem = items.length === limit ? items[limit - 1] : null
@@ -253,7 +235,6 @@ export class FeedService {
     const tags = await this.prismaService.tag.findMany({
       where: {
         countryId: authUser.countryId,
-        isEmoji: false,
         isHidden: false,
         feedEvents: {
           some: {

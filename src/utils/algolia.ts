@@ -68,7 +68,6 @@ export type PostIndexAlgoliaInterface = {
     id: string
     createdAt: Date
     text: string
-    isEmoji: boolean
   }[]
   createdAt: Date
 }
@@ -180,7 +179,6 @@ export const algoliaPostSelect = {
       id: true,
       createdAt: true,
       text: true,
-      isEmoji: true,
     },
   },
 }
@@ -274,7 +272,6 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
         id: tag.id.toString(),
         createdAt: tag.createdAt,
         text: tag.text,
-        isEmoji: tag.isEmoji,
       }
     }),
   }

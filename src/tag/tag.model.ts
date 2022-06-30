@@ -9,8 +9,6 @@ export class Tag {
   id: bigint
   text: string
   createdAt?: Date
-  isLive?: boolean
-  isEmoji?: boolean
   isHidden?: boolean
   posts?: PaginatedPosts
   postCount?: number

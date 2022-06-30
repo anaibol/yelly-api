@@ -264,7 +264,6 @@ type Post {
   score: Int
   tags: [Tag!]
   text: String
-  threadId: BigInt
   viewsCount: Int
   wordsCount: Int
 }
@@ -298,7 +297,7 @@ type Query {
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
   tagExists(tagText: String!): Boolean!
-  tags(date: String = "2022-06-29", isEmoji: Boolean = false, limit: Int = 10, showHidden: Boolean = false, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
+  tags(date: String = "2022-06-30", limit: Int = 10, showHidden: Boolean = false, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   trend(limit: Int = 10, skip: Int = 0, tagId: BigInt!): Trend!
   trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
   unreadFeedItemsCount: Int!
@@ -339,9 +338,7 @@ type Tag {
   author: User
   createdAt: DateTime
   id: BigInt!
-  isEmoji: Boolean
   isHidden: Boolean
-  isLive: Boolean
   postCount: Int
   posts(after: BigInt, limit: Int = 10): PaginatedPosts
   reactionsCount: Int
@@ -368,11 +365,10 @@ type Training {
 }
 
 type Trend {
+  authUserReaction: TagReaction
   author: User
   createdAt: DateTime
   id: BigInt!
-  isEmoji: Boolean
-  isLive: Boolean
   nextCursor: String
   postCount: Int
   posts: OffsetPaginatedPosts

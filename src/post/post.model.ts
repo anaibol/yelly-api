@@ -29,8 +29,6 @@ export class Post {
   expiresIn?: number | null
   expiresAt?: Date | null
   parent?: Post | null
-  @Field(() => BigInt)
-  threadId?: bigint | null
   children?: PaginatedPosts
   childrenCount?: number
   authUserReaction?: PostReaction | null

@@ -156,11 +156,9 @@ model Tag {
   text        String
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @default(now()) @updatedAt
-  isLive      Boolean          @default(false)
   posts       Post[]
   countryId   String?
   country     Country?         @relation(fields: [countryId], references: [id])
-  isEmoji     Boolean          @default(false)
   isHidden    Boolean          @default(false)
   feedEvents  FeedEvent[]
   author      User?            @relation(fields: [authorId], references: [id])
@@ -171,9 +169,7 @@ model Tag {
   viewsCount  Int              @default(0)
 
   @@unique([text, date])
-  @@unique([authorId, date])
   @@index([createdAt])
-  @@index([isLive, countryId])
 }
 
 model Post {
@@ -192,8 +188,6 @@ model Post {
   children    Post[]           @relation("parentChildren")
   parent      Post?            @relation("parentChildren", fields: [parentId], references: [id])
   parentId    BigInt?
-  thread      Thread?          @relation(fields: [threadId], references: [id])
-  threadId    BigInt?
   feedItems   FeedItem[]
   feedEvents  FeedEvent[]
   charsCount  Int?
@@ -289,11 +283,6 @@ enum FeedItemType {
   POST_REPLIED
   SAME_POST_REPLIED
   SAME_SCHOOL_POSTED
-}
-
-model Thread {
-  id    BigInt @id @default(dbgenerated("generate_id()"))
-  posts Post[]
 }
 
 model FeedEvent {
