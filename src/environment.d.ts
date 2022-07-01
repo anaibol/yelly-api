@@ -6,8 +6,6 @@ declare global {
       AWS_ACCESS_KEY_ID: string
       DATABASE_URL: string
       DATABASE_READ_URL: string
-      SENDBIRD_BASE_URL: string
-      SENDBIRD_TOKEN: string
       ALGOLIA_API_KEY: string
       ALGOLIA_APP_ID: string
       ALGOLIA_INDEX_PREFIX: string

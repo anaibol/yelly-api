@@ -48,11 +48,10 @@ input CreateOrUpdateTagReactionInput {
 }
 
 input CreatePostInput {
-  emojis: [String!]
   expiresIn: Int
   parentId: BigInt
   pollOptions: [String!]
-  tags: [String!]
+  tagIds: [BigInt!]
   text: String!
 }
 
@@ -154,7 +153,6 @@ type Me {
   posts(after: BigInt, limit: Int = 10): PaginatedPosts
   role: UserRole!
   school: School
-  sendbirdAccessToken: String
   snapchat: String
   training: Training
   viewsCount: Int
@@ -181,15 +179,12 @@ type Mutation {
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
   deleteTagReaction(input: DeleteTagReactionInput!): Boolean!
   deleteUser(userId: String!): Boolean!
-  deleteUserFeedCursors: Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
   markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: BigInt): Boolean!
   markNotificationAsSeen(notificationId: String!): Boolean!
-  markTrendAsSeen(cursor: String!, tagId: BigInt!): Boolean!
   refreshAccessToken(refreshToken: String!): AccessToken!
-  refreshSendbirdAccessToken: SendbirdAccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
   trackPostViews(postIds: [BigInt!]!): Boolean!
   trackTagViews(tagIds: [BigInt!]!): Boolean!
@@ -215,11 +210,6 @@ enum NotificationType {
   POST_REACTION
 }
 
-type OffsetPaginatedPosts {
-  items: [Post!]!
-  nextSkip: Int!
-}
-
 type PaginatedNotifications {
   items: [Notification!]!
   nextSkip: Int
@@ -232,11 +222,6 @@ type PaginatedPosts {
 
 type PaginatedTags {
   items: [Tag!]!
-  nextSkip: Int!
-}
-
-type PaginatedTrends {
-  items: [Trend!]!
   nextSkip: Int!
 }
 
@@ -297,9 +282,7 @@ type Query {
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
   tagExists(tagText: String!): Boolean!
-  tags(date: String = "2022-06-30", limit: Int = 10, showHidden: Boolean = false, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
-  trend(limit: Int = 10, skip: Int = 0, tagId: BigInt!): Trend!
-  trends(limit: Int = 10, skip: Int = 0): PaginatedTrends!
+  tags(date: String, limit: Int = 10, showHidden: Boolean = false, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   unreadFeedItemsCount: Int!
   unreadNotificationsCount: Int!
   user(id: String!): User!
@@ -322,10 +305,6 @@ type School {
   posts: PaginatedPosts
   totalUsersCount: Int
   users: [User!]
-}
-
-type SendbirdAccessToken {
-  sendbirdAccessToken: String!
 }
 
 enum SortDirection {
@@ -362,20 +341,6 @@ enum TagSortBy {
 type Training {
   id: ID!
   name: String!
-}
-
-type Trend {
-  authUserReaction: TagReaction
-  author: User
-  createdAt: DateTime
-  id: BigInt!
-  nextCursor: String
-  postCount: Int
-  posts: OffsetPaginatedPosts
-  reactionsCount: Int
-  score: Int
-  text: String!
-  viewsCount: Int
 }
 
 input UpdateTagInput {

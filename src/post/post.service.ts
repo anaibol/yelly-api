@@ -1,37 +1,17 @@
-/* eslint-disable functional/no-let */
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../core/prisma.service'
 import { CreatePostInput } from './create-post.input'
 import { TagService } from 'src/tag/tag.service'
-import {
-  PostSelectWithParent,
-  mapPost,
-  mapPostChild,
-  PostChildSelect,
-  getNotExpiredCondition,
-} from './post-select.constant'
+import { PostSelectWithParent, mapPost, mapPostChild, PostChildSelect } from './post-select.constant'
 import { PushNotificationService } from 'src/core/push-notification.service'
-import dates from 'src/utils/dates'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { AuthUser } from 'src/auth/auth.service'
-import { uniq } from 'lodash'
-import { PaginatedPosts } from './paginated-posts.model'
 import { Post } from './post.model'
 import { PostPollVote } from './post.model'
-import { Prisma } from '@prisma/client'
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { PostReaction } from './post-reaction.model'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 
-const getExpiredAt = (expiresIn?: number | null): Date | undefined => {
-  if (!expiresIn) return
-
-  const now = new Date()
-
-  const expiresAtTimestamp = now.setSeconds(now.getSeconds() + expiresIn)
-
-  return new Date(expiresAtTimestamp)
-}
 @Injectable()
 export class PostService {
   constructor(
@@ -226,9 +206,7 @@ export class PostService {
   }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
-    const { text, emojis, expiresIn, tags, pollOptions, parentId } = createPostInput
-
-    const uniqueTags = tags && tags.length > 0 ? uniq(tags) : ['NoTag']
+    const { text, tagIds, pollOptions, parentId } = createPostInput
 
     const parent = parentId
       ? await this.prismaService.post.findUnique({
@@ -240,38 +218,6 @@ export class PostService {
         })
       : null
 
-    const connectOrCreateTags = uniqueTags.map(
-      (tagText): Prisma.TagCreateOrConnectWithoutPostsInput => ({
-        where: {
-          text_date: {
-            text: tagText,
-            date: new Date(),
-          },
-        },
-        create: {
-          text: tagText,
-          countryId: authUser.countryId,
-          authorId: authUser.id,
-        },
-      })
-    )
-
-    const connectOrCreateEmojis = uniq(emojis).map(
-      (emoji): Prisma.TagCreateOrConnectWithoutPostsInput => ({
-        where: {
-          text_date: {
-            text: emoji,
-            date: new Date(),
-          },
-        },
-        create: {
-          text: emoji,
-          countryId: authUser.countryId,
-          authorId: authUser.id,
-        },
-      })
-    )
-
     const post = await this.prismaService.post.create({
       include: {
         tags: true,
@@ -280,8 +226,6 @@ export class PostService {
         text,
         charsCount: text.length,
         wordsCount: text.split(/\s+/).length,
-        expiresAt: parent ? parent.expiresAt : getExpiredAt(expiresIn),
-        expiresIn: parent ? parent.expiresIn : expiresIn,
         ...(pollOptions &&
           pollOptions.length > 0 && {
             pollOptions: {
@@ -302,9 +246,11 @@ export class PostService {
             },
           },
         }),
-        tags: {
-          connectOrCreate: [...connectOrCreateTags, ...connectOrCreateEmojis],
-        },
+        ...(tagIds && {
+          tags: {
+            connect: tagIds.map((tagId) => ({ id: tagId })),
+          },
+        }),
       },
     })
 
@@ -332,7 +278,7 @@ export class PostService {
       })
     }
 
-    uniqueTags.map((tag) => this.tagService.syncTagIndexWithAlgolia(tag))
+    if (tagIds) tagIds.map((tagId) => this.tagService.syncTagIndexWithAlgolia(tagId))
 
     this.syncPostIndexWithAlgolia(post.id)
 
@@ -344,7 +290,7 @@ export class PostService {
       this.pushNotificationService.followeePosted(post.id)
     }
 
-    if (!parentId) this.pushNotificationService.sameSchoolPosted(post.id, authUser.id)
+    // if (!parentId) this.pushNotificationService.postedOnYourTag(post.id)
 
     return post
   }

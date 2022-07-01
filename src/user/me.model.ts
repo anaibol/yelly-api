@@ -25,7 +25,6 @@ export class Me {
   snapchat?: string | null
   instagram?: string | null
   isFilled?: boolean
-  sendbirdAccessToken?: string | null
   expoPushNotificationTokens?: string[]
   about?: string | null
   locale?: string

@@ -9,10 +9,9 @@ import { SchoolService } from '../school/school.service'
 import { UploadResolver } from './upload.resolver'
 import { PostService } from 'src/post/post.service'
 import { TagService } from 'src/tag/tag.service'
-import { SendbirdWebhookModule } from 'src/sendbird-webhook/sendbird-webhook.module'
 
 @Module({
-  imports: [CoreModule, forwardRef(() => AuthModule), SendbirdWebhookModule],
+  imports: [CoreModule, forwardRef(() => AuthModule)],
   providers: [
     UserService,
     UserResolver,

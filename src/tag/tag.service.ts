@@ -51,16 +51,13 @@ export class TagService {
     private algoliaService: AlgoliaService,
     private pushNotificationService: PushNotificationService
   ) {}
-  async syncTagIndexWithAlgolia(tagText: string) {
+  async syncTagIndexWithAlgolia(tagId: bigint) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
 
     const tag = await this.prismaService.tag.findUnique({
       select: tagSelect,
       where: {
-        text_date: {
-          text: tagText,
-          date: new Date(),
-        },
+        id: tagId,
       },
     })
 
@@ -68,7 +65,7 @@ export class TagService {
 
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       id: tag.id,
-      text: tagText,
+      text: tag.text,
       postCount: {
         _operation: 'Increment',
         value: 1,
@@ -176,7 +173,9 @@ export class TagService {
       },
     })
 
-    this.syncTagIndexWithAlgolia(tagText)
+    this.syncTagIndexWithAlgolia(tag.id)
+
+    // this.pushNotificationService.tagCreated(tag.id)
 
     return tag
   }
@@ -193,7 +192,7 @@ export class TagService {
   }
 
   async getTags(
-    date: string,
+    date: string = new Date().toISOString().split('T')[0], // YYYY-MM-DD
     authUser: AuthUser,
     skip: number,
     limit: number,

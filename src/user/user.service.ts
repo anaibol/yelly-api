@@ -2,10 +2,8 @@ import { Injectable } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { AlgoliaService } from '../core/algolia.service'
-// import { Neo4jService } from './../core/neo4j.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
-import { SendbirdService } from '../sendbird/sendbird.service'
 import { SchoolService } from '../school/school.service'
 import { UpdateUserInput } from './update-user.input'
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
@@ -14,7 +12,6 @@ import { PushNotificationService } from 'src/core/push-notification.service'
 import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { FollowRequest } from './follow-request.model'
-import { SendbirdAccessToken } from './sendbirdAccessToken'
 import { AuthUser } from 'src/auth/auth.service'
 import { PostService } from 'src/post/post.service'
 import { Prisma } from '@prisma/client'
@@ -70,7 +67,6 @@ export class UserService {
     private emailService: EmailService,
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
-    private sendbirdService: SendbirdService,
     private pushNotificationService: PushNotificationService,
     // private neo4jService: Neo4jService,
     private postService: PostService
@@ -547,7 +543,6 @@ export class UserService {
         about: true,
         isFilled: true,
         isAgeApproved: true,
-        sendbirdAccessToken: true,
         expoPushNotificationTokens: true,
         instagram: true,
         snapchat: true,
@@ -652,26 +647,6 @@ export class UserService {
     return user
   }
 
-  async refreshSendbirdAccessToken(userId: string): Promise<SendbirdAccessToken> {
-    // eslint-disable-next-line functional/no-try-statement
-    try {
-      const sendbirdAccessToken = await this.sendbirdService.getAccessToken(userId)
-
-      await this.prismaService.user.update({
-        where: {
-          id: userId,
-        },
-        data: {
-          sendbirdAccessToken,
-        },
-      })
-
-      return { sendbirdAccessToken }
-    } catch {
-      return Promise.reject(new Error('Sendbird error'))
-    }
-  }
-
   private generateResetToken() {
     return randomBytes(25).toString('hex')
   }
@@ -683,7 +658,6 @@ export class UserService {
       const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
       this.algoliaService.deleteObject(algoliaUserIndex, userId).catch(console.error)
-      this.sendbirdService.deleteUser(userId).catch(console.error)
 
       return true
     } catch {
@@ -697,7 +671,6 @@ export class UserService {
     const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
     this.algoliaService.deleteObject(algoliaUserIndex, userId)
-    // this.sendbirdService.deactivateUser(userId)
 
     return true
   }
@@ -965,7 +938,6 @@ export class UserService {
         instagram: true,
         snapchat: true,
         about: true,
-        sendbirdAccessToken: true,
         school: {
           select: {
             id: true,
@@ -1034,17 +1006,6 @@ export class UserService {
     if (data.isFilled) {
       // eslint-disable-next-line functional/no-try-statement
       try {
-        // const sendbirdAccessToken = updatedUser && (await this.sendbirdService.createUser(updatedUser))
-        // await this.prismaService.user.update({
-        //   where: {
-        //     id: userId,
-        //   },
-        //   data: {
-        //     sendbirdAccessToken,
-        //   },
-        // })
-        // eslint-disable-next-line functional/immutable-data
-        // updatedUser.sendbirdAccessToken = sendbirdAccessToken
       } catch (error) {
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
@@ -1054,30 +1015,11 @@ export class UserService {
       try {
         this.syncUsersIndexWithAlgolia(userId)
         this.syncPostsIndexWithAlgolia(userId)
-
-        // await this.neo4jService.user.create({
-        //   input: [
-        //     {
-        //       id: updatedUser.id,
-        //       firstName: updatedUser.firstName,
-        //       lastName: updatedUser.lastName,
-        //       pictureId: updatedUser.pictureId,
-        //     },
-        //   ],
-        // })
       } catch (error) {
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
     } else if (updatedUser.isFilled) {
-      // eslint-disable-next-line functional/no-try-statement
-      try {
-        // await this.updateSenbirdUser(updatedUser)
-      } catch (error) {
-        console.log({ error })
-        // CATCH ERROR SO IT CONTINUES
-      }
-
       this.syncUsersIndexWithAlgolia(userId)
 
       // await this.neo4jService.user.update({

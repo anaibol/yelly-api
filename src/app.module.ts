@@ -11,7 +11,6 @@ import { CommonModule } from './common/common.module'
 import { AuthModule } from './auth/auth.module'
 import { NotificationModule } from './notification/notification.module'
 import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
-import { SendbirdWebhookModule } from './sendbird-webhook/sendbird-webhook.module'
 import { SchoolModule } from './school/school.module'
 // import { CommonFriendsLoader } from './user/common-friends.loader'
 import { FeedModule } from './feed/feed.module'
@@ -79,7 +78,6 @@ BigInt.prototype.toJSON = function () {
     CommonModule,
     AuthModule,
     NotificationModule,
-    SendbirdWebhookModule,
     SchoolModule,
     I18nModule.forRoot({
       fallbackLanguage: 'en',

@@ -20,11 +20,9 @@ registerEnumType(SortDirection, {
   name: 'SortDirection',
 })
 
-const getDate = () => new Date().toISOString().split('T')[0] // YYYY-MM-DD
-
 @ArgsType()
 export class TagsArgs extends OffsetPaginationArgs {
-  date: string = getDate()
+  date?: string
   showHidden: boolean = false
   @Field(() => TagSortBy)
   sortBy?: TagSortBy = TagSortBy.createdAt

@@ -99,7 +99,6 @@ model User {
   isBanned                     Boolean                           @default(false)
   isFilled                     Boolean                           @default(false)
   androidPushnotificationToken String?
-  sendbirdAccessToken          String?
   iosPushnotificationToken     String?
   about                        String?
   locale                       String?
@@ -122,7 +121,6 @@ model User {
   feedItems                    FeedItem[]
   viewsCount                   Int                               @default(0)
   tags                         Tag[]
-  feedCursor                   UserFeedCursor[]
 
   @@index([birthdate], map: "User_birthdate")
 }
@@ -163,7 +161,6 @@ model Tag {
   feedEvents  FeedEvent[]
   author      User?            @relation(fields: [authorId], references: [id])
   authorId    String?
-  feedCursors UserFeedCursor[]
   date        DateTime         @default(now()) @db.Date
   reactions   TagReaction[]
   viewsCount  Int              @default(0)
@@ -303,18 +300,6 @@ model FeedEvent {
   createdAt                   DateTime      @default(now())
 
   @@index([createdAt])
-}
-
-model UserFeedCursor {
-  id        BigInt   @id @default(dbgenerated("generate_id()"))
-  tagId     BigInt
-  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cursor    String
-
-  @@unique([tagId, userId])
 }
 
 enum FeedEventType {

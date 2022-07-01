@@ -17,12 +17,6 @@ import { AmplitudeService } from './amplitude.service'
 
 const expiresInFlash = 60 * 15 // 15m
 
-// type SendbirdMessageWebhookBody = {
-//   sender: any
-//   members: any[]
-//   payload: any
-// }
-
 const UserPushTokenSelect = {
   id: true,
   firstName: true,

@@ -1,6 +1,5 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
-import { SendbirdAccessToken } from './sendbirdAccessToken'
 
 import { AgeVerificationResult, Me } from './me.model'
 import { AccessToken } from './accessToken.model'
@@ -111,12 +110,6 @@ export class MeResolver {
     @Args('refreshToken') refreshToken: string
   ): Promise<AccessToken> {
     return this.authService.refreshAccessToken(refreshToken)
-  }
-
-  @Mutation(() => SendbirdAccessToken)
-  @UseGuards(AuthGuard)
-  refreshSendbirdAccessToken(@CurrentUser() authUser: AuthUser): Promise<SendbirdAccessToken> {
-    return this.userService.refreshSendbirdAccessToken(authUser.id)
   }
 
   @Mutation(() => Boolean)
