@@ -223,11 +223,11 @@ export class TagService {
       author: {
         birthdate: isBetween13And15
           ? {
-              gte: new Date(minYear + '-01-01'),
-              lte: new Date(maxYear + '-01-12'),
+              lte: new Date(minYear + '-01-01'),
+              gte: new Date(maxYear + '-01-12'),
             }
           : {
-              gte: new Date(maxYear + 1 + '-01-01'),
+              lte: new Date(maxYear + 1 + '-01-01'),
             },
       },
     }
