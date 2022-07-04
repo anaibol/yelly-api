@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../core/prisma.service'
-import { PostSelectWithParent, mapPost, getNotExpiredCondition } from '../post/post-select.constant'
+import { Prisma } from '@prisma/client'
 import { AuthUser } from 'src/auth/auth.service'
 
+import { PrismaService } from '../core/prisma.service'
+import { mapPost, PostSelectWithParent } from '../post/post-select.constant'
 import { Feed } from './feed.model'
-import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class FeedService {
@@ -18,7 +18,6 @@ export class FeedService {
         isSeen,
       }),
       post: {
-        ...getNotExpiredCondition(),
         author: {
           isActive: true,
         },

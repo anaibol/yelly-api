@@ -1,10 +1,9 @@
 /* eslint-disable functional/immutable-data */
 /* eslint-disable functional/no-return-void */
-import { v4 as uuidv4 } from 'uuid'
-
-import { S3Client, S3ClientConfig, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client, S3ClientConfig } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { Readable } from 'stream'
+import { v4 as uuidv4 } from 'uuid'
 
 const isLocalEnvironment = process.env.ENVIRONMENT === 'local'
 

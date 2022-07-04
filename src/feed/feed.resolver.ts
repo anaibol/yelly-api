@@ -1,14 +1,15 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
-import { FeedService } from './feed.service'
-import { AuthGuard } from '../auth/auth-guard'
+
 import { AuthUser } from '../auth/auth.service'
+import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
-import { Feed } from './feed.model'
-import { FeedArgs } from './feed.args'
-import { MarkFeedItemsAsSeenArgs } from './mark-feed-items-as-seen.args'
 import { PrismaService } from '../core/prisma.service'
 import { TagService } from '../tag/tag.service'
+import { FeedArgs } from './feed.args'
+import { Feed } from './feed.model'
+import { FeedService } from './feed.service'
+import { MarkFeedItemsAsSeenArgs } from './mark-feed-items-as-seen.args'
 
 @Resolver()
 export class FeedResolver {

@@ -1,7 +1,6 @@
 /* eslint-disable functional/immutable-data */
-import { Injectable, OnModuleInit } from '@nestjs/common'
 import * as Amplitude from '@amplitude/node'
-import { TrackEventPrefix } from 'src/types/trackEventPrefix'
+import { Injectable, OnModuleInit } from '@nestjs/common'
 
 @Injectable()
 export class AmplitudeService implements OnModuleInit {

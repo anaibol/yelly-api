@@ -6,7 +6,6 @@ export class CreatePostInput {
   @Field(() => [BigInt])
   tagIds?: bigint[]
   pollOptions?: string[]
-  expiresIn?: number
   @Field(() => BigInt)
   parentId?: bigint
 }

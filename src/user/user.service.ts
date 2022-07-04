@@ -1,23 +1,23 @@
+import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
+import { AuthUser } from 'src/auth/auth.service'
+import { PushNotificationService } from 'src/core/push-notification.service'
+import { PaginatedUsers } from 'src/post/paginated-users.model'
+import { PostService } from 'src/post/post.service'
+import { Payload, RequestBuilder } from 'yoti'
+
+import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { SchoolService } from '../school/school.service'
-import { UpdateUserInput } from './update-user.input'
-import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
-import { User } from './user.model'
-import { PushNotificationService } from 'src/core/push-notification.service'
-import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
-import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { FollowRequest } from './follow-request.model'
-import { AuthUser } from 'src/auth/auth.service'
-import { PostService } from 'src/post/post.service'
-import { Prisma } from '@prisma/client'
-import { PartialUpdateObjectResponse } from '@algolia/client-search'
-import { RequestBuilder, Payload } from 'yoti'
 import { deleteObject, getObject } from '../utils/aws'
+import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
+import { UpdateUserInput } from './update-user.input'
+import { User } from './user.model'
 
 type YotiResponse = {
   antispoofing: {
@@ -68,7 +68,6 @@ export class UserService {
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
     private pushNotificationService: PushNotificationService,
-    // private neo4jService: Neo4jService,
     private postService: PostService
   ) {}
 
@@ -501,31 +500,6 @@ export class UserService {
     return !!follow
   }
 
-  async getPendingFollowRequest(requesterId: string, toFollowUserId: string): Promise<FollowRequest | null> {
-    return this.prismaService.followRequest.findFirst({
-      select: {
-        id: true,
-        status: true,
-        requester: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            pictureId: true,
-          },
-        },
-      },
-      where: {
-        requesterId,
-        toFollowUserId,
-        status: 'PENDING',
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
-  }
-
   async findMe(userId: string): Promise<Me> {
     const res = await this.prismaService.user.findUnique({
       where: {
@@ -675,150 +649,21 @@ export class UserService {
     return true
   }
 
-  async createFollowRequest(authUser: AuthUser, otherUserId: string): Promise<FollowRequest> {
-    if (authUser.id === otherUserId) return Promise.reject(new Error('AuthUserId and OtherUserId cant be equal'))
-
-    const existingFollowRequest = await this.prismaService.followRequest.findFirst({
-      where: {
-        requesterId: authUser.id,
-        toFollowUserId: authUser.id,
-        status: 'PENDING',
-      },
-    })
-
-    if (existingFollowRequest) return Promise.reject(new Error('Follow requests already exists'))
-
-    const followRequest = await this.prismaService.followRequest.create({
+  async follow(userId: string, followeeId: string): Promise<boolean> {
+    const follower = await this.prismaService.follower.create({
       data: {
-        requester: {
-          connect: {
-            id: authUser.id,
-          },
-        },
-        toFollowUser: {
-          connect: {
-            id: otherUserId,
-          },
-        },
-        notifications: {
+        userId,
+        followeeId,
+        notification: {
           create: {
-            type: 'FOLLOW_REQUEST_PENDING',
-            userId: otherUserId,
+            userId: followeeId,
+            type: 'NEW_FOLLOWER',
           },
         },
       },
     })
 
-    this.pushNotificationService.createFollowRequestPushNotification(followRequest)
-
-    return followRequest
-  }
-
-  async deleteFollowRequest(authUser: AuthUser, followRequestId: string): Promise<boolean> {
-    const exists = await this.prismaService.user
-      .findUnique({
-        where: {
-          id: authUser.id,
-        },
-      })
-      .followRequestRequester({
-        where: {
-          id: followRequestId,
-        },
-      })
-
-    if (!exists) return Promise.reject(new Error("Follow request doesn't exists or is not from this user"))
-
-    await Promise.all([
-      this.prismaService.followRequest.delete({
-        where: {
-          id: followRequestId,
-        },
-      }),
-      this.prismaService.notification.deleteMany({
-        where: {
-          followRequestId,
-        },
-      }),
-    ])
-
-    return true
-  }
-
-  async declineFollowRequest(authUser: AuthUser, followRequestId: string): Promise<boolean> {
-    const exists = await this.prismaService.followRequest.findFirst({
-      where: {
-        id: followRequestId,
-        toFollowUserId: authUser.id,
-      },
-    })
-
-    if (!exists) return false
-
-    await this.prismaService.$transaction([
-      this.prismaService.notification.deleteMany({
-        where: {
-          followRequestId,
-        },
-      }),
-      this.prismaService.followRequest.update({
-        where: {
-          id: followRequestId,
-        },
-        data: {
-          status: 'DECLINED',
-        },
-      }),
-    ])
-
-    return true
-  }
-
-  async acceptFollowRequest(authUser: AuthUser, followRequestId: string): Promise<boolean> {
-    const followRequest = await this.prismaService.followRequest.findUnique({
-      where: {
-        id: followRequestId,
-      },
-    })
-
-    if (followRequest?.toFollowUserId !== authUser.id) return Promise.reject(new Error('No follow request'))
-
-    const { requesterId, toFollowUserId } = followRequest
-
-    await this.prismaService.$transaction([
-      this.prismaService.follower.create({
-        data: {
-          userId: requesterId,
-          followeeId: toFollowUserId,
-        },
-      }),
-      this.prismaService.followRequest.update({
-        where: {
-          id: followRequestId,
-        },
-        data: {
-          status: 'ACCEPTED',
-        },
-      }),
-      this.prismaService.notification.updateMany({
-        where: {
-          userId: toFollowUserId,
-          followRequestId,
-        },
-        data: {
-          type: 'FOLLOW_REQUEST_ACCEPTED',
-        },
-      }),
-      this.prismaService.notification.create({
-        data: {
-          userId: requesterId,
-          followRequestId,
-          type: 'FOLLOW_REQUEST_ACCEPTED',
-        },
-      }),
-    ])
-
-    this.pushNotificationService.createFollowRequestAcceptedPushNotification(followRequest)
+    this.pushNotificationService.newFollowerPushNotification(follower)
 
     return true
   }

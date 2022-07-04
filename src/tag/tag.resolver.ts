@@ -1,23 +1,22 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
+
+import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
-import { AuthUser } from '../auth/auth.service'
-
+import { CursorPaginationArgs } from '../common/cursor-pagination.args'
+import { PrismaService } from '../core/prisma.service'
+import { PaginatedPosts } from '../post/paginated-posts.model'
+import { mapPost, PostSelectWithParent } from '../post/post-select.constant'
+import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
+import { CreateTagInput } from './create-tag.input'
+import { DeleteTagReactionInput } from './delete-tag-reaction.input'
+import { PaginatedTags } from './paginated-tags.model'
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
-import { PostSelectWithParent, mapPost } from '../post/post-select.constant'
-import { PaginatedPosts } from '../post/paginated-posts.model'
-import { PaginatedTags } from './paginated-tags.model'
-import { TagsArgs } from './tags.args'
-
-import { PrismaService } from '../core/prisma.service'
-import { UpdateTagInput } from './update-tag.input'
 import { TagReaction } from './tag-reaction.model'
-import { CreateTagInput } from './create-tag.input'
-import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
-import { DeleteTagReactionInput } from './delete-tag-reaction.input'
-import { CursorPaginationArgs } from '../common/cursor-pagination.args'
+import { TagsArgs } from './tags.args'
+import { UpdateTagInput } from './update-tag.input'
 
 @Resolver(Tag)
 export class TagResolver {
@@ -52,14 +51,17 @@ export class TagResolver {
   async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
     const { date, skip, limit, sortBy, sortDirection, showHidden } = tagsArgs
 
+    if (!authUser.countryId) return Promise.reject(new Error('No country'))
+
     const { items, nextSkip } = await this.tagService.getTags(
+      authUser.countryId,
       date,
-      authUser,
       skip,
       limit,
       sortBy,
       sortDirection,
-      showHidden
+      showHidden,
+      authUser
     )
 
     return { items, nextSkip }

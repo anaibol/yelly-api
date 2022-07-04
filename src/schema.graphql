@@ -11,7 +11,7 @@ type AccessToken {
 type AgeVerificationResult {
   ageEstimation: Int
   agePredictionResult: String
-  isAgeApproved: Boolean!
+  isAgeApproved: Boolean
 }
 
 """BigInt scalar type"""
@@ -48,7 +48,6 @@ input CreateOrUpdateTagReactionInput {
 }
 
 input CreatePostInput {
-  expiresIn: Int
   parentId: BigInt
   pollOptions: [String!]
   tagIds: [BigInt!]
@@ -100,23 +99,16 @@ type FeedItem {
 }
 
 enum FeedItemType {
-  FOLLOWEE_POSTED
+  FOLLOWEE_CREATED_TAG
+  FOLLOWEE_POSTED_ON_TAG
+  POSTED_ON_YOUR_TAG
   POST_REPLIED
   SAME_POST_REPLIED
-  SAME_SCHOOL_POSTED
 }
 
-type FollowRequest {
+type Follower {
+  followee: User
   id: ID!
-  requester: User
-  status: FollowRequestStatus
-  toFollowUser: User
-}
-
-enum FollowRequestStatus {
-  ACCEPTED
-  DECLINED
-  PENDING
 }
 
 input ForgotPasswordInput {
@@ -159,27 +151,24 @@ type Me {
 }
 
 type Mutation {
-  acceptFollowRequest(followRequestId: String!): Boolean!
   addExpoPushNotificationsToken(input: String!): Boolean!
   banUser(userId: String!): Boolean!
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
-  createFollowRequest(otherUserId: String!): FollowRequest!
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): PostReaction!
   createOrUpdateTagReaction(input: CreateOrUpdateTagReactionInput!): TagReaction!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   createPromotedTag(tagText: String!): Tag!
   createTag(input: CreateTagInput!): Tag!
-  declineFollowRequest(followRequestId: String!): Boolean!
   deleteAuthUser: Boolean!
   deleteExpoPushNotificationsToken(input: String!): Boolean!
-  deleteFollowRequest(followRequestId: String!): Boolean!
   deleteFollower(otherUserId: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
   deleteTagReaction(input: DeleteTagReactionInput!): Boolean!
   deleteUser(userId: String!): Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!
+  follow(otherUserId: String!): Boolean!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
   markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: BigInt): Boolean!
@@ -197,7 +186,7 @@ type Mutation {
 
 type Notification {
   createdAt: DateTime!
-  followRequest: FollowRequest
+  follower: Follower
   id: ID!
   isSeen: Boolean
   postReaction: PostReaction
@@ -205,9 +194,11 @@ type Notification {
 }
 
 enum NotificationType {
-  FOLLOW_REQUEST_ACCEPTED
-  FOLLOW_REQUEST_PENDING
-  POST_REACTION
+  NEW_FOLLOWER
+  NEW_POSTS_ON_YOUR_TAG
+  POST_REACTION_CREATED
+  TAG_REACTION_CREATED
+  YOUR_TAG_IS_TRENDING
 }
 
 type PaginatedNotifications {
@@ -239,8 +230,6 @@ type Post {
   children: PaginatedPosts
   childrenCount: Int
   createdAt: DateTime
-  expiresAt: DateTime
-  expiresIn: Int
   id: BigInt!
   parent: Post
   pollOptions: [PostPollOption!]
@@ -276,6 +265,7 @@ type Query {
   feed(after: BigInt, isSeen: Boolean, limit: Int = 10): Feed!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
   getS3PresignedUploadUrl: Upload!
+  isUserFollowedByAuthUser(userId: String!): Boolean!
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: BigInt, limit: Int = 10, postId: BigInt!): Post!
@@ -382,8 +372,6 @@ type User {
   isFollowedByAuthUser: Boolean
   lastName: String
   locale: String
-  pendingFollowRequestFromUser: FollowRequest
-  pendingFollowRequestToUser: FollowRequest
   pictureId: String
   postCount: Int
   posts(after: BigInt, limit: Int = 10): PaginatedPosts

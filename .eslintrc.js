@@ -4,7 +4,7 @@ module.exports = {
     project: 'tsconfig.json',
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin', 'functional'],
+  plugins: ['@typescript-eslint/eslint-plugin', 'functional', 'simple-import-sort', 'unused-imports'],
   extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended', 'plugin:functional/recommended'],
   root: true,
   env: {
@@ -27,5 +27,11 @@ module.exports = {
     'functional/no-conditional-statement': 'off',
     'functional/no-expression-statement': 'off',
     'functional/prefer-readonly-type': 'off',
+    'simple-import-sort/imports': 'error',
+    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-vars': [
+      'warn',
+      { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' },
+    ],
   },
 }

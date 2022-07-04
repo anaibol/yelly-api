@@ -1,13 +1,8 @@
 {
-  "POST_REACTION_TITLE": "{firstName} liked your yelly!",
-  "POST_REACTION_BODY": "{firstName} liked your yelly!",
-  "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} requested to follow your yellys",
+  "POST_REACTION_BODY": "{firstName} liked your post!",
   "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} accepted your request to follow his/her yellys",
   "PROMOTED_TAG_BODY": "Yelly trend live",
-  "FOLLOWEE_POSTED": "{firstName} published a new yelly 💬",
-  "FOLLOWEE_POSTED_EPHEMERAL": "{firstName} published a new ephemeral yelly ⚡",
   "POST_REPLIED": "{firstName} replied your yelly 💬",
   "SAME_POST_REPLIED": "{firstName} replied to the same yelly as you 💬",
-  "SAME_SCHOOL_POSTED": "Someone from your school posted a yelly 💬",
-  "YOUR_POST_WILL_VANISH": "Your yelly will vanish in 5 minutes ⚡ Come and share what you're doing 💬"
+  "POSTED_ON_YOUR_TAG": "{firstName} a publié un nouveau yelly 💬"
 }

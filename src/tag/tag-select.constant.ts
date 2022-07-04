@@ -3,6 +3,7 @@ export const tagSelect = {
   text: true,
   createdAt: true,
   isHidden: true,
+  viewsCount: true,
   _count: {
     select: {
       posts: true,

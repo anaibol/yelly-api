@@ -1,8 +1,8 @@
-import { ID, Field, ObjectType } from '@nestjs/graphql'
+import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
+
 import { School } from '../school/school.model'
-import { FollowRequest } from './follow-request.model'
 import { Training } from './training.model'
 
 @ObjectType()
@@ -23,8 +23,6 @@ export class User {
   countryId?: string | null
   posts?: PaginatedPosts
   isFollowedByAuthUser?: boolean
-  pendingFollowRequestFromUser?: FollowRequest | null
-  pendingFollowRequestToUser?: FollowRequest | null
   followers?: PaginatedUsers
   followees?: PaginatedUsers
   followersCount?: number

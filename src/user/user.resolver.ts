@@ -1,20 +1,17 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
-
-import { User } from './user.model'
-
-import { AuthGuard } from '../auth/auth-guard'
-import { CurrentUser } from '../auth/user.decorator'
-
-import { UserService } from './user.service'
-import { AuthUser } from '../auth/auth.service'
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
+import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
 import { PrismaService } from 'src/core/prisma.service'
-import { PostSelectWithParent, mapPost, getNotExpiredCondition } from 'src/post/post-select.constant'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { FollowRequest } from './follow-request.model'
-import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
+import { mapPost, PostSelectWithParent } from 'src/post/post-select.constant'
+
+import { AuthUser } from '../auth/auth.service'
+import { AuthGuard } from '../auth/auth-guard'
+import { CurrentUser } from '../auth/user.decorator'
 import { CursorPaginationArgs } from '../common/cursor-pagination.args'
+import { User } from './user.model'
+import { UserService } from './user.service'
 // import { Loader } from '@tracworx/nestjs-dataloader'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
@@ -37,30 +34,9 @@ export class UserResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => FollowRequest)
-  createFollowRequest(
-    @Args('otherUserId') otherUserId: string,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<FollowRequest> {
-    return this.userService.createFollowRequest(authUser, otherUserId)
-  }
-
-  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  acceptFollowRequest(
-    @Args('followRequestId') followRequestId: string,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<boolean> {
-    return this.userService.acceptFollowRequest(authUser, followRequestId)
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
-  deleteFollowRequest(
-    @Args('followRequestId') followRequestId: string,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<boolean> {
-    return this.userService.deleteFollowRequest(authUser, followRequestId)
+  follow(@Args('otherUserId') otherUserId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.follow(authUser.id, otherUserId)
   }
 
   @UseGuards(AuthGuard)
@@ -73,14 +49,6 @@ export class UserResolver {
   @Mutation(() => Boolean)
   deleteFollower(@Args('otherUserId') otherUserId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.userService.unFollow(otherUserId, authUser.id)
-  }
-  @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
-  declineFollowRequest(
-    @Args('followRequestId') followRequestId: string,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<boolean> {
-    return this.userService.declineFollowRequest(authUser, followRequestId)
   }
 
   // @ResolveField()
@@ -133,16 +101,10 @@ export class UserResolver {
     return this.userService.isFollowedByUser(user.id, authUser.id)
   }
 
+  @Query(() => Boolean)
   @UseGuards(AuthGuard)
-  @ResolveField()
-  pendingFollowRequestFromUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FollowRequest | null> {
-    return this.userService.getPendingFollowRequest(user.id, authUser.id)
-  }
-
-  @UseGuards(AuthGuard)
-  @ResolveField()
-  pendingFollowRequestToUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FollowRequest | null> {
-    return this.userService.getPendingFollowRequest(authUser.id, user.id)
+  async isUserFollowedByAuthUser(@Args('userId') userId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.isFollowedByUser(userId, authUser.id)
   }
 
   @Mutation(() => Boolean)
@@ -177,7 +139,6 @@ export class UserResolver {
     const posts = await this.prismaService.post.findMany({
       where: {
         authorId: user.id,
-        ...getNotExpiredCondition(),
       },
       ...(after && {
         cursor: {

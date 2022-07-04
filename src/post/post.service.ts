@@ -1,16 +1,17 @@
+import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../core/prisma.service'
-import { CreatePostInput } from './create-post.input'
-import { TagService } from 'src/tag/tag.service'
-import { PostSelectWithParent, mapPost, mapPostChild, PostChildSelect } from './post-select.constant'
-import { PushNotificationService } from 'src/core/push-notification.service'
-import { AlgoliaService } from 'src/core/algolia.service'
 import { AuthUser } from 'src/auth/auth.service'
+import { AlgoliaService } from 'src/core/algolia.service'
+import { PushNotificationService } from 'src/core/push-notification.service'
+import { TagService } from 'src/tag/tag.service'
+
+import { PrismaService } from '../core/prisma.service'
+import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
+import { CreatePostInput } from './create-post.input'
 import { Post } from './post.model'
 import { PostPollVote } from './post.model'
-import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { PostReaction } from './post-reaction.model'
-import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
+import { mapPost, mapPostChild, PostChildSelect, PostSelectWithParent } from './post-select.constant'
 
 @Injectable()
 export class PostService {
@@ -207,17 +208,6 @@ export class PostService {
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
     const { text, tagIds, pollOptions, parentId } = createPostInput
-
-    const parent = parentId
-      ? await this.prismaService.post.findUnique({
-          where: { id: parentId },
-          include: {
-            tags: true,
-            author: true,
-          },
-        })
-      : null
-
     const post = await this.prismaService.post.create({
       include: {
         tags: true,
@@ -242,7 +232,7 @@ export class PostService {
         ...(parent && {
           parent: {
             connect: {
-              id: parent.id,
+              id: parentId,
             },
           },
         }),
@@ -254,43 +244,15 @@ export class PostService {
       },
     })
 
-    if (parent) {
-      if (!parent?.parentId) {
-        await this.prismaService.feedEvent.create({
-          data: {
-            postId: parent.id,
-            tagId: parent.tags[0].id,
-            type: 'POST_REPLY_CREATED',
-            postAuthorBirthdate: parent.author.birthdate,
-            postAuthorSchoolId: parent.author.schoolId,
-          },
-        })
-      }
-    } else {
-      await this.prismaService.feedEvent.create({
-        data: {
-          postId: post.id,
-          tagId: post.tags[0].id,
-          type: 'POST_CREATED',
-          postAuthorBirthdate: authUser.birthdate,
-          postAuthorSchoolId: authUser.schoolId,
-        },
-      })
-    }
-
     if (tagIds) tagIds.map((tagId) => this.tagService.syncTagIndexWithAlgolia(tagId))
 
     this.syncPostIndexWithAlgolia(post.id)
 
-    const hasExcludedTags = post.tags?.some((tag) => tag.isHidden)
-
-    if (parentId && !hasExcludedTags) {
+    if (parentId) {
       this.pushNotificationService.postReplied(post.id)
-    } else if (!hasExcludedTags) {
-      this.pushNotificationService.followeePosted(post.id)
+    } else {
+      this.pushNotificationService.postedOnYourTag(post.id)
     }
-
-    // if (!parentId) this.pushNotificationService.postedOnYourTag(post.id)
 
     return post
   }
@@ -308,30 +270,13 @@ export class PostService {
     if (!post) return Promise.reject(new Error('No post'))
     if (post.authorId !== authUser.id && authUser.isNotAdmin) return Promise.reject(new Error('No permission'))
 
-    const deletedPost = await this.prismaService.post.delete({
-      select: {
-        id: true,
-        tags: {
-          select: {
-            id: true,
-            posts: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        },
-      },
+    await this.prismaService.post.delete({
       where: {
         id: postId,
       },
     })
 
     this.deletePostFromAlgolia(postId)
-
-    deletedPost.tags.forEach(async (tag) => {
-      if (tag.posts.length === 1) this.tagService.delete(tag.id)
-    })
 
     return true
   }
@@ -372,17 +317,6 @@ export class PostService {
         post: {
           select: PostSelectWithParent,
         },
-      },
-    })
-
-    await this.prismaService.feedEvent.create({
-      data: {
-        postId,
-        postReactionId: reaction.id,
-        tagId: post.tags[0].id,
-        type: 'POST_REACTION_CREATED',
-        postReactionAuthorBirthdate: authUser.birthdate,
-        postReactionAuthorSchoolId: authUser.schoolId,
       },
     })
 
@@ -486,7 +420,7 @@ export class PostService {
       select: PostSelectWithParent,
     })
 
-    if (!post || post.expiresAt) return
+    if (!post) return
 
     const postIdString = post.id.toString()
 
