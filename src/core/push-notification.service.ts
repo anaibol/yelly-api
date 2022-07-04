@@ -303,8 +303,8 @@ export class PushNotificationService {
     await this.prismaService.feedItem.createMany({
       data: samePostRepliedUsers.map((user) => ({
         userId: user.id,
-        postId,
         type: FeedItemType.SAME_POST_REPLIED,
+        postId,
       })),
     })
 
