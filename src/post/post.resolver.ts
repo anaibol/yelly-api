@@ -83,4 +83,9 @@ export class PostResolver {
   async authUserReaction(@Parent() post: Post, @CurrentUser() authUser: AuthUser): Promise<PostReaction | null> {
     return this.postService.getAuthUserReaction(post.id, authUser)
   }
+
+  @ResolveField()
+  isReadOnly(@Parent() post: Post): boolean {
+    return post?.createdAt?.toDateString() === new Date().toDateString()
+  }
 }

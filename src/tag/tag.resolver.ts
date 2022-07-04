@@ -49,13 +49,13 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
   async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { date, after, limit, sortBy, sortDirection, showHidden } = tagsArgs
+    const { yesterday, after, limit, sortBy, sortDirection, showHidden } = tagsArgs
 
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
     const { items, nextCursor, totalCount } = await this.tagService.getTags(
       authUser,
-      date,
+      yesterday,
       limit,
       after,
       sortBy,
@@ -145,5 +145,10 @@ export class TagResolver {
   @ResolveField()
   async authUserReaction(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<TagReaction | null> {
     return this.tagService.getAuthUserReaction(tag.id, authUser)
+  }
+
+  @ResolveField()
+  isReadOnly(@Parent() tag: Tag): boolean {
+    return tag?.createdAt?.toDateString() === new Date().toDateString()
   }
 }

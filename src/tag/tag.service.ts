@@ -198,7 +198,7 @@ export class TagService {
 
   async getTags(
     authUser: AuthUser,
-    date: string = new Date().toISOString().split('T')[0], // YYYY-MM-DD
+    yesterday: boolean,
     limit: number,
     after?: bigint,
     sortBy?: TagSortBy,
@@ -214,8 +214,10 @@ export class TagService {
 
     const isBetween13And15 = authUser.birthdate.getFullYear() >= minYear && authUser.birthdate.getFullYear() <= maxYear
 
+    const date = yesterday ? new Date(new Date().setDate(new Date().getDate() - 1)) : new Date()
+
     const where: Prisma.TagWhereInput = {
-      date: new Date(date),
+      date,
       countryId: authUser.countryId,
       ...(!showHidden && {
         isHidden: false,

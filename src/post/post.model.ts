@@ -32,6 +32,7 @@ export class Post {
   childrenCount?: number
   authUserReaction?: PostReaction | null
   score?: number | null
+  isReadOnly?: boolean
 }
 
 @ObjectType()

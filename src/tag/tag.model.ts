@@ -17,4 +17,5 @@ export class Tag {
   viewsCount?: number
   author?: User | null
   authUserReaction?: TagReaction | null
+  isReadOnly?: boolean
 }
