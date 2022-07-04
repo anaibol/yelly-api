@@ -146,6 +146,7 @@ type Me {
   role: UserRole!
   school: School
   snapchat: String
+  tags(after: BigInt, limit: Int = 10): PaginatedTags
   training: Training
   viewsCount: Int
 }
@@ -213,7 +214,8 @@ type PaginatedPosts {
 
 type PaginatedTags {
   items: [Tag!]!
-  nextSkip: Int!
+  nextCursor: BigInt
+  totalCount: Int!
 }
 
 type PaginatedUsers {
@@ -272,7 +274,7 @@ type Query {
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
   tagExists(tagText: String!): Boolean!
-  tags(date: String, limit: Int = 10, showHidden: Boolean = false, skip: Int = 0, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
+  tags(after: BigInt, date: String, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   unreadFeedItemsCount: Int!
   unreadNotificationsCount: Int!
   user(id: String!): User!

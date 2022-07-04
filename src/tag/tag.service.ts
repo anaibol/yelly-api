@@ -199,8 +199,8 @@ export class TagService {
   async getTags(
     authUser: AuthUser,
     date: string = new Date().toISOString().split('T')[0], // YYYY-MM-DD
-    skip: number,
     limit: number,
+    after?: bigint,
     sortBy?: TagSortBy,
     sortDirection?: SortDirection,
     showHidden?: boolean
@@ -238,14 +238,17 @@ export class TagService {
       }),
       this.prismaService.tag.findMany({
         where,
-        skip,
+        ...(after && {
+          cursor: {
+            id: after,
+          },
+          skip: 1,
+        }),
         orderBy: getTagSort(sortBy, sortDirection),
         take: limit,
         select: tagSelect,
       }),
     ])
-
-    const nextSkip = skip + limit
 
     const items = tags.map((tag) => {
       return {
@@ -255,7 +258,11 @@ export class TagService {
       }
     })
 
-    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    const lastItem = items.length === limit ? items[limit - 1] : null
+
+    const nextCursor = lastItem ? lastItem.id : null
+
+    return { items, nextCursor, totalCount }
   }
 
   async updateTag(tagId: bigint, { isHidden }: UpdateTagInput): Promise<Tag> {

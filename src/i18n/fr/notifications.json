@@ -1,8 +1,10 @@
 {
   "POST_REACTION_BODY": "{firstName} a aimé ton post !",
+  "TAG_REACTION_BODY": "{firstName} a aimé ton post !",
   "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} te suit désormais",
   "PROMOTED_TAG_BODY": "Tendance Yelly live",
   "POST_REPLIED": "{firstName} a répondu à ton post 💬",
   "SAME_POST_REPLIED": "{firstName} a répondu au même post que toi 💬",
-  "POSTED_ON_YOUR_TAG": "{firstName} a publié un nouveau yelly 💬"
+  "POSTED_ON_YOUR_TAG": "{firstName} a publié un nouveau yelly 💬",
+  "FOLLOWEE_CREATED_TAG": "{firstName} a publié un nouveau yelly 💬"
 }

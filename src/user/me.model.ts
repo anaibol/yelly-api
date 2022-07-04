@@ -4,6 +4,7 @@ import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 
 import { School } from '../school/school.model'
+import { PaginatedTags } from '../tag/paginated-tags.model'
 import { Training } from './training.model'
 
 registerEnumType(UserRole, {
@@ -33,6 +34,7 @@ export class Me {
   school?: School | null
   countryId?: string | null
   posts?: PaginatedPosts
+  tags?: PaginatedTags
   followers?: PaginatedUsers
   followees?: PaginatedUsers
   followersCount?: number

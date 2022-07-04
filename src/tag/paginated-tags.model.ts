@@ -1,9 +1,11 @@
-import { ObjectType } from '@nestjs/graphql'
+import { Field, ObjectType } from '@nestjs/graphql'
 
 import { Tag } from './tag.model'
 
 @ObjectType()
 export class PaginatedTags {
-  nextSkip: number
+  @Field(() => BigInt)
+  nextCursor: BigInt | null
   items: Tag[]
+  totalCount: number
 }

@@ -11,6 +11,8 @@ import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 import { PrismaService } from '../core/prisma.service'
+import { PaginatedTags } from '../tag/paginated-tags.model'
+import { tagSelect } from '../tag/tag-select.constant'
 import { AccessToken } from './accessToken.model'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
 import { EmailSignInInput } from './email-sign-in.input'
@@ -206,5 +208,40 @@ export class MeResolver {
   @ResolveField(() => Boolean)
   canCreateTag(@Parent() user: Me): Promise<boolean> {
     return this.userService.canCreateTag(user.id)
+  }
+
+  @ResolveField()
+  async tags(@Parent() me: Me, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedTags> {
+    const { after, limit } = cursorPaginationArgs
+
+    const [totalCount, items] = await Promise.all([
+      this.prismaService.tag.count({
+        where: {
+          authorId: me.id,
+        },
+      }),
+      this.prismaService.tag.findMany({
+        where: {
+          authorId: me.id,
+        },
+        ...(after && {
+          cursor: {
+            id: after,
+          },
+          skip: 1,
+        }),
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: limit,
+        select: tagSelect,
+      }),
+    ])
+
+    const lastItem = items.length === limit ? items[limit - 1] : null
+
+    const nextCursor = lastItem ? lastItem.id : null
+
+    return { items, nextCursor, totalCount }
   }
 }
