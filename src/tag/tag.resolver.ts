@@ -54,14 +54,13 @@ export class TagResolver {
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
     const { items, nextSkip } = await this.tagService.getTags(
-      authUser.countryId,
+      authUser,
       date,
       skip,
       limit,
       sortBy,
       sortDirection,
-      showHidden,
-      authUser
+      showHidden
     )
 
     return { items, nextSkip }

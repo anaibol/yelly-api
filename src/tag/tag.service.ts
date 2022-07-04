@@ -197,23 +197,39 @@ export class TagService {
   }
 
   async getTags(
-    countryId: string,
+    authUser: AuthUser,
     date: string = new Date().toISOString().split('T')[0], // YYYY-MM-DD
     skip: number,
     limit: number,
     sortBy?: TagSortBy,
     sortDirection?: SortDirection,
-    showHidden?: boolean,
-    authUser?: AuthUser
+    showHidden?: boolean
   ): Promise<PaginatedTags> {
     if (showHidden && !authUser?.isAdmin) return Promise.reject(new Error('No admin'))
 
+    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
+
+    const minYear = 2007
+    const maxYear = 2009
+
+    const isBetween13And15 = authUser.birthdate.getFullYear() >= minYear && authUser.birthdate.getFullYear() <= maxYear
+
     const where: Prisma.TagWhereInput = {
       date: new Date(date),
-      countryId,
+      countryId: authUser.countryId,
       ...(!showHidden && {
         isHidden: false,
       }),
+      author: {
+        birthdate: isBetween13And15
+          ? {
+              gte: new Date(minYear + '-01-01'),
+              lte: new Date(maxYear + '-01-12'),
+            }
+          : {
+              gte: new Date(maxYear + 1 + '-01-01'),
+            },
+      },
     }
 
     const [totalCount, tags] = await Promise.all([
