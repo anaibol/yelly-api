@@ -131,7 +131,7 @@ export class PushNotificationService {
     )
   }
 
-  async tagCreated(tagId: bigint) {
+  async followeeCreatedTag(tagId: bigint) {
     const tag = await this.prismaService.tag.findUnique({
       where: { id: tagId },
       select: {

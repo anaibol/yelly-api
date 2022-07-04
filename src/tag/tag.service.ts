@@ -180,7 +180,7 @@ export class TagService {
 
     this.syncTagIndexWithAlgolia(tag.id)
 
-    // this.pushNotificationService.tagCreated(tag.id)
+    this.pushNotificationService.followeeCreatedTag(tag.id)
 
     return tag
   }
