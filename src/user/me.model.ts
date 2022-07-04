@@ -39,13 +39,13 @@ export class Me {
   followeesCount?: number
   postCount?: number
   viewsCount?: number
-  isAgeApproved?: boolean
+  isAgeApproved?: null | boolean
   canCreateTag?: boolean
 }
 
 @ObjectType()
 export class AgeVerificationResult {
-  isAgeApproved: null | boolean
+  isAgeApproved?: null | boolean
   ageEstimation?: number
   agePredictionResult?: null | string
 }
