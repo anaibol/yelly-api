@@ -275,7 +275,7 @@ type Query {
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
   tagExists(tagText: String!): Boolean!
-  tags(after: BigInt, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc, yesterday: Boolean = false): PaginatedTags!
+  tags(after: BigInt, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   unreadFeedItemsCount: Int!
   unreadNotificationsCount: Int!
   user(id: String!): User!

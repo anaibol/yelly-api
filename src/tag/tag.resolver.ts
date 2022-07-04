@@ -49,13 +49,13 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
   async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { yesterday, after, limit, sortBy, sortDirection, showHidden } = tagsArgs
+    const { isYesterday, after, limit, sortBy, sortDirection, showHidden } = tagsArgs
 
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
     const { items, nextCursor, totalCount } = await this.tagService.getTags(
       authUser,
-      yesterday,
+      isYesterday,
       limit,
       after,
       sortBy,

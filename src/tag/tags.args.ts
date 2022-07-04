@@ -23,7 +23,7 @@ registerEnumType(SortDirection, {
 
 @ArgsType()
 export class TagsArgs extends CursorPaginationArgs {
-  yesterday: boolean = false
+  isYesterday: boolean = false
   showHidden: boolean = false
   @Field(() => TagSortBy)
   sortBy?: TagSortBy = TagSortBy.createdAt
