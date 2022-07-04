@@ -1,9 +1,10 @@
-import { ID, Field, ObjectType, registerEnumType } from '@nestjs/graphql'
-import { School } from '../school/school.model'
-import { Training } from './training.model'
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
+import { UserRole } from '@prisma/client'
 import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { UserRole } from '@prisma/client'
+
+import { School } from '../school/school.model'
+import { Training } from './training.model'
 
 registerEnumType(UserRole, {
   name: 'UserRole',
@@ -44,7 +45,7 @@ export class Me {
 
 @ObjectType()
 export class AgeVerificationResult {
-  isAgeApproved: boolean
+  isAgeApproved: null | boolean
   ageEstimation?: number
   agePredictionResult?: null | string
 }

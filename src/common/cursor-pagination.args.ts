@@ -1,5 +1,6 @@
 import { ArgsType, Field } from '@nestjs/graphql'
 import { Max } from 'class-validator'
+
 import { DEFAULT_LIMIT, MAX_LIMIT } from './pagination.constant'
 
 @ArgsType()

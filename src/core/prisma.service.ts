@@ -1,7 +1,7 @@
 import { INestApplication, Injectable, OnModuleInit } from '@nestjs/common'
 import { PrismaClient } from '@prisma/client'
-import { format } from 'sql-formatter'
 import { camelCase } from 'lodash'
+import { format } from 'sql-formatter'
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {

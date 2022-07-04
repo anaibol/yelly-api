@@ -1,5 +1,5 @@
 import { InputType } from '@nestjs/graphql'
-import { IsPhoneNumber, IsLocale } from 'class-validator'
+import { IsLocale, IsPhoneNumber } from 'class-validator'
 
 @InputType()
 export class InitPhoneNumberVerificationInput {

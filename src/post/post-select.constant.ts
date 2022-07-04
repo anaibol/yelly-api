@@ -1,12 +1,11 @@
 import { Prisma } from '@prisma/client'
+
 import { Post } from './post.model'
 
 export const PostSelect = {
   id: true,
   parentId: true,
   createdAt: true,
-  expiresAt: true,
-  expiresIn: true,
   viewsCount: true,
   text: true,
   charsCount: true,
@@ -141,20 +140,5 @@ export function mapPostChild(child: PostChild, parent: PostWithParent): Post {
     }),
     childrenCount: _count.children,
     reactionsCount: _count.children,
-    expiresIn: parent.expiresIn,
-    expiresAt: parent.expiresAt,
   }
 }
-
-export const getNotExpiredCondition = () => ({
-  OR: [
-    {
-      expiresAt: {
-        gte: new Date(),
-      },
-    },
-    {
-      expiresAt: null,
-    },
-  ],
-})

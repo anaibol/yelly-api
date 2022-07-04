@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { Twilio } from 'twilio'
 import { VerificationInstance } from 'twilio/lib/rest/verify/v2/service/verification'
 

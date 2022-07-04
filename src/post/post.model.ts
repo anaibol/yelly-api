@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql'
-import { User } from '../user/user.model'
+
 import { Tag } from '../tag/tag.model'
+import { User } from '../user/user.model'
 import { PaginatedPosts } from './paginated-posts.model'
 import { PostReaction } from './post-reaction.model'
 
@@ -26,8 +27,6 @@ export class Post {
   reactions?: PostReaction[]
   reactionsCount?: number
   authUserPollVote?: PostPollVote
-  expiresIn?: number | null
-  expiresAt?: Date | null
   parent?: Post | null
   children?: PaginatedPosts
   childrenCount?: number

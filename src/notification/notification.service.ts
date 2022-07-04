@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { getNotExpiredCondition, PostSelectWithParent } from 'src/post/post-select.constant'
+
 import { PrismaService } from '../core/prisma.service'
 import { PaginatedNotifications } from './paginated-notifications.model'
 
@@ -41,21 +41,14 @@ export class NotificationService {
               },
             },
           },
-          followRequest: {
+          follower: {
             select: {
               id: true,
-              status: true,
-              requester: {
+              followee: {
                 select: {
                   id: true,
                   firstName: true,
-                  pictureId: true,
-                },
-              },
-              toFollowUser: {
-                select: {
-                  id: true,
-                  firstName: true,
+                  lastName: true,
                   pictureId: true,
                 },
               },

@@ -1,6 +1,7 @@
 import { BullModule, BullQueueInject } from '@anchan828/nest-bullmq'
 import { Module, OnModuleInit } from '@nestjs/common'
 import { Queue } from 'bullmq'
+
 import { CoreModule } from '../core/core.module'
 import { CronQueue, CronWorker } from './cron.service'
 

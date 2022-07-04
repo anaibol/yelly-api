@@ -16,9 +16,6 @@ async function main() {
   while (hasPosts) {
     const posts = await prisma.post.findMany({
       select: PostSelect,
-      where: {
-        expiresAt: null,
-      },
       take: 500,
       skip,
     })

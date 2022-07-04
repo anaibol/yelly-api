@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
+
+import { AuthUser } from '../auth/auth.service'
 import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
-import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
-import { PaginatedTags } from './paginated-tags.model'
-import { AuthUser } from 'src/auth/auth.service'
-import { Tag } from './tag.model'
-import { tagSelect } from './tag-select.constant'
-import { Prisma } from '@prisma/client'
-import { TagSortBy, SortDirection } from './tags.args'
-import { UpdateTagInput } from './update-tag.input'
+import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
+import { PaginatedTags } from './paginated-tags.model'
+import { Tag } from './tag.model'
 import { TagReaction } from './tag-reaction.model'
+import { tagSelect } from './tag-select.constant'
+import { SortDirection, TagSortBy } from './tags.args'
+import { UpdateTagInput } from './update-tag.input'
 
 const getTagSort = (
   sortBy?: TagSortBy,
@@ -67,6 +68,10 @@ export class TagService {
       id: tag.id,
       text: tag.text,
       postCount: {
+        _operation: 'Increment',
+        value: 1,
+      },
+      reactionsCount: {
         _operation: 'Increment',
         value: 1,
       },
@@ -192,19 +197,20 @@ export class TagService {
   }
 
   async getTags(
+    countryId: string,
     date: string = new Date().toISOString().split('T')[0], // YYYY-MM-DD
-    authUser: AuthUser,
     skip: number,
     limit: number,
     sortBy?: TagSortBy,
     sortDirection?: SortDirection,
-    showHidden?: boolean
+    showHidden?: boolean,
+    authUser?: AuthUser
   ): Promise<PaginatedTags> {
-    if (showHidden && !authUser.isAdmin) return Promise.reject(new Error('No admin'))
+    if (showHidden && !authUser?.isAdmin) return Promise.reject(new Error('No admin'))
 
     const where: Prisma.TagWhereInput = {
       date: new Date(date),
-      countryId: authUser.countryId,
+      countryId,
       ...(!showHidden && {
         isHidden: false,
       }),
@@ -225,7 +231,7 @@ export class TagService {
 
     const nextSkip = skip + limit
 
-    const dataTags = tags.map((tag) => {
+    const items = tags.map((tag) => {
       return {
         ...tag,
         postCount: tag._count.posts,
@@ -233,7 +239,7 @@ export class TagService {
       }
     })
 
-    return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
   async updateTag(tagId: bigint, { isHidden }: UpdateTagInput): Promise<Tag> {
@@ -247,7 +253,7 @@ export class TagService {
     })
   }
 
-  async createPromotedTag(tagText: string, authUser: AuthUser): Promise<Tag> {
+  async createPromotedTag(tagText: string, _authUser: AuthUser): Promise<Tag> {
     // if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     // const authUserCountry = await this.prismaService.school
@@ -335,17 +341,7 @@ export class TagService {
       },
     })
 
-    // await this.prismaService.feedEvent.create({
-    //   data: {
-    //     tagId,
-    //     postReactionId: reaction.id,
-    //     type: 'TAG_REACTION_CREATED',
-    //     postReactionAuthorBirthdate: authUser.birthdate,
-    //     postReactionAuthorSchoolId: authUser.schoolId,
-    //   },
-    // })
-
-    // if (tag.author.id !== authUser.id) this.pushNotificationService.newPostReaction(reaction)
+    if (tag?.author?.id !== authUser.id) this.pushNotificationService.newTagReaction(reaction)
 
     return {
       ...reaction,
@@ -354,11 +350,9 @@ export class TagService {
   }
 
   async deleteTagReaction(tagId: bigint, authUser: AuthUser): Promise<boolean> {
-    const authorId = authUser.id
-
     await this.prismaService.tagReaction.delete({
       where: {
-        authorId_tagId: { authorId, tagId },
+        authorId_tagId: { authorId: authUser.id, tagId },
       },
     })
 

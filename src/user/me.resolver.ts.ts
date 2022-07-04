@@ -1,30 +1,26 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
+import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
+import TwilioService from 'src/core/twilio.service'
+import { PaginatedPosts } from 'src/post/paginated-posts.model'
+import { PaginatedUsers } from 'src/post/paginated-users.model'
+import { mapPost, PostSelectWithParent } from 'src/post/post-select.constant'
 
-import { AgeVerificationResult, Me } from './me.model'
-import { AccessToken } from './accessToken.model'
-
+import { AuthService, AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
-
-import { PrismaService } from '../core/prisma.service'
-import { UserService } from './user.service'
-import { AuthService, AuthUser } from '../auth/auth.service'
-import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
-
-import { ForgotPasswordInput } from './forgot-password.input'
-import { EmailSignInInput } from './email-sign-in.input'
-import { UpdateUserInput } from './update-user.input'
-
-import { ResetPasswordInput } from './reset-password.input'
-import { PostSelectWithParent, mapPost, getNotExpiredCondition } from 'src/post/post-select.constant'
-import { PaginatedUsers } from 'src/post/paginated-users.model'
-import TwilioService from 'src/core/twilio.service'
-import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
-import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
-import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
-import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { CursorPaginationArgs } from '../common/cursor-pagination.args'
+import { PrismaService } from '../core/prisma.service'
+import { AccessToken } from './accessToken.model'
+import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
+import { EmailSignInInput } from './email-sign-in.input'
+import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
+import { ForgotPasswordInput } from './forgot-password.input'
+import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
+import { AgeVerificationResult, Me } from './me.model'
+import { ResetPasswordInput } from './reset-password.input'
+import { UpdateUserInput } from './update-user.input'
+import { UserService } from './user.service'
 
 // function validatePhoneNumberForE164(phoneNumber: string) {
 //   const regEx = /^\+[1-9]\d{10,14}$/
@@ -184,7 +180,6 @@ export class MeResolver {
     const posts = await this.prismaService.post.findMany({
       where: {
         authorId: me.id,
-        ...getNotExpiredCondition(),
       },
       ...(after && {
         cursor: {

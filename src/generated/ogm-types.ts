@@ -1,4 +1,4 @@
-import { SelectionSetNode, DocumentNode } from 'graphql'
+import { DocumentNode, SelectionSetNode } from 'graphql'
 export type Maybe<T> = T | null
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K]
