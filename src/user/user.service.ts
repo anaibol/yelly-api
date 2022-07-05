@@ -657,7 +657,7 @@ export class UserService {
         notification: {
           create: {
             userId: followeeId,
-            type: 'NEW_FOLLOWER',
+            type: 'IS_NOW_FOLLOWING_YOU',
           },
         },
       },

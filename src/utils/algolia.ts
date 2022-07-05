@@ -42,6 +42,8 @@ export type PostIndexAlgoliaInterface = {
   id: string
   objectID: string
   text: string
+  createdAt: Date
+  createdAtTimestamp: number
   author: {
     id: string
     createdAt: Date
@@ -67,9 +69,11 @@ export type PostIndexAlgoliaInterface = {
   tags: {
     id: string
     createdAt: Date
+    createdAtTimestamp: number
+    date: Date
+    dateTimestamp: number
     text: string
   }[]
-  createdAt: Date
 }
 
 export const algoliaUserSelect = {
@@ -178,6 +182,7 @@ export const algoliaPostSelect = {
     select: {
       id: true,
       createdAt: true,
+      date: true,
       text: true,
     },
   },
@@ -244,6 +249,7 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
     id: post.id.toString(),
     objectID: post.id.toString(),
     createdAt: post.createdAt,
+    createdAtTimestamp: post.createdAt.getTime(),
     text: post.text,
     author: {
       id,
@@ -271,6 +277,9 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
       return {
         id: tag.id.toString(),
         createdAt: tag.createdAt,
+        createdAtTimestamp: tag.createdAt.getTime(),
+        date: tag.date,
+        dateTimestamp: tag.date.getTime(),
         text: tag.text,
       }
     }),

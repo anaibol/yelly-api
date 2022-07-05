@@ -39,26 +39,30 @@ model Notification {
   postReaction   PostReaction?     @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
   tagReactionId  BigInt?           @unique
   tagReaction    TagReaction?      @relation(fields: [tagReactionId], references: [id], onDelete: Cascade)
+  tagId          BigInt?           @unique
+  tag            Tag?              @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  postId         BigInt?           @unique
+  post           Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
   follower       Follower?         @relation(fields: [followerId], references: [id], onDelete: Cascade)
   followerId     String?           @unique
+  postCount  Int?
 
   @@index([createdAt], map: "Notification_createdAt")
   @@index([userId])
 }
 
-model FeedItem {
+model Activity {
   id        BigInt       @id @default(dbgenerated("generate_id()"))
-  isSeen    Boolean      @default(false)
   createdAt DateTime     @default(now())
   postId    BigInt?
   post      Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
   tagId     BigInt?
   tag       Tag?         @relation(fields: [tagId], references: [id], onDelete: Cascade)
   user      User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      FeedItemType
+  type      ActivityType
   userId    String
 
-  @@index([createdAt], map: "FeedItem_createdAt")
+  @@index([createdAt], map: "Activity_createdAt")
 }
 
 model School {
@@ -118,7 +122,7 @@ model User {
   tagReactions                 TagReaction[]
   followees                    Follower[]                        @relation("usersAsFollowees")
   followers                    Follower[]                        @relation("usersAsFollowers")
-  feedItems                    FeedItem[]
+  activities                   Activity[]
   viewsCount                   Int                               @default(0)
   tags                         Tag[]
 
@@ -138,42 +142,44 @@ model Follower {
 }
 
 model Tag {
-  id         BigInt        @id @default(dbgenerated("generate_id()"))
-  text       String
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @default(now()) @updatedAt
-  posts      Post[]
-  countryId  String?
-  country    Country?      @relation(fields: [countryId], references: [id])
-  isHidden   Boolean       @default(false)
-  author     User?         @relation(fields: [authorId], references: [id])
-  authorId   String?
-  date       DateTime      @default(now()) @db.Date
-  reactions  TagReaction[]
-  viewsCount Int           @default(0)
-  feedItem FeedItem[]
+  id            BigInt         @id @default(dbgenerated("generate_id()"))
+  text          String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @default(now()) @updatedAt
+  posts         Post[]
+  countryId     String?
+  country       Country?       @relation(fields: [countryId], references: [id])
+  isHidden      Boolean        @default(false)
+  author        User?          @relation(fields: [authorId], references: [id])
+  authorId      String?
+  date          DateTime       @default(now()) @db.Date
+  reactions     TagReaction[]
+  viewsCount    Int            @default(0)
+  activities    Activity[]
+  notifications Notification[]
 
   @@unique([text, date])
   @@index([createdAt])
 }
 
 model Post {
-  id          BigInt           @id @default(dbgenerated("generate_id()"))
-  text        String           @db.Text
-  createdAt   DateTime         @unique @default(now())
-  authorId    String
-  viewsCount  Int              @default(0)
-  author      User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  tags        Tag[]
-  reactions   PostReaction[]
-  pollOptions PostPollOption[]
-  pollVotes   PostPollVote[]
-  children    Post[]           @relation("parentChildren")
-  parent      Post?            @relation("parentChildren", fields: [parentId], references: [id])
-  parentId    BigInt?
-  feedItems   FeedItem[]
-  charsCount  Int?
-  wordsCount  Int?
+  id            BigInt           @id @default(dbgenerated("generate_id()"))
+  text          String           @db.Text
+  createdAt     DateTime         @unique @default(now())
+  authorId      String
+  viewsCount    Int              @default(0)
+  author        User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags          Tag[]
+  reactions     PostReaction[]
+  pollOptions   PostPollOption[]
+  pollVotes     PostPollVote[]
+  children      Post[]           @relation("parentChildren")
+  parent        Post?            @relation("parentChildren", fields: [parentId], references: [id])
+  parentId      BigInt?
+  activities    Activity[]
+  notifications Notification[]
+  charsCount    Int?
+  wordsCount    Int?
 
   @@index([authorId])
 }
@@ -246,17 +252,17 @@ enum UserRole {
 }
 
 enum NotificationType {
-  POST_REACTION_CREATED
-  TAG_REACTION_CREATED
-  NEW_FOLLOWER
+  REPLIED_TO_YOUR_POST
+  REPLIED_TO_SAME_POST_AS_YOU
+  REACTED_TO_YOUR_POST
+  REACTED_TO_YOUR_TAG
+  IS_NOW_FOLLOWING_YOU
   YOUR_TAG_IS_TRENDING
-  NEW_POSTS_ON_YOUR_TAG
+  THERE_ARE_NEW_POSTS_ON_YOUR_TAG
 }
 
-enum FeedItemType {
-  POST_REPLIED
-  SAME_POST_REPLIED
-  FOLLOWEE_CREATED_TAG
-  POSTED_ON_YOUR_TAG
-  FOLLOWEE_POSTED_ON_TAG
+enum ActivityType {
+  CREATED_TAG_REACTION
+  CREATED_TAG
+  CREATED_POST
 }

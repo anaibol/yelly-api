@@ -1,25 +1,25 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql'
-import { FeedItemType } from '@prisma/client'
+import { ActivityType } from '@prisma/client'
 import { Post } from 'src/post/post.model'
 
-registerEnumType(FeedItemType, {
-  name: 'FeedItemType',
+registerEnumType(ActivityType, {
+  name: 'ActivityType',
 })
 
 @ObjectType()
-export class FeedItem {
+export class Activity {
   @Field(() => BigInt)
   id: BigInt
   post?: Post
   createdAt?: Date
-  @Field(() => FeedItemType)
-  type?: FeedItemType | null
+  @Field(() => ActivityType)
+  type?: ActivityType | null
 }
 
 @ObjectType()
-export class Feed {
+export class Activities {
   @Field(() => BigInt)
   nextCursor: BigInt | null
-  items: FeedItem[]
+  items: Activity[]
   totalCount: number
 }

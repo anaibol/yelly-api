@@ -4,12 +4,12 @@ import { AuthModule } from '../auth/auth.module'
 import { CoreModule } from '../core/core.module'
 import { TagModule } from '../tag/tag.module'
 import { UserModule } from '../user/user.module'
-import { FeedResolver } from './feed.resolver'
-import { FeedService } from './feed.service'
+import { ActivityResolver } from './activity.resolver'
+import { ActivityService } from './activity.service'
 
 @Module({
   imports: [CoreModule, AuthModule, UserModule, TagModule],
-  providers: [FeedService, FeedResolver],
-  exports: [FeedService],
+  providers: [ActivityService, ActivityResolver],
+  exports: [ActivityService],
 })
-export class FeedModule {}
+export class ActivityModule {}

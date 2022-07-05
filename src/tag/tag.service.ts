@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { Prisma } from '@prisma/client'
+import { ActivityType, Prisma } from '@prisma/client'
 
 import { AuthUser } from '../auth/auth.service'
 import { AlgoliaService } from '../core/algolia.service'
@@ -76,6 +76,7 @@ export class TagService {
         value: 1,
       },
       createdAtTimestamp: tag.createdAt.getTime(),
+      dateTimestamp: tag.date.getTime(),
       createdAt: tag.createdAt,
     }
 
@@ -175,6 +176,12 @@ export class TagService {
         text: tagText,
         countryId: authUser.countryId,
         authorId: authUser.id,
+        activities: {
+          create: {
+            userId: authUser.id,
+            type: ActivityType.CREATED_TAG,
+          },
+        },
       },
     })
 
@@ -334,7 +341,15 @@ export class TagService {
     const { text, tagId } = createOrUpdateTagReactionInput
     const authorId = authUser.id
 
-    const { tag, ...reaction } = await this.prismaService.tagReaction.upsert({
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagId,
+      },
+    })
+
+    if (!tag) return Promise.reject(new Error('No tag'))
+
+    const reaction = await this.prismaService.tagReaction.upsert({
       where: {
         authorId_tagId: {
           authorId,
@@ -359,19 +374,17 @@ export class TagService {
         authorId,
         tagId,
       },
-      include: {
-        tag: {
-          select: tagSelect,
-        },
-      },
     })
 
-    if (tag?.author?.id !== authUser.id) this.pushNotificationService.newTagReaction(reaction)
-
-    return {
-      ...reaction,
-      // tag: mapPost(tag),
+    if (tag.authorId) {
+      this.prismaService.notification.create({
+        data: { type: 'REACTED_TO_YOUR_TAG', userId: tag.authorId, tagReactionId: reaction.id },
+      })
     }
+
+    this.pushNotificationService.newTagReaction(reaction)
+
+    return reaction
   }
 
   async deleteTagReaction(tagId: bigint, authUser: AuthUser): Promise<boolean> {

@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { ExpoPushNotificationAccessToken, FeedItemType, Follower, PostReaction, Tag, TagReaction } from '@prisma/client'
+import {
+  ExpoPushNotificationAccessToken,
+  Follower,
+  NotificationType,
+  PostReaction,
+  Tag,
+  TagReaction,
+} from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
 
@@ -65,11 +72,6 @@ export class PushNotificationService {
         },
         tags: {
           select: {
-            _count: {
-              select: {
-                posts: true,
-              },
-            },
             author: {
               select: {
                 ...UserPushTokenSelect,
@@ -85,32 +87,6 @@ export class PushNotificationService {
     const tag = post.tags[0]
 
     if (!tag.author) return
-
-    const postCount = post.tags[0]._count.posts
-
-    if (postCount === 1) {
-      await this.prismaService.notification.create({
-        data: {
-          userId: tag.author.id,
-          type: 'NEW_POSTS_ON_YOUR_TAG',
-        },
-      })
-      // NEW_POSTS_ON_YOUR_TAG
-    } else if (postCount === 6) {
-      // NEW_POSTS_ON_YOUR_TAG
-    } else if (postCount === 26) {
-      // NEW_POSTS_ON_YOUR_TAG
-    } else if (postCount === 126) {
-      // NEW_POSTS_ON_YOUR_TAG
-    }
-
-    await this.prismaService.feedItem.create({
-      data: {
-        userId: tag.author.id,
-        type: FeedItemType.POSTED_ON_YOUR_TAG,
-        postId,
-      },
-    })
 
     const lang = tag.author.locale
 
@@ -153,14 +129,6 @@ export class PushNotificationService {
     if (!tag?.author) return Promise.reject(new Error('Tag author not found'))
 
     const followers = tag.author.followers.map(({ user }) => user)
-
-    await this.prismaService.feedItem.createMany({
-      data: followers.map((user) => ({
-        userId: user.id,
-        type: FeedItemType.FOLLOWEE_CREATED_TAG,
-        tagId,
-      })),
-    })
 
     const followersPushNotifications = followers.map(async (user) => {
       const lang = user.locale
@@ -207,14 +175,6 @@ export class PushNotificationService {
     if (!post) return Promise.reject(new Error('Post not found'))
 
     const followers = post.author.followers.map(({ user }) => user)
-
-    await this.prismaService.feedItem.createMany({
-      data: followers.map((user) => ({
-        userId: user.id,
-        type: FeedItemType.FOLLOWEE_POSTED_ON_TAG,
-        postId,
-      })),
-    })
 
     const followersPushNotifications = followers.map(async (user) => {
       const lang = user.locale
@@ -266,14 +226,6 @@ export class PushNotificationService {
     const lang = parent.author.locale
     const expoPushNotificationTokens = parent.author.expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
 
-    await this.prismaService.feedItem.create({
-      data: {
-        userId: parent.author.id,
-        type: FeedItemType.POST_REPLIED,
-        postId,
-      },
-    })
-
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
       body: await this.i18n.translate('notifications.POST_REPLIED', {
@@ -300,10 +252,10 @@ export class PushNotificationService {
       select: UserPushTokenSelect,
     })
 
-    await this.prismaService.feedItem.createMany({
+    await this.prismaService.notification.createMany({
       data: samePostRepliedUsers.map((user) => ({
         userId: user.id,
-        type: FeedItemType.SAME_POST_REPLIED,
+        type: NotificationType.REPLIED_TO_SAME_POST_AS_YOU,
         postId,
       })),
     })
@@ -469,13 +421,6 @@ export class PushNotificationService {
     })
 
     if (!tag?.author?.countryId) return Promise.reject(new Error('No country'))
-
-    await this.prismaService.notification.create({
-      data: {
-        userId: tag.author.id,
-        type: 'TAG_REACTION_CREATED',
-      },
-    })
 
     const topTags = await this.prismaService.tag.findMany({
       orderBy: [

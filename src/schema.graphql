@@ -8,6 +8,25 @@ type AccessToken {
   refreshToken: String!
 }
 
+type Activities {
+  items: [Activity!]!
+  nextCursor: BigInt
+  totalCount: Int!
+}
+
+type Activity {
+  createdAt: DateTime
+  id: BigInt!
+  post: Post
+  type: ActivityType
+}
+
+enum ActivityType {
+  CREATED_POST
+  CREATED_TAG
+  CREATED_TAG_REACTION
+}
+
 type AgeVerificationResult {
   ageEstimation: Int
   agePredictionResult: String
@@ -85,27 +104,6 @@ input EmailSignInInput {
   password: String!
 }
 
-type Feed {
-  items: [FeedItem!]!
-  nextCursor: BigInt
-  totalCount: Int!
-}
-
-type FeedItem {
-  createdAt: DateTime
-  id: BigInt!
-  post: Post
-  type: FeedItemType
-}
-
-enum FeedItemType {
-  FOLLOWEE_CREATED_TAG
-  FOLLOWEE_POSTED_ON_TAG
-  POSTED_ON_YOUR_TAG
-  POST_REPLIED
-  SAME_POST_REPLIED
-}
-
 type Follower {
   followee: User
   id: ID!
@@ -123,15 +121,12 @@ input InitPhoneNumberVerificationInput {
 type Me {
   about: String
   birthdate: DateTime
-  canCreateTag: Boolean
   countryId: String
   createdAt: DateTime
   email: String
   expoPushNotificationTokens: [String!]
   firstName: String
-  followees(limit: Int = 10, skip: Int = 0): PaginatedUsers
   followeesCount: Int
-  followers(limit: Int = 10, skip: Int = 0): PaginatedUsers
   followersCount: Int
   id: ID!
   instagram: String
@@ -142,11 +137,9 @@ type Me {
   phoneNumber: String
   pictureId: String
   postCount: Int
-  posts(after: BigInt, limit: Int = 10): PaginatedPosts
   role: UserRole!
   school: School
   snapchat: String
-  tags(after: BigInt, limit: Int = 10): PaginatedTags
   training: Training
   viewsCount: Int
 }
@@ -172,7 +165,6 @@ type Mutation {
   follow(otherUserId: String!): Boolean!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
-  markFeedItemsAsSeen(after: DateTime, before: DateTime, feedItemId: BigInt): Boolean!
   markNotificationAsSeen(notificationId: String!): Boolean!
   refreshAccessToken(refreshToken: String!): AccessToken!
   resetPassword(input: ResetPasswordInput!): AccessToken!
@@ -195,10 +187,12 @@ type Notification {
 }
 
 enum NotificationType {
-  NEW_FOLLOWER
-  NEW_POSTS_ON_YOUR_TAG
-  POST_REACTION_CREATED
-  TAG_REACTION_CREATED
+  IS_NOW_FOLLOWING_YOU
+  REACTED_TO_YOUR_POST
+  REACTED_TO_YOUR_TAG
+  REPLIED_TO_SAME_POST_AS_YOU
+  REPLIED_TO_YOUR_POST
+  THERE_ARE_NEW_POSTS_ON_YOUR_TAG
   YOUR_TAG_IS_TRENDING
 }
 
@@ -265,20 +259,24 @@ type PostReaction {
 }
 
 type Query {
-  feed(after: BigInt, isSeen: Boolean, limit: Int = 10): Feed!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
   getS3PresignedUploadUrl: Upload!
   isUserFollowedByAuthUser(userId: String!): Boolean!
   me: Me!
+  meCanCreateTag: Boolean!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: BigInt, limit: Int = 10, postId: BigInt!): Post!
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
   tagExists(tagText: String!): Boolean!
   tags(after: BigInt, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
-  unreadFeedItemsCount: Int!
   unreadNotificationsCount: Int!
   user(id: String!): User!
+  userActivities(after: BigInt, limit: Int = 10, userId: String!): Activities!
+  userFollowees(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
+  userFollowers(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
+  userPosts(after: BigInt, limit: Int = 10, userId: String!): PaginatedPosts!
+  userTags(after: BigInt, limit: Int = 10, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc, userId: String!): PaginatedTags!
   users(ids: [String!]!): PaginatedUsers!
 }
 
@@ -367,9 +365,7 @@ type User {
   countryId: String
   createdAt: DateTime
   firstName: String
-  followees(limit: Int = 10, skip: Int = 0): PaginatedUsers
   followeesCount: Int
-  followers(limit: Int = 10, skip: Int = 0): PaginatedUsers
   followersCount: Int
   id: ID!
   instagram: String
@@ -378,7 +374,6 @@ type User {
   locale: String
   pictureId: String
   postCount: Int
-  posts(after: BigInt, limit: Int = 10): PaginatedPosts
   school: School
   snapchat: String
   training: Training

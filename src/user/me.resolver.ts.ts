@@ -1,18 +1,13 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
-import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
+import { Args, Mutation, Parent, Query, Resolver } from '@nestjs/graphql'
 import TwilioService from 'src/core/twilio.service'
-import { PaginatedPosts } from 'src/post/paginated-posts.model'
-import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { mapPost, PostSelectWithParent } from 'src/post/post-select.constant'
 
 import { AuthService, AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
-import { CursorPaginationArgs } from '../common/cursor-pagination.args'
+import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { PrismaService } from '../core/prisma.service'
-import { PaginatedTags } from '../tag/paginated-tags.model'
-import { tagSelect } from '../tag/tag-select.constant'
+import { PaginatedUsers } from '../post/paginated-users.model'
 import { AccessToken } from './accessToken.model'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
 import { EmailSignInInput } from './email-sign-in.input'
@@ -165,83 +160,17 @@ export class MeResolver {
     return this.userService.delete(authUser.id)
   }
 
-  @ResolveField()
-  followers(@Parent() user: Me, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFollowers(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
-  }
-
-  @ResolveField()
-  followees(@Parent() user: Me, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFollowees(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
-  }
-
-  @ResolveField()
-  async posts(@Parent() me: Me, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedPosts> {
-    const { after, limit } = cursorPaginationArgs
-
-    const posts = await this.prismaService.post.findMany({
-      where: {
-        authorId: me.id,
-      },
-      ...(after && {
-        cursor: {
-          id: after,
-        },
-        skip: 1,
-      }),
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: PostSelectWithParent,
-    })
-
-    const items = posts.map(mapPost)
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : null
-
-    return { items, nextCursor }
-  }
-
-  @ResolveField(() => Boolean)
-  canCreateTag(@Parent() user: Me): Promise<boolean> {
+  @Query(() => Boolean)
+  meCanCreateTag(@Parent() user: Me): Promise<boolean> {
     return this.userService.canCreateTag(user.id)
   }
 
-  @ResolveField()
-  async tags(@Parent() me: Me, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedTags> {
-    const { after, limit } = cursorPaginationArgs
-
-    const [totalCount, items] = await Promise.all([
-      this.prismaService.tag.count({
-        where: {
-          authorId: me.id,
-        },
-      }),
-      this.prismaService.tag.findMany({
-        where: {
-          authorId: me.id,
-        },
-        ...(after && {
-          cursor: {
-            id: after,
-          },
-          skip: 1,
-        }),
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: limit,
-        select: tagSelect,
-      }),
-    ])
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : null
-
-    return { items, nextCursor, totalCount }
+  @Query(() => PaginatedUsers)
+  @UseGuards(AuthGuard)
+  followSuggestions(
+    @CurrentUser() authUser: AuthUser,
+    @Args() offsetPaginationArgs: OffsetPaginationArgs
+  ): Promise<PaginatedUsers> {
+    return this.userService.getFollowSuggestions(authUser, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
   }
 }

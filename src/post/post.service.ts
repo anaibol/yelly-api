@@ -1,5 +1,6 @@
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { Injectable } from '@nestjs/common'
+import { NotificationType } from '@prisma/client'
 import { AuthUser } from 'src/auth/auth.service'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
@@ -12,6 +13,16 @@ import { Post } from './post.model'
 import { PostPollVote } from './post.model'
 import { PostReaction } from './post-reaction.model'
 import { mapPost, mapPostChild, PostChildSelect, PostSelectWithParent } from './post-select.constant'
+
+function isDefined<T>(value: T | undefined | null): value is T {
+  return <T>value !== undefined && <T>value !== null
+}
+
+const getPostCount = (postCount: number): number | undefined => {
+  if ([1, 6, 26, 126].includes(postCount)) {
+    return postCount
+  }
+}
 
 @Injectable()
 export class PostService {
@@ -209,9 +220,6 @@ export class PostService {
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
     const { text, tagIds, pollOptions, parentId } = createPostInput
     const post = await this.prismaService.post.create({
-      include: {
-        tags: true,
-      },
       data: {
         text,
         charsCount: text.length,
@@ -244,11 +252,63 @@ export class PostService {
       },
     })
 
-    if (tagIds) tagIds.map((tagId) => this.tagService.syncTagIndexWithAlgolia(tagId))
+    if (tagIds) {
+      const tags = await this.prismaService.tag.findMany({
+        where: {
+          id: {
+            in: tagIds,
+          },
+        },
+        include: {
+          _count: {
+            select: {
+              posts: true,
+            },
+          },
+        },
+      })
+
+      await this.prismaService.notification.createMany({
+        data: tags
+          .map((tag) => {
+            if (!tag.authorId) return
+
+            const postCount = getPostCount(tag._count.posts)
+
+            if (!postCount) return
+
+            return {
+              userId: tag.authorId,
+              type: NotificationType.THERE_ARE_NEW_POSTS_ON_YOUR_TAG,
+              postId: post.id,
+              postCount,
+            }
+          })
+          .filter(isDefined),
+      })
+
+      tagIds.map((tagId) => this.tagService.syncTagIndexWithAlgolia(tagId))
+    }
 
     this.syncPostIndexWithAlgolia(post.id)
 
     if (parentId) {
+      const parent = await this.prismaService.post.findUnique({
+        where: {
+          id: post.id,
+        },
+      })
+
+      if (parent?.authorId) {
+        await this.prismaService.notification.create({
+          data: {
+            userId: parent.authorId,
+            type: NotificationType.REPLIED_TO_YOUR_POST,
+            postId: post.id,
+          },
+        })
+      }
+
       this.pushNotificationService.postReplied(post.id)
     } else {
       this.pushNotificationService.postedOnYourTag(post.id)

@@ -58,6 +58,7 @@ export const PostSelect = {
     select: {
       id: true,
       createdAt: true,
+      date: true,
       text: true,
     },
   },

@@ -1,10 +1,7 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { UserRole } from '@prisma/client'
-import { PaginatedPosts } from 'src/post/paginated-posts.model'
-import { PaginatedUsers } from 'src/post/paginated-users.model'
 
 import { School } from '../school/school.model'
-import { PaginatedTags } from '../tag/paginated-tags.model'
 import { Training } from './training.model'
 
 registerEnumType(UserRole, {
@@ -33,16 +30,11 @@ export class Me {
   training?: Training | null
   school?: School | null
   countryId?: string | null
-  posts?: PaginatedPosts
-  tags?: PaginatedTags
-  followers?: PaginatedUsers
-  followees?: PaginatedUsers
   followersCount?: number
   followeesCount?: number
   postCount?: number
   viewsCount?: number
   isAgeApproved?: null | boolean
-  canCreateTag?: boolean
 }
 
 @ObjectType()
