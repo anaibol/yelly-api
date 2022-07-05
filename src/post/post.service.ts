@@ -229,7 +229,7 @@ export class PostService {
             id: authUser.id,
           },
         },
-        ...(parent && {
+        ...(parentId && {
           parent: {
             connect: {
               id: parentId,

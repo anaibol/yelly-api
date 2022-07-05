@@ -149,6 +149,6 @@ export class TagResolver {
 
   @ResolveField()
   isReadOnly(@Parent() tag: Tag): boolean {
-    return tag?.createdAt?.toDateString() === new Date().toDateString()
+    return tag?.createdAt?.toDateString() !== new Date().toDateString()
   }
 }

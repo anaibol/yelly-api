@@ -86,6 +86,6 @@ export class PostResolver {
 
   @ResolveField()
   isReadOnly(@Parent() post: Post): boolean {
-    return post?.createdAt?.toDateString() === new Date().toDateString()
+    return post?.createdAt?.toDateString() !== new Date().toDateString()
   }
 }
