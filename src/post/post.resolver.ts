@@ -4,20 +4,24 @@ import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/g
 import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
+import { PrismaService } from '../core/prisma.service'
 import { PostService } from '../post/post.service'
+import { PostsArgs } from '../posts/posts.args'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { CreatePostInput } from './create-post.input'
 import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
 import { DeletePostInput } from './delete-post.input'
 import { DeletePostReactionInput } from './delete-post-reaction.input'
+import { PaginatedPosts } from './paginated-posts.model'
 import { PostArgs } from './post.args'
 import { Post, PostPollVote } from './post.model'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
 import { PostReaction } from './post-reaction.model'
+import { mapPost, PostSelectWithParent } from './post-select.constant'
 @Resolver(Post)
 export class PostResolver {
-  constructor(private postService: PostService) {}
+  constructor(private postService: PostService, private prismaService: PrismaService) {}
 
   @UseGuards(AuthGuard)
   @Query(() => Post)
@@ -25,6 +29,38 @@ export class PostResolver {
     const { postId, after, limit } = postArgs
 
     return this.postService.getPost(postId, limit, after)
+  }
+
+  @Query(() => PaginatedPosts)
+  async posts(@Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
+    const { authorId, after, limit } = postsArgs
+
+    const posts = await this.prismaService.post.findMany({
+      where: {
+        ...(authorId && {
+          authorId,
+        }),
+      },
+      ...(after && {
+        cursor: {
+          id: after,
+        },
+        skip: 1,
+      }),
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
+      select: PostSelectWithParent,
+    })
+
+    const items = posts.map(mapPost)
+
+    const lastItem = items.length === limit ? items[limit - 1] : null
+
+    const nextCursor = lastItem ? lastItem.id : null
+
+    return { items, nextCursor }
   }
 
   @UseGuards(AuthGuard)

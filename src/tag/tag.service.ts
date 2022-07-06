@@ -210,7 +210,8 @@ export class TagService {
     after?: bigint,
     sortBy?: TagSortBy,
     sortDirection?: SortDirection,
-    showHidden?: boolean
+    showHidden?: boolean,
+    authorId?: string
   ): Promise<PaginatedTags> {
     if (showHidden && !authUser?.isAdmin) return Promise.reject(new Error('No admin'))
 
@@ -226,6 +227,9 @@ export class TagService {
     const where: Prisma.TagWhereInput = {
       date,
       countryId: authUser.countryId,
+      ...(authorId && {
+        authorId,
+      }),
       ...(!showHidden && {
         isHidden: false,
       }),

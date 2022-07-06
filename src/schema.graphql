@@ -259,24 +259,23 @@ type PostReaction {
 }
 
 type Query {
+  authUserCanCreateTag: Boolean!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
   getS3PresignedUploadUrl: Upload!
   isUserFollowedByAuthUser(userId: String!): Boolean!
   me: Me!
-  meCanCreateTag: Boolean!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: BigInt, limit: Int = 10, postId: BigInt!): Post!
+  posts(after: BigInt, authorId: String, limit: Int = 10): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
   tagExists(tagText: String!): Boolean!
-  tags(after: BigInt, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
+  tags(after: BigInt, authorId: String, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   unreadNotificationsCount: Int!
   user(id: String!): User!
   userActivities(after: BigInt, limit: Int = 10, userId: String!): Activities!
   userFollowees(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
   userFollowers(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
-  userPosts(after: BigInt, limit: Int = 10, userId: String!): PaginatedPosts!
-  userTags(after: BigInt, limit: Int = 10, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc, userId: String!): PaginatedTags!
   users(ids: [String!]!): PaginatedUsers!
 }
 

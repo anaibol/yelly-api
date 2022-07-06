@@ -1,21 +1,14 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
-import { PrismaService } from 'src/core/prisma.service'
-import { PaginatedPosts } from 'src/post/paginated-posts.model'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { mapPost, PostSelectWithParent } from 'src/post/post-select.constant'
 
 import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
-import { PaginatedTags } from '../tag/paginated-tags.model'
-import { tagSelect } from '../tag/tag-select.constant'
 import { User } from './user.model'
 import { UserService } from './user.service'
 import { UserFolloweesArgs } from './user-followees.args'
 import { UserFollowersArgs } from './user-followers.args'
-import { UserPostsArgs } from './user-posts.args'
-import { UserTagsArgs } from './user-tags.args'
 // import { Loader } from '@tracworx/nestjs-dataloader'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
@@ -23,7 +16,7 @@ import { UserTagsArgs } from './user-tags.args'
 
 @Resolver(User)
 export class UserResolver {
-  constructor(private userService: UserService, private prismaService: PrismaService) {}
+  constructor(private userService: UserService) {}
 
   @Query(() => User)
   @UseGuards(AuthGuard)
@@ -125,71 +118,6 @@ export class UserResolver {
     if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
 
     return this.userService.ban(userId)
-  }
-
-  @Query(() => PaginatedPosts)
-  async userPosts(@Args() userPostsArgs: UserPostsArgs): Promise<PaginatedPosts> {
-    const { userId, after, limit } = userPostsArgs
-
-    const posts = await this.prismaService.post.findMany({
-      where: {
-        authorId: userId,
-      },
-      ...(after && {
-        cursor: {
-          id: after,
-        },
-        skip: 1,
-      }),
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: PostSelectWithParent,
-    })
-
-    const items = posts.map(mapPost)
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : null
-
-    return { items, nextCursor }
-  }
-
-  @Query(() => PaginatedTags)
-  async userTags(@Args() userTagsArgs: UserTagsArgs): Promise<PaginatedTags> {
-    const { userId, after, limit } = userTagsArgs
-
-    const [totalCount, items] = await Promise.all([
-      this.prismaService.tag.count({
-        where: {
-          authorId: userId,
-        },
-      }),
-      this.prismaService.tag.findMany({
-        where: {
-          authorId: userId,
-        },
-        ...(after && {
-          cursor: {
-            id: after,
-          },
-          skip: 1,
-        }),
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: limit,
-        select: tagSelect,
-      }),
-    ])
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : null
-
-    return { items, nextCursor, totalCount }
   }
 
   @Query(() => PaginatedUsers)

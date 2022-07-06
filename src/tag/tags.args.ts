@@ -29,4 +29,5 @@ export class TagsArgs extends CursorPaginationArgs {
   sortBy?: TagSortBy = TagSortBy.createdAt
   @Field(() => SortDirection)
   sortDirection?: SortDirection = SortDirection.desc
+  authorId?: string
 }

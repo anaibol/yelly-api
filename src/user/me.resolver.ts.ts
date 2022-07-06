@@ -161,7 +161,7 @@ export class MeResolver {
   }
 
   @Query(() => Boolean)
-  meCanCreateTag(@Parent() user: Me): Promise<boolean> {
+  authUserCanCreateTag(@Parent() user: Me): Promise<boolean> {
     return this.userService.canCreateTag(user.id)
   }
 
