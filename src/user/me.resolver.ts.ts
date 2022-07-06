@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Parent, Query, Resolver } from '@nestjs/graphql'
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 import TwilioService from 'src/core/twilio.service'
 
 import { AuthService, AuthUser } from '../auth/auth.service'
@@ -157,8 +157,8 @@ export class MeResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => Boolean)
-  authUserCanCreateTag(@Parent() user: Me): Promise<boolean> {
-    return this.userService.canCreateTag(user.id)
+  authUserCanCreateTag(@CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.canCreateTag(authUser.id)
   }
 
   @UseGuards(AuthGuard)

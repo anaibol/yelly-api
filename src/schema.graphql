@@ -266,7 +266,7 @@ type Query {
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: BigInt, limit: Int = 10, postId: BigInt!): Post!
-  posts(after: BigInt, authorId: String, limit: Int = 10): PaginatedPosts!
+  posts(after: BigInt, authorId: String, limit: Int = 10, tagId: BigInt): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
   tagExists(tagText: String!): Boolean!
@@ -310,7 +310,7 @@ type Tag {
   isHidden: Boolean
   isReadOnly: Boolean
   postCount: Int
-  posts(after: BigInt, limit: Int = 10): PaginatedPosts
+  posts: PaginatedPosts
   reactionsCount: Int
   text: String!
   viewsCount: Int

@@ -34,12 +34,19 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
   async posts(@Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
-    const { authorId, after, limit } = postsArgs
+    const { authorId, tagId, after, limit } = postsArgs
 
     const posts = await this.prismaService.post.findMany({
       where: {
         ...(authorId && {
           authorId,
+        }),
+        ...(tagId && {
+          tags: {
+            some: {
+              id: tagId,
+            },
+          },
         }),
       },
       ...(after && {

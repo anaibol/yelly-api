@@ -4,10 +4,7 @@ import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/g
 import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
-import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 import { PrismaService } from '../core/prisma.service'
-import { PaginatedPosts } from '../post/paginated-posts.model'
-import { mapPost, PostSelectWithParent } from '../post/post-select.constant'
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { CreateTagInput } from './create-tag.input'
 import { DeleteTagReactionInput } from './delete-tag-reaction.input'
@@ -65,39 +62,6 @@ export class TagResolver {
     )
 
     return { items, nextCursor, totalCount }
-  }
-
-  @UseGuards(AuthGuard)
-  @ResolveField()
-  async posts(@Parent() tag: Tag, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedPosts> {
-    const { limit, after } = cursorPaginationArgs
-
-    const posts = await this.prismaService.post.findMany({
-      where: {
-        tags: {
-          some: {
-            id: tag.id,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      select: PostSelectWithParent,
-      ...(after && {
-        cursor: {
-          id: after,
-        },
-        skip: 1,
-      }),
-      take: limit,
-    })
-
-    const items = posts.map(mapPost)
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : null
-
-    return { items, nextCursor }
   }
 
   @UseGuards(AuthGuard)
