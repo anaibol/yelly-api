@@ -6,7 +6,6 @@ import { AuthService, AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
-import { PrismaService } from '../core/prisma.service'
 import { PaginatedUsers } from '../post/paginated-users.model'
 import { AccessToken } from './accessToken.model'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
@@ -28,7 +27,6 @@ import { UserService } from './user.service'
 @Resolver(Me)
 export class MeResolver {
   constructor(
-    private prismaService: PrismaService,
     private twilioService: TwilioService,
     private userService: UserService,
     private authService: AuthService,
@@ -87,8 +85,8 @@ export class MeResolver {
     return { accessToken, refreshToken, isNewUser }
   }
 
-  @Query(() => Me)
   @UseGuards(AuthGuard)
+  @Query(() => Me)
   async me(@CurrentUser() authUser: AuthUser): Promise<Me> {
     const user = await this.userService.findMe(authUser.id)
 
@@ -98,21 +96,18 @@ export class MeResolver {
   }
 
   @Mutation(() => AccessToken)
-  async refreshAccessToken(
-    @CurrentUser() authUser: AuthUser,
-    @Args('refreshToken') refreshToken: string
-  ): Promise<AccessToken> {
+  async refreshAccessToken(@Args('refreshToken') refreshToken: string): Promise<AccessToken> {
     return this.authService.refreshAccessToken(refreshToken)
   }
 
-  @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
   addExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.expoPushNotificationsTokenService.create(authUser.id, token)
   }
 
-  @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
   deleteExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.expoPushNotificationsTokenService.deleteByUserAndToken(authUser.id, token)
   }
@@ -139,14 +134,14 @@ export class MeResolver {
     }
   }
 
-  @Mutation(() => Me)
   @UseGuards(AuthGuard)
+  @Mutation(() => Me)
   updateMe(@Args('input') updateUserInput: UpdateUserInput, @CurrentUser() authUser: AuthUser): Promise<Me> {
     return this.userService.update(authUser.id, updateUserInput)
   }
 
-  @Mutation(() => AgeVerificationResult)
   @UseGuards(AuthGuard)
+  @Mutation(() => AgeVerificationResult)
   updateAgeVerification(
     @Args('facePictureId') facePictureId: string,
     @CurrentUser() authUser: AuthUser
@@ -154,19 +149,20 @@ export class MeResolver {
     return this.userService.updateAgeVerification(authUser, facePictureId)
   }
 
-  @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
   deleteAuthUser(@CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.userService.delete(authUser.id)
   }
 
+  @UseGuards(AuthGuard)
   @Query(() => Boolean)
   authUserCanCreateTag(@Parent() user: Me): Promise<boolean> {
     return this.userService.canCreateTag(user.id)
   }
 
-  @Query(() => PaginatedUsers)
   @UseGuards(AuthGuard)
+  @Query(() => PaginatedUsers)
   followSuggestions(
     @CurrentUser() authUser: AuthUser,
     @Args() offsetPaginationArgs: OffsetPaginationArgs

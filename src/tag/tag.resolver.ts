@@ -22,8 +22,8 @@ import { UpdateTagInput } from './update-tag.input'
 export class TagResolver {
   constructor(private tagService: TagService, private prismaService: PrismaService) {}
 
-  @Query(() => Tag)
   @UseGuards(AuthGuard)
+  @Query(() => Tag)
   tag(@Args('tagId') tagId: bigint): Promise<Tag> {
     return this.tagService.getTag(tagId)
   }
@@ -40,8 +40,8 @@ export class TagResolver {
     return this.tagService.trackTagViews(tagIds)
   }
 
-  @Query(() => Boolean)
   @UseGuards(AuthGuard)
+  @Query(() => Boolean)
   tagExists(@Args('tagText') tagText: string): Promise<boolean> {
     return this.tagService.getTagExists(tagText)
   }
@@ -67,15 +67,10 @@ export class TagResolver {
     return { items, nextCursor, totalCount }
   }
 
+  @UseGuards(AuthGuard)
   @ResolveField()
-  async posts(
-    @Parent() tag: Tag,
-    @CurrentUser() authUser: AuthUser,
-    @Args() cursorPaginationArgs: CursorPaginationArgs
-  ): Promise<PaginatedPosts> {
+  async posts(@Parent() tag: Tag, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedPosts> {
     const { limit, after } = cursorPaginationArgs
-
-    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
     const posts = await this.prismaService.post.findMany({
       where: {
@@ -105,8 +100,8 @@ export class TagResolver {
     return { items, nextCursor }
   }
 
-  @Mutation(() => Tag)
   @UseGuards(AuthGuard)
+  @Mutation(() => Tag)
   updateTag(
     @CurrentUser() authUser: AuthUser,
     @Args('tagId') tagId: bigint,
@@ -117,8 +112,8 @@ export class TagResolver {
     return this.tagService.updateTag(tagId, updateTagInput)
   }
 
-  @Mutation(() => Tag)
   @UseGuards(AuthGuard)
+  @Mutation(() => Tag)
   createPromotedTag(@CurrentUser() authUser: AuthUser, @Args('tagText') tagText: string): Promise<Tag> {
     if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
 
@@ -143,11 +138,13 @@ export class TagResolver {
     return this.tagService.createOrUpdateTagReaction(createTagReactionInput, authUser)
   }
 
+  @UseGuards(AuthGuard)
   @ResolveField()
   async authUserReaction(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<TagReaction | null> {
     return this.tagService.getAuthUserReaction(tag.id, authUser)
   }
 
+  @UseGuards(AuthGuard)
   @ResolveField()
   isReadOnly(@Parent() tag: Tag): boolean {
     return tag?.createdAt?.toDateString() !== new Date().toDateString()

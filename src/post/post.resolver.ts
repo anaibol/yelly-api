@@ -31,6 +31,7 @@ export class PostResolver {
     return this.postService.getPost(postId, limit, after)
   }
 
+  @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
   async posts(@Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
     const { authorId, after, limit } = postsArgs
@@ -108,6 +109,7 @@ export class PostResolver {
     return this.postService.createPollVote(createPostPollVoteInput.postId, createPostPollVoteInput.optionId, authUser)
   }
 
+  @UseGuards(AuthGuard)
   @ResolveField()
   async authUserPollVote(@Parent() post: Post, @CurrentUser() authUser: AuthUser): Promise<PostPollVote | null> {
     if (!post.pollOptions) return null
@@ -115,11 +117,13 @@ export class PostResolver {
     return this.postService.getAuthUserPollVote(post.id, authUser)
   }
 
+  @UseGuards(AuthGuard)
   @ResolveField()
   async authUserReaction(@Parent() post: Post, @CurrentUser() authUser: AuthUser): Promise<PostReaction | null> {
     return this.postService.getAuthUserReaction(post.id, authUser)
   }
 
+  @UseGuards(AuthGuard)
   @ResolveField()
   isReadOnly(@Parent() post: Post): boolean {
     return post?.createdAt?.toDateString() !== new Date().toDateString()
