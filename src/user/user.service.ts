@@ -1,6 +1,6 @@
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { Injectable } from '@nestjs/common'
-import { Prisma } from '@prisma/client'
+import { NotificationType, Prisma } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { AuthUser } from 'src/auth/auth.service'
@@ -663,7 +663,7 @@ export class UserService {
         notification: {
           create: {
             userId: followeeId,
-            type: 'IS_NOW_FOLLOWING_YOU',
+            type: NotificationType.IS_NOW_FOLLOWING_YOU,
           },
         },
       },

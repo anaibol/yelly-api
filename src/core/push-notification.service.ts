@@ -284,7 +284,7 @@ export class PushNotificationService {
   }
 
   async newFollowerPushNotification(follower: Follower) {
-    const followerUser = await this.prismaService.user.findUnique({
+    const getFollowerUser = this.prismaService.user.findUnique({
       select: {
         id: true,
         firstName: true,
@@ -292,10 +292,12 @@ export class PushNotificationService {
       where: { id: follower.userId },
     })
 
-    const receiverUser = await this.prismaService.user.findUnique({
+    const getReceiverUser = this.prismaService.user.findUnique({
       select: UserPushTokenSelect,
       where: { id: follower.followeeId },
     })
+
+    const [followerUser, receiverUser] = await Promise.all([getFollowerUser, getReceiverUser])
 
     if (!followerUser || !receiverUser) return Promise.reject(new Error('followerUser or receiverUser not found'))
 

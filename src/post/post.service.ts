@@ -219,6 +219,15 @@ export class PostService {
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
     const { text, tagIds, pollOptions, parentId } = createPostInput
+
+    const parent =
+      parentId &&
+      (await this.prismaService.post.findUnique({
+        where: {
+          id: parentId,
+        },
+      }))
+
     const post = await this.prismaService.post.create({
       data: {
         text,
@@ -243,10 +252,17 @@ export class PostService {
             type: ActivityType.CREATED_POST,
           },
         },
-        ...(parentId && {
+
+        ...(parent && {
           parent: {
             connect: {
               id: parentId,
+            },
+          },
+          notifications: {
+            create: {
+              userId: parent.authorId,
+              type: NotificationType.REPLIED_TO_YOUR_POST,
             },
           },
         }),
@@ -299,22 +315,6 @@ export class PostService {
     this.syncPostIndexWithAlgolia(post.id)
 
     if (parentId) {
-      const parent = await this.prismaService.post.findUnique({
-        where: {
-          id: post.id,
-        },
-      })
-
-      if (parent?.authorId) {
-        await this.prismaService.notification.create({
-          data: {
-            userId: parent.authorId,
-            type: NotificationType.REPLIED_TO_YOUR_POST,
-            postId: post.id,
-          },
-        })
-      }
-
       this.pushNotificationService.postReplied(post.id)
     } else {
       this.pushNotificationService.postedOnYourTag(post.id)
@@ -354,6 +354,14 @@ export class PostService {
     const { text, postId } = createOrUpdatePostReactionInput
     const authorId = authUser.id
 
+    const postBeforeReaction = await this.prismaService.post.findUnique({
+      where: {
+        id: postId,
+      },
+    })
+
+    if (!postBeforeReaction) return Promise.reject(new Error('No post'))
+
     const { post, ...reaction } = await this.prismaService.postReaction.upsert({
       where: {
         authorId_postId: {
@@ -371,6 +379,12 @@ export class PostService {
         post: {
           connect: {
             id: postId,
+          },
+        },
+        notification: {
+          create: {
+            userId: postBeforeReaction.authorId,
+            type: NotificationType.REACTED_TO_YOUR_POST,
           },
         },
       },
