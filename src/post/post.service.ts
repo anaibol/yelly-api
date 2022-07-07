@@ -202,7 +202,7 @@ export class PostService {
 
     if (!post) return Promise.reject(new Error('No post'))
 
-    const items = post.children.map((child) => mapPostChild(child, post))
+    const items = post.children.map((child) => mapPostChild(child))
 
     const lastItem = items.length === limit ? items[limit - 1] : null
 

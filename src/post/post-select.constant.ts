@@ -127,7 +127,7 @@ export function mapPost(post: PostWithParent): Post {
 
 type PostChild = Prisma.PostGetPayload<typeof PostChildSelect>
 
-export function mapPostChild(child: PostChild, parent: PostWithParent): Post {
+export function mapPostChild(child: PostChild): Post {
   const { _count, pollOptions, ...rest } = child
 
   return {
