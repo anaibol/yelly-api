@@ -409,10 +409,10 @@ export class PushNotificationService {
     }
   }
 
-  async newTagReaction(tagReaction: TagReaction) {
+  async checkIfTagIsTrendingTrending(tagId: bigint) {
     const tag = await this.prismaService.tag.findUnique({
       where: {
-        id: tagReaction.tagId,
+        id: tagId,
       },
       select: {
         id: true,
@@ -423,6 +423,10 @@ export class PushNotificationService {
     if (!tag?.author?.countryId) return Promise.reject(new Error('No country'))
 
     const topTags = await this.prismaService.tag.findMany({
+      where: {
+        isHidden: false,
+        countryId: tag.author.countryId,
+      },
       orderBy: [
         {
           reactions: {
@@ -444,6 +448,20 @@ export class PushNotificationService {
         },
       })
     }
+  }
+
+  async newTagReaction(tagReaction: TagReaction) {
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagReaction.tagId,
+      },
+      select: {
+        id: true,
+        author: true,
+      },
+    })
+
+    if (!tag?.author) return Promise.reject(new Error('No tag'))
 
     const {
       author: { id: tagAuthorId, locale },

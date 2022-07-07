@@ -370,6 +370,12 @@ export class TagService {
             id: tagId,
           },
         },
+        activity: {
+          create: {
+            userId: authUser.id,
+            type: ActivityType.CREATED_TAG_REACTION,
+          },
+        },
       },
       update: {
         text,
@@ -384,6 +390,7 @@ export class TagService {
       })
     }
 
+    this.pushNotificationService.checkIfTagIsTrendingTrending(reaction.tagId)
     this.pushNotificationService.newTagReaction(reaction)
 
     return reaction

@@ -1,6 +1,6 @@
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { Injectable } from '@nestjs/common'
-import { NotificationType } from '@prisma/client'
+import { ActivityType, NotificationType } from '@prisma/client'
 import { AuthUser } from 'src/auth/auth.service'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
@@ -235,6 +235,12 @@ export class PostService {
         author: {
           connect: {
             id: authUser.id,
+          },
+        },
+        activities: {
+          create: {
+            userId: authUser.id,
+            type: ActivityType.CREATED_POST,
           },
         },
         ...(parentId && {
