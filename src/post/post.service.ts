@@ -246,13 +246,15 @@ export class PostService {
             id: authUser.id,
           },
         },
-        activities: {
-          create: {
-            userId: authUser.id,
-            type: ActivityType.CREATED_POST,
+        ...(tagIds && {
+          activities: {
+            create: tagIds.map((tagId) => ({
+              userId: authUser.id,
+              tagId,
+              type: ActivityType.CREATED_POST,
+            })),
           },
-        },
-
+        }),
         ...(parent && {
           parent: {
             connect: {

@@ -373,6 +373,7 @@ export class TagService {
         activity: {
           create: {
             userId: authUser.id,
+            tagId,
             type: ActivityType.CREATED_TAG_REACTION,
           },
         },

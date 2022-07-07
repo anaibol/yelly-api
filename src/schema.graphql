@@ -18,7 +18,7 @@ type Activity {
   createdAt: DateTime
   date: DateTime
   id: BigInt!
-  post: Post
+  tag: Tag
   type: ActivityType
 }
 

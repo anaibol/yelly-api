@@ -25,5 +25,5 @@ export class Notification {
   follower?: Follower | null
   date?: Date | null
   @Field(() => NotificationType)
-  type?: NotificationType | null
+  type?: NotificationType
 }

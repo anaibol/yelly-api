@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 
 import { PrismaService } from '../core/prisma.service'
-import { mapPost, PostSelectWithParent } from '../post/post-select.constant'
 import { Activities } from './activity.model'
 
 @Injectable()
@@ -16,7 +15,7 @@ export class ActivityService {
       }),
     }
 
-    const [totalCount, activities] = await Promise.all([
+    const [totalCount, items] = await Promise.all([
       this.prismaService.activity.count({
         where,
       }),
@@ -32,23 +31,11 @@ export class ActivityService {
           createdAt: 'desc',
         },
         take: limit,
-        select: {
-          id: true,
-          createdAt: true,
-          date: true,
-          post: {
-            select: PostSelectWithParent,
-          },
+        include: {
+          tag: true,
         },
       }),
     ])
-
-    const mappedPosts = activities.map(({ post, ...activity }) => ({
-      ...activity,
-      ...(post && { post: mapPost(post) }),
-    }))
-
-    const items = mappedPosts
 
     const lastItem = items.length === limit ? items[limit - 1] : null
 

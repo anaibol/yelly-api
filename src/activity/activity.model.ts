@@ -1,6 +1,7 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { ActivityType } from '@prisma/client'
-import { Post } from 'src/post/post.model'
+
+import { Tag } from '../tag/tag.model'
 
 registerEnumType(ActivityType, {
   name: 'ActivityType',
@@ -10,11 +11,11 @@ registerEnumType(ActivityType, {
 export class Activity {
   @Field(() => BigInt)
   id: BigInt
-  post?: Post
+  tag?: Tag
   createdAt?: Date
   date?: Date | null
   @Field(() => ActivityType)
-  type?: ActivityType | null
+  type?: ActivityType
 }
 
 @ObjectType()

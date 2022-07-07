@@ -34,7 +34,7 @@ model Notification {
   isSeen         Boolean           @default(false)
   createdAt      DateTime          @default(now())
   userId         String
-  type           NotificationType?
+  type           NotificationType
   postReactionId BigInt?           @unique
   postReaction   PostReaction?     @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
   tagReactionId  BigInt?           @unique
@@ -57,8 +57,8 @@ model Activity {
   createdAt     DateTime     @default(now())
   postId        BigInt?
   post          Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tagId         BigInt?
-  tag           Tag?         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId         BigInt
+  tag           Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
   tagReactionId BigInt?      @unique
   tagReaction   TagReaction? @relation(fields: [tagReactionId], references: [id], onDelete: Cascade)
   user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
