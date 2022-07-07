@@ -23,5 +23,6 @@ export class User {
   followersCount?: number
   followeesCount?: number
   postCount?: number
+  tagCount?: number
   viewsCount?: number
 }

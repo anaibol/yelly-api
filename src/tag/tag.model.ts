@@ -18,4 +18,5 @@ export class Tag {
   author?: User | null
   authUserReaction?: TagReaction | null
   isReadOnly?: boolean
+  date?: Date | null
 }

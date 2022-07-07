@@ -3,9 +3,10 @@ export interface TagIndexAlgoliaInterface {
   text: string
   postCount: number | object
   reactionsCount: number | object
-  createdAtTimestamp: number
+  date: Date
   dateTimestamp: number
-  // updatedAtTimestamp: number
   createdAt: Date
-  // updatedAt: Date
+  createdAtTimestamp: number
+  updatedAt?: Date
+  updatedAtTimestamp?: number
 }

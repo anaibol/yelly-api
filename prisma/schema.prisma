@@ -45,7 +45,8 @@ model Notification {
   post           Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
   follower       Follower?         @relation(fields: [followerId], references: [id], onDelete: Cascade)
   followerId     String?           @unique
-  postCount  Int?
+  postCount      Int?
+  date           DateTime          @default(now()) @db.Date
 
   @@index([createdAt], map: "Notification_createdAt")
   @@index([userId])
@@ -61,6 +62,7 @@ model Activity {
   user      User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      ActivityType
   userId    String
+  date      DateTime     @default(now()) @db.Date
 
   @@index([createdAt], map: "Activity_createdAt")
 }

@@ -14,10 +14,6 @@ ALTER TABLE "Notification" DROP COLUMN "followerFolloweeId",
 DROP COLUMN "followerUserId",
 ADD COLUMN     "followerId" TEXT;
 
--- AlterTable
-ALTER TABLE "User" ALTER COLUMN "isAgeApproved" DROP NOT NULL,
-ALTER COLUMN "isAgeApproved" DROP DEFAULT;
-
 -- CreateIndex
 CREATE UNIQUE INDEX "Notification_followerId_key" ON "Notification"("followerId");
 

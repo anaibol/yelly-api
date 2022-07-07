@@ -1,8 +1,9 @@
 /* eslint-disable functional/no-let */
 /* eslint-disable functional/no-loop-statement */
-import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
 import { tagSelect } from 'src/tag/tag-select.constant'
+
+import { PrismaClient } from '.prisma/client'
 
 const INDEX_NAME = process.env.ALGOLIA_INDEX_PREFIX + 'TAGS'
 
@@ -44,6 +45,7 @@ async function main() {
         objectID: tag.id,
         text: tag.text,
         postCount: tag._count.posts,
+        reactionsCount: tag._count.reactions,
         ...(tag.updatedAt && { updatedAtTimestamp: Date.parse(tag.updatedAt.toString()) }),
         createdAt: tag.createdAt,
         updatedAt: tag.updatedAt,

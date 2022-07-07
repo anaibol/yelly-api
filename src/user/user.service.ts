@@ -168,6 +168,7 @@ export class UserService {
         _count: {
           select: {
             posts: true,
+            tags: true,
             followers: true,
             followees: true,
           },
@@ -185,6 +186,7 @@ export class UserService {
       followersCount: _count.followers,
       followeesCount: _count.followees,
       postCount: _count.posts,
+      tagCount: _count.tags,
     }
   }
 
@@ -232,6 +234,7 @@ export class UserService {
         _count: {
           select: {
             posts: true,
+            tags: true,
             followers: true,
             followees: true,
           },
@@ -245,6 +248,7 @@ export class UserService {
       followersCount: _count.followers,
       followeesCount: _count.followees,
       postCount: _count.posts,
+      tagCount: _count.tags,
     }))
 
     return {
@@ -553,6 +557,7 @@ export class UserService {
             followers: true,
             followees: true,
             posts: true,
+            tags: true,
           },
         },
         viewsCount: true,
@@ -569,6 +574,7 @@ export class UserService {
       followersCount: _count.followers,
       followeesCount: _count.followees,
       postCount: _count.posts,
+      tagCount: _count.tags,
     }
   }
 

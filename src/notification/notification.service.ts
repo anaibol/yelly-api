@@ -17,12 +17,14 @@ export class NotificationService {
       this.prismaService.notification.findMany({
         where: {
           userId,
+          date: new Date(),
         },
         select: {
           id: true,
           type: true,
           createdAt: true,
           isSeen: true,
+          date: true,
           postReaction: {
             select: {
               id: true,

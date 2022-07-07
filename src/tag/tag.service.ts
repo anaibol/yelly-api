@@ -76,6 +76,7 @@ export class TagService {
         value: 1,
       },
       createdAtTimestamp: tag.createdAt.getTime(),
+      date: tag.date,
       dateTimestamp: tag.date.getTime(),
       createdAt: tag.createdAt,
     }

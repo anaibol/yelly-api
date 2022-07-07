@@ -12,6 +12,7 @@ export class Activity {
   id: BigInt
   post?: Post
   createdAt?: Date
+  date?: Date | null
   @Field(() => ActivityType)
   type?: ActivityType | null
 }

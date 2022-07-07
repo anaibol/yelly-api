@@ -13,8 +13,8 @@ export class ActivityResolver {
   @UseGuards(AuthGuard)
   @Query(() => Activities)
   async userActivities(@Args() userActivitiesArgs: UserActivitiesArgs): Promise<Activities> {
-    const { userId, after, limit } = userActivitiesArgs
+    const { userId, isToday, after, limit } = userActivitiesArgs
 
-    return this.activityService.getActivities(userId, limit, after)
+    return this.activityService.getActivities(userId, isToday, limit, after)
   }
 }

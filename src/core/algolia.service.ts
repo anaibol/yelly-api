@@ -40,15 +40,4 @@ export class AlgoliaService {
   partialUpdateObjects(index: SearchIndex, objectsToUpdate: Array<Record<string, any>>) {
     return index.partialUpdateObjects(objectsToUpdate)
   }
-
-  incrementValue(index: SearchIndex, objectToUpdateOrCreate: any, objectID: string) {
-    return index.partialUpdateObject({
-      ...objectToUpdateOrCreate,
-      postCount: {
-        _operation: 'Increment',
-        value: 1,
-      },
-      objectID,
-    })
-  }
 }

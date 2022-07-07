@@ -8,15 +8,12 @@ import { Activities } from './activity.model'
 @Injectable()
 export class ActivityService {
   constructor(private prismaService: PrismaService) {}
-  async getActivities(userId: string, limit: number, after?: bigint): Promise<Activities> {
+  async getActivities(userId: string, isToday: boolean, limit: number, after?: bigint): Promise<Activities> {
     const where: Prisma.ActivityWhereInput = {
       userId,
-
-      post: {
-        author: {
-          isActive: true,
-        },
-      },
+      ...(isToday && {
+        date: new Date(),
+      }),
     }
 
     const [totalCount, activities] = await Promise.all([
@@ -38,6 +35,7 @@ export class ActivityService {
         select: {
           id: true,
           createdAt: true,
+          date: true,
           post: {
             select: PostSelectWithParent,
           },

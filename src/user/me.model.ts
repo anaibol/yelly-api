@@ -33,6 +33,7 @@ export class Me {
   followersCount?: number
   followeesCount?: number
   postCount?: number
+  tagCount?: number
   viewsCount?: number
   isAgeApproved?: null | boolean
 }

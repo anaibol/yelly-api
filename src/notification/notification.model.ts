@@ -23,6 +23,7 @@ export class Notification {
   createdAt: Date
   postReaction?: PostReaction | null
   follower?: Follower | null
+  date?: Date | null
   @Field(() => NotificationType)
   type?: NotificationType | null
 }
