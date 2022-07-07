@@ -217,10 +217,8 @@ export class TagService {
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
-    const minYear = 2007
-    const maxYear = 2009
-
-    const isBetween13And15 = authUser.birthdate.getFullYear() >= minYear && authUser.birthdate.getFullYear() <= maxYear
+    const fifteenYoYear = 2007
+    const isLessThanFifteen = authUser.birthdate.getFullYear() >= fifteenYoYear
 
     const date = isYesterday ? new Date(new Date().setDate(new Date().getDate() - 1)) : new Date()
 
@@ -234,13 +232,12 @@ export class TagService {
         isHidden: false,
       }),
       author: {
-        birthdate: isBetween13And15
+        birthdate: isLessThanFifteen
           ? {
-              lte: new Date(minYear + '-01-01'),
-              gte: new Date(maxYear + '-01-12'),
+              gte: new Date(fifteenYoYear + '-01-01'),
             }
           : {
-              lte: new Date(maxYear + 1 + '-01-01'),
+              lte: new Date(fifteenYoYear + '-01-01'),
             },
       },
     }
