@@ -49,6 +49,7 @@ model Notification {
   date           DateTime          @default(now()) @db.Date
 
   @@index([createdAt], map: "Notification_createdAt")
+  @@index([date])
   @@index([userId])
 }
 
@@ -67,6 +68,7 @@ model Activity {
   date          DateTime     @default(now()) @db.Date
 
   @@index([createdAt], map: "Activity_createdAt")
+  @@index([userId, date])
 }
 
 model School {
@@ -164,6 +166,9 @@ model Tag {
 
   @@unique([text, date])
   @@index([createdAt])
+  @@index([date])
+  @@index([authorId])
+  @@index([isHidden])
 }
 
 model Post {

@@ -277,7 +277,7 @@ type Query {
   tags(after: BigInt, authorId: String, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   unreadNotificationsCount: Int!
   user(id: String!): User!
-  userActivities(after: BigInt, isToday: Boolean = false, limit: Int = 10, userId: String!): Activities!
+  userActivities(after: BigInt, limit: Int = 10, userId: String!): Activities!
   userFollowees(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
   userFollowers(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
   users(ids: [String!]!): PaginatedUsers!
