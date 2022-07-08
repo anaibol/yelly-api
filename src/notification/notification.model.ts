@@ -19,7 +19,7 @@ export class Notification {
   createdAt: Date
   postReaction?: PostReaction | null
   tagReaction?: TagReaction | null
-  follower?: User | null
+  followerUser?: User | null
   tag?: Tag | null
   post?: Post | null
   date?: Date | null

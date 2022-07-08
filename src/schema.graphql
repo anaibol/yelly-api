@@ -178,7 +178,7 @@ type Mutation {
 type Notification {
   createdAt: DateTime!
   date: DateTime
-  follower: User
+  followerUser: User
   id: ID!
   isSeen: Boolean
   newPostCount: Int

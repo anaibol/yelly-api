@@ -25,6 +25,7 @@ export class NotificationService {
           createdAt: true,
           isSeen: true,
           date: true,
+          newPostCount: true,
           tag: {
             select: {
               id: true,
