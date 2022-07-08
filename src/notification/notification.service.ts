@@ -25,6 +25,25 @@ export class NotificationService {
           createdAt: true,
           isSeen: true,
           date: true,
+          tagReaction: {
+            select: {
+              id: true,
+              text: true,
+              author: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  pictureId: true,
+                },
+              },
+              tag: {
+                select: {
+                  id: true,
+                  text: true,
+                },
+              },
+            },
+          },
           postReaction: {
             select: {
               id: true,

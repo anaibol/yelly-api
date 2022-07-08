@@ -187,6 +187,7 @@ type Notification {
   id: ID!
   isSeen: Boolean
   postReaction: PostReaction
+  tagReaction: TagReaction
   type: NotificationType
 }
 
