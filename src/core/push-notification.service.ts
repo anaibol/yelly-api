@@ -447,6 +447,7 @@ export class PushNotificationService {
         data: {
           userId: tag.author.id,
           type: 'YOUR_TAG_IS_TRENDING',
+          tagId: tag.id,
         },
       })
     }

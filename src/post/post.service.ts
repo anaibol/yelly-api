@@ -18,9 +18,19 @@ function isDefined<T>(value: T | undefined | null): value is T {
   return <T>value !== undefined && <T>value !== null
 }
 
-const getPostCount = (postCount: number): number | undefined => {
-  if ([1, 6, 26, 126].includes(postCount)) {
-    return postCount
+const getNewPostCount = (postCount: number): number | undefined => {
+  switch (postCount) {
+    case 1:
+      return 1
+
+    case 6:
+      return 5
+
+    case 26:
+      return 20
+
+    case 126:
+      return 100
   }
 }
 
@@ -297,15 +307,15 @@ export class PostService {
           .map((tag) => {
             if (!tag.authorId) return
 
-            const postCount = getPostCount(tag._count.posts)
+            const newPostCount = getNewPostCount(tag._count.posts)
 
-            if (!postCount) return
+            if (!newPostCount) return
 
             return {
               userId: tag.authorId,
               type: NotificationType.THERE_ARE_NEW_POSTS_ON_YOUR_TAG,
-              postId: post.id,
-              postCount,
+              tagId: tag.id,
+              newPostCount,
             }
           })
           .filter(isDefined),
@@ -360,6 +370,9 @@ export class PostService {
       where: {
         id: postId,
       },
+      include: {
+        tags: true,
+      },
     })
 
     if (!postBeforeReaction) return Promise.reject(new Error('No post'))
@@ -387,6 +400,7 @@ export class PostService {
           create: {
             userId: postBeforeReaction.authorId,
             type: NotificationType.REACTED_TO_YOUR_POST,
+            tagId: postBeforeReaction.tags[0].id,
           },
         },
       },

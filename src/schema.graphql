@@ -106,11 +106,6 @@ input EmailSignInInput {
   password: String!
 }
 
-type Follower {
-  followee: User
-  id: ID!
-}
-
 input ForgotPasswordInput {
   email: String!
 }
@@ -183,10 +178,13 @@ type Mutation {
 type Notification {
   createdAt: DateTime!
   date: DateTime
-  follower: Follower
+  follower: User
   id: ID!
   isSeen: Boolean
+  newPostCount: Int
+  post: Post
   postReaction: PostReaction
+  tag: Tag
   tagReaction: TagReaction
   type: NotificationType
 }

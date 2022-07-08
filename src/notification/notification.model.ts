@@ -3,14 +3,9 @@ import { NotificationType } from '@prisma/client'
 import { PostReaction } from 'src/post/post-reaction.model'
 import { TagReaction } from 'src/tag/tag-reaction.model'
 
+import { Post } from '../post/post.model'
+import { Tag } from '../tag/tag.model'
 import { User } from '../user/user.model'
-
-@ObjectType()
-class Follower {
-  @Field(() => ID)
-  id: string
-  followee?: User | null
-}
 
 registerEnumType(NotificationType, {
   name: 'NotificationType',
@@ -24,8 +19,11 @@ export class Notification {
   createdAt: Date
   postReaction?: PostReaction | null
   tagReaction?: TagReaction | null
-  follower?: Follower | null
+  follower?: User | null
+  tag?: Tag | null
+  post?: Post | null
   date?: Date | null
+  newPostCount?: number | null
   @Field(() => NotificationType)
   type?: NotificationType
 }

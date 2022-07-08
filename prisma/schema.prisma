@@ -30,23 +30,23 @@ model Country {
 }
 
 model Notification {
-  id             String            @id @default(dbgenerated("generate_id()"))
-  isSeen         Boolean           @default(false)
-  createdAt      DateTime          @default(now())
+  id             String           @id @default(dbgenerated("generate_id()"))
+  isSeen         Boolean          @default(false)
+  createdAt      DateTime         @default(now())
   userId         String
   type           NotificationType
-  postReactionId BigInt?           @unique
-  postReaction   PostReaction?     @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
-  tagReactionId  BigInt?           @unique
-  tagReaction    TagReaction?      @relation(fields: [tagReactionId], references: [id], onDelete: Cascade)
-  tagId          BigInt?           @unique
-  tag            Tag?              @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  postId         BigInt?           @unique
-  post           Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
-  follower       Follower?         @relation(fields: [followerId], references: [id], onDelete: Cascade)
-  followerId     String?           @unique
-  postCount      Int?
-  date           DateTime          @default(now()) @db.Date
+  postReactionId BigInt?          @unique
+  postReaction   PostReaction?    @relation(fields: [postReactionId], references: [id], onDelete: Cascade)
+  tagReactionId  BigInt?          @unique
+  tagReaction    TagReaction?     @relation(fields: [tagReactionId], references: [id], onDelete: Cascade)
+  tagId          BigInt?
+  tag            Tag?             @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  postId         BigInt?
+  post           Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  followerUser   User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  followerUserId String?
+  newPostCount   Int?
+  date           DateTime         @default(now()) @db.Date
 
   @@index([createdAt], map: "Notification_createdAt")
   @@index([date])
@@ -59,7 +59,7 @@ model Activity {
   postId        BigInt?
   post          Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
   tagId         BigInt
-  tag           Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tag           Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
   tagReactionId BigInt?      @unique
   tagReaction   TagReaction? @relation(fields: [tagReactionId], references: [id], onDelete: Cascade)
   user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -131,18 +131,18 @@ model User {
   activities                   Activity[]
   viewsCount                   Int                               @default(0)
   tags                         Tag[]
+  notifications                Notification[]
 
   @@index([birthdate], map: "User_birthdate")
 }
 
 model Follower {
-  id           String        @unique @default(dbgenerated("generate_id()"))
-  userId       String
-  followeeId   String
-  createdAt    DateTime      @default(now())
-  user         User          @relation("usersAsFollowees", fields: [userId], references: [id], onDelete: Cascade)
-  followee     User          @relation("usersAsFollowers", fields: [followeeId], references: [id], onDelete: Cascade)
-  notification Notification?
+  id         String   @unique @default(dbgenerated("generate_id()"))
+  userId     String
+  followeeId String
+  createdAt  DateTime @default(now())
+  user       User     @relation("usersAsFollowees", fields: [userId], references: [id], onDelete: Cascade)
+  followee   User     @relation("usersAsFollowers", fields: [followeeId], references: [id], onDelete: Cascade)
 
   @@id([userId, followeeId])
 }

@@ -660,12 +660,14 @@ export class UserService {
       data: {
         userId,
         followeeId,
-        notification: {
-          create: {
-            userId: followeeId,
-            type: NotificationType.IS_NOW_FOLLOWING_YOU,
-          },
-        },
+      },
+    })
+
+    this.prismaService.notification.create({
+      data: {
+        userId: followeeId,
+        followerUserId: userId,
+        type: NotificationType.IS_NOW_FOLLOWING_YOU,
       },
     })
 

@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql'
-import { User } from 'src/user/user.model'
 
+import { User } from '../user/user.model'
 import { Tag } from './tag.model'
 
 @ObjectType()

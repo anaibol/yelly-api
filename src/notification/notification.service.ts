@@ -25,6 +25,32 @@ export class NotificationService {
           createdAt: true,
           isSeen: true,
           date: true,
+          tag: {
+            select: {
+              id: true,
+              text: true,
+              author: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  pictureId: true,
+                },
+              },
+            },
+          },
+          post: {
+            select: {
+              id: true,
+              text: true,
+              author: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  pictureId: true,
+                },
+              },
+            },
+          },
           tagReaction: {
             select: {
               id: true,
@@ -58,21 +84,24 @@ export class NotificationService {
               post: {
                 select: {
                   id: true,
+                  text: true,
+                  author: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      pictureId: true,
+                    },
+                  },
                 },
               },
             },
           },
-          follower: {
+          followerUser: {
             select: {
               id: true,
-              followee: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  pictureId: true,
-                },
-              },
+              firstName: true,
+              lastName: true,
+              pictureId: true,
             },
           },
         },
