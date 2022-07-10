@@ -21,6 +21,7 @@ type Activity {
   post: Post
   tag: Tag
   type: ActivityType
+  user: User
 }
 
 enum ActivityType {
@@ -262,6 +263,7 @@ type PostReaction {
 }
 
 type Query {
+  activities(after: BigInt, limit: Int = 10): Activities!
   authUserCanCreateTag: Boolean!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
   getS3PresignedUploadUrl: Upload!
