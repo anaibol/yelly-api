@@ -315,6 +315,7 @@ export class PostService {
               userId: tag.authorId,
               type: NotificationType.THERE_ARE_NEW_POSTS_ON_YOUR_TAG,
               tagId: tag.id,
+              postId: post.id,
               newPostCount,
             }
           })
