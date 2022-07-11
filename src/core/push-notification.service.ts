@@ -57,6 +57,7 @@ export class PushNotificationService {
     const tag = await this.prismaService.tag.findUnique({
       where: { id: tagId },
       select: {
+        text: true,
         author: {
           select: {
             ...UserPushTokenSelect,
@@ -83,9 +84,9 @@ export class PushNotificationService {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
         body: await this.i18n.translate('notifications.followeeCreatedTag', {
           ...(lang && { lang }),
-          args: { otherUserFirstName: tag.author?.firstName },
+          args: { otherUserFirstName: tag.author?.firstName, tagText: tag.text },
         }),
-        data: { url: `${process.env.APP_BASE_URL}/notifications/feed` },
+        data: { url: `${process.env.APP_BASE_URL}/tag/${tagId}` },
         sound: 'default' as const,
       }
     })

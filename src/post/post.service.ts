@@ -14,10 +14,6 @@ import { PostPollVote } from './post.model'
 import { PostReaction } from './post-reaction.model'
 import { mapPost, mapPostChild, PostChildSelect, PostSelectWithParent } from './post-select.constant'
 
-function isDefined<T>(value: T | undefined | null): value is T {
-  return <T>value !== undefined && <T>value !== null
-}
-
 const getNewPostCount = (postCount: number): number | undefined => {
   switch (postCount) {
     case 1:
@@ -236,6 +232,9 @@ export class PostService {
         where: {
           id: parentId,
         },
+        include: {
+          tags: true,
+        },
       }))
 
     const post = await this.prismaService.post.create({
@@ -256,15 +255,20 @@ export class PostService {
             id: authUser.id,
           },
         },
-        ...(tagIds && {
-          activities: {
-            create: {
-              userId: authUser.id,
-              tagId: tagIds[0],
-              type: ActivityType.CREATED_POST,
-            },
+        activities: {
+          create: {
+            type: ActivityType.CREATED_POST,
+            ...(tagIds &&
+              tagIds.length > 0 && {
+                tagId: tagIds[0],
+              }),
+            ...(parent &&
+              parent.tags.length > 0 && {
+                tagId: parent.tags[0].id,
+              }),
+            userId: authUser.id,
           },
-        }),
+        },
         ...(parent && {
           parent: {
             connect: {
@@ -275,14 +279,19 @@ export class PostService {
             create: {
               userId: parent.authorId,
               type: NotificationType.REPLIED_TO_YOUR_POST,
+              ...(parent &&
+                parent.tags.length > 0 && {
+                  tagId: parent.tags[0].id,
+                }),
             },
           },
         }),
-        ...(tagIds && {
-          tags: {
-            connect: tagIds.map((tagId) => ({ id: tagId })),
-          },
-        }),
+        ...(tagIds &&
+          tagIds.length > 0 && {
+            tags: {
+              connect: tagIds.map((tagId) => ({ id: tagId })),
+            },
+          }),
       },
     })
 

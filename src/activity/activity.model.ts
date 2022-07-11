@@ -13,7 +13,7 @@ registerEnumType(ActivityType, {
 export class Activity {
   @Field(() => BigInt)
   id: BigInt
-  tag?: Tag
+  tag?: Tag | null
   user?: User | null
   post?: Post | null
   createdAt?: Date

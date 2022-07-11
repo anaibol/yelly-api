@@ -59,11 +59,13 @@ export class ActivityService {
 
     const items = activities.map(({ post, tag, ...activity }) => ({
       post: post ? mapPost(post) : null,
-      tag: {
-        postCount: tag._count.posts,
-        reactionsCount: tag._count.reactions,
-        ...tag,
-      },
+      ...(tag && {
+        tag: {
+          postCount: tag?._count.posts,
+          reactionsCount: tag?._count.reactions,
+          ...tag,
+        },
+      }),
       ...activity,
     }))
 
@@ -116,11 +118,13 @@ export class ActivityService {
 
     const items = activities.map(({ post, tag, ...activity }) => ({
       post: post ? mapPost(post) : null,
-      tag: {
-        postCount: tag._count.posts,
-        reactionsCount: tag._count.reactions,
-        ...tag,
-      },
+      ...(tag && {
+        tag: {
+          postCount: tag?._count.posts,
+          reactionsCount: tag?._count.reactions,
+          ...tag,
+        },
+      }),
       ...activity,
     }))
 
