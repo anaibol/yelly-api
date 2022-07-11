@@ -1,7 +1,7 @@
 {
   "reactedToYourTag": "{otherUserFirstName} a voté pour ton sujet du jour !",
   "reactedToYourPost": "{otherUserFirstName} a aimé ton post sur sur #{tagText}",
-  "reactedToYourPostNoTag": "{otherUserFirstName} a aimé ton post sur",
+  "reactedToYourPostNoTag": "{otherUserFirstName} a aimé ton post",
   "repliedToYourPost": "{otherUserFirstName} a répondu a ton post sur #{tagText}",
   "repliedToYourPostNoTag": "{otherUserFirstName} a répondu a ton post",
   "repliedToSamePostAsYou": "{otherUserFirstName} a répondu au même post que toi sur #{tagText}",

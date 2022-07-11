@@ -1,14 +1,14 @@
 {
-  "reactedToYourTag": "{otherUserFirstName} a voté pour ton sujet du jour !",
-  "reactedToYourPost": "{otherUserFirstName} a aimé ton post sur sur #{tagText}",
-  "reactedToYourPostNoTag": "{otherUserFirstName} a aimé ton post sur",
-  "repliedToYourPost": "{otherUserFirstName} a répondu a ton post sur #{tagText}",
-  "repliedToYourPostNoTag": "{otherUserFirstName} a répondu a ton post",
-  "repliedToSamePostAsYou": "{otherUserFirstName} a répondu au même post que toi sur #{tagText}",
-  "repliedToSamePostAsYouNoTag": "{otherUserFirstName} a répondu au même post que toi",
-  "thereAreNewPostsOnYourTag": "{newPostCount} nouveaux posts sur ton sujet du jour !",
-  "yourTagIsTrending": "Ton sujet du jour est en Une !",
-  "isNowFollowingYou": "{otherUserFirstName} te suis désormais",
+  "reactedToYourTag": "{otherUserFirstName} upvoted your topic!",
+  "reactedToYourPost": "{otherUserFirstName} liked your post on #{tagText}",
+  "reactedToYourPostNoTag": "{otherUserFirstName} liked your post",
+  "repliedToYourPost": "{otherUserFirstName} replied to your post on #{tagText}",
+  "repliedToYourPostNoTag": "{otherUserFirstName} replied to your post",
+  "repliedToSamePostAsYou": "{otherUserFirstName} replied to the same post as you on #{tagText}",
+  "repliedToSamePostAsYouNoTag": "{otherUserFirstName} replied to the same post as you",
+  "thereAreNewPostsOnYourTag": "{newPostCount} new posts on your topic!",
+  "yourTagIsTrending": "Your topic is on the Front Page!",
+  "isNowFollowingYou": "{otherUserFirstName} is now following you",
   "promotedTag": "Tendance Yelly live",
-  "followeeCreatedTag": "{otherUserFirstName} a lancé le sujet #{tagText}"
+  "followeeCreatedTag": "{otherUserFirstName} created the topic #{tagText}"
 }
