@@ -224,11 +224,14 @@ export class TagService {
     const date = isYesterday ? new Date(new Date().setDate(new Date().getDate() - 1)) : new Date()
 
     const where: Prisma.TagWhereInput = {
-      date,
+      ...(authorId
+        ? {
+            authorId,
+          }
+        : {
+            date,
+          }),
       countryId: authUser.countryId,
-      ...(authorId && {
-        authorId,
-      }),
       ...(!showHidden && {
         isHidden: false,
       }),
