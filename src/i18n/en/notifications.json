@@ -10,5 +10,5 @@
   "yourTagIsTrending": "Ton sujet du jour est en Une !",
   "isNowFollowingYou": "{otherUserFirstName} te suis désormais",
   "promotedTag": "Tendance Yelly live",
-  "followeeCreatedTag": "{firstName} a lancé le sujet #{tagText}"
+  "followeeCreatedTag": "{otherUserFirstName} a lancé le sujet #{tagText}"
 }

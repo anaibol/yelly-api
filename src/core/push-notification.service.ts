@@ -129,6 +129,7 @@ export class PushNotificationService {
     if (postReply.parent.author.id === postReply.author.id) return
 
     const lang = postReply.parent.author.locale
+
     const expoPushNotificationTokens = postReply.parent.author
       .expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
 
