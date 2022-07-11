@@ -288,7 +288,7 @@ export class PushNotificationService {
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.IS_NOW_FOLLOWING_YOU_BODY', {
+      body: await this.i18n.translate('notifications.isNowFollowingYou', {
         ...(lang && { lang }),
         args: { otherUserFirstName: followerUser.firstName },
       }),
