@@ -109,6 +109,12 @@ export class PushNotificationService {
         parent: {
           select: {
             id: true,
+            tags: {
+              select: {
+                id: true,
+                text: true,
+              },
+            },
             author: {
               select: UserPushTokenSelect,
             },
@@ -127,10 +133,16 @@ export class PushNotificationService {
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.repliedToYourPost', {
-        ...(lang && { lang }),
-        args: { otherUserFirstName: postReply.author.firstName },
-      }),
+      body:
+        postReply.parent.tags.length > 0
+          ? await this.i18n.translate('notifications.repliedToYourPost', {
+              ...(lang && { lang }),
+              args: { otherUserFirstName: postReply.author.firstName, tagText: postReply.parent.tags[0].text },
+            })
+          : await this.i18n.translate('notifications.repliedToYourPostNoTag', {
+              ...(lang && { lang }),
+              args: { otherUserFirstName: postReply.author.firstName },
+            }),
       data: { url: `${process.env.APP_BASE_URL}/post/${postReply.parent.id}` },
       sound: 'default' as const,
     }
@@ -164,10 +176,16 @@ export class PushNotificationService {
 
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
-        body: await this.i18n.translate('notifications.repliedToSamePostAsYou', {
-          ...(lang && { lang }),
-          args: { otherUserFirstName: postReply.author.firstName },
-        }),
+        body:
+          postReply.parent && postReply.parent.tags.length > 0
+            ? await this.i18n.translate('notifications.repliedToSamePostAsYou', {
+                ...(lang && { lang }),
+                args: { otherUserFirstName: postReply.author.firstName, tagText: postReply.parent?.tags[0].text },
+              })
+            : await this.i18n.translate('notifications.repliedToSamePostAsYouNoTag', {
+                ...(lang && { lang }),
+                args: { otherUserFirstName: postReply.author.firstName },
+              }),
         data: { url: `${process.env.APP_BASE_URL}/post/${postReply.parent?.id}` },
         sound: 'default' as const,
       }
@@ -434,6 +452,12 @@ export class PushNotificationService {
         post: {
           select: {
             id: true,
+            tags: {
+              select: {
+                id: true,
+                text: true,
+              },
+            },
             author: {
               select: {
                 id: true,
@@ -452,10 +476,16 @@ export class PushNotificationService {
     const lang = postReaction.post.author.locale
 
     const message = {
-      body: await this.i18n.translate('notifications.reactedToYourPost', {
-        args: { otherUserFirstName: postReaction.author.firstName },
-        ...(lang && { lang }),
-      }),
+      body:
+        postReaction.post.tags.length > 0
+          ? await this.i18n.translate('notifications.reactedToYourPost', {
+              args: { otherUserFirstName: postReaction.author.firstName, tagText: postReaction.post.tags[0].text },
+              ...(lang && { lang }),
+            })
+          : await this.i18n.translate('notifications.reactedToYourPostNoTag', {
+              args: { otherUserFirstName: postReaction.author.firstName },
+              ...(lang && { lang }),
+            }),
     }
 
     const messages = pushTokens.map((expoPushNotificationToken) => {
