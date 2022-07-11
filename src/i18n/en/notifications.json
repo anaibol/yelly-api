@@ -1,10 +1,11 @@
 {
-  "POST_REACTION_BODY": "{firstName} liked your post!",
-  "TAG_REACTION_BODY": "{firstName} liked your tag!",
-  "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} accepted your request to follow his/her yellys",
-  "PROMOTED_TAG_BODY": "Yelly trend live",
-  "POST_REPLIED": "{firstName} replied your yelly 💬",
-  "SAME_POST_REPLIED": "{firstName} replied to the same yelly as you 💬",
-  "POSTED_ON_YOUR_TAG": "{firstName} a publié un nouveau yelly 💬",
-  "FOLLOWEE_CREATED_TAG": "{firstName} a publié un nouveau yelly 💬"
+  "reactedToYourTag": "{otherUserFirstName} a voté pour ton sujet du jour !",
+  "reactedToYourPost": "{otherUserFirstName} a aimé ton post sur sur #{tagText}",
+  "repliedToYourPost": "{otherUserFirstName} a répondu a ton post sur #{tagText}",
+  "repliedToSamePostAsYou": "{otherUserFirstName} a répondu au même post que toi sur #{tagText}",
+  "thereAreNewPostsOnYourTag": "{newPostCount} nouveaux posts sur ton sujet du jour !",
+  "yourTagIsTrending": "Ton sujet du jour est en Une !",
+  "isNowFollowingYou": "{otherUserFirstName} te suis désormais",
+  "promotedTag": "Tendance Yelly live",
+  "followeeCreatedTag": "{firstName} a publié un nouveau yelly 💬"
 }

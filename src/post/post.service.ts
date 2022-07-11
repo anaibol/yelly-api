@@ -258,11 +258,11 @@ export class PostService {
         },
         ...(tagIds && {
           activities: {
-            create: tagIds.map((tagId) => ({
+            create: {
               userId: authUser.id,
-              tagId,
+              tagId: tagIds[0],
               type: ActivityType.CREATED_POST,
-            })),
+            },
           },
         }),
         ...(parent && {
@@ -286,54 +286,48 @@ export class PostService {
       },
     })
 
-    if (tagIds) {
-      const tags = await this.prismaService.tag.findMany({
-        where: {
-          id: {
-            in: tagIds,
-          },
-        },
-        include: {
-          _count: {
-            select: {
-              posts: true,
-            },
-          },
-        },
-      })
-
-      await this.prismaService.notification.createMany({
-        data: tags
-          .map((tag) => {
-            if (!tag.authorId) return
-
-            const newPostCount = getNewPostCount(tag._count.posts)
-
-            if (!newPostCount) return
-
-            return {
-              userId: tag.authorId,
-              type: NotificationType.THERE_ARE_NEW_POSTS_ON_YOUR_TAG,
-              tagId: tag.id,
-              postId: post.id,
-              newPostCount,
-            }
-          })
-          .filter(isDefined),
-      })
-
-      tagIds.map((tagId) => this.tagService.syncTagIndexWithAlgolia(tagId))
-    }
-
     this.syncPostIndexWithAlgolia(post.id)
 
     if (parentId) {
-      this.pushNotificationService.postReplied(post.id)
+      this.pushNotificationService.repliedToYourPost(post.id)
     } else {
-      this.pushNotificationService.postedOnYourTag(post.id)
+      if (tagIds) this.thereAreNewPostsOnYourTag(post.id, tagIds[0])
     }
 
     return post
+  }
+
+  async thereAreNewPostsOnYourTag(postId: bigint, tagId: bigint) {
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagId,
+      },
+      include: {
+        _count: {
+          select: {
+            posts: true,
+          },
+        },
+      },
+    })
+
+    if (!tag?.authorId) return Promise.reject(new Error('No tag author'))
+
+    const newPostCount = getNewPostCount(tag._count.posts)
+
+    if (!newPostCount) return
+
+    await this.prismaService.notification.create({
+      data: {
+        userId: tag.authorId,
+        type: NotificationType.THERE_ARE_NEW_POSTS_ON_YOUR_TAG,
+        tagId: tag.id,
+        postId: postId,
+        newPostCount,
+      },
+    })
+
+    this.pushNotificationService.thereAreNewPostsOnYourTag(tag.authorId, tag.id, newPostCount)
   }
 
   async delete(postId: bigint, authUser: AuthUser): Promise<boolean> {
@@ -417,7 +411,7 @@ export class PostService {
       },
     })
 
-    if (post.author.id !== authUser.id) this.pushNotificationService.newPostReaction(reaction)
+    if (post.author.id !== authUser.id) this.pushNotificationService.reactedToYourPost(reaction.id)
 
     return {
       ...reaction,

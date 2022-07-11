@@ -93,26 +93,6 @@ export class UserService {
   //   return user.locale ? user.locale.split('-')[0] : 'en'
   // }
 
-  async hasUserPostedOnTag(userId: string, tagId: bigint): Promise<boolean> {
-    const post = await this.prismaService.post.findFirst({
-      select: {
-        id: true,
-      },
-      where: {
-        author: {
-          id: userId,
-        },
-        tags: {
-          some: {
-            id: tagId,
-          },
-        },
-      },
-    })
-
-    return post != null
-  }
-
   findByEmail(email: string): Promise<User | null> {
     return this.prismaService.user.findUnique({
       where: {
@@ -671,7 +651,7 @@ export class UserService {
       },
     })
 
-    this.pushNotificationService.newFollowerPushNotification(follower)
+    this.pushNotificationService.isNowFollowingYou(follower)
 
     return true
   }

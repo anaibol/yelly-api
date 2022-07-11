@@ -394,10 +394,55 @@ export class TagService {
       })
     }
 
-    this.pushNotificationService.checkIfTagIsTrendingTrending(reaction.tagId)
-    this.pushNotificationService.newTagReaction(reaction)
+    this.checkIfTagIsTrendingTrending(reaction.tagId)
+
+    this.pushNotificationService.reactedToYourTag(reaction.id)
 
     return reaction
+  }
+
+  async checkIfTagIsTrendingTrending(tagId: bigint) {
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagId,
+      },
+      select: {
+        id: true,
+        author: true,
+      },
+    })
+
+    if (!tag?.author?.countryId) return Promise.reject(new Error('No country'))
+
+    const topTags = await this.prismaService.tag.findMany({
+      where: {
+        isHidden: false,
+        countryId: tag.author.countryId,
+      },
+      orderBy: [
+        {
+          reactions: {
+            _count: 'desc',
+          },
+        },
+        {
+          createdAt: 'desc' as const,
+        },
+      ],
+      take: 5,
+    })
+
+    if (topTags.some(({ id }) => id === tag.id)) {
+      await this.prismaService.notification.create({
+        data: {
+          userId: tag.author.id,
+          type: 'YOUR_TAG_IS_TRENDING',
+          tagId: tag.id,
+        },
+      })
+
+      this.pushNotificationService.yourTagIsTrending(tag.id)
+    }
   }
 
   async deleteTagReaction(tagId: bigint, authUser: AuthUser): Promise<boolean> {
