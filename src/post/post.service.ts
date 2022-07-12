@@ -255,20 +255,19 @@ export class PostService {
             id: authUser.id,
           },
         },
-        activities: {
-          create: {
-            type: ActivityType.CREATED_POST,
-            ...(tagIds &&
-              tagIds.length > 0 && {
+        ...(tagIds &&
+          tagIds.length > 0 && {
+            tags: {
+              connect: tagIds.map((tagId) => ({ id: tagId })),
+            },
+            activities: {
+              create: {
+                type: ActivityType.CREATED_POST,
                 tagId: tagIds[0],
-              }),
-            ...(parent &&
-              parent.tags.length > 0 && {
-                tagId: parent.tags[0].id,
-              }),
-            userId: authUser.id,
-          },
-        },
+                userId: authUser.id,
+              },
+            },
+          }),
         ...(parent && {
           parent: {
             connect: {
@@ -286,12 +285,6 @@ export class PostService {
             },
           },
         }),
-        ...(tagIds &&
-          tagIds.length > 0 && {
-            tags: {
-              connect: tagIds.map((tagId) => ({ id: tagId })),
-            },
-          }),
       },
     })
 
@@ -404,7 +397,9 @@ export class PostService {
           create: {
             userId: postBeforeReaction.authorId,
             type: NotificationType.REACTED_TO_YOUR_POST,
-            tagId: postBeforeReaction.tags[0].id,
+            ...(postBeforeReaction.tags.length > 0 && {
+              tagId: postBeforeReaction.tags[0].id,
+            }),
           },
         },
       },

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { ActivityType, Prisma } from '@prisma/client'
+import { ActivityType, NotificationType, Prisma } from '@prisma/client'
 
 import { AuthUser } from '../auth/auth.service'
 import { AlgoliaService } from '../core/algolia.service'
@@ -380,6 +380,14 @@ export class TagService {
             type: ActivityType.CREATED_TAG_REACTION,
           },
         },
+        ...(tag.authorId && {
+          notification: {
+            create: {
+              type: NotificationType.REACTED_TO_YOUR_TAG,
+              userId: tag.authorId,
+            },
+          },
+        }),
       },
       update: {
         text,
@@ -387,12 +395,6 @@ export class TagService {
         tagId,
       },
     })
-
-    if (tag.authorId) {
-      this.prismaService.notification.create({
-        data: { type: 'REACTED_TO_YOUR_TAG', userId: tag.authorId, tagReactionId: reaction.id },
-      })
-    }
 
     this.checkIfTagIsTrendingTrending(reaction.tagId)
 
@@ -436,7 +438,7 @@ export class TagService {
       await this.prismaService.notification.create({
         data: {
           userId: tag.author.id,
-          type: 'YOUR_TAG_IS_TRENDING',
+          type: NotificationType.YOUR_TAG_IS_TRENDING,
           tagId: tag.id,
         },
       })
