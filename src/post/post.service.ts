@@ -274,23 +274,25 @@ export class PostService {
               id: parentId,
             },
           },
-          notifications: {
-            create: {
-              userId: parent.authorId,
-              type: NotificationType.REPLIED_TO_YOUR_POST,
-              ...(parent &&
-                parent.tags.length > 0 && {
-                  tagId: parent.tags[0].id,
-                }),
+          ...(authUser.id !== parent.authorId && {
+            notifications: {
+              create: {
+                userId: parent.authorId,
+                type: NotificationType.REPLIED_TO_YOUR_POST,
+                ...(parent &&
+                  parent.tags.length > 0 && {
+                    tagId: parent.tags[0].id,
+                  }),
+              },
             },
-          },
+          }),
         }),
       },
     })
 
     this.syncPostIndexWithAlgolia(post.id)
 
-    if (parentId) {
+    if (parent && authUser.id !== parent.authorId) {
       this.pushNotificationService.repliedToYourPost(post.id)
     } else {
       if (tagIds) this.thereAreNewPostsOnYourTag(post.id, tagIds[0])

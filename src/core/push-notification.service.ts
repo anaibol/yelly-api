@@ -126,8 +126,6 @@ export class PushNotificationService {
 
     if (!postReply?.parent?.author) return Promise.reject(new Error('Parent not found'))
 
-    if (postReply.parent.author.id === postReply.author.id) return
-
     const lang = postReply.parent.author.locale
 
     const expoPushNotificationTokens = postReply.parent.author
