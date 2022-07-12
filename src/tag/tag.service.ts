@@ -5,7 +5,6 @@ import { AuthUser } from '../auth/auth.service'
 import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
 import { PushNotificationService } from '../core/push-notification.service'
-import { PostSelectWithParent } from '../post/post-select.constant'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { PaginatedTags } from './paginated-tags.model'
@@ -442,7 +441,6 @@ export class TagService {
           type: NotificationType.YOUR_TAG_IS_TRENDING,
           tagId: tag.id,
         },
-        select: PostSelectWithParent,
       })
 
       this.pushNotificationService.yourTagIsTrending(tag.id)
