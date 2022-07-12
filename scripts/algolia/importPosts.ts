@@ -1,9 +1,10 @@
 /* eslint-disable functional/no-let */
 /* eslint-disable functional/no-loop-statement */
-import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
+
 import { PostSelect } from '../../src/post/post-select.constant'
 import { mapAlgoliaPost, PostIndexAlgoliaInterface } from '../../src/utils/algolia'
+import { PrismaClient } from '.prisma/client'
 
 const INDEX_NAME = process.env.ALGOLIA_INDEX_PREFIX + 'POSTS'
 
@@ -16,9 +17,6 @@ async function main() {
   while (hasPosts) {
     const posts = await prisma.post.findMany({
       select: PostSelect,
-      where: {
-        expiresAt: null,
-      },
       take: 500,
       skip,
     })

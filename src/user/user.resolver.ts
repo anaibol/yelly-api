@@ -1,21 +1,14 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
+import { PaginatedUsers } from 'src/post/paginated-users.model'
 
-import { User } from './user.model'
-
-import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
-
+import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
-
+import { User } from './user.model'
 import { UserService } from './user.service'
-import { AuthUser } from '../auth/auth.service'
-import { PrismaService } from 'src/core/prisma.service'
-import { PostSelectWithParent, mapPost, getNotExpiredCondition } from 'src/post/post-select.constant'
-import { PaginatedPosts } from 'src/post/paginated-posts.model'
-import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { FollowRequest } from './follow-request.model'
-import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
+import { UserFolloweesArgs } from './user-followees.args'
+import { UserFollowersArgs } from './user-followers.args'
 // import { Loader } from '@tracworx/nestjs-dataloader'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
@@ -23,7 +16,7 @@ import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
 
 @Resolver(User)
 export class UserResolver {
-  constructor(private userService: UserService, private prismaService: PrismaService) {}
+  constructor(private userService: UserService) {}
 
   @Query(() => User)
   @UseGuards(AuthGuard)
@@ -38,30 +31,9 @@ export class UserResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => FollowRequest)
-  createFollowRequest(
-    @Args('otherUserId') otherUserId: string,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<FollowRequest> {
-    return this.userService.createFollowRequest(authUser, otherUserId)
-  }
-
-  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
-  acceptFollowRequest(
-    @Args('followRequestId') followRequestId: string,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<boolean> {
-    return this.userService.acceptFollowRequest(authUser, followRequestId)
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
-  deleteFollowRequest(
-    @Args('followRequestId') followRequestId: string,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<boolean> {
-    return this.userService.deleteFollowRequest(authUser, followRequestId)
+  follow(@Args('otherUserId') otherUserId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.follow(authUser.id, otherUserId)
   }
 
   @UseGuards(AuthGuard)
@@ -74,14 +46,6 @@ export class UserResolver {
   @Mutation(() => Boolean)
   deleteFollower(@Args('otherUserId') otherUserId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.userService.unFollow(otherUserId, authUser.id)
-  }
-  @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
-  declineFollowRequest(
-    @Args('followRequestId') followRequestId: string,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<boolean> {
-    return this.userService.declineFollowRequest(authUser, followRequestId)
   }
 
   // @ResolveField()
@@ -134,16 +98,10 @@ export class UserResolver {
     return this.userService.isFollowedByUser(user.id, authUser.id)
   }
 
+  @Query(() => Boolean)
   @UseGuards(AuthGuard)
-  @ResolveField()
-  pendingFollowRequestFromUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FollowRequest | null> {
-    return this.userService.getPendingFollowRequest(user.id, authUser.id)
-  }
-
-  @UseGuards(AuthGuard)
-  @ResolveField()
-  pendingFollowRequestToUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<FollowRequest | null> {
-    return this.userService.getPendingFollowRequest(authUser.id, user.id)
+  async isUserFollowedByAuthUser(@Args('userId') userId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.isFollowedByUser(userId, authUser.id)
   }
 
   @Mutation(() => Boolean)
@@ -163,53 +121,16 @@ export class UserResolver {
   }
 
   @Query(() => PaginatedUsers)
-  @UseGuards(AuthGuard)
-  followSuggestions(
-    @CurrentUser() authUser: AuthUser,
-    @Args() offsetPaginationArgs: OffsetPaginationArgs
-  ): Promise<PaginatedUsers> {
-    return this.userService.getFollowSuggestions(authUser, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+  userFollowers(@Args() userFollowersArgs: UserFollowersArgs): Promise<PaginatedUsers> {
+    const { userId, skip, limit } = userFollowersArgs
+    return this.userService.getFollowers(userId, skip, limit)
   }
 
-  @ResolveField('posts', () => PaginatedPosts)
-  async posts(@Parent() user: User, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedPosts> {
-    const { after, limit } = cursorPaginationArgs
+  @Query(() => PaginatedUsers)
+  userFollowees(@Args() userFolloweesArgs: UserFolloweesArgs): Promise<PaginatedUsers> {
+    const { userId, skip, limit } = userFolloweesArgs
 
-    const posts = await this.prismaService.post.findMany({
-      where: {
-        authorId: user.id,
-        ...getNotExpiredCondition(),
-      },
-      ...(after && {
-        cursor: {
-          id: after,
-        },
-        skip: 1,
-      }),
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: PostSelectWithParent,
-    })
-
-    const items = posts.map(mapPost)
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : ''
-
-    return { items, nextCursor }
-  }
-
-  @ResolveField()
-  followers(@Parent() user: User, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFollowers(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
-  }
-
-  @ResolveField()
-  followees(@Parent() user: User, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFollowees(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+    return this.userService.getFollowees(userId, skip, limit)
   }
 
   @UseGuards(AuthGuard)

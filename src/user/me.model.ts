@@ -1,9 +1,8 @@
-import { ID, Field, ObjectType, registerEnumType } from '@nestjs/graphql'
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
+import { UserRole } from '@prisma/client'
+
 import { School } from '../school/school.model'
 import { Training } from './training.model'
-import { PaginatedPosts } from 'src/post/paginated-posts.model'
-import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { UserRole } from '@prisma/client'
 
 registerEnumType(UserRole, {
   name: 'UserRole',
@@ -25,18 +24,25 @@ export class Me {
   snapchat?: string | null
   instagram?: string | null
   isFilled?: boolean
-  sendbirdAccessToken?: string | null
   expoPushNotificationTokens?: string[]
   about?: string | null
   locale?: string
   training?: Training | null
   school?: School | null
   countryId?: string | null
-  posts?: PaginatedPosts
-  followers?: PaginatedUsers
-  followees?: PaginatedUsers
   followersCount?: number
   followeesCount?: number
   postCount?: number
+  tagCount?: number
   viewsCount?: number
+  isAgeApproved?: null | boolean
 }
+
+@ObjectType()
+export class AgeVerificationResult {
+  isAgeApproved?: null | boolean
+  ageEstimation?: number
+  agePredictionResult?: null | string
+}
+
+export type AgePredictionResult = 'real' | 'fake' | 'undetermined'

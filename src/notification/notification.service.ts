@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { getNotExpiredCondition, PostSelectWithParent } from 'src/post/post-select.constant'
+
 import { PrismaService } from '../core/prisma.service'
 import { PaginatedNotifications } from './paginated-notifications.model'
 
@@ -17,12 +17,60 @@ export class NotificationService {
       this.prismaService.notification.findMany({
         where: {
           userId,
+          date: new Date(),
         },
         select: {
           id: true,
           type: true,
           createdAt: true,
           isSeen: true,
+          date: true,
+          newPostCount: true,
+          tag: {
+            select: {
+              id: true,
+              text: true,
+              author: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  pictureId: true,
+                },
+              },
+            },
+          },
+          post: {
+            select: {
+              id: true,
+              text: true,
+              author: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  pictureId: true,
+                },
+              },
+            },
+          },
+          tagReaction: {
+            select: {
+              id: true,
+              text: true,
+              author: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  pictureId: true,
+                },
+              },
+              tag: {
+                select: {
+                  id: true,
+                  text: true,
+                },
+              },
+            },
+          },
           postReaction: {
             select: {
               id: true,
@@ -37,28 +85,24 @@ export class NotificationService {
               post: {
                 select: {
                   id: true,
+                  text: true,
+                  author: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      pictureId: true,
+                    },
+                  },
                 },
               },
             },
           },
-          followRequest: {
+          followerUser: {
             select: {
               id: true,
-              status: true,
-              requester: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  pictureId: true,
-                },
-              },
-              toFollowUser: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  pictureId: true,
-                },
-              },
+              firstName: true,
+              lastName: true,
+              pictureId: true,
             },
           },
         },

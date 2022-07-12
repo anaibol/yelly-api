@@ -3,6 +3,7 @@
 import { BullQueueInject, BullWorker, BullWorkerProcess } from '@anchan828/nest-bullmq'
 import { Injectable } from '@nestjs/common'
 import { Job, Queue } from 'bullmq'
+
 import { PrismaService } from '../core/prisma.service'
 
 const APP_QUEUE = 'APP_QUEUE'

@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common'
-import { City, Country, Prisma, School } from '@prisma/client'
+import { City, Country, School } from '@prisma/client'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { algoliaSchoolSelect } from 'src/utils/algolia'
+
 import { PrismaService } from '../core/prisma.service'
 import {
-  getGooglePlaceCityAndCountry,
   getCountryLanguageCode,
   getGoogleCityByName,
+  getGooglePlaceCityAndCountry,
   getGooglePlaceDetails,
 } from '../utils/googlePlaces'
 import { SchoolIndexAlgoliaInterface } from './school-index-algolia.interface'

@@ -1,8 +1,10 @@
-import { ObjectType } from '@nestjs/graphql'
+import { Field, ObjectType } from '@nestjs/graphql'
+
 import { Post } from './post.model'
 
 @ObjectType()
 export class PaginatedPosts {
-  nextCursor: string
+  @Field(() => BigInt)
+  nextCursor: BigInt | null
   items: Post[]
 }

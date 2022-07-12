@@ -1,10 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
-import { PrismaService } from '../core/prisma.service'
-
 import { JwtService } from '@nestjs/jwt'
+import { User } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 import { AccessToken } from 'src/user/accessToken.model'
-import { User } from '@prisma/client'
+
+import { PrismaService } from '../core/prisma.service'
 
 export type AuthUser = User & {
   isAdmin: boolean

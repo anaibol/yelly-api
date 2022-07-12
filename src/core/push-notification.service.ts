@@ -1,27 +1,13 @@
 import { Injectable } from '@nestjs/common'
-import {
-  ExpoPushNotificationAccessToken,
-  FollowRequest,
-  FeedItemType,
-  PostReaction,
-  NotificationType,
-  Tag,
-} from '@prisma/client'
+import { ExpoPushNotificationAccessToken, Follower, NotificationType, Tag } from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
-import { PrismaService } from 'src/core/prisma.service'
-import { TrackEventPrefix } from 'src/types/trackEventPrefix'
-import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotificationsToken.service'
+
+import { TrackEventPrefix } from '../types/trackEventPrefix'
+import { ExpoPushNotificationsTokenService } from '../user/expoPushNotificationsToken.service'
 import expo from '../utils/expo'
 import { AmplitudeService } from './amplitude.service'
-
-const expiresInFlash = 60 * 15 // 15m
-
-// type SendbirdMessageWebhookBody = {
-//   sender: any
-//   members: any[]
-//   payload: any
-// }
+import { PrismaService } from './prisma.service'
 
 const UserPushTokenSelect = {
   id: true,
@@ -67,43 +53,11 @@ export class PushNotificationService {
     })
   }
 
-  async vanishingPosts() {
-    // const users = await this.prismaService.user.findMany({
-    //   where: {
-    //     isActive: true,
-    //     isBanned: false,
-    //     posts: {
-    //       some: {
-    //         expiresAt: {
-    //           gt: new Date(new Date(+new Date() + 60000 * 4).toUTCString()), // In more than four minutes
-    //           lte: new Date(new Date(+new Date() + 60000 * 5).toUTCString()), // Get UTC date from new Date() and convert to ISO
-    //         },
-    //       },
-    //     },
-    //   },
-    //   select: UserPushTokenSelect,
-    // })
-    // const tokens = users.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat()
-    // const notifications = users.map(async (user) => {
-    //   const lang = user.locale
-    //   const to = user.expoPushNotificationTokens.map(({ token }) => token)
-    //   return {
-    //     to: to,
-    //     body: await this.i18n.translate('notifications.YOUR_POST_WILL_VANISH', {
-    //       ...(lang && { lang }),
-    //     }),
-    //     sound: 'default' as const,
-    //   }
-    // })
-    // const notificationsToSend = await Promise.all(notifications)
-    // await this.sendNotifications(notificationsToSend, tokens, 'PUSH_NOTIFICATION_POST_VANISHING')
-  }
-
-  async followeePosted(postId: string) {
-    const post = await this.prismaService.post.findUnique({
-      where: { id: postId },
+  async followeeCreatedTag(tagId: bigint) {
+    const tag = await this.prismaService.tag.findUnique({
+      where: { id: tagId },
       select: {
-        expiresIn: true,
+        text: true,
         author: {
           select: {
             ...UserPushTokenSelect,
@@ -119,31 +73,20 @@ export class PushNotificationService {
       },
     })
 
-    if (!post) return Promise.reject(new Error('Post not found'))
+    if (!tag?.author) return Promise.reject(new Error('Tag author not found'))
 
-    const followers = post.author.followers.map(({ user }) => user)
-
-    await this.prismaService.feedItem.createMany({
-      data: followers.map((user) => ({
-        userId: user.id,
-        type: FeedItemType.FOLLOWEE_POSTED,
-        postId,
-      })),
-    })
+    const followers = tag.author.followers.map(({ user }) => user)
 
     const followersPushNotifications = followers.map(async (user) => {
       const lang = user.locale
 
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
-        body: await this.i18n.translate(
-          `notifications.${post.expiresIn === expiresInFlash ? 'FOLLOWEE_POSTED_EPHEMERAL' : 'FOLLOWEE_POSTED'}`,
-          {
-            ...(lang && { lang }),
-            args: { firstName: post.author.firstName },
-          }
-        ),
-        data: { url: `${process.env.APP_BASE_URL}/notifications/feed` },
+        body: await this.i18n.translate('notifications.followeeCreatedTag', {
+          ...(lang && { lang }),
+          args: { otherUserFirstName: tag.author?.firstName, tagText: tag.text },
+        }),
+        data: { url: `${process.env.APP_BASE_URL}/tag/${tagId}` },
         sound: 'default' as const,
       }
     })
@@ -153,77 +96,11 @@ export class PushNotificationService {
     await this.sendNotifications(
       notificationsToSend,
       followers.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
-      'PUSH_NOTIFICATION_FOLLOWEE_POSTED'
+      'PUSH_NOTIFICATION_FOLLOWEE_CREATED_TAG'
     )
   }
 
-  async sameSchoolPosted(postId: string, userId: string) {
-    const post = await this.prismaService.post.findUnique({
-      where: { id: postId },
-      select: {
-        expiresIn: true,
-        author: {
-          select: {
-            ...UserPushTokenSelect,
-            school: {
-              select: {
-                users: {
-                  where: {
-                    id: {
-                      not: userId,
-                    },
-                    followees: {
-                      none: {
-                        followeeId: userId,
-                      },
-                    },
-                  },
-                  select: UserPushTokenSelect,
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!post) return Promise.reject(new Error('Post not found'))
-    if (!post.author.school) return Promise.reject(new Error('Post author no school found'))
-
-    const sameSchoolUsers = post.author.school?.users
-
-    await this.prismaService.feedItem.createMany({
-      data: sameSchoolUsers.map((user) => ({
-        userId: user.id,
-        type: FeedItemType.SAME_SCHOOL_POSTED,
-        postId,
-      })),
-    })
-
-    const sameSchoolUsersPushNotifications = sameSchoolUsers.map(async (user) => {
-      const lang = user.locale
-
-      return {
-        to: user.expoPushNotificationTokens.map(({ token }) => token),
-        body: await this.i18n.translate(`notifications.SAME_SCHOOL_POSTED`, {
-          ...(lang && { lang }),
-          args: { firstName: post.author.firstName },
-        }),
-        data: { url: `${process.env.APP_BASE_URL}/notifications/feed` },
-        sound: 'default' as const,
-      }
-    })
-
-    const notificationsToSend = await Promise.all(sameSchoolUsersPushNotifications)
-
-    await this.sendNotifications(
-      notificationsToSend,
-      sameSchoolUsers.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
-      'PUSH_NOTIFICATION_SAME_SCHOOL_POSTED'
-    )
-  }
-
-  async postReplied(postId: string) {
+  async repliedToYourPost(postId: bigint) {
     const postReply = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
@@ -233,6 +110,12 @@ export class PushNotificationService {
         parent: {
           select: {
             id: true,
+            tags: {
+              select: {
+                id: true,
+                text: true,
+              },
+            },
             author: {
               select: UserPushTokenSelect,
             },
@@ -243,52 +126,48 @@ export class PushNotificationService {
 
     if (!postReply?.parent?.author) return Promise.reject(new Error('Parent not found'))
 
-    const { parent, author } = postReply
+    const lang = postReply.parent.author.locale
 
-    if (parent.author.id === author.id) return
-
-    const lang = parent.author.locale
-    const expoPushNotificationTokens = parent.author.expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
-
-    await this.prismaService.feedItem.create({
-      data: {
-        userId: parent.author.id,
-        type: FeedItemType.POST_REPLIED,
-        postId,
-      },
-    })
+    const expoPushNotificationTokens = postReply.parent.author
+      .expoPushNotificationTokens as ExpoPushNotificationAccessToken[]
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.POST_REPLIED', {
-        ...(lang && { lang }),
-        args: { firstName: author.firstName },
-      }),
-      data: { url: `${process.env.APP_BASE_URL}/post/${parent.id}` },
+      body:
+        postReply.parent.tags.length > 0
+          ? await this.i18n.translate('notifications.repliedToYourPost', {
+              ...(lang && { lang }),
+              args: { otherUserFirstName: postReply.author.firstName, tagText: postReply.parent.tags[0].text },
+            })
+          : await this.i18n.translate('notifications.repliedToYourPostNoTag', {
+              ...(lang && { lang }),
+              args: { otherUserFirstName: postReply.author.firstName },
+            }),
+      data: { url: `${process.env.APP_BASE_URL}/post/${postReply.parent.id}` },
       sound: 'default' as const,
     }
 
-    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_POST_REPLIED')
+    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_REPLIED_TO_YOUR_POST')
 
     const samePostRepliedUsers = await this.prismaService.user.findMany({
       where: {
         id: {
-          not: author.id,
+          not: postReply.author.id,
         },
         posts: {
           some: {
-            parentId: parent.id,
+            parentId: postReply.parent.id,
           },
         },
       },
       select: UserPushTokenSelect,
     })
 
-    await this.prismaService.feedItem.createMany({
+    await this.prismaService.notification.createMany({
       data: samePostRepliedUsers.map((user) => ({
         userId: user.id,
+        type: NotificationType.REPLIED_TO_SAME_POST_AS_YOU,
         postId,
-        type: FeedItemType.SAME_POST_REPLIED,
       })),
     })
 
@@ -297,11 +176,17 @@ export class PushNotificationService {
 
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
-        body: await this.i18n.translate('notifications.SAME_POST_REPLIED', {
-          ...(lang && { lang }),
-          args: { firstName: author.firstName },
-        }),
-        data: { url: `${process.env.APP_BASE_URL}/notifications/feed` },
+        body:
+          postReply.parent && postReply.parent.tags.length > 0
+            ? await this.i18n.translate('notifications.repliedToSamePostAsYou', {
+                ...(lang && { lang }),
+                args: { otherUserFirstName: postReply.author.firstName, tagText: postReply.parent?.tags[0].text },
+              })
+            : await this.i18n.translate('notifications.repliedToSamePostAsYouNoTag', {
+                ...(lang && { lang }),
+                args: { otherUserFirstName: postReply.author.firstName },
+              }),
+        data: { url: `${process.env.APP_BASE_URL}/post/${postReply.parent?.id}` },
         sound: 'default' as const,
       }
     })
@@ -311,42 +196,33 @@ export class PushNotificationService {
     await this.sendNotifications(
       notificationsToSend,
       samePostRepliedUsers.map(({ expoPushNotificationTokens }) => expoPushNotificationTokens).flat(),
-      'PUSH_NOTIFICATION_SAME_POST_REPLIED'
+      'PUSH_NOTIFICATION_REPLIED_TO_SAME_POST_AS_YOU'
     )
   }
 
-  async createFollowRequestPushNotification(followRequest: FollowRequest) {
-    const url = `${process.env.APP_BASE_URL}/notifications/notifications`
-
-    const receiverUser = await this.prismaService.user.findUnique({
-      select: UserPushTokenSelect,
-      where: { id: followRequest.toFollowUserId },
-    })
-
-    const followRequestRequester = await this.prismaService.user.findUnique({
-      select: {
-        id: true,
-        firstName: true,
+  async yourTagIsTrending(tagId: bigint) {
+    const tag = await this.prismaService.tag.findUnique({
+      where: { id: tagId },
+      include: {
+        author: {
+          select: UserPushTokenSelect,
+        },
       },
-      where: { id: followRequest.requesterId },
     })
 
-    if (!receiverUser || !followRequestRequester)
-      return Promise.reject(new Error('receiverUser or followRequestRequester not found'))
+    if (!tag?.author) return Promise.reject(new Error('No tag'))
 
-    const { locale: lang, expoPushNotificationTokens } = receiverUser
+    const { locale: lang, expoPushNotificationTokens } = tag.author
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY', {
+      body: await this.i18n.translate('notifications.yourTagIsTrending', {
         ...(lang && { lang }),
-        args: { firstName: followRequestRequester.firstName },
       }),
-      data: { userId: followRequestRequester.id, url },
       sound: 'default' as const,
     }
 
-    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_FOLLOW_REQUEST')
+    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_YOUR_TAG_IS_TRENDING')
 
     return {
       statusCode: 200,
@@ -354,38 +230,73 @@ export class PushNotificationService {
     }
   }
 
-  async createFollowRequestAcceptedPushNotification(followRequest: FollowRequest) {
-    const followRequestToUser = await this.prismaService.user.findUnique({
+  async thereAreNewPostsOnYourTag(tagAuthorId: string, tagId: bigint, newPostCount: number) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: tagAuthorId },
+      select: UserPushTokenSelect,
+    })
+
+    if (!user) return Promise.reject(new Error('No user'))
+
+    const { locale: lang, expoPushNotificationTokens } = user
+
+    const url = `${process.env.APP_BASE_URL}/tag/${tagId}`
+
+    const message = {
+      to: expoPushNotificationTokens.map(({ token }) => token),
+      body: await this.i18n.translate('notifications.thereAreNewPostsOnYourTag', {
+        ...(lang && { lang }),
+        args: { newPostCount },
+      }),
+      sound: 'default' as const,
+      data: { url },
+    }
+
+    await this.sendNotifications(
+      [message],
+      expoPushNotificationTokens,
+      'PUSH_NOTIFICATION_THERE_ARE_NEW_POSTS_ON_YOUR_TAG'
+    )
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({}),
+    }
+  }
+
+  async isNowFollowingYou(follower: Follower) {
+    const getFollowerUser = this.prismaService.user.findUnique({
       select: {
         id: true,
         firstName: true,
       },
-      where: { id: followRequest.toFollowUserId },
+      where: { id: follower.userId },
     })
 
-    const receiverUser = await this.prismaService.user.findUnique({
+    const getReceiverUser = this.prismaService.user.findUnique({
       select: UserPushTokenSelect,
-      where: { id: followRequest.requesterId },
+      where: { id: follower.followeeId },
     })
 
-    if (!followRequestToUser || !receiverUser)
-      return Promise.reject(new Error('followRequestToUser or receiverUser not found'))
+    const [followerUser, receiverUser] = await Promise.all([getFollowerUser, getReceiverUser])
 
-    const url = `${process.env.APP_BASE_URL}/user/${followRequestToUser.id}`
+    if (!followerUser || !receiverUser) return Promise.reject(new Error('followerUser or receiverUser not found'))
+
+    const url = `${process.env.APP_BASE_URL}/user/${followerUser.id}`
 
     const { locale: lang, expoPushNotificationTokens, id: userId } = receiverUser
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.FOLLOW_REQUEST_ACCEPTED_BODY', {
+      body: await this.i18n.translate('notifications.isNowFollowingYou', {
         ...(lang && { lang }),
-        args: { firstName: followRequestToUser.firstName },
+        args: { otherUserFirstName: followerUser.firstName },
       }),
       data: { userId, url },
       sound: 'default' as const,
     }
 
-    await this.sendNotifications([message], expoPushNotificationTokens)
+    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_IS_NOW_FOLLOWING_YOU')
 
     return {
       statusCode: 200,
@@ -396,7 +307,7 @@ export class PushNotificationService {
   async sendNotifications(
     messages: ExpoPushMessage[],
     tokens: ExpoPushNotificationAccessToken[],
-    trackEventPrefix?: TrackEventPrefix
+    trackEventPrefix: TrackEventPrefix
   ): Promise<PromiseSettledResult<boolean | undefined>[]> {
     const res = await expo.sendNotifications(
       messages.map(({ data, ...message }) => ({
@@ -464,7 +375,7 @@ export class PushNotificationService {
             //   to: token,
             //   sound: 'default' as const,
             //   title: await this.i18n
-            //     .translate('notifications.PROMOTED_TAG_BODY', { ...(lang && { lang }) })
+            //     .translate('notifications.promotedTag', { ...(lang && { lang }) })
             //     .catch(() => null),
             //   body: '#' + tag.text,
             //   data: { url },
@@ -481,45 +392,36 @@ export class PushNotificationService {
     }
   }
 
-  async newPostReaction(postReaction: PostReaction) {
-    const postAuthor = await this.prismaService.post.findUnique({
+  async reactedToYourTag(tagReactionId: bigint) {
+    const tagReaction = await this.prismaService.tagReaction.findUnique({
       where: {
-        id: postReaction.postId,
+        id: tagReactionId,
       },
       select: {
         author: {
           select: {
-            id: true,
-            locale: true,
+            firstName: true,
+          },
+        },
+        tag: {
+          select: {
+            author: {
+              select: UserPushTokenSelect,
+            },
           },
         },
       },
     })
 
-    if (!postAuthor) return Promise.reject(new Error('Post author not found'))
+    if (!tagReaction?.tag?.author) return Promise.reject(new Error('No tag'))
 
-    const {
-      author: { id: postAuthorId, locale },
-    } = postAuthor
+    const pushTokens = await this.getPushTokensByUsersIds([tagReaction.tag.author.id])
 
-    await this.prismaService.notification.create({
-      data: {
-        userId: postAuthorId,
-        type: NotificationType.POST_REACTION,
-        postReactionId: postReaction.id,
-      },
-    })
-
-    const pushTokens = await this.getPushTokensByUsersIds([postAuthorId])
-    const reaction = await this.prismaService.user.findUnique({ where: { id: postReaction.authorId } })
-
-    if (!reaction) return Promise.reject(new Error('Reaction not found'))
-
-    const lang = locale
+    const lang = tagReaction.tag.author.locale
 
     const message = {
-      body: await this.i18n.translate('notifications.POST_REACTION_BODY', {
-        args: { firstName: reaction.firstName, postReaction: postReaction.text },
+      body: await this.i18n.translate('notifications.reactedToYourTag', {
+        args: { otherUserFirstName: tagReaction.author.firstName },
         ...(lang && { lang }),
       }),
     }
@@ -528,11 +430,73 @@ export class PushNotificationService {
       return {
         ...message,
         to: expoPushNotificationToken.token,
-        data: { url: `${process.env.APP_BASE_URL}/notifications/notifications` },
+        // data: { url: `${process.env.APP_BASE_URL}/notifications/notifications` },
         sound: 'default' as const,
       }
     })
 
-    await this.sendNotifications(messages, pushTokens)
+    await this.sendNotifications(messages, pushTokens, 'PUSH_NOTIFICATION_REACTED_TO_YOUR_TAG')
+  }
+
+  async reactedToYourPost(postReactionId: bigint) {
+    const postReaction = await this.prismaService.postReaction.findUnique({
+      where: {
+        id: postReactionId,
+      },
+      select: {
+        author: {
+          select: {
+            firstName: true,
+          },
+        },
+        post: {
+          select: {
+            id: true,
+            tags: {
+              select: {
+                id: true,
+                text: true,
+              },
+            },
+            author: {
+              select: {
+                id: true,
+                locale: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!postReaction?.post?.author) return Promise.reject(new Error('Post author not found'))
+
+    const pushTokens = await this.getPushTokensByUsersIds([postReaction.post.author.id])
+
+    const lang = postReaction.post.author.locale
+
+    const message = {
+      body:
+        postReaction.post.tags.length > 0
+          ? await this.i18n.translate('notifications.reactedToYourPost', {
+              args: { otherUserFirstName: postReaction.author.firstName, tagText: postReaction.post.tags[0].text },
+              ...(lang && { lang }),
+            })
+          : await this.i18n.translate('notifications.reactedToYourPostNoTag', {
+              args: { otherUserFirstName: postReaction.author.firstName },
+              ...(lang && { lang }),
+            }),
+    }
+
+    const messages = pushTokens.map((expoPushNotificationToken) => {
+      return {
+        ...message,
+        to: expoPushNotificationToken.token,
+        data: { url: `${process.env.APP_BASE_URL}/post/${postReaction.post.id}` },
+        sound: 'default' as const,
+      }
+    })
+
+    await this.sendNotifications(messages, pushTokens, 'PUSH_NOTIFICATION_REACTED_TO_YOUR_POST')
   }
 }

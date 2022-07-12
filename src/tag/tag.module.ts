@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common'
+import { NotificationService } from 'src/notification/notification.service'
+
 import { AuthModule } from '../auth/auth.module'
 import { CoreModule } from '../core/core.module'
-import { UserModule } from '../user/user.module'
 import { PostResolver } from '../post/post.resolver'
-import { TagResolver } from './tag.resolver'
 import { PostService } from '../post/post.service'
+import { UserModule } from '../user/user.module'
+import { TagResolver } from './tag.resolver'
 import { TagService } from './tag.service'
-import { NotificationService } from 'src/notification/notification.service'
 
 @Module({
   imports: [CoreModule, AuthModule, UserModule],

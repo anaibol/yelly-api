@@ -1,27 +1,31 @@
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
-import { I18nModule, I18nJsonParser } from 'nestjs-i18n'
-import { join } from 'path'
-import { UserModule } from './user/user.module'
-import { PostModule } from './post/post.module'
-import { TagModule } from './tag/tag.module'
-import { CoreModule } from './core/core.module'
-import { CommonModule } from './common/common.module'
-import { AuthModule } from './auth/auth.module'
-import { NotificationModule } from './notification/notification.module'
 import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
-import { SendbirdWebhookModule } from './sendbird-webhook/sendbird-webhook.module'
-import { SchoolModule } from './school/school.module'
-// import { CommonFriendsLoader } from './user/common-friends.loader'
-import { FeedModule } from './feed/feed.module'
-// import { GraphQLError, GraphQLFormattedError } from 'graphql'
+import { I18nJsonParser, I18nModule } from 'nestjs-i18n'
+import { join } from 'path'
 
-import { BigIntScalar } from './scalars/big-int.scalar'
+// import { CommonFriendsLoader } from './user/common-friends.loader'
+import { ActivityModule } from './activity/activity.module'
+import { AuthModule } from './auth/auth.module'
+import { CommonModule } from './common/common.module'
+import { CoreModule } from './core/core.module'
 import { CronModule } from './cron/cron.module'
+import { NotificationModule } from './notification/notification.module'
+import { PostModule } from './post/post.module'
+// import { GraphQLError, GraphQLFormattedError } from 'graphql'
+import { BigIntScalar } from './scalars/big-int.scalar'
+import { SchoolModule } from './school/school.module'
+import { TagModule } from './tag/tag.module'
+import { UserModule } from './user/user.module'
+
+// eslint-disable-next-line functional/immutable-data
+BigInt.prototype.toJSON = function () {
+  return this.toString()
+}
 
 @Module({
-  providers: [UserModule, BigIntScalar], // CommonFriendsLoader
+  providers: [BigIntScalar, UserModule], // CommonFriendsLoader
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
@@ -67,14 +71,13 @@ import { CronModule } from './cron/cron.module'
     }),
     ...(process.env.REDIS_HOST && process.env.REDIS_PORT ? [CronModule] : []),
     UserModule,
-    FeedModule,
+    ActivityModule,
     PostModule,
     TagModule,
     CoreModule,
     CommonModule,
     AuthModule,
     NotificationModule,
-    SendbirdWebhookModule,
     SchoolModule,
     I18nModule.forRoot({
       fallbackLanguage: 'en',

@@ -1,24 +1,62 @@
+import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { Injectable } from '@nestjs/common'
+import { NotificationType, Prisma } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
+import { AuthUser } from 'src/auth/auth.service'
+import { PushNotificationService } from 'src/core/push-notification.service'
+import { PaginatedUsers } from 'src/post/paginated-users.model'
+import { PostService } from 'src/post/post.service'
+import { Payload, RequestBuilder } from 'yoti'
+
+import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { AlgoliaService } from '../core/algolia.service'
-// import { Neo4jService } from './../core/neo4j.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
-import { SendbirdService } from '../sendbird/sendbird.service'
 import { SchoolService } from '../school/school.service'
+import { deleteObject, getObject } from '../utils/aws'
+import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
-import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { User } from './user.model'
-import { PushNotificationService } from 'src/core/push-notification.service'
-import { Me } from './me.model'
-import { PaginatedUsers } from 'src/post/paginated-users.model'
-import { FollowRequest } from './follow-request.model'
-import { SendbirdAccessToken } from './sendbirdAccessToken'
-import { AuthUser } from 'src/auth/auth.service'
-import { PostService } from 'src/post/post.service'
-import { Prisma } from '@prisma/client'
-import { PartialUpdateObjectResponse } from '@algolia/client-search'
+
+type YotiResponse = {
+  antispoofing: {
+    prediction: AgePredictionResult
+  }
+  age: {
+    st_dev: number
+    age: number
+  }
+}
+
+const checkAge = async (pictureId: string): Promise<AgeVerificationResult> => {
+  const img = await getObject(pictureId)
+
+  const data = {
+    img,
+  }
+
+  const request = new RequestBuilder()
+    .withBaseUrl('https://api.yoti.com/ai/v1')
+    .withPemFilePath(process.env.YOTI_KEY_FILE_PATH)
+    .withEndpoint('/age-antispoofing')
+    .withPayload(new Payload(data))
+    .withMethod('POST')
+    .withHeader('X-Yoti-Auth-Id', process.env.YOTI_CLIEND_SDK_ID)
+    .build()
+
+  const response = await request.execute()
+
+  const result: YotiResponse = JSON.parse(response.body)
+
+  const isAgeApproved = result.antispoofing.prediction === 'real' && result.age.age >= 13 && result.age.age <= 25
+
+  return Promise.resolve({
+    isAgeApproved,
+    ageEstimation: Math.floor(result.age.age),
+    agePredictionResult: result.antispoofing.prediction,
+  })
+}
 
 @Injectable()
 export class UserService {
@@ -29,9 +67,7 @@ export class UserService {
     private emailService: EmailService,
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
-    private sendbirdService: SendbirdService,
     private pushNotificationService: PushNotificationService,
-    // private neo4jService: Neo4jService,
     private postService: PostService
   ) {}
 
@@ -56,26 +92,6 @@ export class UserService {
 
   //   return user.locale ? user.locale.split('-')[0] : 'en'
   // }
-
-  async hasUserPostedOnTag(userId: string, tagId: string): Promise<boolean> {
-    const post = await this.prismaService.post.findFirst({
-      select: {
-        id: true,
-      },
-      where: {
-        author: {
-          id: userId,
-        },
-        tags: {
-          some: {
-            id: tagId,
-          },
-        },
-      },
-    })
-
-    return post != null
-  }
 
   findByEmail(email: string): Promise<User | null> {
     return this.prismaService.user.findUnique({
@@ -132,6 +148,7 @@ export class UserService {
         _count: {
           select: {
             posts: true,
+            tags: true,
             followers: true,
             followees: true,
           },
@@ -149,6 +166,7 @@ export class UserService {
       followersCount: _count.followers,
       followeesCount: _count.followees,
       postCount: _count.posts,
+      tagCount: _count.tags,
     }
   }
 
@@ -196,6 +214,7 @@ export class UserService {
         _count: {
           select: {
             posts: true,
+            tags: true,
             followers: true,
             followees: true,
           },
@@ -209,6 +228,7 @@ export class UserService {
       followersCount: _count.followers,
       followeesCount: _count.followees,
       postCount: _count.posts,
+      tagCount: _count.tags,
     }))
 
     return {
@@ -464,31 +484,6 @@ export class UserService {
     return !!follow
   }
 
-  async getPendingFollowRequest(requesterId: string, toFollowUserId: string): Promise<FollowRequest | null> {
-    return this.prismaService.followRequest.findFirst({
-      select: {
-        id: true,
-        status: true,
-        requester: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            pictureId: true,
-          },
-        },
-      },
-      where: {
-        requesterId,
-        toFollowUserId,
-        status: 'PENDING',
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
-  }
-
   async findMe(userId: string): Promise<Me> {
     const res = await this.prismaService.user.findUnique({
       where: {
@@ -505,7 +500,7 @@ export class UserService {
         birthdate: true,
         about: true,
         isFilled: true,
-        sendbirdAccessToken: true,
+        isAgeApproved: true,
         expoPushNotificationTokens: true,
         instagram: true,
         snapchat: true,
@@ -542,6 +537,7 @@ export class UserService {
             followers: true,
             followees: true,
             posts: true,
+            tags: true,
           },
         },
         viewsCount: true,
@@ -558,6 +554,7 @@ export class UserService {
       followersCount: _count.followers,
       followeesCount: _count.followees,
       postCount: _count.posts,
+      tagCount: _count.tags,
     }
   }
 
@@ -610,26 +607,6 @@ export class UserService {
     return user
   }
 
-  async refreshSendbirdAccessToken(userId: string): Promise<SendbirdAccessToken> {
-    // eslint-disable-next-line functional/no-try-statement
-    try {
-      const sendbirdAccessToken = await this.sendbirdService.getAccessToken(userId)
-
-      await this.prismaService.user.update({
-        where: {
-          id: userId,
-        },
-        data: {
-          sendbirdAccessToken,
-        },
-      })
-
-      return { sendbirdAccessToken }
-    } catch {
-      return Promise.reject(new Error('Sendbird error'))
-    }
-  }
-
   private generateResetToken() {
     return randomBytes(25).toString('hex')
   }
@@ -641,7 +618,6 @@ export class UserService {
       const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
       this.algoliaService.deleteObject(algoliaUserIndex, userId).catch(console.error)
-      this.sendbirdService.deleteUser(userId).catch(console.error)
 
       return true
     } catch {
@@ -655,155 +631,27 @@ export class UserService {
     const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
     this.algoliaService.deleteObject(algoliaUserIndex, userId)
-    // this.sendbirdService.deactivateUser(userId)
 
     return true
   }
 
-  async createFollowRequest(authUser: AuthUser, otherUserId: string): Promise<FollowRequest> {
-    if (authUser.id === otherUserId) return Promise.reject(new Error('AuthUserId and OtherUserId cant be equal'))
-
-    const existingFollowRequest = await this.prismaService.followRequest.findFirst({
-      where: {
-        requesterId: authUser.id,
-        toFollowUserId: authUser.id,
-        status: 'PENDING',
-      },
-    })
-
-    if (existingFollowRequest) return Promise.reject(new Error('Follow requests already exists'))
-
-    const followRequest = await this.prismaService.followRequest.create({
+  async follow(userId: string, followeeId: string): Promise<boolean> {
+    const follower = await this.prismaService.follower.create({
       data: {
-        requester: {
-          connect: {
-            id: authUser.id,
-          },
-        },
-        toFollowUser: {
-          connect: {
-            id: otherUserId,
-          },
-        },
-        notifications: {
-          create: {
-            type: 'FOLLOW_REQUEST_PENDING',
-            userId: otherUserId,
-          },
-        },
+        userId,
+        followeeId,
       },
     })
 
-    this.pushNotificationService.createFollowRequestPushNotification(followRequest)
-
-    return followRequest
-  }
-
-  async deleteFollowRequest(authUser: AuthUser, followRequestId: string): Promise<boolean> {
-    const exists = await this.prismaService.user
-      .findUnique({
-        where: {
-          id: authUser.id,
-        },
-      })
-      .followRequestRequester({
-        where: {
-          id: followRequestId,
-        },
-      })
-
-    if (!exists) return Promise.reject(new Error("Follow request doesn't exists or is not from this user"))
-
-    await Promise.all([
-      this.prismaService.followRequest.delete({
-        where: {
-          id: followRequestId,
-        },
-      }),
-      this.prismaService.notification.deleteMany({
-        where: {
-          followRequestId,
-        },
-      }),
-    ])
-
-    return true
-  }
-
-  async declineFollowRequest(authUser: AuthUser, followRequestId: string): Promise<boolean> {
-    const exists = await this.prismaService.followRequest.findFirst({
-      where: {
-        id: followRequestId,
-        toFollowUserId: authUser.id,
+    this.prismaService.notification.create({
+      data: {
+        userId: followeeId,
+        followerUserId: userId,
+        type: NotificationType.IS_NOW_FOLLOWING_YOU,
       },
     })
 
-    if (!exists) return false
-
-    await this.prismaService.$transaction([
-      this.prismaService.notification.deleteMany({
-        where: {
-          followRequestId,
-        },
-      }),
-      this.prismaService.followRequest.update({
-        where: {
-          id: followRequestId,
-        },
-        data: {
-          status: 'DECLINED',
-        },
-      }),
-    ])
-
-    return true
-  }
-
-  async acceptFollowRequest(authUser: AuthUser, followRequestId: string): Promise<boolean> {
-    const followRequest = await this.prismaService.followRequest.findUnique({
-      where: {
-        id: followRequestId,
-      },
-    })
-
-    if (followRequest?.toFollowUserId !== authUser.id) return Promise.reject(new Error('No follow request'))
-
-    const { requesterId, toFollowUserId } = followRequest
-
-    await this.prismaService.$transaction([
-      this.prismaService.follower.create({
-        data: {
-          userId: requesterId,
-          followeeId: toFollowUserId,
-        },
-      }),
-      this.prismaService.followRequest.update({
-        where: {
-          id: followRequestId,
-        },
-        data: {
-          status: 'ACCEPTED',
-        },
-      }),
-      this.prismaService.notification.updateMany({
-        where: {
-          userId: toFollowUserId,
-          followRequestId,
-        },
-        data: {
-          type: 'FOLLOW_REQUEST_ACCEPTED',
-        },
-      }),
-      this.prismaService.notification.create({
-        data: {
-          userId: requesterId,
-          followRequestId,
-          type: 'FOLLOW_REQUEST_ACCEPTED',
-        },
-      }),
-    ])
-
-    this.pushNotificationService.createFollowRequestAcceptedPushNotification(followRequest)
+    this.pushNotificationService.isNowFollowingYou(follower)
 
     return true
   }
@@ -914,6 +762,7 @@ export class UserService {
         createdAt: true,
         role: true,
         isFilled: true,
+        isAgeApproved: true,
         email: true,
         firstName: true,
         lastName: true,
@@ -922,7 +771,6 @@ export class UserService {
         instagram: true,
         snapchat: true,
         about: true,
-        sendbirdAccessToken: true,
         school: {
           select: {
             id: true,
@@ -991,17 +839,6 @@ export class UserService {
     if (data.isFilled) {
       // eslint-disable-next-line functional/no-try-statement
       try {
-        // const sendbirdAccessToken = updatedUser && (await this.sendbirdService.createUser(updatedUser))
-        // await this.prismaService.user.update({
-        //   where: {
-        //     id: userId,
-        //   },
-        //   data: {
-        //     sendbirdAccessToken,
-        //   },
-        // })
-        // eslint-disable-next-line functional/immutable-data
-        // updatedUser.sendbirdAccessToken = sendbirdAccessToken
       } catch (error) {
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
@@ -1011,30 +848,11 @@ export class UserService {
       try {
         this.syncUsersIndexWithAlgolia(userId)
         this.syncPostsIndexWithAlgolia(userId)
-
-        // await this.neo4jService.user.create({
-        //   input: [
-        //     {
-        //       id: updatedUser.id,
-        //       firstName: updatedUser.firstName,
-        //       lastName: updatedUser.lastName,
-        //       pictureId: updatedUser.pictureId,
-        //     },
-        //   ],
-        // })
       } catch (error) {
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
     } else if (updatedUser.isFilled) {
-      // eslint-disable-next-line functional/no-try-statement
-      try {
-        // await this.updateSenbirdUser(updatedUser)
-      } catch (error) {
-        console.log({ error })
-        // CATCH ERROR SO IT CONTINUES
-      }
-
       this.syncUsersIndexWithAlgolia(userId)
 
       // await this.neo4jService.user.update({
@@ -1064,14 +882,58 @@ export class UserService {
     return updatedUser
   }
 
-  // async updateSenbirdUser(user: User): Promise<void> {
-  //   if (user.firstName || user.lastName || user.pictureId) {
-  //     await this.sendbirdService.updateUser({
-  //       id: user.id,
-  //       firstName: user.firstName,
-  //       lastName: user.lastName,
-  //       pictureId: user.pictureId,
-  //     })
-  //   }
-  // }
+  async updateAgeVerification(authUser: AuthUser, facePictureId: string): Promise<AgeVerificationResult> {
+    await this.prismaService.user.update({
+      where: {
+        id: authUser.id,
+      },
+      data: {
+        facePictureId,
+      },
+    })
+
+    const { isAgeApproved, ageEstimation, agePredictionResult } = await checkAge(facePictureId)
+
+    await deleteObject(facePictureId)
+
+    if (isAgeApproved) {
+      await this.prismaService.user.update({
+        where: {
+          id: authUser.id,
+        },
+        data: {
+          isAgeApproved,
+          ageEstimation,
+          agePredictionResult,
+          facePictureId: null,
+        },
+      })
+    }
+
+    if (authUser.isAdmin) {
+      return {
+        isAgeApproved,
+        ageEstimation,
+        agePredictionResult,
+      }
+    } else {
+      return {
+        isAgeApproved,
+      }
+    }
+  }
+
+  async canCreateTag(userId: string): Promise<boolean> {
+    const tag = await this.prismaService.tag.findFirst({
+      where: {
+        authorId: userId,
+        date: new Date(),
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    return !!!tag
+  }
 }

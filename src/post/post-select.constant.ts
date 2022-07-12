@@ -1,13 +1,11 @@
 import { Prisma } from '@prisma/client'
+
 import { Post } from './post.model'
 
 export const PostSelect = {
   id: true,
   parentId: true,
-  threadId: true,
   createdAt: true,
-  expiresAt: true,
-  expiresIn: true,
   viewsCount: true,
   text: true,
   charsCount: true,
@@ -60,9 +58,8 @@ export const PostSelect = {
     select: {
       id: true,
       createdAt: true,
+      date: true,
       text: true,
-      isLive: true,
-      isEmoji: true,
     },
   },
   _count: {
@@ -130,7 +127,7 @@ export function mapPost(post: PostWithParent): Post {
 
 type PostChild = Prisma.PostGetPayload<typeof PostChildSelect>
 
-export function mapPostChild(child: PostChild, parent: PostWithParent): Post {
+export function mapPostChild(child: PostChild): Post {
   const { _count, pollOptions, ...rest } = child
 
   return {
@@ -144,20 +141,5 @@ export function mapPostChild(child: PostChild, parent: PostWithParent): Post {
     }),
     childrenCount: _count.children,
     reactionsCount: _count.children,
-    expiresIn: parent.expiresIn,
-    expiresAt: parent.expiresAt,
   }
 }
-
-export const getNotExpiredCondition = () => ({
-  OR: [
-    {
-      expiresAt: {
-        gte: new Date(),
-      },
-    },
-    {
-      expiresAt: null,
-    },
-  ],
-})

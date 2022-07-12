@@ -1,9 +1,11 @@
 import { ArgsType, Field, registerEnumType } from '@nestjs/graphql'
-import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
+
+import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 
 export enum TagSortBy {
   createdAt = 'createdAt',
   postCount = 'postCount',
+  reactionsCount = 'reactionsCount',
 }
 
 export enum SortDirection {
@@ -20,11 +22,12 @@ registerEnumType(SortDirection, {
 })
 
 @ArgsType()
-export class TagsArgs extends OffsetPaginationArgs {
-  isEmoji: boolean = false
+export class TagsArgs extends CursorPaginationArgs {
+  isYesterday: boolean = false
   showHidden: boolean = false
   @Field(() => TagSortBy)
   sortBy?: TagSortBy = TagSortBy.createdAt
   @Field(() => SortDirection)
   sortDirection?: SortDirection = SortDirection.desc
+  authorId?: string
 }

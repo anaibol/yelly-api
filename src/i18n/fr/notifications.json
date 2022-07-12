@@ -1,13 +1,14 @@
 {
-  "POST_REACTION_TITLE": "{firstName} a aimé ton yelly !",
-  "POST_REACTION_BODY": "{firstName} a aimé ton yelly !",
-  "FOLLOW_REQUEST_PUSH_NOTIFICATION_BODY": "{firstName} a demandé à suivre tes yellys",
-  "FOLLOW_REQUEST_ACCEPTED_BODY": "{firstName} a accepté ta demande de suivre ses yellys",
-  "PROMOTED_TAG_BODY": "Tendance Yelly live",
-  "FOLLOWEE_POSTED": "{firstName} a publié un nouveau yelly 💬",
-  "FOLLOWEE_POSTED_EPHEMERAL": "{firstName} a publié un nouveau yelly éphémère ⚡",
-  "POST_REPLIED": "{firstName} a répondu à ton yelly 💬",
-  "SAME_POST_REPLIED": "{firstName} a répondu au même yelly que toi 💬",
-  "SAME_SCHOOL_POSTED": "Quelqu'un de ton école a posté un yelly 💬",
-  "YOUR_POST_WILL_VANISH": "Ton yelly disparaît dans 5 minutes ⚡ Post à nouveau pour dire ce que tu fais ! 💬"
+  "reactedToYourTag": "{otherUserFirstName} a voté pour ton sujet du jour !",
+  "reactedToYourPost": "{otherUserFirstName} a aimé ton post sur sur #{tagText}",
+  "reactedToYourPostNoTag": "{otherUserFirstName} a aimé ton post",
+  "repliedToYourPost": "{otherUserFirstName} a répondu à ton post sur #{tagText}",
+  "repliedToYourPostNoTag": "{otherUserFirstName} a répondu à ton post",
+  "repliedToSamePostAsYou": "{otherUserFirstName} a répondu au même post que toi sur #{tagText}",
+  "repliedToSamePostAsYouNoTag": "{otherUserFirstName} a répondu au même post que toi",
+  "thereAreNewPostsOnYourTag": "{newPostCount} nouveaux posts sur ton sujet du jour !",
+  "yourTagIsTrending": "Ton sujet du jour est en Une !",
+  "isNowFollowingYou": "{otherUserFirstName} te suis désormais",
+  "promotedTag": "Tendance Yelly live",
+  "followeeCreatedTag": "{otherUserFirstName} a lancé le sujet #{tagText}"
 }

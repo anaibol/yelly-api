@@ -1,11 +1,12 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
-import { PaginatedNotifications } from './paginated-notifications.model'
-import { NotificationService } from './notification.service'
-import { OffsetPaginationArgs } from '../common/offset-pagination.args'
-import { AuthGuard } from '../auth/auth-guard'
+
 import { AuthUser } from '../auth/auth.service'
+import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
+import { OffsetPaginationArgs } from '../common/offset-pagination.args'
+import { NotificationService } from './notification.service'
+import { PaginatedNotifications } from './paginated-notifications.model'
 @Resolver()
 export class NotificationResolver {
   constructor(private notificationService: NotificationService) {}

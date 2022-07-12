@@ -1,20 +1,21 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql'
-import { User } from '../user/user.model'
+import { Field, ObjectType } from '@nestjs/graphql'
+
 import { Tag } from '../tag/tag.model'
+import { User } from '../user/user.model'
 import { PaginatedPosts } from './paginated-posts.model'
 import { PostReaction } from './post-reaction.model'
 
 @ObjectType()
 export class PostPollOption {
-  @Field(() => ID)
-  id: string
+  @Field(() => BigInt)
+  id: bigint
   text?: string
   votesCount?: number
 }
 @ObjectType()
 export class Post {
-  @Field(() => ID)
-  id: string
+  @Field(() => BigInt)
+  id: bigint
   text?: string
   charsCount?: number | null
   wordsCount?: number | null
@@ -26,20 +27,18 @@ export class Post {
   reactions?: PostReaction[]
   reactionsCount?: number
   authUserPollVote?: PostPollVote
-  expiresIn?: number | null
-  expiresAt?: Date | null
   parent?: Post | null
-  threadId?: string | null
   children?: PaginatedPosts
   childrenCount?: number
   authUserReaction?: PostReaction | null
   score?: number | null
+  isReadOnly?: boolean
 }
 
 @ObjectType()
 export class PostPollVote {
-  @Field(() => ID)
-  id: string
+  @Field(() => BigInt)
+  id: bigint
   option?: PostPollOption
   post?: Post
 }

@@ -1,31 +1,22 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql'
-import { SendbirdAccessToken } from './sendbirdAccessToken'
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
+import TwilioService from 'src/core/twilio.service'
 
-import { Me } from './me.model'
-import { AccessToken } from './accessToken.model'
-
-import { CursorPaginationArgs } from 'src/common/cursor-pagination.args'
-
+import { AuthService, AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
-
-import { PrismaService } from '../core/prisma.service'
-import { UserService } from './user.service'
-import { AuthService, AuthUser } from '../auth/auth.service'
-import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
-
-import { ForgotPasswordInput } from './forgot-password.input'
-import { EmailSignInInput } from './email-sign-in.input'
-import { UpdateUserInput } from './update-user.input'
-import { ResetPasswordInput } from './reset-password.input'
-import { PostSelectWithParent, mapPost, getNotExpiredCondition } from 'src/post/post-select.constant'
-import { PaginatedUsers } from 'src/post/paginated-users.model'
-import TwilioService from 'src/core/twilio.service'
-import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
+import { OffsetPaginationArgs } from '../common/offset-pagination.args'
+import { PaginatedUsers } from '../post/paginated-users.model'
+import { AccessToken } from './accessToken.model'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
-import { OffsetPaginationArgs } from 'src/common/offset-pagination.args'
-import { PaginatedPosts } from 'src/post/paginated-posts.model'
+import { EmailSignInInput } from './email-sign-in.input'
+import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
+import { ForgotPasswordInput } from './forgot-password.input'
+import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
+import { AgeVerificationResult, Me } from './me.model'
+import { ResetPasswordInput } from './reset-password.input'
+import { UpdateUserInput } from './update-user.input'
+import { UserService } from './user.service'
 
 // function validatePhoneNumberForE164(phoneNumber: string) {
 //   const regEx = /^\+[1-9]\d{10,14}$/
@@ -36,7 +27,6 @@ import { PaginatedPosts } from 'src/post/paginated-posts.model'
 @Resolver(Me)
 export class MeResolver {
   constructor(
-    private prismaService: PrismaService,
     private twilioService: TwilioService,
     private userService: UserService,
     private authService: AuthService,
@@ -95,8 +85,8 @@ export class MeResolver {
     return { accessToken, refreshToken, isNewUser }
   }
 
-  @Query(() => Me)
   @UseGuards(AuthGuard)
+  @Query(() => Me)
   async me(@CurrentUser() authUser: AuthUser): Promise<Me> {
     const user = await this.userService.findMe(authUser.id)
 
@@ -106,27 +96,18 @@ export class MeResolver {
   }
 
   @Mutation(() => AccessToken)
-  async refreshAccessToken(
-    @CurrentUser() authUser: AuthUser,
-    @Args('refreshToken') refreshToken: string
-  ): Promise<AccessToken> {
+  async refreshAccessToken(@Args('refreshToken') refreshToken: string): Promise<AccessToken> {
     return this.authService.refreshAccessToken(refreshToken)
   }
 
-  @Mutation(() => SendbirdAccessToken)
   @UseGuards(AuthGuard)
-  refreshSendbirdAccessToken(@CurrentUser() authUser: AuthUser): Promise<SendbirdAccessToken> {
-    return this.userService.refreshSendbirdAccessToken(authUser.id)
-  }
-
   @Mutation(() => Boolean)
-  @UseGuards(AuthGuard)
   addExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.expoPushNotificationsTokenService.create(authUser.id, token)
   }
 
-  @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
   deleteExpoPushNotificationsToken(@Args('input') token: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.expoPushNotificationsTokenService.deleteByUserAndToken(authUser.id, token)
   }
@@ -153,56 +134,39 @@ export class MeResolver {
     }
   }
 
-  @Mutation(() => Me)
   @UseGuards(AuthGuard)
+  @Mutation(() => Me)
   updateMe(@Args('input') updateUserInput: UpdateUserInput, @CurrentUser() authUser: AuthUser): Promise<Me> {
     return this.userService.update(authUser.id, updateUserInput)
   }
 
-  @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
+  @Mutation(() => AgeVerificationResult)
+  updateAgeVerification(
+    @Args('facePictureId') facePictureId: string,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<AgeVerificationResult> {
+    return this.userService.updateAgeVerification(authUser, facePictureId)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
   deleteAuthUser(@CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.userService.delete(authUser.id)
   }
 
-  @ResolveField()
-  followers(@Parent() user: Me, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFollowers(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
+  @UseGuards(AuthGuard)
+  @Query(() => Boolean)
+  authUserCanCreateTag(@CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.canCreateTag(authUser.id)
   }
 
-  @ResolveField()
-  followees(@Parent() user: Me, @Args() offsetPaginationArgs: OffsetPaginationArgs): Promise<PaginatedUsers> {
-    return this.userService.getFollowees(user.id, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
-  }
-
-  @ResolveField()
-  async posts(@Parent() me: Me, @Args() cursorPaginationArgs: CursorPaginationArgs): Promise<PaginatedPosts> {
-    const { after, limit } = cursorPaginationArgs
-
-    const posts = await this.prismaService.post.findMany({
-      where: {
-        authorId: me.id,
-        ...getNotExpiredCondition(),
-      },
-      ...(after && {
-        cursor: {
-          id: after,
-        },
-        skip: 1,
-      }),
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: PostSelectWithParent,
-    })
-
-    const items = posts.map(mapPost)
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : ''
-
-    return { items, nextCursor }
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedUsers)
+  followSuggestions(
+    @CurrentUser() authUser: AuthUser,
+    @Args() offsetPaginationArgs: OffsetPaginationArgs
+  ): Promise<PaginatedUsers> {
+    return this.userService.getFollowSuggestions(authUser, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
   }
 }

@@ -1,7 +1,9 @@
-import { v4 as uuidv4 } from 'uuid'
-
-import { S3Client, S3ClientConfig, PutObjectCommand } from '@aws-sdk/client-s3'
+/* eslint-disable functional/immutable-data */
+/* eslint-disable functional/no-return-void */
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client, S3ClientConfig } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import type { Readable } from 'stream'
+import { v4 as uuidv4 } from 'uuid'
 
 const isLocalEnvironment = process.env.ENVIRONMENT === 'local'
 
@@ -16,6 +18,7 @@ const s3Configuration: S3ClientConfig = {
   region: REGION,
   useAccelerateEndpoint: true,
 }
+
 const s3 = new S3Client(s3Configuration)
 
 export interface IGetPresignedUploadUrlResponse {
@@ -35,4 +38,35 @@ export const getPresignedUploadUrl = async (): Promise<IGetPresignedUploadUrlRes
     url: await getSignedUrl(s3, command, options),
     key,
   }
+}
+
+export const getObject = async (pictureId: string): Promise<string> => {
+  const prefix = isLocalEnvironment ? 'test/' : ''
+
+  const key: string = prefix + pictureId
+
+  const getObjectCommand = new GetObjectCommand({ Bucket: BUCKET, Key: key })
+
+  const response = (await s3.send(getObjectCommand)).Body as Readable
+
+  return streamToString(response)
+}
+
+export const deleteObject = async (pictureId: string): Promise<void> => {
+  const prefix = isLocalEnvironment ? 'test/' : ''
+
+  const key: string = prefix + pictureId
+
+  const delteObjectCommand = new DeleteObjectCommand({ Bucket: BUCKET, Key: key })
+
+  await s3.send(delteObjectCommand)
+}
+
+async function streamToString(stream: Readable): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = []
+    stream.on('data', (chunk) => chunks.push(chunk))
+    stream.on('error', reject)
+    stream.on('end', () => resolve(Buffer.concat(chunks).toString('base64')))
+  })
 }

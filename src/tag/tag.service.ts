@@ -1,17 +1,50 @@
 import { Injectable } from '@nestjs/common'
+import { ActivityType, NotificationType, Prisma } from '@prisma/client'
+
+import { AuthUser } from '../auth/auth.service'
 import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
-import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { PushNotificationService } from '../core/push-notification.service'
+import { PostSelectWithParent } from '../post/post-select.constant'
+import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
+import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { PaginatedTags } from './paginated-tags.model'
-import { AuthUser } from 'src/auth/auth.service'
 import { Tag } from './tag.model'
+import { TagReaction } from './tag-reaction.model'
 import { tagSelect } from './tag-select.constant'
-import { Prisma } from '@prisma/client'
-import { TagSortBy, SortDirection } from './tags.args'
+import { SortDirection, TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
-import { Post } from '../post/post.model'
-import { mapPost, PostSelectWithParent } from '../post/post-select.constant'
+
+const getTagSort = (
+  sortBy?: TagSortBy,
+  sortDirection?: SortDirection
+): Prisma.Enumerable<Prisma.TagOrderByWithRelationInput> => {
+  switch (sortBy) {
+    case 'postCount':
+      return {
+        posts: {
+          _count: sortDirection,
+        },
+      }
+
+    case 'reactionsCount':
+      return [
+        {
+          reactions: {
+            _count: sortDirection,
+          },
+        },
+        {
+          createdAt: 'desc' as const,
+        },
+      ]
+
+    default:
+      return {
+        createdAt: sortDirection,
+      }
+  }
+}
 
 @Injectable()
 export class TagService {
@@ -20,13 +53,13 @@ export class TagService {
     private algoliaService: AlgoliaService,
     private pushNotificationService: PushNotificationService
   ) {}
-  async syncTagIndexWithAlgolia(tagText: string) {
+  async syncTagIndexWithAlgolia(tagId: bigint) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
 
     const tag = await this.prismaService.tag.findUnique({
       select: tagSelect,
       where: {
-        text: tagText,
+        id: tagId,
       },
     })
 
@@ -34,16 +67,22 @@ export class TagService {
 
     const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
       id: tag.id,
-      text: tagText,
+      text: tag.text,
       postCount: {
         _operation: 'Increment',
         value: 1,
       },
+      reactionsCount: {
+        _operation: 'Increment',
+        value: 1,
+      },
       createdAtTimestamp: tag.createdAt.getTime(),
+      date: tag.date,
+      dateTimestamp: tag.date.getTime(),
       createdAt: tag.createdAt,
     }
 
-    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id)
+    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id.toString())
   }
 
   // async createOrUpdateLiveTag(text: string, isLive: boolean, authUser: AuthUser): Promise<Tag> {
@@ -102,10 +141,10 @@ export class TagService {
   //   return newTag
   // }
 
-  async getTag(text: string): Promise<Tag> {
+  async getTag(tagId: bigint): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
-        text,
+        id: tagId,
       },
       select: tagSelect,
     })
@@ -114,52 +153,99 @@ export class TagService {
 
     const { _count, ...tag } = result
 
-    return { ...tag, postCount: _count.posts }
+    return { ...tag, postCount: _count.posts, reactionsCount: _count.reactions }
   }
 
-  async delete(id: string): Promise<boolean> {
+  async getTagExists(tagText: string): Promise<boolean> {
+    const result = await this.prismaService.tag.findUnique({
+      where: {
+        text_date: {
+          text: tagText,
+          date: new Date(),
+        },
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    return !!result
+  }
+
+  async create(tagText: string, authUser: AuthUser): Promise<Tag> {
+    const tag = await this.prismaService.tag.create({
+      data: {
+        text: tagText,
+        countryId: authUser.countryId,
+        authorId: authUser.id,
+        activities: {
+          create: {
+            userId: authUser.id,
+            type: ActivityType.CREATED_TAG,
+          },
+        },
+      },
+    })
+
+    this.syncTagIndexWithAlgolia(tag.id)
+
+    this.pushNotificationService.followeeCreatedTag(tag.id)
+
+    return tag
+  }
+
+  async delete(tagId: bigint): Promise<boolean> {
     await this.prismaService.tag.delete({
-      where: { id },
+      where: { id: tagId },
     })
 
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
-    this.algoliaService.deleteObject(algoliaTagIndex, id)
+    this.algoliaService.deleteObject(algoliaTagIndex, tagId.toString())
 
     return true
   }
 
   async getTags(
     authUser: AuthUser,
-    skip: number,
+    isYesterday: boolean,
     limit: number,
-    isEmoji?: boolean,
+    after?: bigint,
     sortBy?: TagSortBy,
     sortDirection?: SortDirection,
-    showHidden?: boolean
+    showHidden?: boolean,
+    authorId?: string
   ): Promise<PaginatedTags> {
-    if (showHidden && !authUser.isAdmin) return Promise.reject(new Error('No admin'))
+    if (showHidden && !authUser?.isAdmin) return Promise.reject(new Error('No admin'))
+
+    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
+
+    const fifteenYoYear = 2007
+    const isLessThanFifteen = authUser.birthdate.getFullYear() >= fifteenYoYear
+
+    const date = isYesterday ? new Date(new Date().setDate(new Date().getDate() - 1)) : new Date()
 
     const where: Prisma.TagWhereInput = {
-      isLive: false,
+      ...(authorId
+        ? {
+            authorId,
+          }
+        : {
+            date,
+          }),
       countryId: authUser.countryId,
-      ...(isEmoji !== undefined && {
-        isEmoji,
-      }),
       ...(!showHidden && {
         isHidden: false,
       }),
-    }
-
-    const orderBy =
-      sortBy === 'postCount'
-        ? {
-            posts: {
-              _count: sortDirection,
+      author: {
+        birthdate: isLessThanFifteen
+          ? {
+              gte: new Date(fifteenYoYear + '-01-01'),
+            }
+          : {
+              lte: new Date(fifteenYoYear + '-01-01'),
             },
-          }
-        : {
-            createdAt: sortDirection,
-          }
+      },
+    }
 
     const [totalCount, tags] = await Promise.all([
       this.prismaService.tag.count({
@@ -167,26 +253,34 @@ export class TagService {
       }),
       this.prismaService.tag.findMany({
         where,
-        skip,
-        orderBy,
+        ...(after && {
+          cursor: {
+            id: after,
+          },
+          skip: 1,
+        }),
+        orderBy: getTagSort(sortBy, sortDirection),
         take: limit,
         select: tagSelect,
       }),
     ])
 
-    const nextSkip = skip + limit
-
-    const dataTags = tags.map((tag) => {
+    const items = tags.map((tag) => {
       return {
         ...tag,
         postCount: tag._count.posts,
+        reactionsCount: tag._count.reactions,
       }
     })
 
-    return { items: dataTags, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    const lastItem = items.length === limit ? items[limit - 1] : null
+
+    const nextCursor = lastItem ? lastItem.id : null
+
+    return { items, nextCursor, totalCount }
   }
 
-  async updateTag(tagId: string, { isHidden }: UpdateTagInput): Promise<Tag> {
+  async updateTag(tagId: bigint, { isHidden }: UpdateTagInput): Promise<Tag> {
     return this.prismaService.tag.update({
       where: {
         id: tagId,
@@ -197,7 +291,7 @@ export class TagService {
     })
   }
 
-  async createPromotedTag(tagText: string, authUser: AuthUser): Promise<Tag> {
+  async createPromotedTag(tagText: string, _authUser: AuthUser): Promise<Tag> {
     // if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
     // const authUserCountry = await this.prismaService.school
@@ -221,7 +315,10 @@ export class TagService {
 
     const tag = await this.prismaService.tag.findUnique({
       where: {
-        text: tagText,
+        text_date: {
+          text: tagText,
+          date: new Date(),
+        },
       },
     })
 
@@ -232,19 +329,142 @@ export class TagService {
     return tag
   }
 
-  async getFirstPost(tagId: string): Promise<Post> {
-    const posts = await this.prismaService.tag
-      .findUnique({
-        where: { id: tagId },
-      })
-      .posts({
-        take: 1,
-        orderBy: {
-          createdAt: 'asc',
+  getAuthUserReaction(tagId: bigint, authUser: AuthUser): Promise<TagReaction | null> {
+    return this.prismaService.tagReaction.findUnique({
+      where: {
+        authorId_tagId: {
+          authorId: authUser.id,
+          tagId,
+        },
+      },
+    })
+  }
+
+  async createOrUpdateTagReaction(
+    createOrUpdateTagReactionInput: CreateOrUpdateTagReactionInput,
+    authUser: AuthUser
+  ): Promise<TagReaction> {
+    const { text, tagId } = createOrUpdateTagReactionInput
+    const authorId = authUser.id
+
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagId,
+      },
+    })
+
+    if (!tag) return Promise.reject(new Error('No tag'))
+
+    const reaction = await this.prismaService.tagReaction.upsert({
+      where: {
+        authorId_tagId: {
+          authorId,
+          tagId,
+        },
+      },
+      create: {
+        author: {
+          connect: {
+            id: authUser.id,
+          },
+        },
+        text,
+        tag: {
+          connect: {
+            id: tagId,
+          },
+        },
+        activity: {
+          create: {
+            userId: authUser.id,
+            tagId,
+            type: ActivityType.CREATED_TAG_REACTION,
+          },
+        },
+        ...(tag.authorId && {
+          notification: {
+            create: {
+              type: NotificationType.REACTED_TO_YOUR_TAG,
+              userId: tag.authorId,
+            },
+          },
+        }),
+      },
+      update: {
+        text,
+        authorId,
+        tagId,
+      },
+    })
+
+    this.checkIfTagIsTrendingTrending(reaction.tagId)
+
+    this.pushNotificationService.reactedToYourTag(reaction.id)
+
+    return reaction
+  }
+
+  async checkIfTagIsTrendingTrending(tagId: bigint) {
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagId,
+      },
+      select: {
+        id: true,
+        author: true,
+      },
+    })
+
+    if (!tag?.author?.countryId) return Promise.reject(new Error('No country'))
+
+    const topTags = await this.prismaService.tag.findMany({
+      where: {
+        isHidden: false,
+        countryId: tag.author.countryId,
+      },
+      orderBy: [
+        {
+          reactions: {
+            _count: 'desc',
+          },
+        },
+        {
+          createdAt: 'desc' as const,
+        },
+      ],
+      take: 5,
+    })
+
+    if (topTags.some(({ id }) => id === tag.id)) {
+      await this.prismaService.notification.create({
+        data: {
+          userId: tag.author.id,
+          type: NotificationType.YOUR_TAG_IS_TRENDING,
+          tagId: tag.id,
         },
         select: PostSelectWithParent,
       })
 
-    return mapPost(posts[0])
+      this.pushNotificationService.yourTagIsTrending(tag.id)
+    }
+  }
+
+  async deleteTagReaction(tagId: bigint, authUser: AuthUser): Promise<boolean> {
+    await this.prismaService.tagReaction.delete({
+      where: {
+        authorId_tagId: { authorId: authUser.id, tagId },
+      },
+    })
+
+    return true
+  }
+
+  async trackTagViews(tagsIds: bigint[]): Promise<boolean> {
+    await this.prismaService.tag.updateMany({
+      where: { id: { in: tagsIds } },
+      data: { viewsCount: { increment: 1 } },
+    })
+
+    return true
   }
 }

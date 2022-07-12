@@ -1,8 +1,9 @@
 /* eslint-disable functional/no-let */
 /* eslint-disable functional/no-loop-statement */
-import { PrismaClient } from '.prisma/client'
 import algoliasearch from 'algoliasearch'
+
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
+import { PrismaClient } from '.prisma/client'
 
 const INDEX_NAME = process.env.ALGOLIA_INDEX_PREFIX + 'USERS'
 

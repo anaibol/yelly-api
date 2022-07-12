@@ -5,6 +5,7 @@ import algoliasearch, { SearchClient, SearchIndex } from 'algoliasearch'
 export class AlgoliaService {
   client: SearchClient
   indexPrefix = process.env.ALGOLIA_INDEX_PREFIX
+
   constructor() {
     this.client = algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_API_KEY)
   }
@@ -38,16 +39,5 @@ export class AlgoliaService {
 
   partialUpdateObjects(index: SearchIndex, objectsToUpdate: Array<Record<string, any>>) {
     return index.partialUpdateObjects(objectsToUpdate)
-  }
-
-  incrementValue(index: SearchIndex, objectToUpdateOrCreate: any, objectID: string) {
-    return index.partialUpdateObject({
-      ...objectToUpdateOrCreate,
-      postCount: {
-        _operation: 'Increment',
-        value: 1,
-      },
-      objectID,
-    })
   }
 }

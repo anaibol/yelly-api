@@ -1,4 +1,5 @@
 import { ObjectType } from '@nestjs/graphql'
+
 import { Notification } from './notification.model'
 
 @ObjectType()

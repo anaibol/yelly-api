@@ -1,11 +1,11 @@
-import { InputType } from '@nestjs/graphql'
+import { Field, InputType } from '@nestjs/graphql'
 
 @InputType()
 export class CreatePostInput {
   text: string
-  tags?: string[]
-  emojis?: string[]
+  @Field(() => [BigInt])
+  tagIds?: bigint[]
   pollOptions?: string[]
-  expiresIn?: number
-  parentId?: string
+  @Field(() => BigInt)
+  parentId?: bigint
 }

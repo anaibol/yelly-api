@@ -42,6 +42,8 @@ export type PostIndexAlgoliaInterface = {
   id: string
   objectID: string
   text: string
+  createdAt: Date
+  createdAtTimestamp: number
   author: {
     id: string
     createdAt: Date
@@ -67,10 +69,11 @@ export type PostIndexAlgoliaInterface = {
   tags: {
     id: string
     createdAt: Date
+    createdAtTimestamp: number
+    date: Date
+    dateTimestamp: number
     text: string
-    isEmoji: boolean
   }[]
-  createdAt: Date
 }
 
 export const algoliaUserSelect = {
@@ -79,6 +82,7 @@ export const algoliaUserSelect = {
   firstName: true,
   lastName: true,
   isFilled: true,
+  isAgeApproved: true,
   pictureId: true,
   birthdate: true,
   school: {
@@ -178,8 +182,8 @@ export const algoliaPostSelect = {
     select: {
       id: true,
       createdAt: true,
+      date: true,
       text: true,
-      isEmoji: true,
     },
   },
 }
@@ -242,9 +246,10 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
   if (!createdAt || !firstName || !lastName || !birthdate || !lastName || !school?.city?.country) return null
 
   return {
-    id: post.id,
-    objectID: post.id,
+    id: post.id.toString(),
+    objectID: post.id.toString(),
     createdAt: post.createdAt,
+    createdAtTimestamp: post.createdAt.getTime(),
     text: post.text,
     author: {
       id,
@@ -270,10 +275,12 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
     },
     tags: post.tags.map((tag) => {
       return {
-        id: tag.id,
+        id: tag.id.toString(),
         createdAt: tag.createdAt,
+        createdAtTimestamp: tag.createdAt.getTime(),
+        date: tag.date,
+        dateTimestamp: tag.date.getTime(),
         text: tag.text,
-        isEmoji: tag.isEmoji,
       }
     }),
   }

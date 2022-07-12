@@ -1,38 +1,35 @@
-/* eslint-disable functional/no-let */
+import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../core/prisma.service'
-import { CreatePostInput } from './create-post.input'
-import { TagService } from 'src/tag/tag.service'
-import {
-  PostSelectWithParent,
-  mapPost,
-  mapPostChild,
-  PostChildSelect,
-  getNotExpiredCondition,
-} from './post-select.constant'
-import { PushNotificationService } from 'src/core/push-notification.service'
-import dates from 'src/utils/dates'
-import { AlgoliaService } from 'src/core/algolia.service'
+import { ActivityType, NotificationType } from '@prisma/client'
 import { AuthUser } from 'src/auth/auth.service'
-import { uniq } from 'lodash'
-import { PaginatedPosts } from './paginated-posts.model'
+import { AlgoliaService } from 'src/core/algolia.service'
+import { PushNotificationService } from 'src/core/push-notification.service'
+import { TagService } from 'src/tag/tag.service'
+
+import { PrismaService } from '../core/prisma.service'
+import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
+import { CreatePostInput } from './create-post.input'
 import { Post } from './post.model'
 import { PostPollVote } from './post.model'
-import { Prisma } from '@prisma/client'
-import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { PostReaction } from './post-reaction.model'
-import { DeletePostReactionInput } from './delete-post-reaction.input'
-import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
+import { mapPost, mapPostChild, PostChildSelect, PostSelectWithParent } from './post-select.constant'
 
-const getExpiredAt = (expiresIn?: number | null): Date | undefined => {
-  if (!expiresIn) return
+const getNewPostCount = (postCount: number): number | undefined => {
+  switch (postCount) {
+    case 1:
+      return 1
 
-  const now = new Date()
+    case 6:
+      return 5
 
-  const expiresAtTimestamp = now.setSeconds(now.getSeconds() + expiresIn)
+    case 26:
+      return 20
 
-  return new Date(expiresAtTimestamp)
+    case 126:
+      return 100
+  }
 }
+
 @Injectable()
 export class PostService {
   constructor(
@@ -41,9 +38,9 @@ export class PostService {
     private pushNotificationService: PushNotificationService,
     private algoliaService: AlgoliaService
   ) {}
-  async trackPostViews(postsIds: string[]): Promise<boolean> {
+  async trackPostViews(postIds: bigint[]): Promise<boolean> {
     await this.prismaService.post.updateMany({
-      where: { id: { in: postsIds } },
+      where: { id: { in: postIds } },
       data: { viewsCount: { increment: 1 } },
     })
 
@@ -188,7 +185,7 @@ export class PostService {
   //   return { items, nextCursor }
   // }
 
-  async getPost(postId: string, limit: number, currentCursor?: string): Promise<Post | null> {
+  async getPost(postId: bigint, limit: number, currentCursor?: bigint): Promise<Post | null> {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
@@ -211,11 +208,11 @@ export class PostService {
 
     if (!post) return Promise.reject(new Error('No post'))
 
-    const items = post.children.map((child) => mapPostChild(child, post))
+    const items = post.children.map((child) => mapPostChild(child))
 
     const lastItem = items.length === limit ? items[limit - 1] : null
 
-    const nextCursor = lastItem ? lastItem.id : ''
+    const nextCursor = lastItem ? lastItem.id : null
 
     return {
       ...mapPost(post),
@@ -227,72 +224,24 @@ export class PostService {
   }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
-    const { text, emojis, expiresIn, tags, pollOptions, parentId } = createPostInput
+    const { text, tagIds, pollOptions, parentId } = createPostInput
 
-    const uniqueTags = tags && tags.length > 0 ? uniq(tags) : ['NoTag']
-
-    const parent = parentId
-      ? await this.prismaService.post.findUnique({
-          where: { id: parentId },
-          include: {
-            tags: true,
-            author: true,
-          },
-        })
-      : null
-
-    const connectOrCreateTags = uniqueTags.map(
-      (tagText): Prisma.TagCreateOrConnectWithoutPostsInput => ({
+    const parent =
+      parentId &&
+      (await this.prismaService.post.findUnique({
         where: {
-          text: tagText,
+          id: parentId,
         },
-        create: {
-          text: tagText,
-          countryId: authUser.countryId,
-          authorId: authUser.id,
+        include: {
+          tags: true,
         },
-      })
-    )
-
-    const connectOrCreateEmojis = uniq(emojis).map(
-      (emoji): Prisma.TagCreateOrConnectWithoutPostsInput => ({
-        where: {
-          text: emoji,
-        },
-        create: {
-          text: emoji,
-          countryId: authUser.countryId,
-          isEmoji: true,
-          authorId: authUser.id,
-        },
-      })
-    )
-
-    const threadId =
-      parent &&
-      (parent.threadId ||
-        (
-          await this.prismaService.thread.create({
-            data: {
-              posts: {
-                connect: {
-                  id: parent.id,
-                },
-              },
-            },
-          })
-        ).id)
+      }))
 
     const post = await this.prismaService.post.create({
-      include: {
-        tags: true,
-      },
       data: {
         text,
         charsCount: text.length,
         wordsCount: text.split(/\s+/).length,
-        expiresAt: parent ? parent.expiresAt : getExpiredAt(expiresIn),
-        expiresIn: parent ? parent.expiresIn : expiresIn,
         ...(pollOptions &&
           pollOptions.length > 0 && {
             pollOptions: {
@@ -306,68 +255,86 @@ export class PostService {
             id: authUser.id,
           },
         },
+        ...(tagIds &&
+          tagIds.length > 0 && {
+            tags: {
+              connect: tagIds.map((tagId) => ({ id: tagId })),
+            },
+            activities: {
+              create: {
+                type: ActivityType.CREATED_POST,
+                tagId: tagIds[0],
+                userId: authUser.id,
+              },
+            },
+          }),
         ...(parent && {
           parent: {
             connect: {
-              id: parent.id,
+              id: parentId,
             },
           },
-        }),
-        ...(threadId && {
-          thread: {
-            connect: {
-              id: threadId,
+          ...(authUser.id !== parent.authorId && {
+            notifications: {
+              create: {
+                userId: parent.authorId,
+                type: NotificationType.REPLIED_TO_YOUR_POST,
+                ...(parent &&
+                  parent.tags.length > 0 && {
+                    tagId: parent.tags[0].id,
+                  }),
+              },
             },
-          },
+          }),
         }),
-        tags: {
-          connectOrCreate: [...connectOrCreateTags, ...connectOrCreateEmojis],
-        },
       },
     })
 
-    if (parent) {
-      if (!parent?.parentId) {
-        await this.prismaService.feedEvent.create({
-          data: {
-            postId: parent.id,
-            tagId: parent.tags[0].id,
-            type: 'POST_REPLY_CREATED',
-            postAuthorBirthdate: parent.author.birthdate,
-            postAuthorSchoolId: parent.author.schoolId,
-          },
-        })
-      }
-    } else {
-      await this.prismaService.feedEvent.create({
-        data: {
-          postId: post.id,
-          tagId: post.tags[0].id,
-          type: 'POST_CREATED',
-          postAuthorBirthdate: authUser.birthdate,
-          postAuthorSchoolId: authUser.schoolId,
-        },
-      })
-    }
-
-    uniqueTags.map((tag) => this.tagService.syncTagIndexWithAlgolia(tag))
-
     this.syncPostIndexWithAlgolia(post.id)
 
-    const hasExcludedTags = post.tags?.some((tag) => tag.isHidden)
-
-    if (parentId && !hasExcludedTags) {
-      this.pushNotificationService.postReplied(post.id)
-    } else if (!hasExcludedTags) {
-      this.pushNotificationService.followeePosted(post.id)
+    if (parent && authUser.id !== parent.authorId) {
+      this.pushNotificationService.repliedToYourPost(post.id)
+    } else {
+      if (tagIds) this.thereAreNewPostsOnYourTag(post.id, tagIds[0])
     }
-
-    if (!parentId) this.pushNotificationService.sameSchoolPosted(post.id, authUser.id)
 
     return post
   }
 
-  async delete(postId: string, authUser: AuthUser): Promise<boolean> {
+  async thereAreNewPostsOnYourTag(postId: bigint, tagId: bigint) {
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagId,
+      },
+      include: {
+        _count: {
+          select: {
+            posts: true,
+          },
+        },
+      },
+    })
+
+    if (!tag?.authorId) return Promise.reject(new Error('No tag author'))
+
+    const newPostCount = getNewPostCount(tag._count.posts)
+
+    if (!newPostCount) return
+
+    await this.prismaService.notification.create({
+      data: {
+        userId: tag.authorId,
+        type: NotificationType.THERE_ARE_NEW_POSTS_ON_YOUR_TAG,
+        tagId: tag.id,
+        postId: postId,
+        newPostCount,
+      },
+    })
+
+    this.pushNotificationService.thereAreNewPostsOnYourTag(tag.authorId, tag.id, newPostCount)
+  }
+
+  async delete(postId: bigint, authUser: AuthUser): Promise<boolean> {
     const post = await this.prismaService.post.findUnique({
       where: {
         id: postId,
@@ -380,31 +347,13 @@ export class PostService {
     if (!post) return Promise.reject(new Error('No post'))
     if (post.authorId !== authUser.id && authUser.isNotAdmin) return Promise.reject(new Error('No permission'))
 
-    const deletedPost = await this.prismaService.post.delete({
-      select: {
-        id: true,
-        tags: {
-          select: {
-            id: true,
-            isLive: true,
-            posts: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        },
-      },
+    await this.prismaService.post.delete({
       where: {
         id: postId,
       },
     })
 
     this.deletePostFromAlgolia(postId)
-
-    deletedPost.tags.forEach(async (tag) => {
-      if (!tag.isLive && tag.posts.length === 1) this.tagService.delete(tag.id)
-    })
 
     return true
   }
@@ -415,6 +364,17 @@ export class PostService {
   ): Promise<PostReaction> {
     const { text, postId } = createOrUpdatePostReactionInput
     const authorId = authUser.id
+
+    const postBeforeReaction = await this.prismaService.post.findUnique({
+      where: {
+        id: postId,
+      },
+      include: {
+        tags: true,
+      },
+    })
+
+    if (!postBeforeReaction) return Promise.reject(new Error('No post'))
 
     const { post, ...reaction } = await this.prismaService.postReaction.upsert({
       where: {
@@ -435,6 +395,15 @@ export class PostService {
             id: postId,
           },
         },
+        notification: {
+          create: {
+            userId: postBeforeReaction.authorId,
+            type: NotificationType.REACTED_TO_YOUR_POST,
+            ...(postBeforeReaction.tags.length > 0 && {
+              tagId: postBeforeReaction.tags[0].id,
+            }),
+          },
+        },
       },
       update: {
         text,
@@ -448,18 +417,7 @@ export class PostService {
       },
     })
 
-    await this.prismaService.feedEvent.create({
-      data: {
-        postId,
-        postReactionId: reaction.id,
-        tagId: post.tags[0].id,
-        type: 'POST_REACTION_CREATED',
-        postReactionAuthorBirthdate: authUser.birthdate,
-        postReactionAuthorSchoolId: authUser.schoolId,
-      },
-    })
-
-    if (post.author.id !== authUser.id) this.pushNotificationService.newPostReaction(reaction)
+    if (post.author.id !== authUser.id) this.pushNotificationService.reactedToYourPost(reaction.id)
 
     return {
       ...reaction,
@@ -467,8 +425,7 @@ export class PostService {
     }
   }
 
-  async deletePostReaction(deletePostReactionInput: DeletePostReactionInput, authUser: AuthUser): Promise<boolean> {
-    const { postId } = deletePostReactionInput
+  async deletePostReaction(postId: bigint, authUser: AuthUser): Promise<boolean> {
     const authorId = authUser.id
 
     await this.prismaService.postReaction.delete({
@@ -480,7 +437,7 @@ export class PostService {
     return true
   }
 
-  async createPollVote(postId: string, optionId: string, authUser: AuthUser): Promise<Post> {
+  async createPollVote(postId: bigint, optionId: bigint, authUser: AuthUser): Promise<Post> {
     const pollWithOption = this.prismaService.postPollOption.findFirst({
       where: {
         id: optionId,
@@ -520,7 +477,7 @@ export class PostService {
     return mapPost(post)
   }
 
-  getAuthUserPollVote(postId: string, authUser: AuthUser): Promise<PostPollVote | null> {
+  getAuthUserPollVote(postId: bigint, authUser: AuthUser): Promise<PostPollVote | null> {
     return this.prismaService.postPollVote.findUnique({
       where: {
         authorId_postId: {
@@ -539,7 +496,7 @@ export class PostService {
     })
   }
 
-  getAuthUserReaction(postId: string, authUser: AuthUser): Promise<PostReaction | null> {
+  getAuthUserReaction(postId: bigint, authUser: AuthUser): Promise<PostReaction | null> {
     return this.prismaService.postReaction.findUnique({
       where: {
         authorId_postId: {
@@ -550,21 +507,23 @@ export class PostService {
     })
   }
 
-  async syncPostIndexWithAlgolia(id: string): Promise<PartialUpdateObjectResponse | undefined> {
+  async syncPostIndexWithAlgolia(postId: bigint): Promise<PartialUpdateObjectResponse | undefined> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
 
     const post = await this.prismaService.post.findUnique({
       where: {
-        id,
+        id: postId,
       },
       select: PostSelectWithParent,
     })
 
-    if (!post || post.expiresAt) return
+    if (!post) return
+
+    const postIdString = post.id.toString()
 
     const objectToCreate = {
-      id: post.id,
-      objectID: post.id,
+      id: postIdString,
+      objectID: postIdString,
       createdAt: post.createdAt,
       createdAtTimestamp: Date.parse(post.createdAt.toString()),
       text: post.text,
@@ -572,20 +531,20 @@ export class PostService {
       tags: post.tags,
     }
 
-    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, post.id)
+    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, postIdString)
   }
 
-  async deletePostFromAlgolia(id: string): Promise<void> {
+  async deletePostFromAlgolia(postId: bigint): Promise<void> {
     const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
-    this.algoliaService.deleteObject(algoliaTagIndex, id)
+    this.algoliaService.deleteObject(algoliaTagIndex, postId.toString())
   }
 
   async postsUserReactions(
-    postIds: string[],
+    postIds: bigint[],
     userId: string
   ): Promise<
     {
-      postId: string
+      postId: bigint
       reaction?: PostReaction
     }[]
   > {
@@ -615,7 +574,7 @@ export class PostService {
       where: {
         authorId: userId,
         postId: {
-          in: postIds as string[],
+          in: postIds as bigint[],
         },
       },
     })
