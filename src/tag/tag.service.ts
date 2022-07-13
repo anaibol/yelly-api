@@ -172,6 +172,18 @@ export class TagService {
   }
 
   async create(tagText: string, authUser: AuthUser): Promise<Tag> {
+    const result = await this.prismaService.tag.findMany({
+      where: {
+        authorId: authUser.id,
+        date: new Date(),
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    if (result.length > 0) return Promise.reject(new Error('Already created a tag'))
+
     const tag = await this.prismaService.tag.create({
       data: {
         text: tagText,

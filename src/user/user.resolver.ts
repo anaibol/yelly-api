@@ -98,6 +98,18 @@ export class UserResolver {
     return this.userService.isFollowedByUser(user.id, authUser.id)
   }
 
+  @UseGuards(AuthGuard)
+  @ResolveField(() => Number)
+  async tagViewsCount(@Parent() user: User): Promise<number> {
+    return this.userService.getTagViewsCount(user.id)
+  }
+
+  @UseGuards(AuthGuard)
+  @ResolveField(() => Number)
+  async tagReactionsCount(@Parent() user: User): Promise<number> {
+    return this.userService.getTagReactionsCount(user.id)
+  }
+
   @Query(() => Boolean)
   @UseGuards(AuthGuard)
   async isUserFollowedByAuthUser(@Args('userId') userId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
