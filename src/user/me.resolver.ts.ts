@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
+import { Args, Mutation, Query, ResolveField, Resolver } from '@nestjs/graphql'
 import TwilioService from 'src/core/twilio.service'
 
 import { AuthService, AuthUser } from '../auth/auth.service'
@@ -93,6 +93,18 @@ export class MeResolver {
     if (!user) return Promise.reject(new Error('not found'))
 
     return user
+  }
+
+  @UseGuards(AuthGuard)
+  @ResolveField(() => Number)
+  async tagViewsCount(@CurrentUser() authUser: AuthUser): Promise<number> {
+    return this.userService.getTagViewsCount(authUser.id)
+  }
+
+  @UseGuards(AuthGuard)
+  @ResolveField(() => Number)
+  async tagReactionsCount(@CurrentUser() authUser: AuthUser): Promise<number> {
+    return this.userService.getTagReactionsCount(authUser.id)
   }
 
   @Mutation(() => AccessToken)

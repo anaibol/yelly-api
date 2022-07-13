@@ -25,4 +25,6 @@ export class User {
   postCount?: number
   tagCount?: number
   viewsCount?: number
+  tagViewsCount?: number
+  tagReactionsCount?: number
 }
