@@ -86,7 +86,7 @@ export class PushNotificationService {
           ...(lang && { lang }),
           args: { otherUserFirstName: tag.author?.firstName, tagText: tag.text },
         }),
-        data: { url: `${process.env.APP_BASE_URL}/tag/${tagId}` },
+        data: { url: `${process.env.APP_BASE_URL}/tags/${tagId}` },
         sound: 'default' as const,
       }
     })
@@ -143,7 +143,7 @@ export class PushNotificationService {
               ...(lang && { lang }),
               args: { otherUserFirstName: postReply.author.firstName },
             }),
-      data: { url: `${process.env.APP_BASE_URL}/post/${postReply.parent.id}` },
+      data: { url: `${process.env.APP_BASE_URL}/posts/${postReply.parent.id}` },
       sound: 'default' as const,
     }
 
@@ -240,7 +240,7 @@ export class PushNotificationService {
 
     const { locale: lang, expoPushNotificationTokens } = user
 
-    const url = `${process.env.APP_BASE_URL}/tag/${tagId}`
+    const url = `${process.env.APP_BASE_URL}/tags/${tagId}`
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
@@ -358,7 +358,7 @@ export class PushNotificationService {
     AND "User"."schoolId" = "School"."id"
     AND "School"."cityId" = "City"."id"
     AND "City"."countryId" =  ${tag.countryId}`
-    const url = `${process.env.APP_BASE_URL}/tags/${tag.text}`
+    const url = `${process.env.APP_BASE_URL}/tags/${tag.id}`
 
     // eslint-disable-next-line functional/no-try-statement
     try {
@@ -492,7 +492,7 @@ export class PushNotificationService {
       return {
         ...message,
         to: expoPushNotificationToken.token,
-        data: { url: `${process.env.APP_BASE_URL}/post/${postReaction.post.id}` },
+        data: { url: `${process.env.APP_BASE_URL}/posts/${postReaction.post.id}` },
         sound: 'default' as const,
       }
     })
