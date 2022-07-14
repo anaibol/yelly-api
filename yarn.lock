@@ -1564,15 +1564,15 @@
   dependencies:
     ajv "^6.12.6"
 
-"@graphql-tools/merge@8.2.2":
-  version "8.2.2"
-  resolved "https://registry.npmjs.org/@graphql-tools/merge/-/merge-8.2.2.tgz"
-  integrity sha512-2DyqhIOMUMKbCPqo8p6xSdll2OBcBxGdOrxlJJlFQvinsSaYqp/ct3dhAxNtzaIcvSVgXvttQqfD7O2ziFtE7Q==
+"@graphql-tools/merge@8.3.0":
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/@graphql-tools/merge/-/merge-8.3.0.tgz#d3a8ba10942f8598788c3e03f97cc1d0c0b055f8"
+  integrity sha512-xRa7RAQok/0DD2YnjuqikMrr7dUAxTpdGtZ7BkvUUGhYs3B3p7reCAfvOVr1DJAqVToP7hdlMk+S5+Ylk+AaqA==
   dependencies:
-    "@graphql-tools/utils" "^8.5.1"
-    tslib "~2.3.0"
+    "@graphql-tools/utils" "8.8.0"
+    tslib "^2.4.0"
 
-"@graphql-tools/merge@^8.2.1", "@graphql-tools/merge@^8.2.3":
+"@graphql-tools/merge@^8.2.3":
   version "8.2.3"
   resolved "https://registry.npmjs.org/@graphql-tools/merge/-/merge-8.2.3.tgz"
   integrity sha512-XCSmL6/Xg8259OTWNp69B57CPWiVL69kB7pposFrufG/zaAlI9BS68dgzrxmmSqZV5ZHU4r/6Tbf6fwnEJGiSw==
@@ -1590,14 +1590,14 @@
     fast-json-stable-stringify "^2.1.0"
     tslib "~2.3.0"
 
-"@graphql-tools/schema@8.3.1":
-  version "8.3.1"
-  resolved "https://registry.npmjs.org/@graphql-tools/schema/-/schema-8.3.1.tgz"
-  integrity sha512-3R0AJFe715p4GwF067G5i0KCr/XIdvSfDLvTLEiTDQ8V/hwbOHEKHKWlEBHGRQwkG5lwFQlW1aOn7VnlPERnWQ==
+"@graphql-tools/schema@8.5.0":
+  version "8.5.0"
+  resolved "https://registry.yarnpkg.com/@graphql-tools/schema/-/schema-8.5.0.tgz#0332b3a2e674d16e9bf8a58dfd47432449ce2368"
+  integrity sha512-VeFtKjM3SA9/hCJJfr95aEdC3G0xIKM9z0Qdz4i+eC1g2fdZYnfWFt2ucW4IME+2TDd0enHlKzaV0qk2SLVUww==
   dependencies:
-    "@graphql-tools/merge" "^8.2.1"
-    "@graphql-tools/utils" "^8.5.1"
-    tslib "~2.3.0"
+    "@graphql-tools/merge" "8.3.0"
+    "@graphql-tools/utils" "8.8.0"
+    tslib "^2.4.0"
     value-or-promise "1.0.11"
 
 "@graphql-tools/schema@^8.0.0", "@graphql-tools/schema@^8.3.2":
@@ -1610,14 +1610,14 @@
     tslib "~2.3.0"
     value-or-promise "1.0.11"
 
-"@graphql-tools/utils@8.6.1":
-  version "8.6.1"
-  resolved "https://registry.npmjs.org/@graphql-tools/utils/-/utils-8.6.1.tgz"
-  integrity sha512-uxcfHCocp4ENoIiovPxUWZEHOnbXqj3ekWc0rm7fUhW93a1xheARNHcNKhwMTR+UKXVJbTFQdGI1Rl5XdyvDBg==
+"@graphql-tools/utils@8.8.0":
+  version "8.8.0"
+  resolved "https://registry.yarnpkg.com/@graphql-tools/utils/-/utils-8.8.0.tgz#8332ff80a1da9204ccf514750dd6f5c5cccf17dc"
+  integrity sha512-KJrtx05uSM/cPYFdTnGAS1doL5bftJLAiFCDMZ8Vkifztz3BFn3gpFiy/o4wDtM8s39G46mxmt2Km/RmeltfGw==
   dependencies:
-    tslib "~2.3.0"
+    tslib "^2.4.0"
 
-"@graphql-tools/utils@^8.0.0", "@graphql-tools/utils@^8.5.1", "@graphql-tools/utils@^8.6.2":
+"@graphql-tools/utils@^8.0.0", "@graphql-tools/utils@^8.6.2":
   version "8.6.2"
   resolved "https://registry.npmjs.org/@graphql-tools/utils/-/utils-8.6.2.tgz"
   integrity sha512-x1DG0cJgpJtImUlNE780B/dfp8pxvVxOD6UeykFH5rHes26S4kGokbgU8F1IgrJ1vAPm/OVBHtd2kicTsPfwdA==
@@ -1949,15 +1949,15 @@
     tslib "2.3.1"
     uuid "8.3.2"
 
-"@nestjs/graphql@10.0.5":
-  version "10.0.5"
-  resolved "https://registry.npmjs.org/@nestjs/graphql/-/graphql-10.0.5.tgz"
-  integrity sha512-ok7dXJOIw3hqoler3IP/ehm2S9FBQLgmjKguuPB4OMe/pk4TbcDXzQO7SPzwkgVMB/H/fhol9+kHoCXrCMHf7w==
+"@nestjs/graphql@^10.0.18":
+  version "10.0.18"
+  resolved "https://registry.yarnpkg.com/@nestjs/graphql/-/graphql-10.0.18.tgz#97fae97a8388a35f02042dc987bc76f4e6a1b816"
+  integrity sha512-aRC33cakBWtsVG9K4ievYgQAQCSjcLu+VJkW3gfU/FyEbGbt/8ZGzeDF+6Z21VmhnVhd7VdqD2KOJgbjvK00uA==
   dependencies:
-    "@graphql-tools/merge" "8.2.2"
-    "@graphql-tools/schema" "8.3.1"
-    "@graphql-tools/utils" "8.6.1"
-    "@nestjs/mapped-types" "1.0.1"
+    "@graphql-tools/merge" "8.3.0"
+    "@graphql-tools/schema" "8.5.0"
+    "@graphql-tools/utils" "8.8.0"
+    "@nestjs/mapped-types" "1.1.0"
     chokidar "3.5.3"
     fast-glob "3.2.11"
     graphql-tag "2.12.6"
@@ -1965,9 +1965,9 @@
     lodash "4.17.21"
     normalize-path "3.0.0"
     subscriptions-transport-ws "0.11.0"
-    tslib "2.3.1"
+    tslib "2.4.0"
     uuid "8.3.2"
-    ws "8.5.0"
+    ws "8.8.0"
 
 "@nestjs/jwt@8.0.0":
   version "8.0.0"
@@ -1977,10 +1977,10 @@
     "@types/jsonwebtoken" "8.5.4"
     jsonwebtoken "8.5.1"
 
-"@nestjs/mapped-types@1.0.1":
-  version "1.0.1"
-  resolved "https://registry.npmjs.org/@nestjs/mapped-types/-/mapped-types-1.0.1.tgz"
-  integrity sha512-NFvofzSinp00j5rzUd4tf+xi9od6383iY0JP7o0Bnu1fuItAUkWBgc4EKuIQ3D+c2QI3i9pG1kDWAeY27EMGtg==
+"@nestjs/mapped-types@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@nestjs/mapped-types/-/mapped-types-1.1.0.tgz#54a9fa61079635dd6c3c75fd9593f20b2302a55b"
+  integrity sha512-+2kSly4P1QI+9eGt+/uGyPdEG1hVz7nbpqPHWZVYgoqz8eOHljpXPag+UCVRw9zo2XCu4sgNUIGe8Uk0+OvUQg==
 
 "@nestjs/passport@8.2.1":
   version "8.2.1"
@@ -8565,6 +8565,11 @@ tslib@2.3.1, tslib@^2, tslib@^2.1.0, tslib@^2.3.0, tslib@^2.3.1, tslib@~2.3.0:
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.3.1.tgz"
   integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==
 
+tslib@2.4.0, tslib@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.4.0.tgz#7cecaa7f073ce680a05847aa77be941098f36dc3"
+  integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
+
 tslib@^1.11.1, tslib@^1.14.1, tslib@^1.8.1, tslib@^1.9.0, tslib@^1.9.3:
   version "1.14.1"
   resolved "https://registry.npmjs.org/tslib/-/tslib-1.14.1.tgz"
@@ -9014,10 +9019,15 @@ write-file-atomic@^3.0.0:
     signal-exit "^3.0.2"
     typedarray-to-buffer "^3.1.5"
 
-ws@*, ws@8.5.0:
+ws@*:
   version "8.5.0"
   resolved "https://registry.npmjs.org/ws/-/ws-8.5.0.tgz"
   integrity sha512-BWX0SWVgLPzYwF8lTzEy1egjhS4S4OEAHfsO8o65WOVsrnSRGaSiUaa9e0ggGlkMTtBlmOpEXiie9RUcBO86qg==
+
+ws@8.8.0:
+  version "8.8.0"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-8.8.0.tgz#8e71c75e2f6348dbf8d78005107297056cb77769"
+  integrity sha512-JDAgSYQ1ksuwqfChJusw1LSJ8BizJ2e/vVu5Lxjq3YvNJNlROv1ui4i+c/kUUrPheBvQl4c5UbERhTwKa6QBJQ==
 
 "ws@^5.2.0 || ^6.0.0 || ^7.0.0", ws@^7.4.6, ws@^7.5.5:
   version "7.5.7"
