@@ -24,6 +24,9 @@ BigInt.prototype.toJSON = function () {
   return this.toString()
 }
 
+// eslint-disable-next-line functional/immutable-data
+process.env.TZ = 'Europe/Paris'
+
 @Module({
   providers: [BigIntScalar, UserModule], // CommonFriendsLoader
   imports: [
