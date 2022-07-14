@@ -21,7 +21,8 @@ import { User } from './user.model'
 
 function changeTimezone(date: Date, timeZone: string): Date {
   return new Date(
-    date.toLocaleString('fr-FR', {
+    // fr-FR didn't wok
+    date.toLocaleString('en-US', {
       timeZone,
     })
   )
@@ -955,13 +956,12 @@ export class UserService {
   }
 
   async canCreateTag(userId: string): Promise<boolean> {
-    console.log({ date: new Date() })
-    console.log({ date2: changeTimezone(new Date(), 'Europe/Paris') })
+    const date = changeTimezone(new Date(), 'Europe/Paris')
 
     const tag = await this.prismaService.tag.findFirst({
       where: {
         authorId: userId,
-        date: changeTimezone(new Date(), 'Europe/Paris'),
+        date,
       },
       select: {
         id: true,
