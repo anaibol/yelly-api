@@ -19,6 +19,18 @@ import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
 
+function changeTimezone(date: Date, ianatz: string): Date {
+  const invdate = new Date(
+    date.toLocaleString('fr-FR', {
+      timeZone: ianatz,
+    })
+  )
+
+  const diff = date.getTime() - invdate.getTime()
+
+  return new Date(date.getTime() - diff)
+}
+
 type YotiResponse = {
   antispoofing: {
     prediction: AgePredictionResult
@@ -950,7 +962,7 @@ export class UserService {
     const tag = await this.prismaService.tag.findFirst({
       where: {
         authorId: userId,
-        date: new Date(),
+        date: changeTimezone(new Date(), 'Europe/Paris'),
       },
       select: {
         id: true,

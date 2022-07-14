@@ -405,6 +405,7 @@ export class PushNotificationService {
         },
         tag: {
           select: {
+            id: true,
             author: {
               select: UserPushTokenSelect,
             },
@@ -430,7 +431,7 @@ export class PushNotificationService {
       return {
         ...message,
         to: expoPushNotificationToken.token,
-        // data: { url: `${process.env.APP_BASE_URL}/notifications/notifications` },
+        data: { url: `${process.env.APP_BASE_URL}/tags/${tagReaction.tag.id}` },
         sound: 'default' as const,
       }
     })
