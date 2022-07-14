@@ -182,7 +182,7 @@ export class TagService {
       },
     })
 
-    if (result.length > 0) return Promise.reject(new Error('Already created a tag'))
+    if (result.length > 0 && !authUser.isAdmin) return Promise.reject(new Error('Already created a tag'))
 
     const tag = await this.prismaService.tag.create({
       data: {
