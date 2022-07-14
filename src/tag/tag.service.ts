@@ -477,26 +477,4 @@ export class TagService {
 
     return true
   }
-
-  async getIsTopToday(tagId: bigint, authUser: AuthUser): Promise<boolean> {
-    const topTags = await this.prismaService.tag.findMany({
-      where: {
-        isHidden: false,
-        countryId: authUser.countryId,
-      },
-      orderBy: [
-        {
-          reactions: {
-            _count: 'desc',
-          },
-        },
-        {
-          createdAt: 'desc' as const,
-        },
-      ],
-      take: 5,
-    })
-
-    return topTags.some(({ id }) => id === tagId)
-  }
 }

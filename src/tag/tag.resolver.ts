@@ -110,12 +110,6 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async isTopToday(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.tagService.getIsTopToday(tag.id, authUser)
-  }
-
-  @UseGuards(AuthGuard)
-  @ResolveField()
   isReadOnly(@Parent() tag: Tag): boolean {
     return tag?.createdAt?.toDateString() !== new Date().toDateString()
   }

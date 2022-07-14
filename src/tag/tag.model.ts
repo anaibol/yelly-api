@@ -17,7 +17,6 @@ export class Tag {
   viewsCount?: number
   author?: User | null
   authUserReaction?: TagReaction | null
-  isTopToday?: boolean
   isReadOnly?: boolean
   date?: Date | null
 }
