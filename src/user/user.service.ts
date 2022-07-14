@@ -19,16 +19,12 @@ import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
 
-function changeTimezone(date: Date, ianatz: string): Date {
-  const invdate = new Date(
+function changeTimezone(date: Date, timeZone: string): Date {
+  return new Date(
     date.toLocaleString('fr-FR', {
-      timeZone: ianatz,
+      timeZone,
     })
   )
-
-  const diff = date.getTime() - invdate.getTime()
-
-  return new Date(date.getTime() - diff)
 }
 
 type YotiResponse = {
