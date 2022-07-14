@@ -959,6 +959,9 @@ export class UserService {
   }
 
   async canCreateTag(userId: string): Promise<boolean> {
+    console.log({ date: new Date() })
+    console.log({ date2: changeTimezone(new Date(), 'Europe/Paris') })
+
     const tag = await this.prismaService.tag.findFirst({
       where: {
         authorId: userId,
