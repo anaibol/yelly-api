@@ -437,6 +437,9 @@ export class UserService {
             },
           },
         },
+        orderBy: {
+          createdAt: 'desc',
+        },
       }),
     ])
 
@@ -466,6 +469,9 @@ export class UserService {
               school: true,
             },
           },
+        },
+        orderBy: {
+          createdAt: 'desc',
         },
       }),
     ])
