@@ -29,7 +29,13 @@ type YotiResponse = {
   }
 }
 
-const checkAge = async (pictureId: string): Promise<AgeVerificationResult> => {
+const checkAge = async (
+  pictureId: string
+): Promise<{
+  isAgeApproved: boolean
+  ageEstimation: number
+  agePredictionResult: string
+}> => {
   const img = await getObject(pictureId)
 
   const data = {
@@ -906,32 +912,20 @@ export class UserService {
   }
 
   async updateAgeVerification(authUser: AuthUser, facePictureId: string): Promise<AgeVerificationResult> {
+    const { isAgeApproved, ageEstimation, agePredictionResult } = await checkAge(facePictureId)
+
+    deleteObject(facePictureId)
+
     await this.prismaService.user.update({
       where: {
         id: authUser.id,
       },
       data: {
-        facePictureId,
+        isAgeApproved,
+        ageEstimation,
+        agePredictionResult,
       },
     })
-
-    const { isAgeApproved, ageEstimation, agePredictionResult } = await checkAge(facePictureId)
-
-    await deleteObject(facePictureId)
-
-    if (isAgeApproved) {
-      await this.prismaService.user.update({
-        where: {
-          id: authUser.id,
-        },
-        data: {
-          isAgeApproved,
-          ageEstimation,
-          agePredictionResult,
-          facePictureId: null,
-        },
-      })
-    }
 
     if (authUser.isAdmin) {
       return {
