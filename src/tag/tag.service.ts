@@ -226,11 +226,6 @@ export class TagService {
     showHidden?: boolean,
     authorId?: string
   ): Promise<PaginatedTags> {
-    console.log({ tz: process.env.TZ })
-    console.log({ date: new Date() })
-    console.log({ date: new Date().toString() })
-    console.log({ date: new Date().toDateString() })
-
     if (showHidden && !authUser?.isAdmin) return Promise.reject(new Error('No admin'))
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
