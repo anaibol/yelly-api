@@ -124,6 +124,7 @@ export class NotificationService {
       where: {
         userId,
         isSeen: false,
+        date: new Date(),
       },
     })
   }
