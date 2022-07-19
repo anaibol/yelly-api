@@ -19,6 +19,24 @@ export const tagSelect = {
       lastName: true,
       birthdate: true,
       pictureId: true,
+      training: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      school: {
+        select: {
+          id: true,
+          name: true,
+          city: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
   },
 }
