@@ -21,8 +21,10 @@ export class AlgoliaService {
     })
   }
 
-  deleteObject(index: any, objectId: string) {
-    return index.deleteObject(objectId)
+  async deleteObject(index: SearchIndex, objectId: string): Promise<boolean> {
+    await index.deleteObject(objectId)
+
+    return true
   }
 
   partialUpdateObject(index: SearchIndex, objectToUpdate: any, objectID: string) {
