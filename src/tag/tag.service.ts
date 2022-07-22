@@ -248,6 +248,7 @@ export class TagService {
         isHidden: false,
       }),
       author: {
+        isBanned: false,
         birthdate: isLessThanFifteen
           ? {
               gte: new Date(fifteenYoYear + '-01-01'),

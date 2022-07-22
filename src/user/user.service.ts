@@ -652,10 +652,11 @@ export class UserService {
       await this.prismaService.user.delete({ where: { id: userId } })
       const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
-      this.algoliaService.deleteObject(algoliaUserIndex, userId).catch(console.error)
+      await this.algoliaService.deleteObject(algoliaUserIndex, userId).catch(console.error)
 
       return true
-    } catch {
+    } catch (e) {
+      console.log(e)
       return Promise.reject(new Error('not found'))
     }
   }
