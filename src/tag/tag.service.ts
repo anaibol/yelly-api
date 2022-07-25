@@ -237,9 +237,14 @@ export class TagService {
             authorId,
           }
         : {
-            createdAt: {
-              gte: isYesterday ? getPreviousResetDate() : getLastResetDate(),
-            },
+            createdAt: isYesterday
+              ? {
+                  gte: getPreviousResetDate(),
+                  lt: getLastResetDate(),
+                }
+              : {
+                  gte: getLastResetDate(),
+                },
           }),
       countryId: authUser.countryId,
       ...(!showHidden && {

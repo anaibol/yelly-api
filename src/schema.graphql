@@ -266,6 +266,8 @@ type Query {
   activities(after: BigInt, limit: Int = 10): Activities!
   authUserCanCreateTag: Boolean!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
+  getLastResetDate: DateTime!
+  getNextResetDate: DateTime!
   getS3PresignedUploadUrl: Upload!
   isUserFollowedByAuthUser(userId: String!): Boolean!
   me: Me!

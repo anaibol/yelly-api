@@ -58,6 +58,19 @@ export const getPreviousResetDate = () => {
   return sub(date, { days: currentHours < RESET_HOURS ? 1 : 2 })
 }
 
+export const getNextResetDate = () => {
+  const date = new Date()
+
+  const currentHours = date.getHours()
+
+  date.setHours(RESET_HOURS)
+  date.setMinutes(0)
+  date.setSeconds(0)
+  date.setMilliseconds(0)
+
+  return currentHours < RESET_HOURS ? sub(date, { days: 1 }) : date
+}
+
 export default {
   getAge,
   getDateYearsAgo,
