@@ -398,7 +398,8 @@ export class PushNotificationService {
     const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
       .$queryRaw`
     SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken"
-    WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"`
+    WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"
+    AND "User"."email" = 'caca@caca.com'`
 
     // eslint-disable-next-line functional/no-try-statement
     try {
