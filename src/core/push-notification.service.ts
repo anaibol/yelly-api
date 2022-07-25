@@ -394,17 +394,16 @@ export class PushNotificationService {
 
   async sendDailyReminder(): Promise<void> {
     // if (process.env.NODE_ENV === 'development') return
-
-    const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
-      .$queryRaw`
+    // eslint-disable-next-line functional/no-try-statement
+    try {
+      const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
+        .$queryRaw`
     SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken"
     WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"
     AND "User"."email" = 'caca@caca.com' OR "User"."role" = 'ADMIN'`
 
-    console.log({ allPushTokens })
+      console.log({ allPushTokens })
 
-    // eslint-disable-next-line functional/no-try-statement
-    try {
       const messages = await Promise.all(
         allPushTokens
           .map(async ({ token, locale: lang }) => {
@@ -420,6 +419,7 @@ export class PushNotificationService {
       // Typescript is not smart to recognize it will never be undefined
       await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_YELLY_RESET')
     } catch (e) {
+      console.log(e)
       // eslint-disable-next-line functional/no-throw-statement
       throw e
     }
