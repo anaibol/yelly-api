@@ -398,12 +398,7 @@ export class PushNotificationService {
     const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
       .$queryRaw`
     SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken"
-    WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"
-    AND "User"."email" = 'caca@caca.com'`
-
-    console.log({ allPushTokens })
-
-    // const url = `${process.env.APP_BASE_URL}/tags/${tag.id}`
+    WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"`
 
     // eslint-disable-next-line functional/no-try-statement
     try {
@@ -413,24 +408,14 @@ export class PushNotificationService {
             return {
               to: token,
               sound: 'default' as const,
-              body: 'Yelly recommence ! Viens poster pour être à la Une',
-              // data: { url },
+              body: 'Yelly recommence ! Viens poster pour être à la Une⚡',
             }
-            // return {
-            //   to: token,
-            //   sound: 'default' as const,
-            //   title: await this.i18n
-            //     .translate('notifications.promotedTag', { ...(lang && { lang }) })
-            //     .catch(() => null),
-            //   body: '#' + tag.text,
-            //   data: { url },
-            // }
           })
           .filter((v) => v)
       )
 
       // Typescript is not smart to recognize it will never be undefined
-      await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_PROMOTED_TAG')
+      await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_YELLY_RESET')
     } catch (e) {
       // eslint-disable-next-line functional/no-throw-statement
       throw e
