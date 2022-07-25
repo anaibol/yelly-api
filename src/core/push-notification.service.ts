@@ -399,7 +399,7 @@ export class PushNotificationService {
       .$queryRaw`
     SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken"
     WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"
-    AND "User"."email" = 'caca@caca.com'`
+    AND "User"."email" = 'caca@caca.com' OR "User"."role" = 'ADMIN'`
 
     // eslint-disable-next-line functional/no-try-statement
     try {
