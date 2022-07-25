@@ -23,10 +23,14 @@ export class CronWorker {
 
   @BullWorkerProcess()
   public async process(job: Job): Promise<{ status: string }> {
+    console.log({ holA: 'mundo' })
     console.log('APP_QUEUE CRON RUN', { date: new Date() })
 
     try {
+      console.log({ hol2: 'mundo' })
+
       await this.pushNotificationService.sendDailyReminder()
+      console.log({ hol3: 'mundo' })
 
       // const tags = await this.prismaService.tag.findMany({
       //   where: {

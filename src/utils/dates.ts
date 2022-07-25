@@ -1,4 +1,4 @@
-import { differenceInYears, sub } from 'date-fns'
+import { add, differenceInYears, sub } from 'date-fns'
 
 const getAge = (date: string | Date): number => {
   return differenceInYears(new Date(), new Date(date))
@@ -35,40 +35,28 @@ export const RESET_HOURS = 11
 export const getLastResetDate = () => {
   const date = new Date()
 
-  const currentHours = date.getHours()
+  const isResetHoursPassed = date.getHours() > RESET_HOURS
+  date.setHours(RESET_HOURS, 0, 0, 0)
 
-  date.setHours(RESET_HOURS)
-  date.setMinutes(0)
-  date.setSeconds(0)
-  date.setMilliseconds(0)
-
-  return currentHours < RESET_HOURS ? sub(date, { days: 1 }) : date
+  return isResetHoursPassed ? date : sub(date, { days: 1 })
 }
 
 export const getPreviousResetDate = () => {
   const date = new Date()
 
-  const currentHours = date.getHours()
+  const isResetHoursPassed = date.getHours() > RESET_HOURS
+  date.setHours(RESET_HOURS, 0, 0, 0)
 
-  date.setHours(RESET_HOURS)
-  date.setMinutes(0)
-  date.setSeconds(0)
-  date.setMilliseconds(0)
-
-  return sub(date, { days: currentHours < RESET_HOURS ? 1 : 2 })
+  return sub(date, { days: isResetHoursPassed ? 2 : 1 })
 }
 
 export const getNextResetDate = () => {
   const date = new Date()
 
-  const currentHours = date.getHours()
+  const isResetHoursPassed = date.getHours() > RESET_HOURS
+  date.setHours(RESET_HOURS, 0, 0, 0)
 
-  date.setHours(RESET_HOURS)
-  date.setMinutes(0)
-  date.setSeconds(0)
-  date.setMilliseconds(0)
-
-  return currentHours < RESET_HOURS ? sub(date, { days: 1 }) : date
+  return isResetHoursPassed ? add(date, { days: 1 }) : date
 }
 
 export default {
