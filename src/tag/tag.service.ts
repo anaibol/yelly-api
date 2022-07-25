@@ -171,16 +171,19 @@ export class TagService {
   }
 
   async create(tagText: string, authUser: AuthUser): Promise<Tag> {
-    const result = await this.prismaService.tag.findMany({
+    const tagCreated = await this.prismaService.tag.findFirst({
       where: {
         authorId: authUser.id,
+        createdAt: {
+          gte: getLastResetDate(),
+        },
       },
       select: {
         id: true,
       },
     })
 
-    if (result.length > 0 && !authUser.isAdmin) return Promise.reject(new Error('Already created a tag'))
+    if (tagCreated && !authUser.isAdmin) return Promise.reject(new Error('Already created a tag'))
 
     const tag = await this.prismaService.tag.create({
       data: {
