@@ -17,7 +17,6 @@ export class Activity {
   user?: User | null
   post?: Post | null
   createdAt?: Date
-  date?: Date | null
   @Field(() => ActivityType)
   type?: ActivityType
 }

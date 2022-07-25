@@ -32,9 +32,10 @@ export class CronModule implements OnModuleInit {
   async onModuleInit() {
     await this.queue.drain(true)
 
-    await this.queue.add('cron', undefined, {
+    await this.queue.add('sendDailyReminder', undefined, {
       repeat: {
-        every: process.env.NODE_ENV === 'development' ? 30000 : 3600000,
+        cron: '0 11 * * *',
+        tz: 'Europe/Paris',
       },
     })
   }

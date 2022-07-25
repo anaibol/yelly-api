@@ -25,7 +25,7 @@ BigInt.prototype.toJSON = function () {
 }
 
 // eslint-disable-next-line functional/immutable-data
-process.env.TZ = 'Etc/GMT-9'
+process.env.TZ = 'Europe/Paris'
 
 @Module({
   providers: [BigIntScalar, UserModule], // CommonFriendsLoader

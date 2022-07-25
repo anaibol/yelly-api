@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common'
 import { Job, Queue } from 'bullmq'
 
 import { PrismaService } from '../core/prisma.service'
+import { PushNotificationService } from '../core/push-notification.service'
 
 const APP_QUEUE = 'APP_QUEUE'
 
@@ -18,11 +19,13 @@ export class CronQueue {
 
 @BullWorker({ queueName: APP_QUEUE, options: { concurrency: 1 } })
 export class CronWorker {
-  constructor(private prismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService, private pushNotificationService: PushNotificationService) {}
 
   @BullWorkerProcess()
   public async process(job: Job): Promise<{ status: string }> {
     console.log('APP_QUEUE CRON RUN', { date: new Date() })
+
+    this.pushNotificationService.sendDailyReminder()
 
     try {
       // const tags = await this.prismaService.tag.findMany({

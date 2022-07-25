@@ -6,6 +6,7 @@ import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
 import { PushNotificationService } from '../core/push-notification.service'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
+import { getLastResetDate, getPreviousResetDate } from '../utils/dates'
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { PaginatedTags } from './paginated-tags.model'
 import { Tag } from './tag.model'
@@ -76,8 +77,6 @@ export class TagService {
         value: 1,
       },
       createdAtTimestamp: tag.createdAt.getTime(),
-      date: tag.date,
-      dateTimestamp: tag.date.getTime(),
       createdAt: tag.createdAt,
     }
 
@@ -156,11 +155,11 @@ export class TagService {
   }
 
   async getTagExists(tagText: string): Promise<boolean> {
-    const result = await this.prismaService.tag.findUnique({
+    const result = await this.prismaService.tag.findFirst({
       where: {
-        text_date: {
-          text: tagText,
-          date: new Date(),
+        text: tagText,
+        createdAt: {
+          gte: getLastResetDate(),
         },
       },
       select: {
@@ -175,7 +174,6 @@ export class TagService {
     const result = await this.prismaService.tag.findMany({
       where: {
         authorId: authUser.id,
-        date: new Date(),
       },
       select: {
         id: true,
@@ -233,15 +231,15 @@ export class TagService {
     const fifteenYoYear = 2007
     const isLessThanFifteen = authUser.birthdate.getFullYear() >= fifteenYoYear
 
-    const date = isYesterday ? new Date(new Date().setDate(new Date().getDate() - 1)) : new Date()
-
     const where: Prisma.TagWhereInput = {
       ...(authorId
         ? {
             authorId,
           }
         : {
-            date,
+            createdAt: {
+              gte: isYesterday ? getPreviousResetDate() : getLastResetDate(),
+            },
           }),
       countryId: authUser.countryId,
       ...(!showHidden && {
@@ -325,11 +323,11 @@ export class TagService {
     //   update: {},
     // })
 
-    const tag = await this.prismaService.tag.findUnique({
+    const tag = await this.prismaService.tag.findFirst({
       where: {
-        text_date: {
-          text: tagText,
-          date: new Date(),
+        text: tagText,
+        createdAt: {
+          gte: getLastResetDate(),
         },
       },
     })
