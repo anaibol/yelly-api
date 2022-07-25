@@ -34,7 +34,7 @@ export class CronModule implements OnModuleInit {
 
     await this.queue.add('sendDailyReminder', undefined, {
       repeat: {
-        cron: '20 23 * * *',
+        cron: '0 11 * * *',
         tz: 'Europe/Paris',
       },
     })
