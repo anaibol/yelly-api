@@ -401,6 +401,8 @@ export class PushNotificationService {
     WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"
     AND "User"."email" = 'caca@caca.com' OR "User"."role" = 'ADMIN'`
 
+    console.log({ allPushTokens })
+
     // eslint-disable-next-line functional/no-try-statement
     try {
       const messages = await Promise.all(

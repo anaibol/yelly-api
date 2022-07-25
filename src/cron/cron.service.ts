@@ -25,9 +25,9 @@ export class CronWorker {
   public async process(job: Job): Promise<{ status: string }> {
     console.log('APP_QUEUE CRON RUN', { date: new Date() })
 
-    this.pushNotificationService.sendDailyReminder()
-
     try {
+      await this.pushNotificationService.sendDailyReminder()
+
       // const tags = await this.prismaService.tag.findMany({
       //   where: {
       //     isHidden: false,
