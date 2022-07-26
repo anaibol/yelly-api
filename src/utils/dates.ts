@@ -30,33 +30,31 @@ const getDateRanges = (userAge: number): { gte: Date; lt: Date } | null => {
   return null
 }
 
-export const RESET_HOURS = 20
+export const RESET_HOURS = 21
+
+const isResetHoursPassed = (): boolean => {
+  console.log(new Date().getHours() > RESET_HOURS)
+  return new Date().getHours() > RESET_HOURS
+}
+
+const getTodayResetDate = () => new Date(new Date().setHours(RESET_HOURS, 0, 0, 0))
 
 export const getLastResetDate = () => {
-  const date = new Date()
+  const todayResetDate = getTodayResetDate()
 
-  const isResetHoursPassed = date.getHours() > RESET_HOURS
-  date.setHours(RESET_HOURS, 0, 0, 0)
-
-  return isResetHoursPassed ? date : sub(date, { days: 1 })
+  return isResetHoursPassed() ? todayResetDate : sub(todayResetDate, { days: 1 })
 }
 
 export const getPreviousResetDate = () => {
-  const date = new Date()
+  const todayResetDate = getTodayResetDate()
 
-  const isResetHoursPassed = date.getHours() > RESET_HOURS
-  date.setHours(RESET_HOURS, 0, 0, 0)
-
-  return isResetHoursPassed ? sub(date, { days: 1 }) : sub(date, { days: 2 })
+  return isResetHoursPassed() ? sub(todayResetDate, { days: 1 }) : sub(todayResetDate, { days: 2 })
 }
 
 export const getNextResetDate = () => {
-  const date = new Date()
+  const todayResetDate = getTodayResetDate()
 
-  const isResetHoursPassed = date.getHours() > RESET_HOURS
-  date.setHours(RESET_HOURS, 0, 0, 0)
-
-  return isResetHoursPassed ? add(date, { days: 1 }) : date
+  return isResetHoursPassed() ? add(todayResetDate, { days: 1 }) : todayResetDate
 }
 
 export default {
