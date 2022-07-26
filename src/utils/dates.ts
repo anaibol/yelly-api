@@ -30,7 +30,7 @@ const getDateRanges = (userAge: number): { gte: Date; lt: Date } | null => {
   return null
 }
 
-export const RESET_HOURS = 16
+export const RESET_HOURS = 17
 
 export const getLastResetDate = () => {
   const date = new Date()
