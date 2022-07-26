@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
 import { PrismaService } from '../core/prisma.service'
+import { getLastResetDate } from '../utils/dates'
 import { PaginatedNotifications } from './paginated-notifications.model'
 
 @Injectable()
@@ -17,14 +18,15 @@ export class NotificationService {
       this.prismaService.notification.findMany({
         where: {
           userId,
-          date: new Date(),
+          createdAt: {
+            gte: getLastResetDate(),
+          },
         },
         select: {
           id: true,
           type: true,
           createdAt: true,
           isSeen: true,
-          date: true,
           newPostCount: true,
           tag: {
             select: {
@@ -124,7 +126,9 @@ export class NotificationService {
       where: {
         userId,
         isSeen: false,
-        date: new Date(),
+        createdAt: {
+          gte: getLastResetDate(),
+        },
       },
     })
   }

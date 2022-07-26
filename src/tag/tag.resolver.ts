@@ -5,6 +5,7 @@ import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { PrismaService } from '../core/prisma.service'
+import { getLastResetDate, getNextResetDate, getPreviousResetDate } from '../utils/dates'
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { CreateTagInput } from './create-tag.input'
 import { DeleteTagReactionInput } from './delete-tag-reaction.input'
@@ -41,6 +42,24 @@ export class TagResolver {
   @Query(() => Boolean)
   tagExists(@Args('tagText') tagText: string): Promise<boolean> {
     return this.tagService.getTagExists(tagText)
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => Date)
+  getLastResetDate(): Date {
+    return getLastResetDate()
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => Date)
+  getPreviousResetDate(): Date {
+    return getPreviousResetDate()
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => Date)
+  getNextResetDate(): Date {
+    return getNextResetDate()
   }
 
   @UseGuards(AuthGuard)
@@ -111,6 +130,6 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @ResolveField()
   isReadOnly(@Parent() tag: Tag): boolean {
-    return tag?.createdAt?.toDateString() !== new Date().toDateString()
+    return !!(tag?.createdAt && tag.createdAt < getLastResetDate())
   }
 }

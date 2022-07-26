@@ -16,7 +16,6 @@ type Activities {
 
 type Activity {
   createdAt: DateTime
-  date: DateTime
   id: BigInt!
   post: Post
   tag: Tag
@@ -180,7 +179,6 @@ type Mutation {
 
 type Notification {
   createdAt: DateTime!
-  date: DateTime
   followerUser: User
   id: ID!
   isSeen: Boolean
@@ -268,6 +266,9 @@ type Query {
   activities(after: BigInt, limit: Int = 10): Activities!
   authUserCanCreateTag: Boolean!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
+  getLastResetDate: DateTime!
+  getNextResetDate: DateTime!
+  getPreviousResetDate: DateTime!
   getS3PresignedUploadUrl: Upload!
   isUserFollowedByAuthUser(userId: String!): Boolean!
   me: Me!
@@ -313,7 +314,6 @@ type Tag {
   authUserReaction: TagReaction
   author: User
   createdAt: DateTime
-  date: DateTime
   id: BigInt!
   isHidden: Boolean
   isReadOnly: Boolean

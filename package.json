@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@amplitude/node": "^1.9.2",
-    "@anchan828/nest-bullmq": "^1.2.7",
+    "@anchan828/nest-bullmq": "^2.0.2",
     "@aws-sdk/client-s3": "3.44.0",
     "@aws-sdk/s3-request-presigner": "3.44.0",
     "@aws-sdk/signature-v4-crt": "3.41.0",
@@ -58,7 +58,7 @@
     "apollo-server-fastify": "^3.6.5",
     "axios": "^0.24.0",
     "bcrypt": "^5.0.1",
-    "bullmq": "^1.82.2",
+    "bullmq": "^1.86.7",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
     "dataloader": "^2.0.0",

@@ -22,7 +22,6 @@ export class Notification {
   followerUser?: User | null
   tag?: Tag | null
   post?: Post | null
-  date?: Date | null
   newPostCount?: number | null
   @Field(() => NotificationType)
   type?: NotificationType

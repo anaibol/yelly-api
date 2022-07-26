@@ -15,6 +15,7 @@ import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { SchoolService } from '../school/school.service'
 import { deleteObject, getObject } from '../utils/aws'
+import { getLastResetDate } from '../utils/dates'
 import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
@@ -951,7 +952,9 @@ export class UserService {
     const tag = await this.prismaService.tag.findFirst({
       where: {
         authorId: userId,
-        date: new Date(),
+        createdAt: {
+          gte: getLastResetDate(),
+        },
       },
       select: {
         id: true,

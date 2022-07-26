@@ -1,4 +1,4 @@
-import { differenceInYears, sub } from 'date-fns'
+import { add, differenceInYears, sub } from 'date-fns'
 
 const getAge = (date: string | Date): number => {
   return differenceInYears(new Date(), new Date(date))
@@ -28,6 +28,32 @@ const getDateRanges = (userAge: number): { gte: Date; lt: Date } | null => {
     }
 
   return null
+}
+
+export const RESET_HOURS = 22
+
+const isResetHoursPassed = (): boolean => {
+  return new Date().getHours() >= RESET_HOURS
+}
+
+const getTodayResetDate = () => new Date(new Date().setHours(RESET_HOURS, 0, 0, 0))
+
+export const getLastResetDate = () => {
+  const todayResetDate = getTodayResetDate()
+
+  return isResetHoursPassed() ? todayResetDate : sub(todayResetDate, { days: 1 })
+}
+
+export const getPreviousResetDate = () => {
+  const todayResetDate = getTodayResetDate()
+
+  return isResetHoursPassed() ? sub(todayResetDate, { days: 1 }) : sub(todayResetDate, { days: 2 })
+}
+
+export const getNextResetDate = () => {
+  const todayResetDate = getTodayResetDate()
+
+  return isResetHoursPassed() ? add(todayResetDate, { days: 1 }) : todayResetDate
 }
 
 export default {

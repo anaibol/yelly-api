@@ -46,10 +46,8 @@ model Notification {
   followerUser   User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
   followerUserId String?
   newPostCount   Int?
-  date           DateTime         @default(now()) @db.Date
 
   @@index([createdAt], map: "Notification_createdAt")
-  @@index([date])
   @@index([userId])
 }
 
@@ -65,10 +63,8 @@ model Activity {
   user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
   type          ActivityType
   userId        String
-  date          DateTime     @default(now()) @db.Date
 
   @@index([createdAt], map: "Activity_createdAt")
-  @@index([userId, date])
 }
 
 model School {
@@ -158,15 +154,12 @@ model Tag {
   isHidden      Boolean        @default(false)
   author        User?          @relation(fields: [authorId], references: [id])
   authorId      String?
-  date          DateTime       @default(now()) @db.Date
   reactions     TagReaction[]
   viewsCount    Int            @default(0)
   activities    Activity[]
   notifications Notification[]
 
-  @@unique([text, date])
   @@index([createdAt])
-  @@index([date])
   @@index([authorId])
   @@index([isHidden])
 }

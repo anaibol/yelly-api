@@ -3,7 +3,6 @@ export const tagSelect = {
   text: true,
   createdAt: true,
   updatedAt: true,
-  date: true,
   isHidden: true,
   viewsCount: true,
   _count: {

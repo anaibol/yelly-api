@@ -392,6 +392,39 @@ export class PushNotificationService {
     }
   }
 
+  async sendDailyReminder(): Promise<void> {
+    if (process.env.NODE_ENV === 'development') return
+    // eslint-disable-next-line functional/no-try-statement
+    try {
+      const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
+        .$queryRaw`
+    SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken"
+    WHERE ("User"."id" = "ExpoPushNotificationAccessToken"."userId")
+    AND ("User"."email" = 'caca@caca.com' OR "User"."role" = 'ADMIN')`
+
+      console.log({ allPushTokens })
+
+      const messages = await Promise.all(
+        allPushTokens
+          .map(async ({ token, locale: lang }) => {
+            return {
+              to: token,
+              sound: 'default' as const,
+              body: 'Yelly recommence ! Viens poster pour être à la Une⚡',
+            }
+          })
+          .filter((v) => v)
+      )
+
+      // Typescript is not smart to recognize it will never be undefined
+      await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_YELLY_RESET')
+    } catch (e) {
+      console.log(e)
+      // eslint-disable-next-line functional/no-throw-statement
+      throw e
+    }
+  }
+
   async reactedToYourTag(tagReactionId: bigint) {
     const tagReaction = await this.prismaService.tagReaction.findUnique({
       where: {
