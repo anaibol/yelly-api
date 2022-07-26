@@ -268,6 +268,7 @@ type Query {
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
   getLastResetDate: DateTime!
   getNextResetDate: DateTime!
+  getPreviousResetDate: DateTime!
   getS3PresignedUploadUrl: Upload!
   isUserFollowedByAuthUser(userId: String!): Boolean!
   me: Me!

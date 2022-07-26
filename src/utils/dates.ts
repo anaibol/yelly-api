@@ -30,7 +30,7 @@ const getDateRanges = (userAge: number): { gte: Date; lt: Date } | null => {
   return null
 }
 
-export const RESET_HOURS = 11
+export const RESET_HOURS = 16
 
 export const getLastResetDate = () => {
   const date = new Date()
@@ -47,7 +47,7 @@ export const getPreviousResetDate = () => {
   const isResetHoursPassed = date.getHours() > RESET_HOURS
   date.setHours(RESET_HOURS, 0, 0, 0)
 
-  return sub(date, { days: isResetHoursPassed ? 2 : 1 })
+  return isResetHoursPassed ? sub(date, { days: 1 }) : date
 }
 
 export const getNextResetDate = () => {
