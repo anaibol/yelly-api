@@ -30,7 +30,7 @@ const getDateRanges = (userAge: number): { gte: Date; lt: Date } | null => {
   return null
 }
 
-export const RESET_HOURS = 22
+export const RESET_HOURS = 11
 
 const isResetHoursPassed = (): boolean => {
   return new Date().getHours() >= RESET_HOURS
