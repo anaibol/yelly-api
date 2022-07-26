@@ -33,8 +33,7 @@ const getDateRanges = (userAge: number): { gte: Date; lt: Date } | null => {
 export const RESET_HOURS = 21
 
 const isResetHoursPassed = (): boolean => {
-  console.log(new Date().getHours() > RESET_HOURS)
-  return new Date().getHours() > RESET_HOURS
+  return new Date().getHours() >= RESET_HOURS
 }
 
 const getTodayResetDate = () => new Date(new Date().setHours(RESET_HOURS, 0, 0, 0))
