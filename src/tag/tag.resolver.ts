@@ -130,6 +130,6 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @ResolveField()
   isReadOnly(@Parent() tag: Tag): boolean {
-    return !!(tag?.createdAt && tag.createdAt > getLastResetDate())
+    return !!(tag?.createdAt && tag.createdAt < getLastResetDate())
   }
 }

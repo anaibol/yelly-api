@@ -393,7 +393,7 @@ export class PushNotificationService {
   }
 
   async sendDailyReminder(): Promise<void> {
-    // if (process.env.NODE_ENV === 'development') return
+    if (process.env.NODE_ENV === 'development') return
     // eslint-disable-next-line functional/no-try-statement
     try {
       const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService

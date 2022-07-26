@@ -3,6 +3,7 @@ import { Module, OnModuleInit } from '@nestjs/common'
 import { Queue } from 'bullmq'
 
 import { CoreModule } from '../core/core.module'
+import { RESET_HOURS } from '../utils/dates'
 import { CronQueue, CronWorker } from './cron.service'
 
 const APP_QUEUE = 'APP_QUEUE'
@@ -34,7 +35,7 @@ export class CronModule implements OnModuleInit {
 
     await this.queue.add('sendDailyReminder', undefined, {
       repeat: {
-        cron: '0 11 * * *',
+        cron: `0 ${RESET_HOURS} * * *`,
         tz: 'Europe/Paris',
       },
     })
