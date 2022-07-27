@@ -224,7 +224,7 @@ export class PostService {
   }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
-    const { text, tagIds, pollOptions, parentId } = createPostInput
+    const { text, tagIds, pollOptions, parentId, mentionUserIds } = createPostInput
 
     const parent =
       parentId &&
@@ -255,6 +255,19 @@ export class PostService {
             id: authUser.id,
           },
         },
+        ...(mentionUserIds &&
+          mentionUserIds.length > 0 && {
+            mentions: {
+              connect: mentionUserIds.map((tagId) => ({ id: tagId })),
+            },
+            activities: {
+              create: {
+                type: ActivityType.CREATED_POST,
+                tagId: mentionUserIds[0],
+                userId: authUser.id,
+              },
+            },
+          }),
         ...(tagIds &&
           tagIds.length > 0 && {
             tags: {

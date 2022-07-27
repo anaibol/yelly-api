@@ -8,4 +8,6 @@ export class CreatePostInput {
   pollOptions?: string[]
   @Field(() => BigInt)
   parentId?: bigint
+  @Field(() => [BigInt])
+  mentionUserIds?: bigint[]
 }
