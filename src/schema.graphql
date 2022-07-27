@@ -282,7 +282,7 @@ type Query {
   unreadNotificationsCount: Int!
   user(id: String!): User!
   userActivities(after: BigInt, limit: Int = 10, userId: String!): Activities!
-  userFollowees(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
+  userFollowees(firstNameStartsWith: String, limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
   userFollowers(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
   users(ids: [String!]!): PaginatedUsers!
 }

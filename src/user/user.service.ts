@@ -435,6 +435,7 @@ export class UserService {
           user: {
             include: {
               school: true,
+              training: true,
             },
           },
         },
@@ -451,23 +452,37 @@ export class UserService {
     return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async getFollowees(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
+  async getFollowees(
+    userId: string,
+    skip: number,
+    limit: number,
+    firstNameStartsWith?: string
+  ): Promise<PaginatedUsers> {
+    const where: Prisma.FollowerWhereInput = {
+      userId,
+      ...(firstNameStartsWith && {
+        followee: {
+          firstName: {
+            startsWith: firstNameStartsWith,
+            mode: 'insensitive',
+          },
+        },
+      }),
+    }
+
     const [totalCount, follows] = await Promise.all([
       this.prismaService.follower.count({
-        where: {
-          userId,
-        },
+        where,
       }),
       this.prismaService.follower.findMany({
         take: limit,
         skip,
-        where: {
-          userId,
-        },
+        where,
         include: {
           followee: {
             include: {
               school: true,
+              training: true,
             },
           },
         },
