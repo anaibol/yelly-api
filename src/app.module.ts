@@ -1,6 +1,6 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { Module } from '@nestjs/common'
-import { GraphQLModule } from '@nestjs/graphql'
+import { GraphQLModule, registerEnumType } from '@nestjs/graphql'
 import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
 import { I18nJsonParser, I18nModule } from 'nestjs-i18n'
 import { join } from 'path'
@@ -26,6 +26,14 @@ BigInt.prototype.toJSON = function () {
 
 // eslint-disable-next-line functional/immutable-data
 process.env.TZ = 'Europe/Paris'
+
+export enum SortDirection {
+  asc = 'asc',
+  desc = 'desc',
+}
+registerEnumType(SortDirection, {
+  name: 'SortDirection',
+})
 
 @Module({
   providers: [BigIntScalar, UserModule], // CommonFriendsLoader

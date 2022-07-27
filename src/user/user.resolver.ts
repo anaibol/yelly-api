@@ -140,9 +140,9 @@ export class UserResolver {
 
   @Query(() => PaginatedUsers)
   userFollowees(@Args() userFolloweesArgs: UserFolloweesArgs): Promise<PaginatedUsers> {
-    const { userId, skip, limit, firstNameStartsWith } = userFolloweesArgs
+    const { userId, skip, limit, firstNameStartsWith, sortBy, sortDirection } = userFolloweesArgs
 
-    return this.userService.getFollowees(userId, skip, limit, firstNameStartsWith)
+    return this.userService.getFollowees(userId, skip, limit, firstNameStartsWith, sortBy, sortDirection)
   }
 
   @UseGuards(AuthGuard)

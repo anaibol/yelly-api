@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ActivityType, NotificationType, Prisma } from '@prisma/client'
 
+import { SortDirection } from '../app.module'
 import { AuthUser } from '../auth/auth.service'
 import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
@@ -12,10 +13,10 @@ import { PaginatedTags } from './paginated-tags.model'
 import { Tag } from './tag.model'
 import { TagReaction } from './tag-reaction.model'
 import { tagSelect } from './tag-select.constant'
-import { SortDirection, TagSortBy } from './tags.args'
+import { TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 
-const getTagSort = (
+const getTagsSort = (
   sortBy?: TagSortBy,
   sortDirection?: SortDirection
 ): Prisma.Enumerable<Prisma.TagOrderByWithRelationInput> => {
@@ -277,7 +278,7 @@ export class TagService {
           },
           skip: 1,
         }),
-        orderBy: getTagSort(sortBy, sortDirection),
+        orderBy: getTagsSort(sortBy, sortDirection),
         take: limit,
         select: tagSelect,
       }),
