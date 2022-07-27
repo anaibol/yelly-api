@@ -257,7 +257,7 @@ export class PostService {
         },
         ...(mentionUserIds &&
           mentionUserIds.length > 0 && {
-            mentions: {
+            userMentions: {
               connect: mentionUserIds.map((tagId) => ({ id: tagId })),
             },
             activities: {
@@ -310,6 +310,8 @@ export class PostService {
     } else {
       if (tagIds) this.thereAreNewPostsOnYourTag(post.id, tagIds[0])
     }
+
+    // if (mentionUserIds) this.pushNotificationService.youHaveBeenMentioned(post.id)
 
     return post
   }

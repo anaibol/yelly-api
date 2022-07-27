@@ -25,6 +25,7 @@ type Activity {
 
 enum ActivityType {
   CREATED_POST
+  CREATED_POST_USER_MENTION
   CREATED_TAG
   CREATED_TAG_REACTION
 }
@@ -69,6 +70,7 @@ input CreateOrUpdateTagReactionInput {
 }
 
 input CreatePostInput {
+  mentionUserIds: [BigInt!]
   parentId: BigInt
   pollOptions: [String!]
   tagIds: [BigInt!]
@@ -197,6 +199,7 @@ enum NotificationType {
   REPLIED_TO_SAME_POST_AS_YOU
   REPLIED_TO_YOUR_POST
   THERE_ARE_NEW_POSTS_ON_YOUR_TAG
+  USER_MENTIONED_YOU
   YOUR_TAG_IS_TRENDING
 }
 
