@@ -566,10 +566,16 @@ export class PushNotificationService {
 
         return {
           to: expoPushNotificationTokens.map(({ token }) => token),
-          body: await this.i18n.translate('notifications.youHaveBeenMentioned', {
-            ...(lang && { lang }),
-            args: { otherUserFirstName: author.firstName, tagText: post.tags[0].text },
-          }),
+          body:
+            post.tags.length > 0
+              ? await this.i18n.translate('notifications.youHaveBeenMentioned', {
+                  ...(lang && { lang }),
+                  args: { otherUserFirstName: author.firstName, tagText: post.tags[0].text },
+                })
+              : await this.i18n.translate('notifications.youHaveBeenMentionedNoTag', {
+                  ...(lang && { lang }),
+                  args: { otherUserFirstName: author.firstName },
+                }),
           data: { userId, url },
           sound: 'default' as const,
         }

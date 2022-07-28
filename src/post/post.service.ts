@@ -261,30 +261,6 @@ export class PostService {
               createMany: {
                 data: mentionedUserIds.map((userId) => ({
                   userId,
-                  activity: {
-                    create: {
-                      data: {
-                        userId: authUser.id,
-                        type: ActivityType.CREATED_POST_USER_MENTION,
-                        ...(tagIds &&
-                          tagIds.length > 0 && {
-                            tagId: tagIds[0],
-                          }),
-                      },
-                    },
-                  },
-                  notification: {
-                    createMany: {
-                      data: mentionedUserIds.map((userId) => ({
-                        userId,
-                        type: NotificationType.USER_MENTIONED_YOU,
-                        ...(tagIds &&
-                          tagIds.length > 0 && {
-                            tagId: tagIds[0],
-                          }),
-                      })),
-                    },
-                  },
                 })),
               },
             },
@@ -332,7 +308,31 @@ export class PostService {
       this.thereAreNewPostsOnYourTag(post.id, tagIds[0])
     }
 
-    if (mentionedUserIds) this.pushNotificationService.youHaveBeenMentioned(post.id)
+    if (mentionedUserIds && mentionedUserIds.length > 0) {
+      this.pushNotificationService.youHaveBeenMentioned(post.id)
+
+      this.prismaService.activity.create({
+        data: {
+          userId: authUser.id,
+          type: ActivityType.CREATED_POST_USER_MENTION,
+          ...(tagIds &&
+            tagIds.length > 0 && {
+              tagId: tagIds[0],
+            }),
+        },
+      })
+
+      this.prismaService.notification.createMany({
+        data: mentionedUserIds.map((userId) => ({
+          userId,
+          type: NotificationType.USER_MENTIONED_YOU,
+          ...(tagIds &&
+            tagIds.length > 0 && {
+              tagId: tagIds[0],
+            }),
+        })),
+      })
+    }
 
     return post
   }
