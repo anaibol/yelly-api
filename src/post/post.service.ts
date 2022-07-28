@@ -309,29 +309,40 @@ export class PostService {
     }
 
     if (mentionedUserIds && mentionedUserIds.length > 0) {
-      this.pushNotificationService.youHaveBeenMentioned(post.id)
+      const postUserMentions = await this.prismaService.postUserMention.findMany({ where: { postId: post.id } })
 
-      this.prismaService.activity.create({
-        data: {
-          userId: authUser.id,
-          type: ActivityType.CREATED_POST_USER_MENTION,
-          ...(tagIds &&
-            tagIds.length > 0 && {
-              tagId: tagIds[0],
+      if (!postUserMentions) return Promise.reject(new Error('No mentions'))
+      console.log(postUserMentions)
+      await Promise.all(
+        postUserMentions.map((mention) =>
+          [
+            this.prismaService.activity.create({
+              data: {
+                userId: authUser.id,
+                postId: post.id,
+                postUserMentionId: mention.id,
+                type: ActivityType.CREATED_POST_USER_MENTION,
+                ...(tagIds &&
+                  tagIds.length > 0 && {
+                    tagId: tagIds[0],
+                  }),
+              },
             }),
-        },
-      })
-
-      this.prismaService.notification.createMany({
-        data: mentionedUserIds.map((userId) => ({
-          userId,
-          type: NotificationType.USER_MENTIONED_YOU,
-          ...(tagIds &&
-            tagIds.length > 0 && {
-              tagId: tagIds[0],
+            this.prismaService.notification.createMany({
+              data: mentionedUserIds.map((userId) => ({
+                userId,
+                postId: post.id,
+                postUserMentionId: mention.id,
+                type: NotificationType.USER_MENTIONED_YOU,
+                ...(tagIds &&
+                  tagIds.length > 0 && {
+                    tagId: tagIds[0],
+                  }),
+              })),
             }),
-        })),
-      })
+          ].flat()
+        )
+      )
     }
 
     return post
