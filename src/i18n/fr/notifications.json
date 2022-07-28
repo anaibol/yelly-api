@@ -10,5 +10,7 @@
   "yourTagIsTrending": "Ton sujet du jour est en Une !",
   "isNowFollowingYou": "{otherUserFirstName} te suis désormais",
   "promotedTag": "Tendance Yelly live",
-  "followeeCreatedTag": "{otherUserFirstName} a lancé le sujet #{tagText}"
+  "followeeCreatedTag": "{otherUserFirstName} a lancé le sujet #{tagText}",
+  "youHaveBeenMentioned": "{otherUserFirstName} a mentionné ton nom sur #{tagText}",
+  "youHaveBeenMentionedNoTag": "{otherUserFirstName} a mentionné ton nom"
 }

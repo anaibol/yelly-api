@@ -533,46 +533,58 @@ export class PushNotificationService {
     await this.sendNotifications(messages, pushTokens, 'PUSH_NOTIFICATION_REACTED_TO_YOUR_POST')
   }
 
-  // async youHaveBeenMentioned(postId: bigint) {
-  //   const post = await this.prismaService.post.findUnique({
-  //     include: {
-  //       userMentions: {
-  //         include: {
-  //           user: {
-  //             select: UserPushTokenSelect,
-  //           },
-  //         },
-  //       },
-  //       author: true,
-  //     },
-  //     where: { id: postId },
-  //   })
+  async youHaveBeenMentioned(postId: bigint) {
+    const post = await this.prismaService.post.findUnique({
+      include: {
+        userMentions: {
+          include: {
+            user: {
+              select: UserPushTokenSelect,
+            },
+          },
+        },
+        tags: {
+          select: {
+            id: true,
+            text: true,
+          },
+        },
+        author: true,
+      },
+      where: { id: postId },
+    })
 
-  //   if (!post) return Promise.reject(new Error('post not found'))
+    if (!post) return Promise.reject(new Error('post not found'))
 
-  //   const { userMentions, author } = post
+    const { userMentions, author } = post
 
-  //   const url = `${process.env.APP_BASE_URL}/user/${post.author.id}`
+    const url = `${process.env.APP_BASE_URL}/user/${post.author.id}`
 
-  //   const messages = userMentions.map(async ({ user }) => {
-  //     const { locale: lang, expoPushNotificationTokens, id: userId } = user
+    const messages = await Promise.all(
+      userMentions.map(async ({ user }) => {
+        const { locale: lang, expoPushNotificationTokens, id: userId } = user
 
-  //     return {
-  //       to: expoPushNotificationTokens.map(({ token }) => token),
-  //       body: await this.i18n.translate('notifications.youHaveBeenMentioned', {
-  //         ...(lang && { lang }),
-  //         args: { otherUserFirstName: author.firstName },
-  //       }),
-  //       data: { userId, url },
-  //       sound: 'default' as const,
-  //     }
-  //   })
+        return {
+          to: expoPushNotificationTokens.map(({ token }) => token),
+          body: await this.i18n.translate('notifications.youHaveBeenMentioned', {
+            ...(lang && { lang }),
+            args: { otherUserFirstName: author.firstName, tagText: post.tags[0].text },
+          }),
+          data: { userId, url },
+          sound: 'default' as const,
+        }
+      })
+    )
 
-  //   await this.sendNotifications(messages, expoPushNotificationTokens, 'PUSH_NOTIFICATION_USER_MENTIONED_YOU')
+    await this.sendNotifications(
+      messages,
+      userMentions.map(({ user }) => user.expoPushNotificationTokens).flat(),
+      'PUSH_NOTIFICATION_USER_MENTIONED_YOU'
+    )
 
-  //   return {
-  //     statusCode: 200,
-  //     body: JSON.stringify({}),
-  //   }
-  // }
+    return {
+      statusCode: 200,
+      body: JSON.stringify({}),
+    }
+  }
 }
