@@ -33,7 +33,7 @@ export class Post {
   authUserReaction?: PostReaction | null
   score?: number | null
   isReadOnly?: boolean
-  mentionedUserIds?: string[]
+  mentionedUsers?: User[]
 }
 
 @ObjectType()

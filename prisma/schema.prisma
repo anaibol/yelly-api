@@ -196,9 +196,9 @@ model PostUserMention {
   id           BigInt        @id @default(dbgenerated("generate_id()"))
   createdAt    DateTime      @default(now())
   userId       String
-  user         User          @relation(fields: [userId], references: [id])
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   postId       BigInt
-  post         Post          @relation(fields: [postId], references: [id])
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
   activity     Activity?
   activityId   String?
   notification Notification?

@@ -73,6 +73,10 @@ export const PostSelect = {
       user: {
         select: {
           id: true,
+          firstName: true,
+          lastName: true,
+          birthdate: true,
+          pictureId: true,
         },
       },
     },
@@ -130,7 +134,7 @@ export function mapPost(post: PostWithParent): Post {
       })),
     }),
     ...(userMentions.length > 0 && {
-      mentionedUserIds: userMentions.map(({ user }) => user.id),
+      mentionedUsers: userMentions.map(({ user }) => user),
     }),
     childrenCount: _count.children,
     reactionsCount: _count.reactions,
