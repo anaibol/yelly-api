@@ -36,7 +36,9 @@ export class NotificationService {
                 select: {
                   id: true,
                   firstName: true,
+                  lastName: true,
                   pictureId: true,
+                  birthdate: true,
                 },
               },
             },
@@ -49,7 +51,9 @@ export class NotificationService {
                 select: {
                   id: true,
                   firstName: true,
+                  lastName: true,
                   pictureId: true,
+                  birthdate: true,
                 },
               },
             },
@@ -60,6 +64,10 @@ export class NotificationService {
               user: {
                 select: {
                   id: true,
+                  firstName: true,
+                  lastName: true,
+                  pictureId: true,
+                  birthdate: true,
                 },
               },
             },
@@ -72,7 +80,9 @@ export class NotificationService {
                 select: {
                   id: true,
                   firstName: true,
+                  lastName: true,
                   pictureId: true,
+                  birthdate: true,
                 },
               },
               tag: {
@@ -91,7 +101,9 @@ export class NotificationService {
                 select: {
                   id: true,
                   firstName: true,
+                  lastName: true,
                   pictureId: true,
+                  birthdate: true,
                 },
               },
               post: {
@@ -102,7 +114,9 @@ export class NotificationService {
                     select: {
                       id: true,
                       firstName: true,
+                      lastName: true,
                       pictureId: true,
+                      birthdate: true,
                     },
                   },
                 },
@@ -115,6 +129,7 @@ export class NotificationService {
               firstName: true,
               lastName: true,
               pictureId: true,
+              birthdate: true,
             },
           },
         },

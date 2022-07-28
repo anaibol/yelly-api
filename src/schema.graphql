@@ -185,10 +185,10 @@ type Notification {
   followerUser: User
   id: ID!
   isSeen: Boolean
-  mentionedUser: User
   newPostCount: Int
   post: Post
   postReaction: PostReaction
+  postUserMention: PostUserMention
   tag: Tag
   tagReaction: TagReaction
   type: NotificationType
@@ -266,6 +266,11 @@ type PostReaction {
   id: BigInt!
   post: Post
   text: String
+}
+
+type PostUserMention {
+  id: BigInt!
+  user: User
 }
 
 type Query {
