@@ -15,7 +15,7 @@ registerEnumType(NotificationType, {
 export class PostUserMention {
   @Field(() => BigInt)
   id: bigint
-  user?: User | null
+  post?: Post | null
 }
 
 @ObjectType()

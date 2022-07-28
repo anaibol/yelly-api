@@ -144,7 +144,7 @@ export function mapPost(post: PostWithParent): Post {
 type PostChild = Prisma.PostGetPayload<typeof PostChildSelect>
 
 export function mapPostChild(child: PostChild): Post {
-  const { _count, pollOptions, ...rest } = child
+  const { _count, pollOptions, userMentions, ...rest } = child
 
   return {
     ...rest,
@@ -154,6 +154,9 @@ export function mapPostChild(child: PostChild): Post {
         text: o.text,
         votesCount: o._count.votes,
       })),
+    }),
+    ...(userMentions.length > 0 && {
+      mentionedUsers: userMentions.map(({ user }) => user),
     }),
     childrenCount: _count.children,
     reactionsCount: _count.children,

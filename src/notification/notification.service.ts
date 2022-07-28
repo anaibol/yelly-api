@@ -61,13 +61,19 @@ export class NotificationService {
           postUserMention: {
             select: {
               id: true,
-              user: {
+              post: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
-                  pictureId: true,
-                  birthdate: true,
+                  text: true,
+                  author: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      lastName: true,
+                      pictureId: true,
+                      birthdate: true,
+                    },
+                  },
                 },
               },
             },

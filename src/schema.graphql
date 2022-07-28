@@ -270,7 +270,7 @@ type PostReaction {
 
 type PostUserMention {
   id: BigInt!
-  user: User
+  post: Post
 }
 
 type Query {
