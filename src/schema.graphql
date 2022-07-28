@@ -17,6 +17,7 @@ type Activities {
 type Activity {
   createdAt: DateTime
   id: BigInt!
+  mentionedUser: User
   post: Post
   tag: Tag
   type: ActivityType
@@ -70,7 +71,7 @@ input CreateOrUpdateTagReactionInput {
 }
 
 input CreatePostInput {
-  mentionUserIds: [BigInt!]
+  mentionedUserIds: [String!]
   parentId: BigInt
   pollOptions: [String!]
   tagIds: [BigInt!]
@@ -184,6 +185,7 @@ type Notification {
   followerUser: User
   id: ID!
   isSeen: Boolean
+  mentionedUser: User
   newPostCount: Int
   post: Post
   postReaction: PostReaction
@@ -235,6 +237,7 @@ type Post {
   createdAt: DateTime
   id: BigInt!
   isReadOnly: Boolean
+  mentionedUserIds: [String!]
   parent: Post
   pollOptions: [PostPollOption!]
   reactions: [PostReaction!]

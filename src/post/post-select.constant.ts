@@ -67,6 +67,16 @@ export const PostSelect = {
       reactions: true,
     },
   },
+  userMentions: {
+    select: {
+      id: true,
+      user: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  },
 }
 
 export const PostSelectWithParent = {
@@ -93,7 +103,7 @@ export const PostChildSelect = {
 }
 
 export function mapPost(post: PostWithParent): Post {
-  const { pollOptions, parent, _count, ...rest } = post
+  const { userMentions, pollOptions, parent, _count, ...rest } = post
 
   return {
     ...rest,
@@ -118,6 +128,9 @@ export function mapPost(post: PostWithParent): Post {
         text: o.text,
         votesCount: o._count.votes,
       })),
+    }),
+    ...(userMentions.length > 0 && {
+      mentionedUserIds: userMentions.map(({ user }) => user.id),
     }),
     childrenCount: _count.children,
     reactionsCount: _count.reactions,

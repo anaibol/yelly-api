@@ -23,6 +23,7 @@ export class Notification {
   tag?: Tag | null
   post?: Post | null
   newPostCount?: number | null
+  mentionedUser?: User | null
   @Field(() => NotificationType)
   type?: NotificationType
 }

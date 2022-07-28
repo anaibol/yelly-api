@@ -46,28 +46,28 @@ model Notification {
   followerUser      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
   followerUserId    String?
   newPostCount      Int?
-  postUserMention   PostUserMention?
-  postUserMentionId BigInt?
+  postUserMention   PostUserMention? @relation(fields: [postUserMentionId], references: [id], onDelete: Cascade)
+  postUserMentionId BigInt?          @unique
 
   @@index([createdAt], map: "Notification_createdAt")
   @@index([userId])
 }
 
 model Activity {
-  id              BigInt           @id @default(dbgenerated("generate_id()"))
-  createdAt       DateTime         @default(now())
-  postId          BigInt?
-  post            Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tagId           BigInt?
-  tag             Tag?             @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  tagReactionId   BigInt?          @unique
-  tagReaction     TagReaction?     @relation(fields: [tagReactionId], references: [id], onDelete: Cascade)
-  user            User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type            ActivityType
-  userId          String
-  postUserMention PostUserMention?
+  id                BigInt           @id @default(dbgenerated("generate_id()"))
+  createdAt         DateTime         @default(now())
+  postId            BigInt?
+  post              Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tagId             BigInt?
+  tag               Tag?             @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagReactionId     BigInt?          @unique
+  tagReaction       TagReaction?     @relation(fields: [tagReactionId], references: [id], onDelete: Cascade)
+  user              User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              ActivityType
+  userId            String
+  postUserMention   PostUserMention? @relation(fields: [postUserMentionId], references: [id], onDelete: Cascade)
+  postUserMentionId BigInt?          @unique
 
-  postUserMentionId BigInt?
   @@index([createdAt], map: "Activity_createdAt")
 }
 
@@ -193,17 +193,16 @@ model Post {
 }
 
 model PostUserMention {
-  id             BigInt       @id @default(dbgenerated("generate_id()"))
-  text           String       @db.Text
-  createdAt      DateTime     @unique @default(now())
-  userId         String
-  user           User         @relation(fields: [userId], references: [id])
-  postId         BigInt
-  post           Post         @relation(fields: [postId], references: [id])
-  notification   Notification @relation(fields: [notificationId], references: [id])
-  notificationId String       @unique
-  activity       Activity     @relation(fields: [activityId], references: [id])
-  activityId     BigInt       @unique
+  id           BigInt        @id @default(dbgenerated("generate_id()"))
+  createdAt    DateTime      @default(now())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  postId       BigInt
+  post         Post          @relation(fields: [postId], references: [id])
+  activity     Activity?
+  activityId   String?
+  notification Notification?
+  notificationId String?
 
   @@index([postId])
 }
@@ -243,21 +242,22 @@ model PostReaction {
   author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
   post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
   notification Notification?
+  notificationId String?
 
   @@unique([authorId, postId])
 }
 
 model TagReaction {
-  id             BigInt        @id @default(dbgenerated("generate_id()"))
-  createdAt      DateTime      @default(now())
-  text           String
-  tagId          BigInt
-  authorId       String
-  author         User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  tag            Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  activity       Activity?
-  activityId     String?
-  notification   Notification?
+  id           BigInt        @id @default(dbgenerated("generate_id()"))
+  createdAt    DateTime      @default(now())
+  text         String
+  tagId        BigInt
+  authorId     String
+  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tag          Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  activity     Activity?
+  activityId   String?
+  notification Notification?
   notificationId String?
 
   @@unique([authorId, tagId])

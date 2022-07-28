@@ -54,6 +54,16 @@ export class NotificationService {
               },
             },
           },
+          postUserMention: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  id: true,
+                },
+              },
+            },
+          },
           tagReaction: {
             select: {
               id: true,
