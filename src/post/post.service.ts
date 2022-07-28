@@ -328,8 +328,8 @@ export class PostService {
 
     if (parent && authUser.id !== parent.authorId) {
       this.pushNotificationService.repliedToYourPost(post.id)
-    } else {
-      if (tagIds) this.thereAreNewPostsOnYourTag(post.id, tagIds[0])
+    } else if (tagIds && tagIds.length > 0) {
+      this.thereAreNewPostsOnYourTag(post.id, tagIds[0])
     }
 
     if (mentionedUserIds) this.pushNotificationService.youHaveBeenMentioned(post.id)
