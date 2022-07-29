@@ -282,7 +282,7 @@ export class PushNotificationService {
 
     if (!followerUser || !receiverUser) return Promise.reject(new Error('followerUser or receiverUser not found'))
 
-    const url = `${process.env.APP_BASE_URL}/user/${followerUser.id}`
+    const url = `${process.env.APP_BASE_URL}/users/${followerUser.id}`
 
     const { locale: lang, expoPushNotificationTokens, id: userId } = receiverUser
 
