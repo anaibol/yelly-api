@@ -312,10 +312,10 @@ export class PostService {
       const postUserMentions = await this.prismaService.postUserMention.findMany({ where: { postId: post.id } })
 
       if (!postUserMentions) return Promise.reject(new Error('No mentions'))
-      console.log(postUserMentions)
+
       await Promise.all(
-        postUserMentions.map((mention) =>
-          [
+        postUserMentions
+          .map((mention) => [
             this.prismaService.activity.create({
               data: {
                 userId: authUser.id,
@@ -340,8 +340,8 @@ export class PostService {
                   }),
               })),
             }),
-          ].flat()
-        )
+          ])
+          .flat()
       )
     }
 
