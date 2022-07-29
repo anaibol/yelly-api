@@ -224,7 +224,7 @@ export class PostService {
   }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
-    const { text, tagIds, pollOptions, parentId } = createPostInput
+    const { text, tagIds, pollOptions, parentId, mentionedUserIds } = createPostInput
 
     const parent =
       parentId &&
@@ -255,6 +255,16 @@ export class PostService {
             id: authUser.id,
           },
         },
+        ...(mentionedUserIds &&
+          mentionedUserIds.length > 0 && {
+            userMentions: {
+              createMany: {
+                data: mentionedUserIds.map((userId) => ({
+                  userId,
+                })),
+              },
+            },
+          }),
         ...(tagIds &&
           tagIds.length > 0 && {
             tags: {
@@ -290,12 +300,46 @@ export class PostService {
       },
     })
 
-    this.syncPostIndexWithAlgolia(post.id)
-
     if (parent && authUser.id !== parent.authorId) {
       this.pushNotificationService.repliedToYourPost(post.id)
-    } else {
-      if (tagIds) this.thereAreNewPostsOnYourTag(post.id, tagIds[0])
+    } else if (tagIds && tagIds.length > 0) {
+      this.thereAreNewPostsOnYourTag(post.id, tagIds[0])
+    }
+
+    if (mentionedUserIds && mentionedUserIds.length > 0) {
+      this.pushNotificationService.youHaveBeenMentioned(post.id)
+      this.syncPostIndexWithAlgolia(post.id)
+
+      const postUserMentions = await this.prismaService.postUserMention.findMany({ where: { postId: post.id } })
+
+      if (!postUserMentions) return Promise.reject(new Error('No mentions'))
+
+      await Promise.all([
+        this.prismaService.activity.createMany({
+          data: postUserMentions.map((mention) => ({
+            postUserMentionId: mention.id,
+            userId: authUser.id,
+            postId: post.id,
+            type: ActivityType.CREATED_POST_USER_MENTION,
+            ...(tagIds &&
+              tagIds.length > 0 && {
+                tagId: tagIds[0],
+              }),
+          })),
+        }),
+        this.prismaService.notification.createMany({
+          data: postUserMentions.map((mention) => ({
+            postUserMentionId: mention.id,
+            userId: mention.userId,
+            postId: post.id,
+            type: NotificationType.USER_MENTIONED_YOU,
+            ...(tagIds &&
+              tagIds.length > 0 && {
+                tagId: tagIds[0],
+              }),
+          })),
+        }),
+      ])
     }
 
     return post

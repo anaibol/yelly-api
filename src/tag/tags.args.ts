@@ -1,5 +1,6 @@
 import { ArgsType, Field, registerEnumType } from '@nestjs/graphql'
 
+import { SortDirection } from '../app.module'
 import { CursorPaginationArgs } from '../common/cursor-pagination.args'
 
 export enum TagSortBy {
@@ -8,17 +9,8 @@ export enum TagSortBy {
   reactionsCount = 'reactionsCount',
 }
 
-export enum SortDirection {
-  asc = 'asc',
-  desc = 'desc',
-}
-
 registerEnumType(TagSortBy, {
   name: 'TagSortBy',
-})
-
-registerEnumType(SortDirection, {
-  name: 'SortDirection',
 })
 
 @ArgsType()

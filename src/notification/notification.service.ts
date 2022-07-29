@@ -36,7 +36,9 @@ export class NotificationService {
                 select: {
                   id: true,
                   firstName: true,
+                  lastName: true,
                   pictureId: true,
+                  birthdate: true,
                 },
               },
             },
@@ -49,7 +51,29 @@ export class NotificationService {
                 select: {
                   id: true,
                   firstName: true,
+                  lastName: true,
                   pictureId: true,
+                  birthdate: true,
+                },
+              },
+            },
+          },
+          postUserMention: {
+            select: {
+              id: true,
+              post: {
+                select: {
+                  id: true,
+                  text: true,
+                  author: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      lastName: true,
+                      pictureId: true,
+                      birthdate: true,
+                    },
+                  },
                 },
               },
             },
@@ -62,7 +86,9 @@ export class NotificationService {
                 select: {
                   id: true,
                   firstName: true,
+                  lastName: true,
                   pictureId: true,
+                  birthdate: true,
                 },
               },
               tag: {
@@ -81,7 +107,9 @@ export class NotificationService {
                 select: {
                   id: true,
                   firstName: true,
+                  lastName: true,
                   pictureId: true,
+                  birthdate: true,
                 },
               },
               post: {
@@ -92,7 +120,9 @@ export class NotificationService {
                     select: {
                       id: true,
                       firstName: true,
+                      lastName: true,
                       pictureId: true,
+                      birthdate: true,
                     },
                   },
                 },
@@ -105,6 +135,7 @@ export class NotificationService {
               firstName: true,
               lastName: true,
               pictureId: true,
+              birthdate: true,
             },
           },
         },

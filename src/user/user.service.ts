@@ -10,6 +10,7 @@ import { PostService } from 'src/post/post.service'
 import { Payload, RequestBuilder } from 'yoti'
 
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
+import { SortDirection } from '../app.module'
 import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
@@ -19,6 +20,7 @@ import { getLastResetDate } from '../utils/dates'
 import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
+import { UserFolloweesSortBy } from './user-followees.args'
 
 type YotiResponse = {
   antispoofing: {
@@ -27,6 +29,25 @@ type YotiResponse = {
   age: {
     st_dev: number
     age: number
+  }
+}
+
+const getUserFolloweesSort = (
+  sortBy?: UserFolloweesSortBy,
+  sortDirection?: SortDirection
+): Prisma.Enumerable<Prisma.FollowerOrderByWithRelationInput> => {
+  switch (sortBy) {
+    case 'firstName':
+      return {
+        followee: {
+          firstName: sortDirection,
+        },
+      }
+
+    default:
+      return {
+        createdAt: sortDirection,
+      }
   }
 }
 
@@ -435,6 +456,7 @@ export class UserService {
           user: {
             include: {
               school: true,
+              training: true,
             },
           },
         },
@@ -451,31 +473,48 @@ export class UserService {
     return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
   }
 
-  async getFollowees(userId: string, skip: number, limit: number): Promise<PaginatedUsers> {
+  async getFollowees(
+    userId: string,
+    skip: number,
+    limit: number,
+    firstNameStartsWith?: string,
+    sortBy?: UserFolloweesSortBy,
+    sortDirection?: SortDirection
+  ): Promise<PaginatedUsers> {
+    console.log({ sortBy })
+    const where: Prisma.FollowerWhereInput = {
+      userId,
+      ...(firstNameStartsWith && {
+        followee: {
+          firstName: {
+            startsWith: firstNameStartsWith,
+            mode: 'insensitive',
+          },
+        },
+      }),
+    }
+
     const [totalCount, follows] = await Promise.all([
       this.prismaService.follower.count({
-        where: {
-          userId,
-        },
+        where,
       }),
       this.prismaService.follower.findMany({
         take: limit,
         skip,
-        where: {
-          userId,
-        },
+        where,
         include: {
           followee: {
             include: {
               school: true,
+              training: true,
             },
           },
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy: getUserFolloweesSort(sortBy, sortDirection),
       }),
     ])
+
+    console.log({ ad: getUserFolloweesSort(sortBy, sortDirection) })
 
     const items = follows.map(({ followee }) => followee)
 

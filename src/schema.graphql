@@ -17,6 +17,7 @@ type Activities {
 type Activity {
   createdAt: DateTime
   id: BigInt!
+  mentionedUser: User
   post: Post
   tag: Tag
   type: ActivityType
@@ -25,6 +26,7 @@ type Activity {
 
 enum ActivityType {
   CREATED_POST
+  CREATED_POST_USER_MENTION
   CREATED_TAG
   CREATED_TAG_REACTION
 }
@@ -69,6 +71,7 @@ input CreateOrUpdateTagReactionInput {
 }
 
 input CreatePostInput {
+  mentionedUserIds: [String!]
   parentId: BigInt
   pollOptions: [String!]
   tagIds: [BigInt!]
@@ -185,6 +188,7 @@ type Notification {
   newPostCount: Int
   post: Post
   postReaction: PostReaction
+  postUserMention: PostUserMention
   tag: Tag
   tagReaction: TagReaction
   type: NotificationType
@@ -197,6 +201,7 @@ enum NotificationType {
   REPLIED_TO_SAME_POST_AS_YOU
   REPLIED_TO_YOUR_POST
   THERE_ARE_NEW_POSTS_ON_YOUR_TAG
+  USER_MENTIONED_YOU
   YOUR_TAG_IS_TRENDING
 }
 
@@ -232,6 +237,7 @@ type Post {
   createdAt: DateTime
   id: BigInt!
   isReadOnly: Boolean
+  mentionedUsers: [User!]
   parent: Post
   pollOptions: [PostPollOption!]
   reactions: [PostReaction!]
@@ -262,6 +268,11 @@ type PostReaction {
   text: String
 }
 
+type PostUserMention {
+  id: BigInt!
+  post: Post
+}
+
 type Query {
   activities(after: BigInt, limit: Int = 10): Activities!
   authUserCanCreateTag: Boolean!
@@ -282,7 +293,7 @@ type Query {
   unreadNotificationsCount: Int!
   user(id: String!): User!
   userActivities(after: BigInt, limit: Int = 10, userId: String!): Activities!
-  userFollowees(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
+  userFollowees(firstNameStartsWith: String, limit: Int = 10, skip: Int = 0, sortBy: UserFolloweesSortBy = createdAt, sortDirection: SortDirection = desc, userId: String!): PaginatedUsers!
   userFollowers(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
   users(ids: [String!]!): PaginatedUsers!
 }
@@ -388,6 +399,11 @@ type User {
   tagViewsCount: Int
   training: Training
   viewsCount: Int
+}
+
+enum UserFolloweesSortBy {
+  createdAt
+  firstName
 }
 
 enum UserRole {

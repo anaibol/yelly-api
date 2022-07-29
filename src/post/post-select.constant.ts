@@ -67,6 +67,20 @@ export const PostSelect = {
       reactions: true,
     },
   },
+  userMentions: {
+    select: {
+      id: true,
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          birthdate: true,
+          pictureId: true,
+        },
+      },
+    },
+  },
 }
 
 export const PostSelectWithParent = {
@@ -93,7 +107,7 @@ export const PostChildSelect = {
 }
 
 export function mapPost(post: PostWithParent): Post {
-  const { pollOptions, parent, _count, ...rest } = post
+  const { userMentions, pollOptions, parent, _count, ...rest } = post
 
   return {
     ...rest,
@@ -119,6 +133,9 @@ export function mapPost(post: PostWithParent): Post {
         votesCount: o._count.votes,
       })),
     }),
+    ...(userMentions.length > 0 && {
+      mentionedUsers: userMentions.map(({ user }) => user),
+    }),
     childrenCount: _count.children,
     reactionsCount: _count.reactions,
   }
@@ -127,7 +144,7 @@ export function mapPost(post: PostWithParent): Post {
 type PostChild = Prisma.PostGetPayload<typeof PostChildSelect>
 
 export function mapPostChild(child: PostChild): Post {
-  const { _count, pollOptions, ...rest } = child
+  const { _count, pollOptions, userMentions, ...rest } = child
 
   return {
     ...rest,
@@ -137,6 +154,9 @@ export function mapPostChild(child: PostChild): Post {
         text: o.text,
         votesCount: o._count.votes,
       })),
+    }),
+    ...(userMentions.length > 0 && {
+      mentionedUsers: userMentions.map(({ user }) => user),
     }),
     childrenCount: _count.children,
     reactionsCount: _count.children,
