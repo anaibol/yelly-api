@@ -127,7 +127,9 @@ export class ActivityService {
             select: {
               id: true,
               firstName: true,
+              lastName: true,
               pictureId: true,
+              birthdate: true,
             },
           },
           tag: {
