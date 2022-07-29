@@ -47,7 +47,9 @@ export class ActivityService {
             select: {
               id: true,
               firstName: true,
+              lastName: true,
               pictureId: true,
+              birthdate: true,
             },
           },
           tag: {
@@ -56,11 +58,25 @@ export class ActivityService {
           post: {
             select: PostSelectWithParent,
           },
+          postUserMention: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  pictureId: true,
+                  birthdate: true,
+                },
+              },
+            },
+          },
         },
       }),
     ])
 
-    const items = activities.map(({ post, tag, ...activity }) => ({
+    const items = activities.map(({ post, tag, postUserMention, ...activity }) => ({
       post: post ? mapPost(post) : null,
       ...(tag && {
         tag: {
@@ -68,6 +84,9 @@ export class ActivityService {
           reactionsCount: tag?._count.reactions,
           ...tag,
         },
+      }),
+      ...(postUserMention && {
+        mentionedUser: postUserMention.user,
       }),
       ...activity,
     }))
@@ -117,11 +136,25 @@ export class ActivityService {
           post: {
             select: PostSelectWithParent,
           },
+          postUserMention: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  pictureId: true,
+                  birthdate: true,
+                },
+              },
+            },
+          },
         },
       }),
     ])
 
-    const items = activities.map(({ post, tag, ...activity }) => ({
+    const items = activities.map(({ post, tag, postUserMention, ...activity }) => ({
       post: post ? mapPost(post) : null,
       ...(tag && {
         tag: {
@@ -129,6 +162,9 @@ export class ActivityService {
           reactionsCount: tag?._count.reactions,
           ...tag,
         },
+      }),
+      ...(postUserMention && {
+        mentionedUser: postUserMention.user,
       }),
       ...activity,
     }))
