@@ -307,6 +307,7 @@ export class PostService {
     }
 
     if (mentionedUserIds && mentionedUserIds.length > 0) {
+      this.pushNotificationService.youHaveBeenMentioned(post.id)
       this.syncPostIndexWithAlgolia(post.id)
 
       const postUserMentions = await this.prismaService.postUserMention.findMany({ where: { postId: post.id } })
