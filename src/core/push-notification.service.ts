@@ -558,7 +558,7 @@ export class PushNotificationService {
 
     const { userMentions, author } = post
 
-    const url = `${process.env.APP_BASE_URL}/user/${post.author.id}`
+    const url = `${process.env.APP_BASE_URL}/posts/${post.id}`
 
     const messages = await Promise.all(
       userMentions.map(async ({ user }) => {
