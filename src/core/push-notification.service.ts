@@ -396,12 +396,11 @@ export class PushNotificationService {
     if (process.env.NODE_ENV === 'development') return
     // eslint-disable-next-line functional/no-try-statement
     try {
+      console.log('sendDailyReminder')
       const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
         .$queryRaw`
     SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken"
     WHERE ("User"."id" = "ExpoPushNotificationAccessToken"."userId")`
-
-      console.log({ allPushTokens })
 
       const messages = await Promise.all(
         allPushTokens
