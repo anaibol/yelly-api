@@ -290,6 +290,7 @@ type Query {
   tag(tagId: BigInt!): Tag!
   tagExists(tagText: String!): Boolean!
   tags(after: BigInt, authorId: String, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
+  tagsByScore: PaginatedTags!
   unreadNotificationsCount: Int!
   user(id: String!): User!
   userActivities(after: BigInt, limit: Int = 10, userId: String!): Activities!
@@ -331,6 +332,7 @@ type Tag {
   postCount: Int
   posts: PaginatedPosts
   reactionsCount: Int
+  score: Float
   text: String!
   viewsCount: Int
 }
