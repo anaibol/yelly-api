@@ -110,6 +110,12 @@ export class UserResolver {
     return this.userService.getTagReactionsCount(user.id)
   }
 
+  @UseGuards(AuthGuard)
+  @ResolveField()
+  async trendingTagsCount(@Parent() user: User): Promise<number> {
+    return this.userService.getTrendingTagsCount(user.id)
+  }
+
   @Query(() => Boolean)
   @UseGuards(AuthGuard)
   async isUserFollowedByAuthUser(@Args('userId') userId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
