@@ -1,4 +1,4 @@
-import { Field, ObjectType } from '@nestjs/graphql'
+import { Field, Float, ObjectType } from '@nestjs/graphql'
 import { User } from 'src/user/user.model'
 
 import { PaginatedPosts } from '../post/paginated-posts.model'
@@ -18,4 +18,6 @@ export class Tag {
   author?: User | null
   authUserReaction?: TagReaction | null
   isReadOnly?: boolean
+  @Field(() => Float)
+  score?: number | null
 }

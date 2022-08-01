@@ -1,6 +1,8 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
+import { orderBy } from 'lodash'
 
+import { SortDirection } from '../app.module'
 import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
@@ -13,7 +15,7 @@ import { PaginatedTags } from './paginated-tags.model'
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { TagReaction } from './tag-reaction.model'
-import { TagsArgs } from './tags.args'
+import { TagsArgs, TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 
 @Resolver(Tag)
@@ -81,6 +83,32 @@ export class TagResolver {
     )
 
     return { items, nextCursor, totalCount }
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => PaginatedTags)
+  async tagsByScore(@CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
+    if (!authUser.countryId) return Promise.reject(new Error('No country'))
+
+    const { items, nextCursor, totalCount } = await this.tagService.getTags(
+      authUser,
+      false,
+      1000,
+      undefined,
+      TagSortBy.postCount,
+      SortDirection.desc
+    )
+
+    const scoredTags = orderBy(
+      items.map((tag) => ({
+        ...tag,
+        score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+      })),
+      'score',
+      'desc'
+    )
+
+    return { items: scoredTags, nextCursor, totalCount }
   }
 
   @UseGuards(AuthGuard)

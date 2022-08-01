@@ -9,7 +9,6 @@ import { PushNotificationService } from '../core/push-notification.service'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { getLastResetDate, getPreviousResetDate } from '../utils/dates'
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
-import { PaginatedTags } from './paginated-tags.model'
 import { Tag } from './tag.model'
 import { TagReaction } from './tag-reaction.model'
 import { tagSelect } from './tag-select.constant'
@@ -227,7 +226,7 @@ export class TagService {
     sortDirection?: SortDirection,
     showHidden?: boolean,
     authorId?: string
-  ): Promise<PaginatedTags> {
+  ) {
     if (showHidden && !authUser?.isAdmin) return Promise.reject(new Error('No admin'))
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
