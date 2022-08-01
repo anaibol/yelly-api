@@ -149,20 +149,21 @@ model Follower {
 }
 
 model Tag {
-  id            BigInt         @id @default(dbgenerated("generate_id()"))
-  text          String
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @default(now()) @updatedAt
-  posts         Post[]
-  countryId     String?
-  country       Country?       @relation(fields: [countryId], references: [id])
-  isHidden      Boolean        @default(false)
-  author        User?          @relation(fields: [authorId], references: [id])
-  authorId      String?
-  reactions     TagReaction[]
-  viewsCount    Int            @default(0)
-  activities    Activity[]
-  notifications Notification[]
+  id              BigInt         @id @default(dbgenerated("generate_id()"))
+  text            String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @default(now()) @updatedAt
+  posts           Post[]
+  countryId       String?
+  country         Country?       @relation(fields: [countryId], references: [id])
+  isHidden        Boolean        @default(false)
+  author          User?          @relation(fields: [authorId], references: [id])
+  authorId        String?
+  reactions       TagReaction[]
+  viewsCount      Int            @default(0)
+  activities      Activity[]
+  notifications   Notification[]
+  hasBeenTrending Boolean        @default(false)
 
   @@index([createdAt])
   @@index([authorId])

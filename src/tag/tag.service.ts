@@ -415,7 +415,7 @@ export class TagService {
       },
     })
 
-    this.checkIfTagIsTrendingTrending(reaction.tagId)
+    if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
 
     this.pushNotificationService.reactedToYourTag(reaction.id)
 
@@ -435,31 +435,31 @@ export class TagService {
 
     if (!tag?.author?.countryId) return Promise.reject(new Error('No country'))
 
-    const topTags = await this.prismaService.tag.findMany({
-      where: {
-        isHidden: false,
-        countryId: tag.author.countryId,
+    const topTags = await this.getTags(
+      {
+        ...tag.author,
+        isAdmin: false,
+        isNotAdmin: true,
       },
-      orderBy: [
-        {
-          reactions: {
-            _count: 'desc',
-          },
-        },
-        {
-          createdAt: 'desc' as const,
-        },
-      ],
-      take: 5,
-    })
+      false,
+      5,
+      undefined,
+      TagSortBy.reactionsCount,
+      SortDirection.desc
+    )
 
-    if (topTags.some(({ id }) => id === tag.id)) {
+    if (topTags.items.some(({ id }) => id === tag.id)) {
       await this.prismaService.notification.create({
         data: {
           userId: tag.author.id,
           type: NotificationType.YOUR_TAG_IS_TRENDING,
           tagId: tag.id,
         },
+      })
+
+      await this.prismaService.tag.update({
+        where: { id: tag.id },
+        data: { hasBeenTrending: true },
       })
 
       this.pushNotificationService.yourTagIsTrending(tag.id)
