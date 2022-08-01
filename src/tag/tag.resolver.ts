@@ -6,6 +6,7 @@ import { SortDirection } from '../app.module'
 import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
+import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { PrismaService } from '../core/prisma.service'
 import { getLastResetDate, getNextResetDate, getPreviousResetDate } from '../utils/dates'
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
@@ -87,8 +88,13 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
-  async tagsByScore(@CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
+  async tagsByScore(
+    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<PaginatedTags> {
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
+
+    const { skip, limit } = offsetPaginationArgs
 
     const { items, nextCursor, totalCount } = await this.tagService.getTags(
       authUser,
@@ -100,10 +106,12 @@ export class TagResolver {
     )
 
     const scoredTags = orderBy(
-      items.map((tag) => ({
-        ...tag,
-        score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
-      })),
+      items
+        .map((tag) => ({
+          ...tag,
+          score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+        }))
+        .splice(skip, skip + limit),
       'score',
       'desc'
     )
