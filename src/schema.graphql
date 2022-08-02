@@ -144,6 +144,7 @@ type Me {
   tagReactionsCount: Int
   tagViewsCount: Int
   training: Training
+  trendingTagsCount: Int
   viewsCount: Int
 }
 
@@ -221,6 +222,13 @@ type PaginatedTags {
   totalCount: Int!
 }
 
+type PaginatedTagsByScore {
+  items: [Tag!]!
+  nextCursor: BigInt
+  nextSkip: Int
+  totalCount: Int!
+}
+
 type PaginatedUsers {
   items: [User!]!
   nextSkip: Int
@@ -273,6 +281,12 @@ type PostUserMention {
   post: Post
 }
 
+enum PostsSortBy {
+  childrenCount
+  createdAt
+  reactionsCount
+}
+
 type Query {
   activities(after: BigInt, limit: Int = 10): Activities!
   authUserCanCreateTag: Boolean!
@@ -285,12 +299,12 @@ type Query {
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: BigInt, limit: Int = 10, postId: BigInt!): Post!
-  posts(after: BigInt, authorId: String, limit: Int = 10, tagId: BigInt): PaginatedPosts!
+  posts(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
   tagExists(tagText: String!): Boolean!
   tags(after: BigInt, authorId: String, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
-  tagsByScore(limit: Int = 10, skip: Int = 0): PaginatedTags!
+  tagsByScore(limit: Int = 10, skip: Int = 0): PaginatedTagsByScore!
   unreadNotificationsCount: Int!
   user(id: String!): User!
   userActivities(after: BigInt, limit: Int = 10, userId: String!): Activities!
@@ -400,6 +414,7 @@ type User {
   tagReactionsCount: Int
   tagViewsCount: Int
   training: Training
+  trendingTagsCount: Int
   viewsCount: Int
 }
 

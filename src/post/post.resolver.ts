@@ -19,7 +19,7 @@ import { Post, PostPollVote } from './post.model'
 // import { CommonFriendsLoader } from './common-friends.loader'
 // import { CommonFriendsCountLoader } from './common-friends-count.loader'
 import { PostReaction } from './post-reaction.model'
-import { mapPost, PostSelectWithParent } from './post-select.constant'
+
 @Resolver(Post)
 export class PostResolver {
   constructor(private postService: PostService, private prismaService: PrismaService) {}
@@ -35,41 +35,14 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
   async posts(@Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
-    const { authorId, tagId, after, limit } = postsArgs
-
-    const posts = await this.prismaService.post.findMany({
-      where: {
-        ...(authorId && {
-          authorId,
-        }),
-        ...(tagId && {
-          tags: {
-            some: {
-              id: tagId,
-            },
-          },
-        }),
-      },
-      ...(after && {
-        cursor: {
-          id: after,
-        },
-        skip: 1,
-      }),
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      select: PostSelectWithParent,
-    })
-
-    const items = posts.map(mapPost)
-
-    const lastItem = items.length === limit ? items[limit - 1] : null
-
-    const nextCursor = lastItem ? lastItem.id : null
-
-    return { items, nextCursor }
+    return this.postService.getPosts(
+      postsArgs.authorId,
+      postsArgs.tagId,
+      postsArgs.after,
+      postsArgs.limit,
+      postsArgs.sortBy,
+      postsArgs.sortDirection
+    )
   }
 
   @UseGuards(AuthGuard)
