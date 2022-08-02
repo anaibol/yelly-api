@@ -1,18 +1,51 @@
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { Injectable } from '@nestjs/common'
-import { ActivityType, NotificationType } from '@prisma/client'
+import { ActivityType, NotificationType, Prisma } from '@prisma/client'
 import { AuthUser } from 'src/auth/auth.service'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
-import { TagService } from 'src/tag/tag.service'
 
+import { SortDirection } from '../app.module'
 import { PrismaService } from '../core/prisma.service'
+import { PostsSortBy } from '../posts/posts.args'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { CreatePostInput } from './create-post.input'
+import { PaginatedPosts } from './paginated-posts.model'
 import { Post } from './post.model'
 import { PostPollVote } from './post.model'
 import { PostReaction } from './post-reaction.model'
 import { mapPost, mapPostChild, PostChildSelect, PostSelectWithParent } from './post-select.constant'
+
+const getPostsSort = (
+  sortBy?: PostsSortBy,
+  sortDirection?: SortDirection
+): Prisma.Enumerable<Prisma.PostOrderByWithRelationInput> => {
+  switch (sortBy) {
+    case 'childrenCount':
+      return {
+        children: {
+          _count: sortDirection,
+        },
+      }
+
+    case 'reactionsCount':
+      return [
+        {
+          reactions: {
+            _count: sortDirection,
+          },
+        },
+        {
+          createdAt: 'desc' as const,
+        },
+      ]
+
+    default:
+      return {
+        createdAt: sortDirection,
+      }
+  }
+}
 
 const getNewPostCount = (postCount: number): number | undefined => {
   switch (postCount) {
@@ -34,7 +67,6 @@ const getNewPostCount = (postCount: number): number | undefined => {
 export class PostService {
   constructor(
     private prismaService: PrismaService,
-    private tagService: TagService,
     private pushNotificationService: PushNotificationService,
     private algoliaService: AlgoliaService
   ) {}
@@ -221,6 +253,47 @@ export class PostService {
         nextCursor,
       },
     }
+  }
+
+  async getPosts(
+    authorId?: string,
+    tagId?: bigint,
+    after?: bigint,
+    limit?: number,
+    sortBy?: PostsSortBy,
+    sortDirection?: SortDirection
+  ): Promise<PaginatedPosts> {
+    const posts = await this.prismaService.post.findMany({
+      where: {
+        ...(authorId && {
+          authorId,
+        }),
+        ...(tagId && {
+          tags: {
+            some: {
+              id: tagId,
+            },
+          },
+        }),
+      },
+      ...(after && {
+        cursor: {
+          id: after,
+        },
+        skip: 1,
+      }),
+      orderBy: getPostsSort(sortBy, sortDirection),
+      take: limit,
+      select: PostSelectWithParent,
+    })
+
+    const items = posts.map(mapPost)
+
+    const lastItem = items.length === limit ? items[limit - 1] : null
+
+    const nextCursor = lastItem ? lastItem.id : null
+
+    return { items, nextCursor }
   }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
