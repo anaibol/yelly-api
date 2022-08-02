@@ -12,7 +12,7 @@ import { getLastResetDate, getNextResetDate, getPreviousResetDate } from '../uti
 import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { CreateTagInput } from './create-tag.input'
 import { DeleteTagReactionInput } from './delete-tag-reaction.input'
-import { PaginatedTags } from './paginated-tags.model'
+import { PaginatedTags, PaginatedTagsByScore } from './paginated-tags.model'
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { TagReaction } from './tag-reaction.model'
@@ -87,11 +87,11 @@ export class TagResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => PaginatedTags)
+  @Query(() => PaginatedTagsByScore)
   async tagsByScore(
     @Args() offsetPaginationArgs: OffsetPaginationArgs,
     @CurrentUser() authUser: AuthUser
-  ): Promise<PaginatedTags> {
+  ): Promise<PaginatedTagsByScore> {
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
     const { skip, limit } = offsetPaginationArgs
@@ -106,17 +106,17 @@ export class TagResolver {
     )
 
     const scoredTags = orderBy(
-      items
-        .map((tag) => ({
-          ...tag,
-          score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
-        }))
-        .splice(skip, skip + limit),
+      items.map((tag) => ({
+        ...tag,
+        score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+      })),
       'score',
       'desc'
-    )
+    ).slice(skip, skip + limit)
 
-    return { items: scoredTags, nextCursor, totalCount }
+    const nextSkip = skip + limit
+
+    return { items: scoredTags, nextSkip, totalCount }
   }
 
   @UseGuards(AuthGuard)
