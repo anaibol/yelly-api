@@ -96,7 +96,7 @@ export class TagResolver {
 
     const { skip, limit } = offsetPaginationArgs
 
-    const { items, nextCursor, totalCount } = await this.tagService.getTags(
+    const { items, totalCount } = await this.tagService.getTags(
       authUser,
       false,
       1000,
@@ -116,7 +116,7 @@ export class TagResolver {
 
     const nextSkip = skip + limit
 
-    return { items: scoredTags, nextSkip, totalCount }
+    return { items: scoredTags, nextSkip, totalCount, nextCursor: null }
   }
 
   @UseGuards(AuthGuard)
