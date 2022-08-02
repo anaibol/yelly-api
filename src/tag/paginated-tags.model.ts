@@ -9,3 +9,10 @@ export class PaginatedTags {
   items: Tag[]
   totalCount: number
 }
+
+@ObjectType()
+export class PaginatedTagsByScore {
+  nextSkip?: number
+  items: Tag[]
+  totalCount: number
+}
