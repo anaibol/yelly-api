@@ -436,9 +436,7 @@ export class TagService {
     return reaction
   }
 
-  async createAnonymousTagReaction(
-    createAnonymousTagReactionInput: CreateAnonymousTagReactionInput
-  ): Promise<TagReaction> {
+  async createAnonymousTagReaction(createAnonymousTagReactionInput: CreateAnonymousTagReactionInput): Promise<boolean> {
     const { tagId } = createAnonymousTagReactionInput
 
     const tag = await this.prismaService.tag.findUnique({
@@ -477,7 +475,7 @@ export class TagService {
 
     this.pushNotificationService.reactedToYourTag(reaction.id)
 
-    return reaction
+    return true
   }
 
   async checkIfTagIsTrendingTrending(tagId: bigint) {
