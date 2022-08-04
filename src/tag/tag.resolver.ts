@@ -157,6 +157,13 @@ export class TagResolver {
     return this.tagService.createOrUpdateTagReaction(createTagReactionInput, authUser)
   }
 
+  @Mutation(() => TagReaction)
+  async createAnonymousTagReaction(
+    @Args('input') createTagReactionInput: CreateOrUpdateTagReactionInput
+  ): Promise<TagReaction> {
+    return this.tagService.createAnonymousTagReaction(createTagReactionInput)
+  }
+
   @UseGuards(AuthGuard)
   @ResolveField()
   async authUserReaction(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<TagReaction | null> {

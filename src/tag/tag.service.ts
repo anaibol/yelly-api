@@ -8,7 +8,7 @@ import { PrismaService } from '../core/prisma.service'
 import { PushNotificationService } from '../core/push-notification.service'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { getLastResetDate, getPreviousResetDate } from '../utils/dates'
-import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
+import { CreateAnonymousTagReactionInput, CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { Tag } from './tag.model'
 import { TagReaction } from './tag-reaction.model'
 import { tagSelect } from './tag-select.constant'
@@ -426,6 +426,50 @@ export class TagService {
         text,
         authorId,
         tagId,
+      },
+    })
+
+    if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
+
+    this.pushNotificationService.reactedToYourTag(reaction.id)
+
+    return reaction
+  }
+
+  async createAnonymousTagReaction(
+    createAnonymousTagReactionInput: CreateAnonymousTagReactionInput
+  ): Promise<TagReaction> {
+    const { tagId } = createAnonymousTagReactionInput
+
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagId,
+      },
+    })
+
+    if (!tag) return Promise.reject(new Error('No tag'))
+
+    const reaction = await this.prismaService.tagReaction.create({
+      data: {
+        text: '',
+        author: {
+          connect: {
+            id: 'ANONYMOUS',
+          },
+        },
+        tag: {
+          connect: {
+            id: tagId,
+          },
+        },
+        ...(tag.authorId && {
+          notification: {
+            create: {
+              type: NotificationType.REACTED_TO_YOUR_TAG,
+              userId: tag.authorId,
+            },
+          },
+        }),
       },
     })
 
