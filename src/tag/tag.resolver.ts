@@ -116,7 +116,7 @@ export class TagResolver {
 
     const nextSkip = skip + limit
 
-    return { items: scoredTags, nextSkip, totalCount, nextCursor: null }
+    return { items: scoredTags, nextSkip: totalCount > nextSkip ? nextSkip : 0, totalCount, nextCursor: null }
   }
 
   @UseGuards(AuthGuard)
