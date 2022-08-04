@@ -23,7 +23,7 @@ import { UpdateTagInput } from './update-tag.input'
 export class TagResolver {
   constructor(private tagService: TagService, private prismaService: PrismaService) {}
 
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   @Query(() => Tag)
   tag(@Args('tagId') tagId: bigint): Promise<Tag> {
     return this.tagService.getTag(tagId)
