@@ -5,5 +5,5 @@ import { Notification } from './notification.model'
 @ObjectType()
 export class PaginatedNotifications {
   items: Notification[]
-  nextSkip?: number
+  nextSkip?: number | null
 }
