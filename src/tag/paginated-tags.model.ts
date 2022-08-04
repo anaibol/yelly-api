@@ -15,7 +15,7 @@ export class PaginatedTagsByScore {
   // TODO: remove nextCursor after migration
   @Field(() => BigInt)
   nextCursor: BigInt | null
-  nextSkip?: number
+  nextSkip?: number | null
   items: Tag[]
   totalCount: number
 }

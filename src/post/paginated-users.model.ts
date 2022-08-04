@@ -4,6 +4,6 @@ import { User } from 'src/user/user.model'
 @ObjectType()
 export class PaginatedUsers {
   items: User[]
-  nextSkip?: number
+  nextSkip?: number | null
   totalCount?: number
 }

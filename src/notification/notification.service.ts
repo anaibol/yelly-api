@@ -149,7 +149,7 @@ export class NotificationService {
 
     const nextSkip = skip + limit
 
-    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : null }
   }
 
   getUnreadCount(userId: string): Promise<number> {

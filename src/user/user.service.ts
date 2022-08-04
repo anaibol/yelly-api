@@ -470,7 +470,7 @@ export class UserService {
 
     const nextSkip = skip + limit
 
-    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : null }
   }
 
   async getFollowees(
@@ -520,7 +520,7 @@ export class UserService {
 
     const nextSkip = skip + limit
 
-    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0 }
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : null }
   }
 
   async getTagViewsCount(userId: string): Promise<number> {
@@ -813,7 +813,7 @@ export class UserService {
 
     const nextSkip = skip + limit
 
-    return { items, nextSkip: totalCount > nextSkip ? nextSkip : 0, totalCount }
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
   }
 
   async findOrCreate(phoneNumber: string, locale: string): Promise<{ user: User; isNewUser?: boolean }> {
