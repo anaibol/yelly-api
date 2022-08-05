@@ -560,7 +560,7 @@ export class UserService {
   }
 
   async isBlockedByUser(userId: string, otherUserId: string): Promise<boolean> {
-    const user = await this.prismaService.user
+    const blockedUsers = await this.prismaService.user
       .findUnique({
         where: {
           id: otherUserId,
@@ -572,7 +572,7 @@ export class UserService {
         },
       })
 
-    return !!user
+    return blockedUsers.length > 0
   }
 
   async getTrendingTagsCount(userId: string): Promise<number> {
