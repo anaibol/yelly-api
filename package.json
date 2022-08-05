@@ -68,6 +68,7 @@
     "fastify": "^3.27.4",
     "graphql": "^15.6.1",
     "lodash": "^4.17.21",
+    "nanoid": "3.3.4",
     "nestjs-http-promise": "^1.2.1",
     "nestjs-i18n": "^8.2.2",
     "p-all": "3.0.0",

@@ -30,6 +30,12 @@ export class TagResolver {
   }
 
   @UseGuards(AuthGuard)
+  @Query(() => Tag)
+  tagByNanoId(@Args('tagNanoId') nanoId: string): Promise<Tag> {
+    return this.tagService.getTagByNanoId(nanoId)
+  }
+
+  @UseGuards(AuthGuard)
   @Mutation(() => Tag)
   async createTag(@Args('input') createTagInput: CreateTagInput, @CurrentUser() authUser: AuthUser) {
     return this.tagService.create(createTagInput.tagText, authUser)

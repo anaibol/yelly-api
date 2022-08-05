@@ -61,7 +61,7 @@ type Country {
 }
 
 input CreateAnonymousTagReactionInput {
-  tagId: BigInt!
+  tagNanoId: String!
 }
 
 input CreateOrUpdatePostReactionInput {
@@ -307,6 +307,7 @@ type Query {
   posts(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
+  tagByNanoId(tagNanoId: String!): Tag!
   tagExists(tagText: String!): Boolean!
   tags(after: BigInt, authorId: String, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   tagsByScore(limit: Int = 10, skip: Int = 0): PaginatedTagsByScore!
