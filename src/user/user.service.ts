@@ -559,16 +559,16 @@ export class UserService {
     return !!follow
   }
 
-  async isBlockedByUser(otherUserId: string, userId: string): Promise<boolean> {
+  async isBlockedByUser(userId: string, otherUserId: string): Promise<boolean> {
     const user = await this.prismaService.user
       .findUnique({
         where: {
-          id: userId,
+          id: otherUserId,
         },
       })
       .blockedUsers({
         where: {
-          id: otherUserId,
+          id: userId,
         },
       })
 

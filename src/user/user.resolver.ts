@@ -101,7 +101,7 @@ export class UserResolver {
   @UseGuards(AuthGuard)
   @ResolveField()
   async hasBlockedAuthUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.isBlockedByUser(user.id, authUser.id)
+    return this.userService.isBlockedByUser(authUser.id, user.id)
   }
 
   @UseGuards(AuthGuard)
