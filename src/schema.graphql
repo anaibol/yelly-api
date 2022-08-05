@@ -411,9 +411,9 @@ type User {
   firstName: String
   followeesCount: Int
   followersCount: Int
+  hasBlockedAuthUser: Boolean
   id: ID!
   instagram: String
-  isBlockedByAuthUser: Boolean
   isFollowedByAuthUser: Boolean
   lastName: String
   locale: String
