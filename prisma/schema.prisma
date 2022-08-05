@@ -133,6 +133,11 @@ model User {
   tags                         Tag[]
   notifications                Notification[]
   postMentions                 PostUserMention[]
+  blockedUsers                 User[]                            @relation("blockedUsers")
+  blockedByUsers               User[]                            @relation("blockedUsers")
+  // reporterUser               User[]                            @relation("reportAuthors")
+  // reportedUser               User[]                            @relation("reporterUsers")
+  // reports                      UserReport[]                  @relation("userReports")
 
   @@index([birthdate], map: "User_birthdate")
 }
@@ -150,7 +155,7 @@ model Follower {
 
 model Tag {
   id              BigInt         @id @default(dbgenerated("generate_id()"))
-  nanoId          String?         @unique
+  nanoId          String?        @unique
   text            String
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @default(now()) @updatedAt
@@ -273,6 +278,17 @@ model ExpoPushNotificationAccessToken {
 
   @@index([userId])
 }
+
+// model UserReport {
+//   id        BigInt   @id @default(dbgenerated("generate_id()"))
+//   createdAt DateTime @default(now())
+//   userId    String
+//   authorId  String
+//   // author         User          @relation(name: "reportAuthors", fields: [authorId], references: [id], onDelete: Cascade)
+//   // user      User     @relation(name: "userReports", fields: [userId], references: [id], onDelete: Cascade)
+
+//   @@unique([authorId, userId])
+// }
 
 enum UserRole {
   USER

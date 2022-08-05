@@ -559,6 +559,22 @@ export class UserService {
     return !!follow
   }
 
+  async isBlockedByUser(otherUserId: string, userId: string): Promise<boolean> {
+    const user = await this.prismaService.user
+      .findUnique({
+        where: {
+          id: userId,
+        },
+      })
+      .blockedUsers({
+        where: {
+          id: otherUserId,
+        },
+      })
+
+    return !!user
+  }
+
   async getTrendingTagsCount(userId: string): Promise<number> {
     return this.prismaService.tag.count({
       where: {
@@ -720,7 +736,50 @@ export class UserService {
     return true
   }
 
+  async report(otherUserId: string): Promise<boolean> {
+    // await this.prismaService.user.update({
+    //   where: { id: otherUserId },
+    //   data: { reportsCount: { increment: 1 } },
+    // })
+
+    return true
+  }
+
+  async block(authUser: AuthUser, otherUserId: string): Promise<boolean> {
+    await this.prismaService.user.update({
+      where: { id: authUser.id },
+      data: {
+        blockedUsers: {
+          connect: {
+            id: otherUserId,
+          },
+        },
+      },
+    })
+
+    return true
+  }
+
+  async unBlock(authUser: AuthUser, otherUserId: string): Promise<boolean> {
+    await this.prismaService.user.update({
+      where: { id: authUser.id },
+      data: {
+        blockedUsers: {
+          disconnect: {
+            id: otherUserId,
+          },
+        },
+      },
+    })
+
+    return true
+  }
+
   async follow(userId: string, followeeId: string): Promise<boolean> {
+    const isBlockerByUser = await this.isBlockedByUser(followeeId, userId)
+
+    if (isBlockerByUser) return Promise.reject(new Error('User is blocked'))
+
     const follower = await this.prismaService.follower.create({
       data: {
         userId,
