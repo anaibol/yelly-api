@@ -373,6 +373,8 @@ export class PostService {
       },
     })
 
+    this.syncPostIndexWithAlgolia(post.id)
+
     if (parent && authUser.id !== parent.authorId) {
       this.pushNotificationService.repliedToYourPost(post.id)
     } else if (tagIds && tagIds.length > 0) {
@@ -381,7 +383,6 @@ export class PostService {
 
     if (mentionedUserIds && mentionedUserIds.length > 0) {
       this.pushNotificationService.youHaveBeenMentioned(post.id)
-      this.syncPostIndexWithAlgolia(post.id)
 
       const postUserMentions = await this.prismaService.postUserMention.findMany({ where: { postId: post.id } })
 
