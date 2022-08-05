@@ -1,5 +1,6 @@
 export const tagSelect = {
   id: true,
+  nanoId: true,
   text: true,
   createdAt: true,
   updatedAt: true,

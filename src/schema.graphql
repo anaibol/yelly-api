@@ -349,6 +349,7 @@ type Tag {
   id: BigInt!
   isHidden: Boolean
   isReadOnly: Boolean
+  nanoId: String
   postCount: Int
   posts: PaginatedPosts
   reactionsCount: Int
