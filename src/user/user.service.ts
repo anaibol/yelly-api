@@ -736,11 +736,10 @@ export class UserService {
     return true
   }
 
-  async report(otherUserId: string): Promise<boolean> {
-    // await this.prismaService.user.update({
-    //   where: { id: otherUserId },
-    //   data: { reportsCount: { increment: 1 } },
-    // })
+  async report(authUser: AuthUser, otherUserId: string): Promise<boolean> {
+    await this.prismaService.userReport.create({
+      data: { authorId: authUser.id, userId: otherUserId },
+    })
 
     return true
   }

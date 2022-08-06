@@ -135,9 +135,8 @@ model User {
   postMentions                 PostUserMention[]
   blockedUsers                 User[]                            @relation("blockedUsers")
   blockedByUsers               User[]                            @relation("blockedUsers")
-  // reporterUser               User[]                            @relation("reportAuthors")
-  // reportedUser               User[]                            @relation("reporterUsers")
-  // reports                      UserReport[]                  @relation("userReports")
+  reports                      UserReport[]                      @relation("reportAuthors")
+  reported                     UserReport[]                      @relation("userReports")
 
   @@index([birthdate], map: "User_birthdate")
 }
@@ -279,16 +278,16 @@ model ExpoPushNotificationAccessToken {
   @@index([userId])
 }
 
-// model UserReport {
-//   id        BigInt   @id @default(dbgenerated("generate_id()"))
-//   createdAt DateTime @default(now())
-//   userId    String
-//   authorId  String
-//   // author         User          @relation(name: "reportAuthors", fields: [authorId], references: [id], onDelete: Cascade)
-//   // user      User     @relation(name: "userReports", fields: [userId], references: [id], onDelete: Cascade)
+model UserReport {
+  id        BigInt   @id @default(dbgenerated("generate_id()"))
+  createdAt DateTime @default(now())
+  userId    String
+  authorId  String
+  author    User     @relation(name: "reportAuthors", fields: [authorId], references: [id], onDelete: Cascade)
+  user      User     @relation(name: "userReports", fields: [userId], references: [id], onDelete: Cascade)
 
-//   @@unique([authorId, userId])
-// }
+  @@unique([authorId, userId])
+}
 
 enum UserRole {
   USER

@@ -146,8 +146,8 @@ export class UserResolver {
 
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
-  reportUser(@Args('otherUserId') otherUserId: string): Promise<boolean> {
-    return this.userService.report(otherUserId)
+  reportUser(@CurrentUser() authUser: AuthUser, @Args('otherUserId') otherUserId: string): Promise<boolean> {
+    return this.userService.report(authUser, otherUserId)
   }
 
   @Mutation(() => Boolean)
