@@ -414,6 +414,7 @@ type User {
   hasBlockedAuthUser: Boolean
   id: ID!
   instagram: String
+  isBlockedByAuthUser: Boolean
   isFollowedByAuthUser: Boolean
   lastName: String
   locale: String
