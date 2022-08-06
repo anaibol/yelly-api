@@ -265,6 +265,9 @@ export class PostService {
   ): Promise<PaginatedPosts> {
     const posts = await this.prismaService.post.findMany({
       where: {
+        author: {
+          isBanned: false,
+        },
         ...(authorId && {
           authorId,
         }),
