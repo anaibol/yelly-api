@@ -753,6 +753,22 @@ export class UserService {
             id: otherUserId,
           },
         },
+        followees: {
+          disconnect: {
+            userId_followeeId: {
+              followeeId: otherUserId,
+              userId: authUser.id,
+            },
+          },
+        },
+        followers: {
+          disconnect: {
+            userId_followeeId: {
+              followeeId: authUser.id,
+              userId: otherUserId,
+            },
+          },
+        },
       },
     })
 
