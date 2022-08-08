@@ -745,18 +745,30 @@ export class UserService {
   }
 
   async block(authUser: AuthUser, otherUserId: string): Promise<boolean> {
-    const blockUser = this.prismaService.user.update({
-      where: { id: authUser.id },
-      data: {
-        blockedUsers: {
-          connect: {
-            id: otherUserId,
+    await Promise.all([
+      this.prismaService.user.update({
+        where: { id: authUser.id },
+        data: {
+          blockedUsers: {
+            connect: {
+              id: otherUserId,
+            },
           },
         },
-      },
-    })
-
-    await Promise.all([blockUser, this.unFollow(authUser.id, otherUserId), this.unFollow(otherUserId, authUser.id)])
+      }),
+      this.prismaService.follower.deleteMany({
+        where: {
+          userId: authUser.id,
+          followeeId: otherUserId,
+        },
+      }),
+      this.prismaService.follower.deleteMany({
+        where: {
+          userId: otherUserId,
+          followeeId: authUser.id,
+        },
+      }),
+    ])
 
     return true
   }
