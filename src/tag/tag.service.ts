@@ -292,6 +292,11 @@ export class TagService {
             id: authUser.id,
           },
         },
+        blockedByUsers: {
+          none: {
+            id: authUser.id,
+          },
+        },
         birthdate: isLessThanFifteen
           ? {
               gte: new Date(fifteenYoYear + '-01-01'),
