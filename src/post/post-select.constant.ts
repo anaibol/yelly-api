@@ -122,6 +122,9 @@ export function mapPost(post: PostWithParent): Post {
                 votesCount: o._count.votes,
               }))
             : undefined,
+        ...(parent.userMentions.length > 0 && {
+          mentionedUsers: parent.userMentions.map(({ user }) => user),
+        }),
         childrenCount: parent._count.children,
         reactionsCount: parent._count.reactions,
       },
