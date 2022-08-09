@@ -559,6 +559,22 @@ export class UserService {
     return !!follow
   }
 
+  async isBlockedByUser(userId: string, otherUserId: string): Promise<boolean> {
+    const blockedUsers = await this.prismaService.user
+      .findUnique({
+        where: {
+          id: otherUserId,
+        },
+      })
+      .blockedUsers({
+        where: {
+          id: userId,
+        },
+      })
+
+    return blockedUsers.length > 0
+  }
+
   async getTrendingTagsCount(userId: string): Promise<number> {
     return this.prismaService.tag.count({
       where: {
@@ -720,7 +736,63 @@ export class UserService {
     return true
   }
 
+  async report(authUser: AuthUser, otherUserId: string): Promise<boolean> {
+    await this.prismaService.userReport.create({
+      data: { authorId: authUser.id, userId: otherUserId },
+    })
+
+    return true
+  }
+
+  async block(authUser: AuthUser, otherUserId: string): Promise<boolean> {
+    await Promise.all([
+      this.prismaService.user.update({
+        where: { id: authUser.id },
+        data: {
+          blockedUsers: {
+            connect: {
+              id: otherUserId,
+            },
+          },
+        },
+      }),
+      this.prismaService.follower.deleteMany({
+        where: {
+          userId: authUser.id,
+          followeeId: otherUserId,
+        },
+      }),
+      this.prismaService.follower.deleteMany({
+        where: {
+          userId: otherUserId,
+          followeeId: authUser.id,
+        },
+      }),
+    ])
+
+    return true
+  }
+
+  async unBlock(authUser: AuthUser, otherUserId: string): Promise<boolean> {
+    await this.prismaService.user.update({
+      where: { id: authUser.id },
+      data: {
+        blockedUsers: {
+          disconnect: {
+            id: otherUserId,
+          },
+        },
+      },
+    })
+
+    return true
+  }
+
   async follow(userId: string, followeeId: string): Promise<boolean> {
+    const isBlockerByUser = await this.isBlockedByUser(followeeId, userId)
+
+    if (isBlockerByUser) return Promise.reject(new Error('User is blocked'))
+
     const follower = await this.prismaService.follower.create({
       data: {
         userId,

@@ -9,6 +9,5 @@ export class CreateOrUpdateTagReactionInput {
 
 @InputType()
 export class CreateAnonymousTagReactionInput {
-  @Field(() => BigInt)
-  tagId: bigint
+  tagNanoId: string
 }

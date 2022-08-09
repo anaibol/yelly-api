@@ -20,6 +20,8 @@ export class User {
   school?: School | null
   countryId?: string | null
   isFollowedByAuthUser?: boolean
+  hasBlockedAuthUser?: boolean
+  isBlockedByAuthUser?: boolean
   followersCount?: number
   followeesCount?: number
   postCount?: number

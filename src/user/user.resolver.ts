@@ -99,6 +99,18 @@ export class UserResolver {
   }
 
   @UseGuards(AuthGuard)
+  @ResolveField()
+  async hasBlockedAuthUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.isBlockedByUser(authUser.id, user.id)
+  }
+
+  @UseGuards(AuthGuard)
+  @ResolveField()
+  async isBlockedByAuthUser(@Parent() user: User, @CurrentUser() authUser: AuthUser): Promise<boolean> {
+    return this.userService.isBlockedByUser(user.id, authUser.id)
+  }
+
+  @UseGuards(AuthGuard)
   @ResolveField(() => Number)
   async tagViewsCount(@Parent() user: User): Promise<number> {
     return this.userService.getTagViewsCount(user.id)
@@ -136,6 +148,24 @@ export class UserResolver {
     if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
 
     return this.userService.ban(userId)
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  reportUser(@CurrentUser() authUser: AuthUser, @Args('otherUserId') otherUserId: string): Promise<boolean> {
+    return this.userService.report(authUser, otherUserId)
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  blockUser(@CurrentUser() authUser: AuthUser, @Args('otherUserId') otherUserId: string): Promise<boolean> {
+    return this.userService.block(authUser, otherUserId)
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  unBlockUser(@CurrentUser() authUser: AuthUser, @Args('otherUserId') otherUserId: string): Promise<boolean> {
+    return this.userService.unBlock(authUser, otherUserId)
   }
 
   @Query(() => PaginatedUsers)

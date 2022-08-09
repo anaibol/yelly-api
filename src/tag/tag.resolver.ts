@@ -9,7 +9,7 @@ import { CurrentUser } from '../auth/user.decorator'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { PrismaService } from '../core/prisma.service'
 import { getLastResetDate, getNextResetDate, getPreviousResetDate } from '../utils/dates'
-import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
+import { CreateAnonymousTagReactionInput, CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { CreateTagInput } from './create-tag.input'
 import { DeleteTagReactionInput } from './delete-tag-reaction.input'
 import { PaginatedTags, PaginatedTagsByScore } from './paginated-tags.model'
@@ -27,6 +27,11 @@ export class TagResolver {
   @Query(() => Tag)
   tag(@Args('tagId') tagId: bigint): Promise<Tag> {
     return this.tagService.getTag(tagId)
+  }
+
+  @Query(() => Tag)
+  tagByNanoId(@Args('tagNanoId') nanoId: string): Promise<Tag> {
+    return this.tagService.getTagByNanoId(nanoId)
   }
 
   @UseGuards(AuthGuard)
@@ -157,11 +162,11 @@ export class TagResolver {
     return this.tagService.createOrUpdateTagReaction(createTagReactionInput, authUser)
   }
 
-  @Mutation(() => TagReaction)
+  @Mutation(() => Boolean)
   async createAnonymousTagReaction(
-    @Args('input') createTagReactionInput: CreateOrUpdateTagReactionInput
-  ): Promise<TagReaction> {
-    return this.tagService.createAnonymousTagReaction(createTagReactionInput)
+    @Args('input') createAnonymousTagReactionInput: CreateAnonymousTagReactionInput
+  ): Promise<boolean> {
+    return this.tagService.createAnonymousTagReaction(createAnonymousTagReactionInput)
   }
 
   @UseGuards(AuthGuard)

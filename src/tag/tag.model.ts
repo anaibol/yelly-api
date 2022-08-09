@@ -8,6 +8,7 @@ import { TagReaction } from './tag-reaction.model'
 export class Tag {
   @Field(() => BigInt)
   id: bigint
+  nanoId?: string | null
   text: string
   createdAt?: Date
   isHidden?: boolean

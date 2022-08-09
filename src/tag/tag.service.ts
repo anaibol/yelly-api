@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { ActivityType, NotificationType, Prisma } from '@prisma/client'
+import { customAlphabet } from 'nanoid'
 
 import { SortDirection } from '../app.module'
 import { AuthUser } from '../auth/auth.service'
@@ -14,6 +15,7 @@ import { TagReaction } from './tag-reaction.model'
 import { tagSelect } from './tag-select.constant'
 import { TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
+const createNanoId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 10)
 
 const getTagsSort = (
   sortBy?: TagSortBy,
@@ -154,6 +156,21 @@ export class TagService {
     return { ...tag, postCount: _count.posts, reactionsCount: _count.reactions }
   }
 
+  async getTagByNanoId(nanoId: string): Promise<Tag> {
+    const result = await this.prismaService.tag.findUnique({
+      where: {
+        nanoId,
+      },
+      select: tagSelect,
+    })
+
+    if (!result) return Promise.reject(new Error('No tag'))
+
+    const { _count, ...tag } = result
+
+    return { ...tag, postCount: _count.posts, reactionsCount: _count.reactions }
+  }
+
   async getTagExists(tagText: string): Promise<boolean> {
     const result = await this.prismaService.tag.findFirst({
       where: {
@@ -201,6 +218,7 @@ export class TagService {
 
     const tag = await this.prismaService.tag.create({
       data: {
+        nanoId: createNanoId(),
         text: tagText,
         countryId: authUser.countryId,
         authorId: authUser.id,
@@ -269,6 +287,16 @@ export class TagService {
       }),
       author: {
         isBanned: false,
+        blockedUsers: {
+          none: {
+            id: authUser.id,
+          },
+        },
+        blockedByUsers: {
+          none: {
+            id: authUser.id,
+          },
+        },
         birthdate: isLessThanFifteen
           ? {
               gte: new Date(fifteenYoYear + '-01-01'),
@@ -436,14 +464,12 @@ export class TagService {
     return reaction
   }
 
-  async createAnonymousTagReaction(
-    createAnonymousTagReactionInput: CreateAnonymousTagReactionInput
-  ): Promise<TagReaction> {
-    const { tagId } = createAnonymousTagReactionInput
+  async createAnonymousTagReaction(createAnonymousTagReactionInput: CreateAnonymousTagReactionInput): Promise<boolean> {
+    const { tagNanoId } = createAnonymousTagReactionInput
 
     const tag = await this.prismaService.tag.findUnique({
       where: {
-        id: tagId,
+        nanoId: tagNanoId,
       },
     })
 
@@ -459,7 +485,7 @@ export class TagService {
         },
         tag: {
           connect: {
-            id: tagId,
+            nanoId: tagNanoId,
           },
         },
         ...(tag.authorId && {
@@ -477,7 +503,7 @@ export class TagService {
 
     this.pushNotificationService.reactedToYourTag(reaction.id)
 
-    return reaction
+    return true
   }
 
   async checkIfTagIsTrendingTrending(tagId: bigint) {

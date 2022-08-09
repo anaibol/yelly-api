@@ -34,8 +34,9 @@ export class PostResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => PaginatedPosts)
-  async posts(@Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
+  async posts(@Args() postsArgs: PostsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedPosts> {
     return this.postService.getPosts(
+      authUser,
       postsArgs.authorId,
       postsArgs.tagId,
       postsArgs.after,
