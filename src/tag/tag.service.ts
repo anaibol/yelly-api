@@ -390,12 +390,10 @@ export class TagService {
   }
 
   getAuthUserReaction(tagId: bigint, authUser: AuthUser): Promise<TagReaction | null> {
-    return this.prismaService.tagReaction.findUnique({
+    return this.prismaService.tagReaction.findFirst({
       where: {
-        authorId_tagId: {
-          authorId: authUser.id,
-          tagId,
-        },
+        authorId: authUser.id,
+        tagId,
       },
     })
   }
@@ -413,14 +411,18 @@ export class TagService {
       },
     })
 
+    const tagReaction = await this.prismaService.tagReaction.findFirst({
+      where: {
+        tagId,
+        authorId: authUser.id,
+      },
+    })
+
     if (!tag) return Promise.reject(new Error('No tag'))
 
     const reaction = await this.prismaService.tagReaction.upsert({
       where: {
-        authorId_tagId: {
-          authorId,
-          tagId,
-        },
+        id: tagReaction?.id,
       },
       create: {
         author: {
@@ -546,10 +548,8 @@ export class TagService {
   }
 
   async deleteTagReaction(tagId: bigint, authUser: AuthUser): Promise<boolean> {
-    await this.prismaService.tagReaction.delete({
-      where: {
-        authorId_tagId: { authorId: authUser.id, tagId },
-      },
+    await this.prismaService.tagReaction.deleteMany({
+      where: { authorId: authUser.id, tagId },
     })
 
     return true

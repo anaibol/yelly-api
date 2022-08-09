@@ -265,8 +265,6 @@ model TagReaction {
   activityId     String?
   notification   Notification?
   notificationId String?
-
-  @@unique([authorId, tagId])
 }
 
 model ExpoPushNotificationAccessToken {
