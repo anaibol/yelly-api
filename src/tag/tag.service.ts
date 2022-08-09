@@ -478,11 +478,6 @@ export class TagService {
     const reaction = await this.prismaService.tagReaction.create({
       data: {
         text: '',
-        author: {
-          connect: {
-            id: 'ANONYMOUS',
-          },
-        },
         tag: {
           connect: {
             nanoId: tagNanoId,

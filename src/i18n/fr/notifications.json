@@ -1,5 +1,6 @@
 {
   "reactedToYourTag": "{otherUserFirstName} a voté pour ton sujet du jour !",
+  "someoneReactedToYourTag": "Quelqu'un a voté pour ton sujet du jour !",
   "reactedToYourPost": "{otherUserFirstName} a aimé ton post sur sur #{tagText}",
   "reactedToYourPostNoTag": "{otherUserFirstName} a aimé ton post",
   "repliedToYourPost": "{otherUserFirstName} a répondu à ton post sur #{tagText}",
