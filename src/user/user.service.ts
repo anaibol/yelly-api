@@ -789,9 +789,12 @@ export class UserService {
   }
 
   async follow(userId: string, followeeId: string): Promise<boolean> {
-    const isBlockerByUser = await this.isBlockedByUser(followeeId, userId)
+    const [isBlockerByUser, hasBlockedUser] = await Promise.all([
+      this.isBlockedByUser(followeeId, userId),
+      this.isBlockedByUser(userId, followeeId),
+    ])
 
-    if (isBlockerByUser) return Promise.reject(new Error('User is blocked'))
+    if (isBlockerByUser || hasBlockedUser) return Promise.reject(new Error('User is blocked'))
 
     const follower = await this.prismaService.follower.create({
       data: {
