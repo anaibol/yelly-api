@@ -27,9 +27,9 @@ export class PostResolver {
   @UseGuards(AuthGuard)
   @Query(() => Post)
   post(@Args() postArgs: PostArgs) {
-    const { postId, after, limit } = postArgs
+    const { postId, after, limit, childrenSortBy, childrenSortDirection } = postArgs
 
-    return this.postService.getPost(postId, limit, after)
+    return this.postService.getPost(postId, limit, after, childrenSortBy, childrenSortDirection)
   }
 
   @UseGuards(AuthGuard)
