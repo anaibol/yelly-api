@@ -21,4 +21,5 @@ export class Tag {
   isReadOnly?: boolean
   @Field(() => Float)
   score?: number | null
+  hasBeenTrending?: boolean
 }

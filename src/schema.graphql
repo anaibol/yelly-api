@@ -349,6 +349,7 @@ type Tag {
   authUserReaction: TagReaction
   author: User
   createdAt: DateTime
+  hasBeenTrending: Boolean
   id: BigInt!
   isHidden: Boolean
   isReadOnly: Boolean
