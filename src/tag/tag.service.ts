@@ -403,13 +403,14 @@ export class TagService {
     authUser: AuthUser
   ): Promise<TagReaction> {
     const { text, tagId } = createOrUpdateTagReactionInput
-    const authorId = authUser.id
 
     const tag = await this.prismaService.tag.findUnique({
       where: {
         id: tagId,
       },
     })
+
+    if (!tag) return Promise.reject(new Error('No tag'))
 
     const tagReaction = await this.prismaService.tagReaction.findFirst({
       where: {
@@ -418,24 +419,13 @@ export class TagService {
       },
     })
 
-    if (!tag) return Promise.reject(new Error('No tag'))
+    if (tagReaction) return Promise.reject(new Error('Already reacted'))
 
-    const reaction = await this.prismaService.tagReaction.upsert({
-      where: {
-        id: tagReaction?.id,
-      },
-      create: {
-        author: {
-          connect: {
-            id: authUser.id,
-          },
-        },
+    const reaction = await this.prismaService.tagReaction.create({
+      data: {
+        authorId: authUser.id,
         text,
-        tag: {
-          connect: {
-            id: tagId,
-          },
-        },
+        tagId,
         activity: {
           create: {
             userId: authUser.id,
@@ -451,11 +441,6 @@ export class TagService {
             },
           },
         }),
-      },
-      update: {
-        text,
-        authorId,
-        tagId,
       },
     })
 
