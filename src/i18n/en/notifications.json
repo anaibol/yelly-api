@@ -1,6 +1,6 @@
 {
   "reactedToYourTag": "{otherUserFirstName} upvoted your topic!",
-  "someoneReactedToYourTag": "Someone upvoted your topic!",
+  "someoneReactedToYourTag": "Someone ouf of Yelly upvoted your topic!",
   "reactedToYourPost": "{otherUserFirstName} liked your post on #{tagText}",
   "reactedToYourPostNoTag": "{otherUserFirstName} liked your post",
   "repliedToYourPost": "{otherUserFirstName} replied to your post on #{tagText}",
