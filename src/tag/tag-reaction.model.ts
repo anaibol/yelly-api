@@ -8,6 +8,6 @@ export class TagReaction {
   @Field(() => BigInt)
   id: BigInt
   text?: string
-  author?: User
+  author?: User | null
   tag?: Tag
 }
