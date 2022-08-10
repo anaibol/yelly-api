@@ -258,15 +258,13 @@ model TagReaction {
   createdAt      DateTime      @default(now())
   text           String
   tagId          BigInt
-  authorId       String
-  author         User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId       String?
+  author         User?          @relation(fields: [authorId], references: [id], onDelete: Cascade)
   tag            Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
   activity       Activity?
   activityId     String?
   notification   Notification?
   notificationId String?
-
-  @@unique([authorId, tagId])
 }
 
 model ExpoPushNotificationAccessToken {

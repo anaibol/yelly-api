@@ -217,16 +217,20 @@ export class PostService {
   //   return { items, nextCursor }
   // }
 
-  async getPost(postId: bigint, limit: number, currentCursor?: bigint): Promise<Post | null> {
+  async getPost(
+    postId: bigint,
+    limit: number,
+    currentCursor?: bigint,
+    childrenSortBy?: PostsSortBy,
+    childrenSortDirection?: SortDirection
+  ): Promise<Post | null> {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
         ...PostSelectWithParent,
         children: {
           ...PostChildSelect,
-          orderBy: {
-            createdAt: 'desc',
-          },
+          orderBy: getPostsSort(childrenSortBy, childrenSortDirection),
           ...(currentCursor && {
             cursor: {
               id: currentCursor,

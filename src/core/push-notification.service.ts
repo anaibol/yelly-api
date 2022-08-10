@@ -451,12 +451,18 @@ export class PushNotificationService {
 
     const lang = tagReaction.tag.author.locale
 
-    const message = {
-      body: await this.i18n.translate('notifications.reactedToYourTag', {
-        args: { otherUserFirstName: tagReaction.author.firstName },
-        ...(lang && { lang }),
-      }),
-    }
+    const message = tagReaction.author
+      ? {
+          body: await this.i18n.translate('notifications.reactedToYourTag', {
+            args: { otherUserFirstName: tagReaction.author.firstName },
+            ...(lang && { lang }),
+          }),
+        }
+      : {
+          body: await this.i18n.translate('notifications.someoneReactedToYourTag', {
+            ...(lang && { lang }),
+          }),
+        }
 
     const messages = pushTokens.map((expoPushNotificationToken) => {
       return {
