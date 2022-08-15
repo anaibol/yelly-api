@@ -19,3 +19,11 @@ export class PaginatedTagsByScore {
   items: Tag[]
   totalCount: number
 }
+
+@ObjectType()
+export class PaginatedTagsByRank {
+  @Field(() => BigInt)
+  nextSkip?: number | null
+  items: Tag[]
+  totalCount: number
+}
