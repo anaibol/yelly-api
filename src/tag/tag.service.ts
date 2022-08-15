@@ -23,11 +23,16 @@ const getTagsSort = (
 ): Prisma.Enumerable<Prisma.TagOrderByWithRelationInput> => {
   switch (sortBy) {
     case 'postCount':
-      return {
-        posts: {
-          _count: sortDirection,
+      return [
+        {
+          posts: {
+            _count: sortDirection,
+          },
         },
-      }
+        {
+          createdAt: 'desc' as const,
+        },
+      ]
 
     case 'reactionsCount':
       return [
