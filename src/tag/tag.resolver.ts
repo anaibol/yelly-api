@@ -146,7 +146,7 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: tag.postCount * 1.5 + tag.reactionsCount,
+        score: tag.postCount * 3 + tag.reactionsCount,
       })),
       'score',
       'desc'
