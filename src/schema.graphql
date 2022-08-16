@@ -319,7 +319,7 @@ type Query {
   tagByNanoId(tagNanoId: String!): Tag!
   tagExists(tagText: String!): Boolean!
   tags(after: BigInt, authorId: String, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
-  tagsByRank(limit: Int = 10, skip: Int = 0): PaginatedTagsByRank!
+  tagsByRank(isYesterday: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTagsByRank!
   tagsByScore(limit: Int = 10, skip: Int = 0): PaginatedTagsByScore!
   unreadNotificationsCount: Int!
   user(id: String!): User!

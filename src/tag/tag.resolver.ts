@@ -16,7 +16,7 @@ import { PaginatedTags, PaginatedTagsByRank, PaginatedTagsByScore } from './pagi
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { TagReaction } from './tag-reaction.model'
-import { TagsArgs, TagSortBy } from './tags.args'
+import { TagsArgs, TagsByRankArgs, TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 
 @Resolver(Tag)
@@ -127,16 +127,16 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTagsByRank)
   async tagsByRank(
-    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @Args() tagsByRankArgs: TagsByRankArgs,
     @CurrentUser() authUser: AuthUser
   ): Promise<PaginatedTagsByRank> {
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
-    const { skip, limit } = offsetPaginationArgs
+    const { isYesterday, skip, limit } = tagsByRankArgs
 
     const { items, totalCount } = await this.tagService.getTags(
       authUser,
-      false,
+      isYesterday,
       1000,
       undefined,
       TagSortBy.postCount,
