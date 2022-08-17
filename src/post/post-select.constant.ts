@@ -162,6 +162,6 @@ export function mapPostChild(child: PostChild): Post {
       mentionedUsers: userMentions.map(({ user }) => user),
     }),
     childrenCount: _count.children,
-    reactionsCount: _count.children,
+    reactionsCount: _count.reactions,
   }
 }
