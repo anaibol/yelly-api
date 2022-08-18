@@ -113,7 +113,7 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+        score: tag.viewsCount ? (3 * tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
       })),
       'score',
       'desc'
@@ -146,15 +146,29 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: tag.postCount * 4 + tag.reactionsCount,
+        score: tag.viewsCount ? (3 * tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+        interactionsCount: tag.postCount + tag.reactionsCount,
       })),
-      'score',
+      'interactionsCount',
       'desc'
     ).slice(skip, skip + limit)
 
+    // Get tags with at least 15 interactions order by engagment score
+    const selectedTags = orderBy(
+      scoredTags.filter((tag) => tag.interactionsCount >= 15),
+      'score',
+      'desc'
+    )
+
+    const tags: Tag[] = selectedTags
+
+    if (selectedTags.length <= 5) {
+      // eslint-disable-next-line functional/immutable-data
+      tags.push(...(scoredTags as Tag[]).slice(0, 5 - selectedTags.length))
+    }
     const nextSkip = skip + limit
 
-    return { items: scoredTags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
+    return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
   }
 
   @UseGuards(AuthGuard)
