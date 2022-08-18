@@ -1,6 +1,6 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
-import { orderBy } from 'lodash'
+import { orderBy, uniqBy } from 'lodash'
 
 import { SortDirection } from '../app.module'
 import { AuthUser } from '../auth/auth.service'
@@ -149,23 +149,22 @@ export class TagResolver {
         score: tag.viewsCount ? (3 * tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
         interactionsCount: tag.postCount + tag.reactionsCount,
       })),
-      'interactionsCount',
+      'score',
       'desc'
-    ).slice(skip, skip + limit)
+    )
 
-    // Get tags with at least 15 interactions order by engagment score
+    // Get tags with at least 15 interactions ordered by engagment score
     const selectedTags = orderBy(
       scoredTags.filter((tag) => tag.interactionsCount >= 15),
       'score',
       'desc'
     )
 
-    const tags: Tag[] = selectedTags
+    // eslint-disable-next-line functional/immutable-data
+    selectedTags.push(...scoredTags)
 
-    if (selectedTags.length <= 5) {
-      // eslint-disable-next-line functional/immutable-data
-      tags.push(...(scoredTags as Tag[]).slice(0, 5 - selectedTags.length))
-    }
+    const tags = uniqBy(selectedTags, 'id').slice(skip, skip + limit)
+
     const nextSkip = skip + limit
 
     return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
