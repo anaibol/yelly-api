@@ -1,0 +1,9 @@
+-- CreateEnum
+CREATE TYPE "TagType" AS ENUM ('STANDARD', 'BREAKING');
+
+-- AlterTable
+ALTER TABLE "Tag" ADD COLUMN     "type" "TagType" DEFAULT 'STANDARD';
+
+UPDATE "Tag" SET "type" = 'STANDARD' WHERE "type" IS NULL;
+
+ALTER  TABLE "Tag" ALTER COLUMN "type" SET NOT NULL;

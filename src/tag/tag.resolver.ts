@@ -37,7 +37,7 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => Tag)
   async createTag(@Args('input') createTagInput: CreateTagInput, @CurrentUser() authUser: AuthUser) {
-    return this.tagService.create(createTagInput.tagText, authUser)
+    return this.tagService.create(createTagInput.tagText, createTagInput.type, authUser)
   }
 
   @UseGuards(AuthGuard)

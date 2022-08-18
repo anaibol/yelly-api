@@ -1,8 +1,13 @@
-import { Field, Float, ObjectType } from '@nestjs/graphql'
+import { Field, Float, ObjectType, registerEnumType } from '@nestjs/graphql'
+import { TagType } from '@prisma/client'
 import { User } from 'src/user/user.model'
 
 import { PaginatedPosts } from '../post/paginated-posts.model'
 import { TagReaction } from './tag-reaction.model'
+
+registerEnumType(TagType, {
+  name: 'TagType',
+})
 
 @ObjectType()
 export class Tag {

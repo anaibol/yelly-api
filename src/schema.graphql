@@ -89,6 +89,7 @@ input CreatePostPollVoteInput {
 
 input CreateTagInput {
   tagText: String!
+  type: TagType!
 }
 
 """
@@ -380,6 +381,11 @@ enum TagSortBy {
   createdAt
   postCount
   reactionsCount
+}
+
+enum TagType {
+  BREAKING
+  STANDARD
 }
 
 type Training {

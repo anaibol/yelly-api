@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { ActivityType, NotificationType, Prisma } from '@prisma/client'
+import { ActivityType, NotificationType, Prisma, TagType } from '@prisma/client'
 import { customAlphabet } from 'nanoid'
 
 import { SortDirection } from '../app.module'
@@ -192,7 +192,7 @@ export class TagService {
     return !!result
   }
 
-  async create(tagText: string, authUser: AuthUser): Promise<Tag> {
+  async create(tagText: string, tagType: TagType, authUser: AuthUser): Promise<Tag> {
     const tagCreated = await this.prismaService.tag.findFirst({
       where: {
         authorId: authUser.id,
@@ -225,6 +225,7 @@ export class TagService {
       data: {
         nanoId: createNanoId(),
         text: tagText,
+        type: tagType,
         countryId: authUser.countryId,
         authorId: authUser.id,
         activities: {
