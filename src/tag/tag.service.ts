@@ -192,7 +192,7 @@ export class TagService {
     return !!result
   }
 
-  async create(tagText: string, tagType: TagType, authUser: AuthUser): Promise<Tag> {
+  async create(tagText: string, authUser: AuthUser, tagType: TagType | undefined): Promise<Tag> {
     const tagCreated = await this.prismaService.tag.findFirst({
       where: {
         authorId: authUser.id,

@@ -5,5 +5,5 @@ import { TagType } from '@prisma/client'
 export class CreateTagInput {
   tagText: string
   @Field(() => TagType)
-  type: TagType
+  type?: TagType
 }

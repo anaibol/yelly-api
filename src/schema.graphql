@@ -89,7 +89,7 @@ input CreatePostPollVoteInput {
 
 input CreateTagInput {
   tagText: String!
-  type: TagType!
+  type: TagType
 }
 
 """
