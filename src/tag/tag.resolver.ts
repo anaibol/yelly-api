@@ -113,7 +113,7 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: tag.viewsCount ? (3 * tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+        score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
       })),
       'score',
       'desc'
@@ -146,7 +146,7 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: tag.viewsCount ? (3 * tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+        score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
         interactionsCount: tag.postCount + tag.reactionsCount,
       })),
       'score',
