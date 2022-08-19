@@ -15,6 +15,8 @@ export class Tag {
   id: bigint
   nanoId?: string | null
   text: string
+  @Field(() => TagType)
+  type?: TagType
   createdAt?: Date
   isHidden?: boolean
   posts?: PaginatedPosts

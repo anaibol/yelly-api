@@ -2,6 +2,7 @@ export const tagSelect = {
   id: true,
   nanoId: true,
   text: true,
+  type: true,
   createdAt: true,
   updatedAt: true,
   isHidden: true,

@@ -367,6 +367,7 @@ type Tag {
   reactionsCount: Int
   score: Float
   text: String!
+  type: TagType
   viewsCount: Int
 }
 
