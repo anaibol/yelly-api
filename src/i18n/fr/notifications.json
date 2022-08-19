@@ -8,7 +8,7 @@
   "repliedToSamePostAsYou": "{otherUserFirstName} a répondu au même post que toi sur #{tagText}",
   "repliedToSamePostAsYouNoTag": "{otherUserFirstName} a répondu au même post que toi",
   "thereAreNewPostsOnYourTag": "{newPostCount} nouveaux posts sur ton sujet du jour !",
-  "yourTagIsTrending": "Ton sujet du jour est en Une !",
+  "yourTagIsTrending": "Ton sujet intéresse, tu es à la Une !",
   "isNowFollowingYou": "{otherUserFirstName} te suis désormais",
   "promotedTag": "Tendance Yelly live",
   "followeeCreatedTag": "{otherUserFirstName} a lancé le sujet #{tagText}",
