@@ -313,7 +313,7 @@ type Query {
   isUserFollowedByAuthUser(userId: String!): Boolean!
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
-  post(after: BigInt, limit: Int = 10, postId: BigInt!): Post!
+  post(after: BigInt, childrenSortBy: PostsSortBy = createdAt, childrenSortDirection: SortDirection = desc, limit: Int = 10, postId: BigInt!): Post!
   posts(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt): PaginatedPosts!
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
