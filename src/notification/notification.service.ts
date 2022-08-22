@@ -13,6 +13,9 @@ export class NotificationService {
       this.prismaService.notification.count({
         where: {
           userId,
+          createdAt: {
+            gte: getLastResetDate(),
+          },
         },
       }),
       this.prismaService.notification.findMany({
