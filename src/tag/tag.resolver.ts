@@ -154,7 +154,7 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: (tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0) * tag.scoreFactor,
+        score: (tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0) * (tag.scoreFactor ?? 1),
         scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
         interactionsCount: tag.postCount + tag.reactionsCount,
       })),
