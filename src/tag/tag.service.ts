@@ -12,7 +12,7 @@ import { getLastResetDate, getPreviousResetDate } from '../utils/dates'
 import { CreateAnonymousTagReactionInput, CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { Tag } from './tag.model'
 import { TagReaction } from './tag-reaction.model'
-import { tagSelect, tagSelectAsAdmin } from './tag-select.constant'
+import { tagSelect } from './tag-select.constant'
 import { TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 const createNanoId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 10)
@@ -151,7 +151,7 @@ export class TagService {
       where: {
         id: tagId,
       },
-      select: authUser.isAdmin ? tagSelectAsAdmin : tagSelect,
+      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: undefined },
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -166,7 +166,7 @@ export class TagService {
       where: {
         nanoId,
       },
-      select: authUser.isAdmin ? tagSelectAsAdmin : tagSelect,
+      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: undefined },
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -258,6 +258,7 @@ export class TagService {
   async getTags(
     authUser: AuthUser,
     isYesterday: boolean,
+    showScoreFactor: boolean,
     limit: number,
     after?: bigint,
     sortBy?: TagSortBy,
@@ -327,7 +328,7 @@ export class TagService {
         }),
         orderBy: getTagsSort(sortBy, sortDirection),
         take: limit,
-        select: authUser.isAdmin ? tagSelectAsAdmin : tagSelect,
+        select: showScoreFactor ? tagSelect : { ...tagSelect, scoreFactor: undefined },
       }),
     ])
 
@@ -513,6 +514,7 @@ export class TagService {
         isAdmin: false,
         isNotAdmin: true,
       },
+      false,
       false,
       5,
       undefined,

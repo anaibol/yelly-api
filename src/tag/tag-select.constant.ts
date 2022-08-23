@@ -8,6 +8,7 @@ export const tagSelect = {
   isHidden: true,
   viewsCount: true,
   hasBeenTrending: true,
+  scoreFactor: true,
   _count: {
     select: {
       posts: true,
@@ -42,5 +43,3 @@ export const tagSelect = {
     },
   },
 }
-
-export const tagSelectAsAdmin = { ...tagSelect, scoreFactor: true }

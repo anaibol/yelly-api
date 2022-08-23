@@ -74,12 +74,14 @@ export class TagResolver {
   @Query(() => PaginatedTags)
   async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
     const { authorId, isYesterday, after, limit, sortBy, sortDirection, showHidden } = tagsArgs
+    const showScoreFactor = authUser.isAdmin
 
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
     const { items, nextCursor, totalCount } = await this.tagService.getTags(
       authUser,
       isYesterday,
+      showScoreFactor,
       limit,
       after,
       sortBy,
@@ -100,10 +102,12 @@ export class TagResolver {
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
     const { skip, limit } = offsetPaginationArgs
+    const showScoreFactor = authUser.isAdmin
 
     const { items, totalCount } = await this.tagService.getTags(
       authUser,
       false,
+      showScoreFactor,
       1000,
       undefined,
       TagSortBy.postCount,
@@ -134,9 +138,13 @@ export class TagResolver {
 
     const { isYesterday, skip, limit } = tagsByRankArgs
 
+    // We need the score factor to compute the ranking
+    const showScoreFactor = true
+
     const { items, totalCount } = await this.tagService.getTags(
       authUser,
       isYesterday,
+      showScoreFactor,
       1000,
       undefined,
       TagSortBy.postCount,
@@ -146,7 +154,8 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+        score: (tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0) * tag.scoreFactor,
+        scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
         interactionsCount: tag.postCount + tag.reactionsCount,
       })),
       'score',
