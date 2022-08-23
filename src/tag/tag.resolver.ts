@@ -170,7 +170,6 @@ export class TagResolver {
       items.map((tag) => ({
         ...tag,
         score: this.tagService.getTagScore(tag),
-        interactionsCount: tag.postCount + tag.reactionsCount,
       })),
       'score',
       'desc'

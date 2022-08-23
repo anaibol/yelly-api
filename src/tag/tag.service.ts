@@ -314,6 +314,20 @@ export class TagService {
       },
     }
 
+    const tagSelectWithPostInteractions = {
+      ...tagSelect,
+      posts: {
+        select: {
+          _count: {
+            select: {
+              children: true,
+              reactions: true,
+            },
+          },
+        },
+      },
+    }
+
     const [totalCount, tags] = await Promise.all([
       this.prismaService.tag.count({
         where,
@@ -328,15 +342,30 @@ export class TagService {
         }),
         orderBy: getTagsSort(sortBy, sortDirection),
         take: limit,
-        select: showScoreFactor ? tagSelect : { ...tagSelect, scoreFactor: false },
+        select: showScoreFactor
+          ? tagSelectWithPostInteractions
+          : { ...tagSelectWithPostInteractions, scoreFactor: false },
       }),
     ])
 
     const items = tags.map((tag) => {
+      const postInteractions = tag.posts.reduce(
+        (prev, post) => ({
+          childrenCount: prev.childrenCount + post._count.children,
+          reactionsCount: prev.reactionsCount + post._count.reactions,
+        }),
+        { childrenCount: 0, reactionsCount: 0 }
+      )
+      const interactionsCount =
+        tag._count.posts + tag._count.reactions + postInteractions.childrenCount + postInteractions.reactionsCount
+
       return {
         ...tag,
+        // remove posts from the result
+        posts: undefined,
         postCount: tag._count.posts,
         reactionsCount: tag._count.reactions,
+        interactionsCount,
       }
     })
 
@@ -558,13 +587,11 @@ export class TagService {
     return true
   }
 
-  getTagScore(tag: Tag) {
+  getTagScore(tag: Tag & { interactionsCount: number }) {
     if (!tag.viewsCount || tag.viewsCount === 0) return 0
 
-    const postCount = tag?.postCount ?? 0
-    const reactionCount = tag.reactionsCount ?? 0
     const scoreFactor = tag.scoreFactor ?? 1
-    const score = ((postCount + reactionCount) / tag.viewsCount) * scoreFactor
+    const score = (tag.interactionsCount / tag.viewsCount) * scoreFactor
 
     return score
   }
