@@ -151,7 +151,7 @@ export class TagService {
       where: {
         id: tagId,
       },
-      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: undefined },
+      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: false },
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -166,7 +166,7 @@ export class TagService {
       where: {
         nanoId,
       },
-      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: undefined },
+      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: false },
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -328,7 +328,7 @@ export class TagService {
         }),
         orderBy: getTagsSort(sortBy, sortDirection),
         take: limit,
-        select: showScoreFactor ? tagSelect : { ...tagSelect, scoreFactor: undefined },
+        select: showScoreFactor ? tagSelect : { ...tagSelect, scoreFactor: false },
       }),
     ])
 
