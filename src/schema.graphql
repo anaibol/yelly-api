@@ -366,7 +366,7 @@ type Tag {
   posts: PaginatedPosts
   reactionsCount: Int
   score: Float
-  scoreFactor: Int
+  scoreFactor: Float
   text: String!
   type: TagType
   viewsCount: Int
@@ -397,7 +397,7 @@ type Training {
 
 input UpdateTagInput {
   isHidden: Boolean
-  scoreFactor: Int
+  scoreFactor: Float
 }
 
 input UpdateUserInput {
