@@ -25,13 +25,13 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => Tag)
-  tag(@Args('tagId') tagId: bigint): Promise<Tag> {
-    return this.tagService.getTag(tagId)
+  tag(@Args('tagId') tagId: bigint, @CurrentUser() authUser: AuthUser): Promise<Tag> {
+    return this.tagService.getTag(tagId, authUser)
   }
 
   @Query(() => Tag)
-  tagByNanoId(@Args('tagNanoId') nanoId: string): Promise<Tag> {
-    return this.tagService.getTagByNanoId(nanoId)
+  tagByNanoId(@Args('tagNanoId') nanoId: string, @CurrentUser() authUser: AuthUser): Promise<Tag> {
+    return this.tagService.getTagByNanoId(nanoId, authUser)
   }
 
   @UseGuards(AuthGuard)
@@ -74,12 +74,14 @@ export class TagResolver {
   @Query(() => PaginatedTags)
   async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
     const { authorId, isYesterday, after, limit, sortBy, sortDirection, showHidden } = tagsArgs
+    const showScoreFactor = authUser.isAdmin
 
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
     const { items, nextCursor, totalCount } = await this.tagService.getTags(
       authUser,
       isYesterday,
+      showScoreFactor,
       limit,
       after,
       sortBy,
@@ -87,6 +89,14 @@ export class TagResolver {
       showHidden,
       authorId
     )
+
+    if (authUser.isAdmin) {
+      const scoredTags = items.map((tag) => ({
+        ...tag,
+        score: this.tagService.getTagScore(tag),
+      }))
+      return { items: scoredTags, nextCursor, totalCount }
+    }
 
     return { items, nextCursor, totalCount }
   }
@@ -100,10 +110,12 @@ export class TagResolver {
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
     const { skip, limit } = offsetPaginationArgs
+    const showScoreFactor = authUser.isAdmin
 
     const { items, totalCount } = await this.tagService.getTags(
       authUser,
       false,
+      showScoreFactor,
       1000,
       undefined,
       TagSortBy.postCount,
@@ -113,7 +125,7 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+        score: this.tagService.getTagScore(tag),
       })),
       'score',
       'desc'
@@ -121,7 +133,14 @@ export class TagResolver {
 
     const nextSkip = skip + limit
 
-    return { items: scoredTags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount, nextCursor: null }
+    const tags = scoredTags.map((tag) => ({
+      ...tag,
+      // Display score for admin only
+      score: authUser.isAdmin ? tag.score : undefined,
+      scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
+    }))
+
+    return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount, nextCursor: null }
   }
 
   @UseGuards(AuthGuard)
@@ -134,9 +153,13 @@ export class TagResolver {
 
     const { isYesterday, skip, limit } = tagsByRankArgs
 
+    // We need the score factor to compute the ranking
+    const showScoreFactor = true
+
     const { items, totalCount } = await this.tagService.getTags(
       authUser,
       isYesterday,
+      showScoreFactor,
       1000,
       undefined,
       TagSortBy.postCount,
@@ -146,7 +169,7 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+        score: this.tagService.getTagScore(tag),
         interactionsCount: tag.postCount + tag.reactionsCount,
       })),
       'score',
@@ -163,7 +186,14 @@ export class TagResolver {
     // eslint-disable-next-line functional/immutable-data
     selectedTags.push(...scoredTags)
 
-    const tags = uniqBy(selectedTags, 'id').slice(skip, skip + limit)
+    const tags = uniqBy(selectedTags, 'id')
+      .slice(skip, skip + limit)
+      .map((tag) => ({
+        ...tag,
+        // Display score for admin only
+        score: authUser.isAdmin ? tag?.score : undefined,
+        scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
+      }))
 
     const nextSkip = skip + limit
 
