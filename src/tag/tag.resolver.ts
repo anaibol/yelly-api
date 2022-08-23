@@ -155,7 +155,6 @@ export class TagResolver {
       items.map((tag) => ({
         ...tag,
         score: (tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0) * (tag.scoreFactor ?? 1),
-        scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
         interactionsCount: tag.postCount + tag.reactionsCount,
       })),
       'score',
@@ -172,7 +171,14 @@ export class TagResolver {
     // eslint-disable-next-line functional/immutable-data
     selectedTags.push(...scoredTags)
 
-    const tags = uniqBy(selectedTags, 'id').slice(skip, skip + limit)
+    const tags = uniqBy(selectedTags, 'id')
+      .slice(skip, skip + limit)
+      .map((tag) => ({
+        ...tag,
+        // Display score for admin only
+        score: authUser.isAdmin ? tag?.score : undefined,
+        scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
+      }))
 
     const nextSkip = skip + limit
 
