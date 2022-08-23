@@ -42,3 +42,5 @@ export const tagSelect = {
     },
   },
 }
+
+export const tagSelectAsAdmin = { ...tagSelect, scoreFactor: true }

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Tag" ADD COLUMN     "scoreFactor" INTEGER NOT NULL DEFAULT 1;

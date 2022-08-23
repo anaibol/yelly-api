@@ -25,13 +25,13 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Query(() => Tag)
-  tag(@Args('tagId') tagId: bigint): Promise<Tag> {
-    return this.tagService.getTag(tagId)
+  tag(@Args('tagId') tagId: bigint, @CurrentUser() authUser: AuthUser): Promise<Tag> {
+    return this.tagService.getTag(tagId, authUser)
   }
 
   @Query(() => Tag)
-  tagByNanoId(@Args('tagNanoId') nanoId: string): Promise<Tag> {
-    return this.tagService.getTagByNanoId(nanoId)
+  tagByNanoId(@Args('tagNanoId') nanoId: string, @CurrentUser() authUser: AuthUser): Promise<Tag> {
+    return this.tagService.getTagByNanoId(nanoId, authUser)
   }
 
   @UseGuards(AuthGuard)

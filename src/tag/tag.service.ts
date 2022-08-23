@@ -12,7 +12,7 @@ import { getLastResetDate, getPreviousResetDate } from '../utils/dates'
 import { CreateAnonymousTagReactionInput, CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { Tag } from './tag.model'
 import { TagReaction } from './tag-reaction.model'
-import { tagSelect } from './tag-select.constant'
+import { tagSelect, tagSelectAsAdmin } from './tag-select.constant'
 import { TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 const createNanoId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 10)
@@ -146,12 +146,12 @@ export class TagService {
   //   return newTag
   // }
 
-  async getTag(tagId: bigint): Promise<Tag> {
+  async getTag(tagId: bigint, authUser: AuthUser): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         id: tagId,
       },
-      select: tagSelect,
+      select: authUser.isAdmin ? tagSelectAsAdmin : tagSelect,
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -161,12 +161,12 @@ export class TagService {
     return { ...tag, postCount: _count.posts, reactionsCount: _count.reactions }
   }
 
-  async getTagByNanoId(nanoId: string): Promise<Tag> {
+  async getTagByNanoId(nanoId: string, authUser: AuthUser): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         nanoId,
       },
-      select: tagSelect,
+      select: authUser.isAdmin ? tagSelectAsAdmin : tagSelect,
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -327,7 +327,7 @@ export class TagService {
         }),
         orderBy: getTagsSort(sortBy, sortDirection),
         take: limit,
-        select: tagSelect,
+        select: authUser.isAdmin ? tagSelectAsAdmin : tagSelect,
       }),
     ])
 

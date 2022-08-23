@@ -170,6 +170,7 @@ model Tag {
   activities      Activity[]
   notifications   Notification[]
   hasBeenTrending Boolean        @default(false)
+  scoreFactor     Int            @default(1)
 
   @@index([createdAt])
   @@index([authorId])

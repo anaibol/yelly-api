@@ -366,6 +366,7 @@ type Tag {
   posts: PaginatedPosts
   reactionsCount: Int
   score: Float
+  scoreFactor: Int
   text: String!
   type: TagType
   viewsCount: Int

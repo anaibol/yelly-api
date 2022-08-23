@@ -29,4 +29,5 @@ export class Tag {
   @Field(() => Float)
   score?: number | null
   hasBeenTrending?: boolean
+  scoreFactor?: number
 }
