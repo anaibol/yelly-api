@@ -557,4 +557,15 @@ export class TagService {
 
     return true
   }
+
+  getTagScore(tag: Tag) {
+    if (!tag.viewsCount || tag.viewsCount === 0) return 0
+
+    const postCount = tag?.postCount ?? 0
+    const reactionCount = tag.reactionsCount ?? 0
+    const scoreFactor = tag.scoreFactor ?? 1
+    const score = ((postCount + reactionCount) / tag.viewsCount) * scoreFactor
+
+    return score
+  }
 }

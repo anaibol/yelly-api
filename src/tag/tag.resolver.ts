@@ -117,7 +117,7 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0,
+        score: this.tagService.getTagScore(tag),
       })),
       'score',
       'desc'
@@ -125,7 +125,14 @@ export class TagResolver {
 
     const nextSkip = skip + limit
 
-    return { items: scoredTags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount, nextCursor: null }
+    const tags = scoredTags.map((tag) => ({
+      ...tag,
+      // Display score for admin only
+      score: authUser.isAdmin ? tag.score : undefined,
+      scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
+    }))
+
+    return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount, nextCursor: null }
   }
 
   @UseGuards(AuthGuard)
@@ -154,7 +161,7 @@ export class TagResolver {
     const scoredTags = orderBy(
       items.map((tag) => ({
         ...tag,
-        score: (tag.viewsCount ? (tag.postCount + tag.reactionsCount) / tag.viewsCount : 0) * (tag.scoreFactor ?? 1),
+        score: this.tagService.getTagScore(tag),
         interactionsCount: tag.postCount + tag.reactionsCount,
       })),
       'score',
