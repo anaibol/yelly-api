@@ -90,6 +90,14 @@ export class TagResolver {
       authorId
     )
 
+    if (authUser.isAdmin) {
+      const scoredTags = items.map((tag) => ({
+        ...tag,
+        score: this.tagService.getTagScore(tag),
+      }))
+      return { items: scoredTags, nextCursor, totalCount }
+    }
+
     return { items, nextCursor, totalCount }
   }
 
