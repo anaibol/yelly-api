@@ -397,6 +397,7 @@ type Training {
 
 input UpdateTagInput {
   isHidden: Boolean
+  scoreFactor: Int
 }
 
 input UpdateUserInput {

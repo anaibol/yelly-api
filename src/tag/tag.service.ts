@@ -347,13 +347,14 @@ export class TagService {
     return { items, nextCursor, totalCount }
   }
 
-  async updateTag(tagId: bigint, { isHidden }: UpdateTagInput): Promise<Tag> {
+  async updateTag(tagId: bigint, { isHidden, scoreFactor }: UpdateTagInput): Promise<Tag> {
     return this.prismaService.tag.update({
       where: {
         id: tagId,
       },
       data: {
         isHidden,
+        scoreFactor,
       },
     })
   }
