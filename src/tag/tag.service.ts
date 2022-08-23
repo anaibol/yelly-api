@@ -146,12 +146,12 @@ export class TagService {
   //   return newTag
   // }
 
-  async getTag(tagId: bigint): Promise<Tag> {
+  async getTag(tagId: bigint, authUser: AuthUser): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         id: tagId,
       },
-      select: tagSelect,
+      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: undefined },
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -161,12 +161,12 @@ export class TagService {
     return { ...tag, postCount: _count.posts, reactionsCount: _count.reactions }
   }
 
-  async getTagByNanoId(nanoId: string): Promise<Tag> {
+  async getTagByNanoId(nanoId: string, authUser: AuthUser): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         nanoId,
       },
-      select: tagSelect,
+      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: undefined },
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -258,6 +258,7 @@ export class TagService {
   async getTags(
     authUser: AuthUser,
     isYesterday: boolean,
+    showScoreFactor: boolean,
     limit: number,
     after?: bigint,
     sortBy?: TagSortBy,
@@ -327,7 +328,7 @@ export class TagService {
         }),
         orderBy: getTagsSort(sortBy, sortDirection),
         take: limit,
-        select: tagSelect,
+        select: showScoreFactor ? tagSelect : { ...tagSelect, scoreFactor: undefined },
       }),
     ])
 
@@ -346,13 +347,14 @@ export class TagService {
     return { items, nextCursor, totalCount }
   }
 
-  async updateTag(tagId: bigint, { isHidden }: UpdateTagInput): Promise<Tag> {
+  async updateTag(tagId: bigint, { isHidden, scoreFactor }: UpdateTagInput): Promise<Tag> {
     return this.prismaService.tag.update({
       where: {
         id: tagId,
       },
       data: {
         isHidden,
+        scoreFactor,
       },
     })
   }
@@ -513,6 +515,7 @@ export class TagService {
         isAdmin: false,
         isNotAdmin: true,
       },
+      false,
       false,
       5,
       undefined,
