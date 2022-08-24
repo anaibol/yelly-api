@@ -8,6 +8,7 @@ import { PushNotificationService } from 'src/core/push-notification.service'
 import { SortDirection } from '../app.module'
 import { PrismaService } from '../core/prisma.service'
 import { PostsSortBy } from '../posts/posts.args'
+import { TagService } from '../tag/tag.service'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { CreatePostInput } from './create-post.input'
 import { PaginatedPosts } from './paginated-posts.model'
@@ -68,6 +69,7 @@ export class PostService {
   constructor(
     private prismaService: PrismaService,
     private pushNotificationService: PushNotificationService,
+    private tagService: TagService,
     private algoliaService: AlgoliaService
   ) {}
   async trackPostViews(postIds: bigint[]): Promise<boolean> {
@@ -391,6 +393,11 @@ export class PostService {
       },
     })
 
+    // TODO: update tag interactions for replies (post with parentId and no tags)
+    if (tagIds && tagIds.length > 0) {
+      this.tagService.updateInteractionsCount(tagIds[0])
+    }
+
     this.syncPostIndexWithAlgolia(post.id)
 
     if (parent && authUser.id !== parent.authorId) {
@@ -473,6 +480,7 @@ export class PostService {
       },
       select: {
         authorId: true,
+        tags: true,
       },
     })
 
@@ -484,6 +492,10 @@ export class PostService {
         id: postId,
       },
     })
+
+    if (post.tags && post.tags.length > 0) {
+      this.tagService.updateInteractionsCount(post.tags[0].id, false)
+    }
 
     this.deletePostFromAlgolia(postId)
 
@@ -551,6 +563,8 @@ export class PostService {
 
     if (post.author.id !== authUser.id) this.pushNotificationService.reactedToYourPost(reaction.id)
 
+    // TODO: update tag interactions for post and replies
+
     return {
       ...reaction,
       post: mapPost(post),
@@ -565,6 +579,8 @@ export class PostService {
         authorId_postId: { authorId, postId },
       },
     })
+
+    // TODO: update tag interactions for post and replies
 
     return true
   }
