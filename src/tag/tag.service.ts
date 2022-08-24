@@ -646,4 +646,8 @@ export class TagService {
     if (!viewsCount || viewsCount === 0 || !interactionsCount || interactionsCount === 0) return 0
     return (interactionsCount / viewsCount) * (scoreFactor ?? 1)
   }
+
+  async computeTagRanking() {
+    // TODO: Compute 2 ranking for the two age segments
+  }
 }

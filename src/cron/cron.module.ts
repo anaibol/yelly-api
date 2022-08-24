@@ -39,5 +39,12 @@ export class CronModule implements OnModuleInit {
         tz: 'Europe/Paris',
       },
     })
+
+    await this.queue.add('computeTagRanking', undefined, {
+      repeat: {
+        cron: `0 ${RESET_HOURS} * * *`,
+        tz: 'Europe/Paris',
+      },
+    })
   }
 }
