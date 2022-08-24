@@ -23,6 +23,7 @@ export class Tag {
   postCount?: number
   reactionsCount?: number
   viewsCount?: number
+  interactionsCount?: number
   author?: User | null
   authUserReaction?: TagReaction | null
   isReadOnly?: boolean
@@ -31,4 +32,5 @@ export class Tag {
   hasBeenTrending?: boolean
   @Field(() => Float)
   scoreFactor?: number | null
+  rank?: number
 }

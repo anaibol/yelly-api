@@ -119,22 +119,13 @@ export class TagResolver {
       showScoreFactor,
       1000,
       undefined,
-      TagSortBy.postCount,
+      TagSortBy.score,
       SortDirection.desc
     )
 
-    const scoredTags = orderBy(
-      items.map((tag) => ({
-        ...tag,
-        score: this.tagService.getTagScore(tag),
-      })),
-      'score',
-      'desc'
-    ).slice(skip, skip + limit)
-
     const nextSkip = skip + limit
 
-    const tags = scoredTags.map((tag) => ({
+    const tags = items.map((tag) => ({
       ...tag,
       // Display score for admin only
       score: authUser.isAdmin ? tag.score : undefined,
@@ -163,28 +154,19 @@ export class TagResolver {
       showScoreFactor,
       1000,
       undefined,
-      TagSortBy.postCount,
+      TagSortBy.score,
       SortDirection.desc
-    )
-
-    const scoredTags = orderBy(
-      items.map((tag) => ({
-        ...tag,
-        score: this.tagService.getTagScore(tag),
-      })),
-      'score',
-      'desc'
     )
 
     // Get tags with at least 15 interactions ordered by engagment score
     const selectedTags = orderBy(
-      scoredTags.filter((tag) => tag.interactionsCount >= 10),
+      items.filter((tag) => tag.interactionsCount >= 10),
       'score',
       'desc'
     )
 
     // eslint-disable-next-line functional/immutable-data
-    selectedTags.push(...scoredTags)
+    selectedTags.push(...items)
 
     const tags = uniqBy(selectedTags, 'id')
       .slice(skip, skip + limit)

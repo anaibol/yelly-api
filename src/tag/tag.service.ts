@@ -314,20 +314,6 @@ export class TagService {
       },
     }
 
-    const tagSelectWithPostInteractions = {
-      ...tagSelect,
-      posts: {
-        select: {
-          _count: {
-            select: {
-              children: true,
-              reactions: true,
-            },
-          },
-        },
-      },
-    }
-
     const [totalCount, tags] = await Promise.all([
       this.prismaService.tag.count({
         where,
@@ -342,30 +328,15 @@ export class TagService {
         }),
         orderBy: getTagsSort(sortBy, sortDirection),
         take: limit,
-        select: showScoreFactor
-          ? tagSelectWithPostInteractions
-          : { ...tagSelectWithPostInteractions, scoreFactor: false },
+        select: showScoreFactor ? tagSelect : { ...tagSelect, score: false, scoreFactor: false },
       }),
     ])
 
     const items = tags.map((tag) => {
-      const postInteractions = tag.posts.reduce(
-        (prev, post) => ({
-          childrenCount: prev.childrenCount + post._count.children,
-          reactionsCount: prev.reactionsCount + post._count.reactions,
-        }),
-        { childrenCount: 0, reactionsCount: 0 }
-      )
-      const interactionsCount =
-        tag._count.posts + tag._count.reactions + postInteractions.childrenCount + postInteractions.reactionsCount
-
       return {
         ...tag,
-        // remove posts from the result
-        posts: undefined,
         postCount: tag._count.posts,
         reactionsCount: tag._count.reactions,
-        interactionsCount,
       }
     })
 
@@ -481,6 +452,8 @@ export class TagService {
       },
     })
 
+    this.updateInteractionsCount(tag.id)
+
     if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
 
     this.pushNotificationService.reactedToYourTag(reaction.id)
@@ -517,6 +490,8 @@ export class TagService {
         }),
       },
     })
+
+    this.updateInteractionsCount(tag.id)
 
     if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
 
@@ -575,24 +550,80 @@ export class TagService {
       where: { authorId: authUser.id, tagId },
     })
 
+    this.updateInteractionsCount(tagId, false)
+
     return true
   }
 
   async trackTagViews(tagsIds: bigint[]): Promise<boolean> {
-    await this.prismaService.tag.updateMany({
-      where: { id: { in: tagsIds } },
-      data: { viewsCount: { increment: 1 } },
+    const tags = await this.prismaService.tag.findMany({
+      where: {
+        id: { in: tagsIds },
+      },
+      select: {
+        id: true,
+        viewsCount: true,
+        interactionsCount: true,
+        scoreFactor: true,
+      },
+    })
+
+    const promises: Promise<any>[] = []
+
+    tags.forEach((tag) =>
+      // eslint-disable-next-line functional/immutable-data
+      promises.push(
+        this.prismaService.tag.update({
+          where: { id: tag.id },
+          data: {
+            viewsCount: { increment: 1 },
+            score: this.getTagScore({ ...tag, viewsCount: tag.viewsCount + 1 }),
+          },
+        })
+      )
+    )
+
+    await Promise.all(promises)
+
+    return true
+  }
+
+  async updateInteractionsCount(tagId: bigint, isIncrement = true): Promise<boolean> {
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagId,
+      },
+      select: {
+        viewsCount: true,
+        interactionsCount: true,
+        scoreFactor: true,
+      },
+    })
+
+    if (!tag) return Promise.reject(new Error('No tag'))
+
+    // TODO: Use a single transaction for both read and update counters
+    await this.prismaService.tag.update({
+      where: { id: tagId },
+      data: {
+        interactionsCount: isIncrement ? { increment: 1 } : { decrement: 1 },
+        score: this.getTagScore({ ...tag, interactionsCount: tag.interactionsCount + (isIncrement ? 1 : -1) }),
+      },
     })
 
     return true
   }
 
-  getTagScore(tag: Tag & { interactionsCount: number }) {
-    if (!tag.viewsCount || tag.viewsCount === 0) return 0
-
-    const scoreFactor = tag.scoreFactor ?? 1
-    const score = (tag.interactionsCount / tag.viewsCount) * scoreFactor
-
-    return score
+  getTagScore({
+    viewsCount,
+    interactionsCount,
+    scoreFactor,
+  }: {
+    viewsCount?: number
+    interactionsCount: number
+    scoreFactor: number | null
+  }) {
+    if (!viewsCount || viewsCount === 0 || !interactionsCount || interactionsCount === 0) return 0
+    return (interactionsCount / viewsCount) * (scoreFactor ?? 1)
   }
 }
