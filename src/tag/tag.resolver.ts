@@ -29,6 +29,7 @@ export class TagResolver {
     return this.tagService.getTag(tagId, authUser)
   }
 
+  @UseGuards(AuthGuard)
   @Query(() => Tag)
   tagByNanoId(@Args('tagNanoId') nanoId: string, @CurrentUser() authUser: AuthUser): Promise<Tag> {
     return this.tagService.getTagByNanoId(nanoId, authUser)
