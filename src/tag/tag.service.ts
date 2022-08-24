@@ -46,6 +46,26 @@ const getTagsSort = (
         },
       ]
 
+    case 'score':
+      return [
+        {
+          score: sortDirection,
+        },
+        {
+          createdAt: 'desc' as const,
+        },
+      ]
+
+    case 'rank':
+      return [
+        {
+          rank: sortDirection,
+        },
+        {
+          createdAt: 'desc' as const,
+        },
+      ]
+
     default:
       return {
         createdAt: sortDirection,
