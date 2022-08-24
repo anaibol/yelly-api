@@ -393,9 +393,12 @@ export class PostService {
       },
     })
 
-    // TODO: update tag interactions for replies (post with parentId and no tags)
     if (tagIds && tagIds.length > 0) {
       this.tagService.updateInteractionsCount(tagIds[0])
+    } else {
+      if (post.parentId) {
+        this.tagService.updateInteractionsCount(post.parentId)
+      }
     }
 
     this.syncPostIndexWithAlgolia(post.id)
@@ -563,7 +566,13 @@ export class PostService {
 
     if (post.author.id !== authUser.id) this.pushNotificationService.reactedToYourPost(reaction.id)
 
-    // TODO: update tag interactions for post and replies
+    if (post.tags && post.tags.length > 0) {
+      this.tagService.updateInteractionsCount(post.tags[0].id)
+    } else {
+      if (post.parent && post.parent.tags && post.parent.tags.length > 0) {
+        this.tagService.updateInteractionsCount(post.parent.tags[0].id)
+      }
+    }
 
     return {
       ...reaction,
@@ -574,13 +583,33 @@ export class PostService {
   async deletePostReaction(postId: bigint, authUser: AuthUser): Promise<boolean> {
     const authorId = authUser.id
 
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+      select: {
+        tags: true,
+        parent: {
+          select: {
+            tags: true,
+          },
+        },
+      },
+    })
+
+    if (!post) return Promise.reject(new Error('No post'))
+
     await this.prismaService.postReaction.delete({
       where: {
         authorId_postId: { authorId, postId },
       },
     })
 
-    // TODO: update tag interactions for post and replies
+    if (post.tags && post.tags.length > 0) {
+      this.tagService.updateInteractionsCount(post.tags[0].id, false)
+    } else {
+      if (post.parent && post.parent.tags && post.parent.tags.length > 0) {
+        this.tagService.updateInteractionsCount(post.parent.tags[0].id, false)
+      }
+    }
 
     return true
   }
