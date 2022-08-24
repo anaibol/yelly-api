@@ -396,8 +396,8 @@ export class PostService {
     if (tagIds && tagIds.length > 0) {
       this.tagService.updateInteractionsCount(tagIds[0])
     } else {
-      if (post.parentId) {
-        this.tagService.updateInteractionsCount(post.parentId)
+      if (parent && parent.tags && parent.tags.length > 0) {
+        this.tagService.updateInteractionsCount(parent.tags[0].id)
       }
     }
 
@@ -484,6 +484,11 @@ export class PostService {
       select: {
         authorId: true,
         tags: true,
+        parent: {
+          select: {
+            tags: true,
+          },
+        },
       },
     })
 
@@ -498,6 +503,10 @@ export class PostService {
 
     if (post.tags && post.tags.length > 0) {
       this.tagService.updateInteractionsCount(post.tags[0].id, false)
+    } else {
+      if (post.parent && post.parent.tags && post.parent.tags.length > 0) {
+        this.tagService.updateInteractionsCount(post.parent.tags[0].id, false)
+      }
     }
 
     this.deletePostFromAlgolia(postId)
