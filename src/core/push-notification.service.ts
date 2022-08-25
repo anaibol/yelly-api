@@ -408,9 +408,10 @@ export class PushNotificationService {
             return {
               to: token,
               sound: 'default' as const,
-              // Temporary message change for new hour annoucement
-              //  body: 'Yelly recommence ! Viens poster pour être à la Une⚡',
-              body: "Yelly redémarre à 19h à partir d'aujourd'hui !",
+              // TODO: use translation file
+              body: lang.startsWith('fr')
+                ? 'Yelly recommence ! Viens poster pour être à la Une⚡'
+                : 'Yelly restarts ! Come post to be on the Front Page⚡',
             }
           })
           .filter((v) => v)
