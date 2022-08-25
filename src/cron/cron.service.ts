@@ -19,7 +19,7 @@ export class CronQueue {
 
 @BullWorker({ queueName: APP_QUEUE, options: { concurrency: 1 } })
 export class CronWorker {
-  constructor(private pushNotificationService: PushNotificationService, private tagServer: TagService) {}
+  constructor(private pushNotificationService: PushNotificationService, private tagService: TagService) {}
 
   @BullWorkerProcess()
   public async process(job: Job): Promise<{ status: string }> {
@@ -39,7 +39,8 @@ export class CronWorker {
 
     if (job.name === 'computeTagRanking') {
       try {
-        // TODO: tagService.computeTagRanking function
+        // TODO: Check which date/hour to set
+        await this.tagService.computeTagRanking(new Date())
 
         return { status: 'ok' }
       } catch (error) {

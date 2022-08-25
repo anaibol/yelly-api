@@ -38,16 +38,30 @@ const isResetHoursPassed = (): boolean => {
 
 const getTodayResetDate = () => new Date(new Date().setHours(RESET_HOURS, 0, 0, 0))
 
+export const getResetDate = (date: Date) => new Date(date.setHours(RESET_HOURS, 0, 0, 0))
+
 export const getLastResetDate = () => {
   const todayResetDate = getTodayResetDate()
 
   return isResetHoursPassed() ? todayResetDate : sub(todayResetDate, { days: 1 })
 }
 
+export const getLastResetDateFromDate = (date: Date) => {
+  const resetDate = getResetDate(date)
+
+  return isResetHoursPassed() ? resetDate : sub(resetDate, { days: 1 })
+}
+
 export const getPreviousResetDate = () => {
   const todayResetDate = getTodayResetDate()
 
   return isResetHoursPassed() ? sub(todayResetDate, { days: 1 }) : sub(todayResetDate, { days: 2 })
+}
+
+export const getPreviousResetDateFromDate = (date: Date) => {
+  const resetDate = getResetDate(date)
+
+  return isResetHoursPassed() ? sub(resetDate, { days: 1 }) : sub(resetDate, { days: 2 })
 }
 
 export const getNextResetDate = () => {

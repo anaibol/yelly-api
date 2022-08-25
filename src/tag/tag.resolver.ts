@@ -158,7 +158,7 @@ export class TagResolver {
       SortDirection.desc
     )
 
-    // Get tags with at least 15 interactions ordered by engagment score
+    // Get tags with at least 10 interactions ordered by engagment score
     const selectedTags = orderBy(
       items.filter((tag) => tag.interactionsCount >= 10),
       'score',
