@@ -788,14 +788,15 @@ export class TagService {
     for (let index = 0; index < tags.length; index++) {
       const rank = index + 1
 
-      console.log('computeTagRankingCore:update', {
-        countryId,
-        isLessThanFifteen,
-        tagId: tags[index].id,
-        tagText: tags[index].text,
-        createdAt: tags[index].createdAt,
-        rank,
-      })
+      // DEBUG
+      // console.log('computeTagRankingCore:update', {
+      //   countryId,
+      //   isLessThanFifteen,
+      //   tagId: tags[index].id,
+      //   tagText: tags[index].text,
+      //   createdAt: tags[index].createdAt,
+      //   rank,
+      // })
 
       await this.prismaService.tag.update({
         where: {
