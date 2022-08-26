@@ -23,6 +23,8 @@ import { TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 const createNanoId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 10)
 
+const countryFrId = 'e4eee8e7-2770-4fb0-97bb-4839b06ff37b'
+
 const getTagsSort = (
   sortBy?: TagSortBy,
   sortDirection?: SortDirection
@@ -373,7 +375,7 @@ export class TagService {
     return { items, nextCursor, totalCount }
   }
 
-  async getTagsForRanking(date: Date, countryId: string, isLessThanFifteen: boolean, limit: number, after?: bigint) {
+  getWhereTagsForRanking(date: Date, isLessThanFifteen: boolean): Prisma.TagWhereInput {
     const fifteenYoYear = 2007
 
     const where: Prisma.TagWhereInput = {
@@ -381,7 +383,6 @@ export class TagService {
         gte: getPreviousResetDateFromDate(date),
         lt: getLastResetDateFromDate(date),
       },
-      countryId,
       isHidden: false,
       author: {
         isBanned: false,
@@ -394,6 +395,11 @@ export class TagService {
             },
       },
     }
+    return where
+  }
+
+  async getTagsForRanking(date: Date, countryId: string, isLessThanFifteen: boolean, limit: number, after?: bigint) {
+    const where: Prisma.TagWhereInput = { ...this.getWhereTagsForRanking(date, isLessThanFifteen), countryId }
 
     const [totalCount, tags] = await Promise.all([
       this.prismaService.tag.count({
@@ -710,28 +716,49 @@ export class TagService {
 
   async computeTagRanking(date: Date) {
     // France first 🇫🇷
-    const countryFrId = 'e4eee8e7-2770-4fb0-97bb-4839b06ff37b'
-
+    console.log('computeTagRanking:France:started')
     await Promise.all([
-      this.computeTagRankingCore(date, countryFrId, true),
       this.computeTagRankingCore(date, countryFrId, false),
+      this.computeTagRankingCore(date, countryFrId, true),
     ])
+    console.log('computeTagRanking:France:completed')
 
-    // TODO: Other countries
+    // All countries
+    console.log('computeTagRanking:All countries:started')
+    await this.computeTagRankingForAllCountries(date, false)
+    await this.computeTagRankingForAllCountries(date, true)
+    console.log('computeTagRanking:All completed:completed')
+  }
 
-    // Get the list of countries of the author of the tags for the specified date
+  async computeTagRankingForAllCountries(date: Date, isLessThanFifteen: boolean) {
+    // Get the list of countries of tags for the specified date
     // FR excluded
-    const countryIds: string[] = []
+    const where: Prisma.TagWhereInput = { ...this.getWhereTagsForRanking(date, true), countryId: { not: countryFrId } }
 
-    // Loop on the countries
+    const countries = await this.prismaService.tag.findMany({
+      where,
+      select: {
+        country: {
+          select: {
+            id: true,
+            code: true,
+          },
+        },
+      },
+      distinct: ['countryId'],
+    })
+
+    console.log(`computeTagRankingForAllCountries:countries`, {
+      count: countries.length,
+    })
+
     // eslint-disable-next-line functional/no-loop-statement, functional/no-let
-    for (let index = 0; index < countryIds.length; index++) {
-      if (countryIds[index] === countryFrId) continue
-
-      await Promise.all([
-        this.computeTagRankingCore(date, countryIds[index], true),
-        this.computeTagRankingCore(date, countryIds[index], false),
-      ])
+    for (let index = 0; index < countries.length; index++) {
+      const country = countries[index].country
+      if (!country) continue
+      console.log(`computeTagRankingForAllCountries:${country.code}:started`, { isLessThanFifteen })
+      await this.computeTagRankingCore(date, country.id, isLessThanFifteen)
+      console.log(`computeTagRankingForAllCountries:${country.code}:completed`, { isLessThanFifteen })
     }
   }
 
@@ -750,10 +777,26 @@ export class TagService {
 
     const tags = uniqBy(selectedTags, 'id')
 
+    // DEBUG
+    // console.log('computeTagRankingCore', {
+    //   tags: tags.map((tag) => ({ countryId, id: tag.id, text: tag.text, interactionsCount: tag.interactionsCount })),
+    // })
+
     // Update tags rank
     // Use loop to guarantee to wait for all the updates to be completed
     // eslint-disable-next-line functional/no-loop-statement, functional/no-let
     for (let index = 0; index < tags.length; index++) {
+      const rank = index + 1
+
+      console.log('computeTagRankingCore:update', {
+        countryId,
+        isLessThanFifteen,
+        tagId: tags[index].id,
+        tagText: tags[index].text,
+        createdAt: tags[index].createdAt,
+        rank,
+      })
+
       await this.prismaService.tag.update({
         where: {
           id: tags[index].id,
@@ -762,7 +805,7 @@ export class TagService {
           rank: index + 1,
         },
       })
-      return true
     }
+    return true
   }
 }
