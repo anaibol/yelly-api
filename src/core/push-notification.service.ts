@@ -409,16 +409,17 @@ export class PushNotificationService {
               to: token,
               sound: 'default' as const,
               // TODO: use translation file
-              body: lang.startsWith('fr')
-                ? 'Yelly recommence ! Viens poster pour être à la Une⚡'
-                : 'Yelly restarts! Come post to be on the Front Page⚡',
+              body: 'Yelly recommence ! Viens poster pour être à la Une⚡',
             }
           })
           .filter((v) => v)
       )
+      console.log('sendDailyReminder:started', { messagesLength: messages.length })
 
       // Typescript is not smart to recognize it will never be undefined
       await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_YELLY_RESET')
+
+      console.log('sendDailyReminder:completed')
     } catch (e) {
       console.log(e)
       // eslint-disable-next-line functional/no-throw-statement
