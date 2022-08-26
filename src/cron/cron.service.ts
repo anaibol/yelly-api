@@ -37,6 +37,7 @@ export class CronWorker {
       }
     }
 
+    // TODO: Create a dedicated cron service with a dedicated Worker?
     if (job.name === 'computeTagRanking') {
       try {
         // TODO: Check which date/hour to set

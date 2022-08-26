@@ -3,6 +3,7 @@ import { Module, OnModuleInit } from '@nestjs/common'
 import { Queue } from 'bullmq'
 
 import { CoreModule } from '../core/core.module'
+import { TagModule } from '../tag/tag.module'
 import { RESET_HOURS } from '../utils/dates'
 import { CronQueue, CronWorker } from './cron.service'
 
@@ -11,6 +12,7 @@ const APP_QUEUE = 'APP_QUEUE'
 @Module({
   imports: [
     CoreModule,
+    TagModule,
     BullModule.forRoot({
       options: {
         connection: {
