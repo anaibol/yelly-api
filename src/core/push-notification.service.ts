@@ -408,7 +408,10 @@ export class PushNotificationService {
             return {
               to: token,
               sound: 'default' as const,
-              body: 'Yelly recommence ! Viens poster pour être à la Une⚡',
+              // TODO: use translation file
+              body: lang.startsWith('fr')
+                ? 'Yelly recommence ! Viens poster pour être à la Une⚡'
+                : 'Yelly restarts! Come post to be on the Front Page⚡',
             }
           })
           .filter((v) => v)
