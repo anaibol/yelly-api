@@ -24,6 +24,14 @@ export class UserResolver {
     return this.userService.getUser(id)
   }
 
+  @Query(() => User)
+  @UseGuards(AuthGuard)
+  userByPhoneNumber(@Args('phoneNumber') phoneNumber: string, @CurrentUser() authUser: AuthUser): Promise<User> {
+    return authUser.isAdmin
+      ? this.userService.getUserByPhoneNumber(phoneNumber)
+      : Promise.reject(new Error('Access denied'))
+  }
+
   @Query(() => PaginatedUsers)
   @UseGuards(AuthGuard)
   users(@Args('ids', { type: () => [String] }) ids: string[]): Promise<PaginatedUsers> {

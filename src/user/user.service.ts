@@ -134,10 +134,16 @@ export class UserService {
   }
 
   async getUser(userId: string): Promise<User> {
+    return this.getUserCore({ id: userId })
+  }
+
+  async getUserByPhoneNumber(phoneNumber: string): Promise<User> {
+    return this.getUserCore({ phoneNumber })
+  }
+
+  async getUserCore(where: Prisma.UserWhereUniqueInput): Promise<User> {
     const res = await this.prismaService.user.findUnique({
-      where: {
-        id: userId,
-      },
+      where,
       select: {
         id: true,
         createdAt: true,
