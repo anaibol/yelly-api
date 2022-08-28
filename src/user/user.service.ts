@@ -742,6 +742,12 @@ export class UserService {
     return true
   }
 
+  async approveAge(authUser: AuthUser, userId: string): Promise<boolean> {
+    await this.prismaService.user.update({ where: { id: userId }, data: { isAgeApproved: true } })
+
+    return true
+  }
+
   async report(authUser: AuthUser, otherUserId: string): Promise<boolean> {
     await this.prismaService.userReport.create({
       data: { authorId: authUser.id, userId: otherUserId },
