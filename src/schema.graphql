@@ -433,6 +433,8 @@ type User {
   hasBlockedAuthUser: Boolean
   id: ID!
   instagram: String
+  isAgeApproved: Boolean
+  isBanned: Boolean
   isBlockedByAuthUser: Boolean
   isFollowedByAuthUser: Boolean
   lastName: String

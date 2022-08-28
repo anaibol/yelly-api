@@ -154,6 +154,8 @@ export class UserService {
         about: true,
         instagram: true,
         snapchat: true,
+        isBanned: true,
+        isAgeApproved: true,
         school: {
           select: {
             id: true,

@@ -22,6 +22,8 @@ export class User {
   isFollowedByAuthUser?: boolean
   hasBlockedAuthUser?: boolean
   isBlockedByAuthUser?: boolean
+  isBanned?: boolean | null
+  isAgeApproved?: boolean | null
   followersCount?: number
   followeesCount?: number
   postCount?: number
