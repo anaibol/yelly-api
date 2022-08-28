@@ -5,6 +5,7 @@ import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
+import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
 import { UserService } from './user.service'
 import { UserFolloweesArgs } from './user-followees.args'
@@ -140,6 +141,18 @@ export class UserResolver {
   @UseGuards(AuthGuard)
   async isUserFollowedByAuthUser(@Args('userId') userId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
     return this.userService.isFollowedByUser(userId, authUser.id)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => User)
+  updateUser(
+    @Args('userId') userId: string,
+    @Args('input') updateUserInput: UpdateUserInput,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<User> {
+    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
+
+    return this.userService.update(userId, updateUserInput)
   }
 
   @Mutation(() => Boolean)

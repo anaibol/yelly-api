@@ -189,6 +189,7 @@ type Mutation {
   updateAgeVerification(facePictureId: String!): AgeVerificationResult!
   updateMe(input: UpdateUserInput!): Me!
   updateTag(input: UpdateTagInput!, tagId: BigInt!): Tag!
+  updateUser(input: UpdateUserInput!, userId: String!): User!
 }
 
 type Notification {
