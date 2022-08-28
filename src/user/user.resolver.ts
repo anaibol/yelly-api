@@ -24,6 +24,14 @@ export class UserResolver {
     return this.userService.getUser(id)
   }
 
+  @Query(() => User)
+  @UseGuards(AuthGuard)
+  userByPhoneNumber(@Args('phoneNumber') phoneNumber: string, @CurrentUser() authUser: AuthUser): Promise<User> {
+    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
+
+    return this.userService.getUserByPhoneNumber(phoneNumber)
+  }
+
   @Query(() => PaginatedUsers)
   @UseGuards(AuthGuard)
   users(@Args('ids', { type: () => [String] }) ids: string[]): Promise<PaginatedUsers> {
@@ -148,6 +156,14 @@ export class UserResolver {
     if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
 
     return this.userService.ban(userId)
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  approveUserAge(@CurrentUser() authUser: AuthUser, @Args('userId') userId: string): Promise<boolean> {
+    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
+
+    return this.userService.approveAge(authUser, userId)
   }
 
   @Mutation(() => Boolean)
