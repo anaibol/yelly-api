@@ -1,6 +1,5 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
-import { orderBy, uniqBy } from 'lodash'
 
 import { SortDirection } from '../app.module'
 import { AuthUser } from '../auth/auth.service'
@@ -154,28 +153,16 @@ export class TagResolver {
       showScoreFactor,
       1000,
       undefined,
-      TagSortBy.score,
-      SortDirection.desc
+      TagSortBy.rank,
+      SortDirection.asc
     )
 
-    // Get tags with at least 10 interactions ordered by engagment score
-    const selectedTags = orderBy(
-      items.filter((tag) => tag.interactionsCount >= 10),
-      'score',
-      'desc'
-    )
-
-    // eslint-disable-next-line functional/immutable-data
-    selectedTags.push(...items)
-
-    const tags = uniqBy(selectedTags, 'id')
-      .slice(skip, skip + limit)
-      .map((tag) => ({
-        ...tag,
-        // Display score for admin only
-        score: authUser.isAdmin ? tag?.score : undefined,
-        scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
-      }))
+    const tags = items.slice(skip, skip + limit).map((tag) => ({
+      ...tag,
+      // Display score for admin only
+      score: authUser.isAdmin ? tag?.score : undefined,
+      scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
+    }))
 
     const nextSkip = skip + limit
 

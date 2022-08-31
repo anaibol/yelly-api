@@ -803,7 +803,7 @@ export class TagService {
           id: tags[index].id,
         },
         data: {
-          rank: index + 1,
+          rank,
         },
       })
     }
