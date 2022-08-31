@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common'
 import { Job, Queue } from 'bullmq'
 
 import { PushNotificationService } from '../core/push-notification.service'
+import { TagService } from '../tag/tag.service'
 
 const APP_QUEUE = 'APP_QUEUE'
 
@@ -18,20 +19,39 @@ export class CronQueue {
 
 @BullWorker({ queueName: APP_QUEUE, options: { concurrency: 1 } })
 export class CronWorker {
-  constructor(private pushNotificationService: PushNotificationService) {}
+  constructor(private pushNotificationService: PushNotificationService, private tagService: TagService) {}
 
   @BullWorkerProcess()
   public async process(job: Job): Promise<{ status: string }> {
     console.log('APP_QUEUE CRON RUN', { date: new Date(), job })
 
-    try {
-      await this.pushNotificationService.sendDailyReminder()
+    if (job.name === 'sendDailyReminder') {
+      try {
+        await this.pushNotificationService.sendDailyReminder()
 
-      return { status: 'ok' }
-    } catch (error) {
-      console.log({ error })
+        return { status: 'ok' }
+      } catch (error) {
+        console.log({ error })
 
-      return { status: 'error' }
+        return { status: 'error' }
+      }
     }
+
+    // TODO: Create a dedicated cron service with a dedicated Worker?
+    if (job.name === 'computeTagRanking') {
+      try {
+        // TODO: Check which date/hour to set
+        await this.tagService.computeTagRanking(new Date())
+
+        return { status: 'ok' }
+      } catch (error) {
+        console.log({ error })
+
+        return { status: 'error' }
+      }
+    }
+
+    console.log({ error: 'Invalid job name' })
+    return { status: 'error' }
   }
 }

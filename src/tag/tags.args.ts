@@ -8,6 +8,8 @@ export enum TagSortBy {
   createdAt = 'createdAt',
   postCount = 'postCount',
   reactionsCount = 'reactionsCount',
+  score = 'score',
+  rank = 'rank',
 }
 
 registerEnumType(TagSortBy, {

@@ -153,24 +153,27 @@ model Follower {
 }
 
 model Tag {
-  id              BigInt         @id @default(dbgenerated("generate_id()"))
-  nanoId          String?        @unique
-  text            String
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @default(now()) @updatedAt
-  type            TagType        @default(STANDARD)
-  posts           Post[]
-  countryId       String?
-  country         Country?       @relation(fields: [countryId], references: [id])
-  isHidden        Boolean        @default(false)
-  author          User?          @relation(fields: [authorId], references: [id])
-  authorId        String?
-  reactions       TagReaction[]
-  viewsCount      Int            @default(0)
-  activities      Activity[]
-  notifications   Notification[]
-  hasBeenTrending Boolean        @default(false)
-  scoreFactor     Float?         @default(1)
+  id                BigInt         @id @default(dbgenerated("generate_id()"))
+  nanoId            String?        @unique
+  text              String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @default(now()) @updatedAt
+  type              TagType        @default(STANDARD)
+  posts             Post[]
+  countryId         String?
+  country           Country?       @relation(fields: [countryId], references: [id])
+  isHidden          Boolean        @default(false)
+  author            User?          @relation(fields: [authorId], references: [id])
+  authorId          String?
+  reactions         TagReaction[]
+  viewsCount        Int            @default(0)
+  interactionsCount Int            @default(0)
+  activities        Activity[]
+  notifications     Notification[]
+  hasBeenTrending   Boolean        @default(false)
+  score             Float?         @default(0)
+  scoreFactor       Float?         @default(1)
+  rank              Int            @default(0)
 
   @@index([createdAt])
   @@index([authorId])
@@ -261,7 +264,7 @@ model TagReaction {
   text           String
   tagId          BigInt
   authorId       String?
-  author         User?          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author         User?         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   tag            Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
   activity       Activity?
   activityId     String?

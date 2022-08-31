@@ -3,6 +3,7 @@ import { Module, OnModuleInit } from '@nestjs/common'
 import { Queue } from 'bullmq'
 
 import { CoreModule } from '../core/core.module'
+import { TagModule } from '../tag/tag.module'
 import { RESET_HOURS } from '../utils/dates'
 import { CronQueue, CronWorker } from './cron.service'
 
@@ -11,6 +12,7 @@ const APP_QUEUE = 'APP_QUEUE'
 @Module({
   imports: [
     CoreModule,
+    TagModule,
     BullModule.forRoot({
       options: {
         connection: {
@@ -34,6 +36,13 @@ export class CronModule implements OnModuleInit {
     await this.queue.drain(true)
 
     await this.queue.add('sendDailyReminder', undefined, {
+      repeat: {
+        cron: `0 ${RESET_HOURS} * * *`,
+        tz: 'Europe/Paris',
+      },
+    })
+
+    await this.queue.add('computeTagRanking', undefined, {
       repeat: {
         cron: `0 ${RESET_HOURS} * * *`,
         tz: 'Europe/Paris',

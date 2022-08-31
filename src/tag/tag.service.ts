@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { ActivityType, NotificationType, Prisma, TagType } from '@prisma/client'
+import { orderBy, uniqBy } from 'lodash'
 import { customAlphabet } from 'nanoid'
 
 import { SortDirection } from '../app.module'
@@ -8,7 +9,12 @@ import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
 import { PushNotificationService } from '../core/push-notification.service'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
-import { getLastResetDate, getPreviousResetDate } from '../utils/dates'
+import {
+  getLastResetDate,
+  getLastResetDateFromDate,
+  getPreviousResetDate,
+  getPreviousResetDateFromDate,
+} from '../utils/dates'
 import { CreateAnonymousTagReactionInput, CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { Tag } from './tag.model'
 import { TagReaction } from './tag-reaction.model'
@@ -16,6 +22,8 @@ import { tagSelect } from './tag-select.constant'
 import { TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 const createNanoId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 10)
+
+const countryFrId = 'e4eee8e7-2770-4fb0-97bb-4839b06ff37b'
 
 const getTagsSort = (
   sortBy?: TagSortBy,
@@ -40,6 +48,26 @@ const getTagsSort = (
           reactions: {
             _count: sortDirection,
           },
+        },
+        {
+          createdAt: 'desc' as const,
+        },
+      ]
+
+    case 'score':
+      return [
+        {
+          score: sortDirection,
+        },
+        {
+          createdAt: 'desc' as const,
+        },
+      ]
+
+    case 'rank':
+      return [
+        {
+          rank: sortDirection,
         },
         {
           createdAt: 'desc' as const,
@@ -314,20 +342,6 @@ export class TagService {
       },
     }
 
-    const tagSelectWithPostInteractions = {
-      ...tagSelect,
-      posts: {
-        select: {
-          _count: {
-            select: {
-              children: true,
-              reactions: true,
-            },
-          },
-        },
-      },
-    }
-
     const [totalCount, tags] = await Promise.all([
       this.prismaService.tag.count({
         where,
@@ -342,30 +356,74 @@ export class TagService {
         }),
         orderBy: getTagsSort(sortBy, sortDirection),
         take: limit,
-        select: showScoreFactor
-          ? tagSelectWithPostInteractions
-          : { ...tagSelectWithPostInteractions, scoreFactor: false },
+        select: showScoreFactor ? tagSelect : { ...tagSelect, score: false, scoreFactor: false },
       }),
     ])
 
     const items = tags.map((tag) => {
-      const postInteractions = tag.posts.reduce(
-        (prev, post) => ({
-          childrenCount: prev.childrenCount + post._count.children,
-          reactionsCount: prev.reactionsCount + post._count.reactions,
-        }),
-        { childrenCount: 0, reactionsCount: 0 }
-      )
-      const interactionsCount =
-        tag._count.posts + tag._count.reactions + postInteractions.childrenCount + postInteractions.reactionsCount
-
       return {
         ...tag,
-        // remove posts from the result
-        posts: undefined,
         postCount: tag._count.posts,
         reactionsCount: tag._count.reactions,
-        interactionsCount,
+      }
+    })
+
+    const lastItem = items.length === limit ? items[limit - 1] : null
+
+    const nextCursor = lastItem ? lastItem.id : null
+
+    return { items, nextCursor, totalCount }
+  }
+
+  getWhereTagsForRanking(date: Date, isLessThanFifteen: boolean): Prisma.TagWhereInput {
+    const fifteenYoYear = 2007
+
+    const where: Prisma.TagWhereInput = {
+      createdAt: {
+        gte: getPreviousResetDateFromDate(date),
+        lt: getLastResetDateFromDate(date),
+      },
+      isHidden: false,
+      author: {
+        isBanned: false,
+        birthdate: isLessThanFifteen
+          ? {
+              gte: new Date(fifteenYoYear + '-01-01'),
+            }
+          : {
+              lte: new Date(fifteenYoYear + '-01-01'),
+            },
+      },
+    }
+    return where
+  }
+
+  async getTagsForRanking(date: Date, countryId: string, isLessThanFifteen: boolean, limit: number, after?: bigint) {
+    const where: Prisma.TagWhereInput = { ...this.getWhereTagsForRanking(date, isLessThanFifteen), countryId }
+
+    const [totalCount, tags] = await Promise.all([
+      this.prismaService.tag.count({
+        where,
+      }),
+      this.prismaService.tag.findMany({
+        where,
+        ...(after && {
+          cursor: {
+            id: after,
+          },
+          skip: 1,
+        }),
+        orderBy: getTagsSort(TagSortBy.score, SortDirection.desc),
+        take: limit,
+        select: tagSelect,
+      }),
+    ])
+
+    const items = tags.map((tag) => {
+      return {
+        ...tag,
+        postCount: tag._count.posts,
+        reactionsCount: tag._count.reactions,
       }
     })
 
@@ -481,6 +539,8 @@ export class TagService {
       },
     })
 
+    this.updateInteractionsCount(tag.id)
+
     if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
 
     this.pushNotificationService.reactedToYourTag(reaction.id)
@@ -517,6 +577,8 @@ export class TagService {
         }),
       },
     })
+
+    this.updateInteractionsCount(tag.id)
 
     if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
 
@@ -575,24 +637,176 @@ export class TagService {
       where: { authorId: authUser.id, tagId },
     })
 
+    this.updateInteractionsCount(tagId, false)
+
     return true
   }
 
   async trackTagViews(tagsIds: bigint[]): Promise<boolean> {
-    await this.prismaService.tag.updateMany({
-      where: { id: { in: tagsIds } },
-      data: { viewsCount: { increment: 1 } },
+    const tags = await this.prismaService.tag.findMany({
+      where: {
+        id: { in: tagsIds },
+      },
+      select: {
+        id: true,
+        viewsCount: true,
+        interactionsCount: true,
+        scoreFactor: true,
+      },
+    })
+
+    const promises: Promise<any>[] = []
+
+    tags.forEach((tag) =>
+      // eslint-disable-next-line functional/immutable-data
+      promises.push(
+        this.prismaService.tag.update({
+          where: { id: tag.id },
+          data: {
+            viewsCount: { increment: 1 },
+            score: this.getTagScore({ ...tag, viewsCount: tag.viewsCount + 1 }),
+          },
+        })
+      )
+    )
+
+    await Promise.all(promises)
+
+    return true
+  }
+
+  async updateInteractionsCount(tagId: bigint, isIncrement = true): Promise<boolean> {
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagId,
+      },
+      select: {
+        viewsCount: true,
+        interactionsCount: true,
+        scoreFactor: true,
+      },
+    })
+
+    if (!tag) return Promise.reject(new Error('No tag'))
+
+    // TODO: Use a single transaction for both read and update counters
+    await this.prismaService.tag.update({
+      where: { id: tagId },
+      data: {
+        interactionsCount: isIncrement ? { increment: 1 } : { decrement: 1 },
+        score: this.getTagScore({ ...tag, interactionsCount: tag.interactionsCount + (isIncrement ? 1 : -1) }),
+      },
     })
 
     return true
   }
 
-  getTagScore(tag: Tag & { interactionsCount: number }) {
-    if (!tag.viewsCount || tag.viewsCount === 0) return 0
+  getTagScore({
+    viewsCount,
+    interactionsCount,
+    scoreFactor,
+  }: {
+    viewsCount?: number
+    interactionsCount: number
+    scoreFactor: number | null
+  }) {
+    if (!viewsCount || viewsCount === 0 || !interactionsCount || interactionsCount === 0) return 0
+    return (interactionsCount / viewsCount) * (scoreFactor ?? 1)
+  }
 
-    const scoreFactor = tag.scoreFactor ?? 1
-    const score = (tag.interactionsCount / tag.viewsCount) * scoreFactor
+  async computeTagRanking(date: Date) {
+    // France first 🇫🇷
+    console.log('computeTagRanking:France:started')
+    await Promise.all([
+      this.computeTagRankingCore(date, countryFrId, false),
+      this.computeTagRankingCore(date, countryFrId, true),
+    ])
+    console.log('computeTagRanking:France:completed')
 
-    return score
+    // All countries
+    console.log('computeTagRanking:All countries:started')
+    await this.computeTagRankingForAllCountries(date, false)
+    await this.computeTagRankingForAllCountries(date, true)
+    console.log('computeTagRanking:All completed:completed')
+  }
+
+  async computeTagRankingForAllCountries(date: Date, isLessThanFifteen: boolean) {
+    // Get the list of countries of tags for the specified date
+    // FR excluded
+    const where: Prisma.TagWhereInput = { ...this.getWhereTagsForRanking(date, true), countryId: { not: countryFrId } }
+
+    const countries = await this.prismaService.tag.findMany({
+      where,
+      select: {
+        country: {
+          select: {
+            id: true,
+            code: true,
+          },
+        },
+      },
+      distinct: ['countryId'],
+    })
+
+    console.log(`computeTagRankingForAllCountries:countries`, {
+      count: countries.length,
+    })
+
+    // eslint-disable-next-line functional/no-loop-statement, functional/no-let
+    for (let index = 0; index < countries.length; index++) {
+      const country = countries[index].country
+      if (!country) continue
+      console.log(`computeTagRankingForAllCountries:${country.code}:started`, { isLessThanFifteen })
+      await this.computeTagRankingCore(date, country.id, isLessThanFifteen)
+      console.log(`computeTagRankingForAllCountries:${country.code}:completed`, { isLessThanFifteen })
+    }
+  }
+
+  async computeTagRankingCore(date: Date, countryId: string, isLessThanFifteen: boolean) {
+    const { items } = await this.getTagsForRanking(date, countryId, isLessThanFifteen, 1000)
+
+    // Get tags with at least 10 interactions ordered by engagment score
+    const selectedTags = orderBy(
+      items.filter((tag) => tag.interactionsCount >= 10),
+      'score',
+      'desc'
+    )
+
+    // eslint-disable-next-line functional/immutable-data
+    selectedTags.push(...items)
+
+    const tags = uniqBy(selectedTags, 'id')
+
+    // DEBUG
+    // console.log('computeTagRankingCore', {
+    //   tags: tags.map((tag) => ({ countryId, id: tag.id, text: tag.text, interactionsCount: tag.interactionsCount })),
+    // })
+
+    // Update tags rank
+    // Use loop to guarantee to wait for all the updates to be completed
+    // eslint-disable-next-line functional/no-loop-statement, functional/no-let
+    for (let index = 0; index < tags.length; index++) {
+      const rank = index + 1
+
+      // DEBUG
+      // console.log('computeTagRankingCore:update', {
+      //   countryId,
+      //   isLessThanFifteen,
+      //   tagId: tags[index].id,
+      //   tagText: tags[index].text,
+      //   createdAt: tags[index].createdAt,
+      //   rank,
+      // })
+
+      await this.prismaService.tag.update({
+        where: {
+          id: tags[index].id,
+        },
+        data: {
+          rank,
+        },
+      })
+    }
+    return true
   }
 }

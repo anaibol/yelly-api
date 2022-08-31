@@ -8,6 +8,7 @@ import { PushNotificationService } from 'src/core/push-notification.service'
 import { SortDirection } from '../app.module'
 import { PrismaService } from '../core/prisma.service'
 import { PostsSortBy } from '../posts/posts.args'
+import { TagService } from '../tag/tag.service'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { CreatePostInput } from './create-post.input'
 import { PaginatedPosts } from './paginated-posts.model'
@@ -68,6 +69,7 @@ export class PostService {
   constructor(
     private prismaService: PrismaService,
     private pushNotificationService: PushNotificationService,
+    private tagService: TagService,
     private algoliaService: AlgoliaService
   ) {}
   async trackPostViews(postIds: bigint[]): Promise<boolean> {
@@ -391,6 +393,14 @@ export class PostService {
       },
     })
 
+    if (tagIds && tagIds.length > 0) {
+      this.tagService.updateInteractionsCount(tagIds[0])
+    } else {
+      if (parent && parent.tags && parent.tags.length > 0) {
+        this.tagService.updateInteractionsCount(parent.tags[0].id)
+      }
+    }
+
     this.syncPostIndexWithAlgolia(post.id)
 
     if (parent && authUser.id !== parent.authorId) {
@@ -473,6 +483,12 @@ export class PostService {
       },
       select: {
         authorId: true,
+        tags: true,
+        parent: {
+          select: {
+            tags: true,
+          },
+        },
       },
     })
 
@@ -484,6 +500,14 @@ export class PostService {
         id: postId,
       },
     })
+
+    if (post.tags && post.tags.length > 0) {
+      this.tagService.updateInteractionsCount(post.tags[0].id, false)
+    } else {
+      if (post.parent && post.parent.tags && post.parent.tags.length > 0) {
+        this.tagService.updateInteractionsCount(post.parent.tags[0].id, false)
+      }
+    }
 
     this.deletePostFromAlgolia(postId)
 
@@ -551,6 +575,14 @@ export class PostService {
 
     if (post.author.id !== authUser.id) this.pushNotificationService.reactedToYourPost(reaction.id)
 
+    if (post.tags && post.tags.length > 0) {
+      this.tagService.updateInteractionsCount(post.tags[0].id)
+    } else {
+      if (post.parent && post.parent.tags && post.parent.tags.length > 0) {
+        this.tagService.updateInteractionsCount(post.parent.tags[0].id)
+      }
+    }
+
     return {
       ...reaction,
       post: mapPost(post),
@@ -560,11 +592,33 @@ export class PostService {
   async deletePostReaction(postId: bigint, authUser: AuthUser): Promise<boolean> {
     const authorId = authUser.id
 
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+      select: {
+        tags: true,
+        parent: {
+          select: {
+            tags: true,
+          },
+        },
+      },
+    })
+
+    if (!post) return Promise.reject(new Error('No post'))
+
     await this.prismaService.postReaction.delete({
       where: {
         authorId_postId: { authorId, postId },
       },
     })
+
+    if (post.tags && post.tags.length > 0) {
+      this.tagService.updateInteractionsCount(post.tags[0].id, false)
+    } else {
+      if (post.parent && post.parent.tags && post.parent.tags.length > 0) {
+        this.tagService.updateInteractionsCount(post.parent.tags[0].id, false)
+      }
+    }
 
     return true
   }

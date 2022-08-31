@@ -362,11 +362,13 @@ type Tag {
   createdAt: DateTime
   hasBeenTrending: Boolean
   id: BigInt!
+  interactionsCount: Int
   isHidden: Boolean
   isReadOnly: Boolean
   nanoId: String
   postCount: Int
   posts: PaginatedPosts
+  rank: Int
   reactionsCount: Int
   score: Float
   scoreFactor: Float
@@ -385,7 +387,9 @@ type TagReaction {
 enum TagSortBy {
   createdAt
   postCount
+  rank
   reactionsCount
+  score
 }
 
 enum TagType {
