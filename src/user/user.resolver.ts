@@ -5,6 +5,7 @@ import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
+import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
 import { UserService } from './user.service'
 import { UserFolloweesArgs } from './user-followees.args'
@@ -22,6 +23,14 @@ export class UserResolver {
   @UseGuards(AuthGuard)
   user(@Args('id') id: string): Promise<User> {
     return this.userService.getUser(id)
+  }
+
+  @Query(() => User)
+  @UseGuards(AuthGuard)
+  userByPhoneNumber(@Args('phoneNumber') phoneNumber: string, @CurrentUser() authUser: AuthUser): Promise<User> {
+    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
+
+    return this.userService.getUserByPhoneNumber(phoneNumber)
   }
 
   @Query(() => PaginatedUsers)
@@ -134,6 +143,18 @@ export class UserResolver {
     return this.userService.isFollowedByUser(userId, authUser.id)
   }
 
+  @UseGuards(AuthGuard)
+  @Mutation(() => User)
+  updateUser(
+    @Args('userId') userId: string,
+    @Args('input') updateUserInput: UpdateUserInput,
+    @CurrentUser() authUser: AuthUser
+  ): Promise<User> {
+    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
+
+    return this.userService.update(userId, updateUserInput)
+  }
+
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
   deleteUser(@CurrentUser() authUser: AuthUser, @Args('userId') userId: string): Promise<boolean> {
@@ -148,6 +169,14 @@ export class UserResolver {
     if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
 
     return this.userService.ban(userId)
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  approveUserAge(@CurrentUser() authUser: AuthUser, @Args('userId') userId: string): Promise<boolean> {
+    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
+
+    return this.userService.approveAge(authUser, userId)
   }
 
   @Mutation(() => Boolean)

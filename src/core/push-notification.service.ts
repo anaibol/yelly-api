@@ -393,7 +393,6 @@ export class PushNotificationService {
   }
 
   async sendDailyReminder(): Promise<void> {
-    if (process.env.NODE_ENV === 'development') return
     // eslint-disable-next-line functional/no-try-statement
     try {
       console.log('sendDailyReminder')
@@ -409,16 +408,19 @@ export class PushNotificationService {
               to: token,
               sound: 'default' as const,
               // TODO: use translation file
-              body: lang.startsWith('fr')
-                ? 'Yelly recommence ! Viens poster pour être à la Une⚡'
-                : 'Yelly restarts! Come post to be on the Front Page⚡',
+              body: 'Il est 19h 🕖 Viens discuter de l’actu de la journée⚡',
             }
           })
           .filter((v) => v)
       )
+      console.log('sendDailyReminder:started', { messagesLength: messages.length })
 
-      // Typescript is not smart to recognize it will never be undefined
-      await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_YELLY_RESET')
+      if (process.env.NODE_ENV !== 'development') {
+        // Typescript is not smart to recognize it will never be undefined
+        await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_YELLY_RESET')
+      }
+
+      console.log('sendDailyReminder:completed')
     } catch (e) {
       console.log(e)
       // eslint-disable-next-line functional/no-throw-statement

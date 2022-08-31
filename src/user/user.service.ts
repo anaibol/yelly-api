@@ -134,10 +134,16 @@ export class UserService {
   }
 
   async getUser(userId: string): Promise<User> {
+    return this.getUserCore({ id: userId })
+  }
+
+  async getUserByPhoneNumber(phoneNumber: string): Promise<User> {
+    return this.getUserCore({ phoneNumber })
+  }
+
+  async getUserCore(where: Prisma.UserWhereUniqueInput): Promise<User> {
     const res = await this.prismaService.user.findUnique({
-      where: {
-        id: userId,
-      },
+      where,
       select: {
         id: true,
         createdAt: true,
@@ -148,6 +154,8 @@ export class UserService {
         about: true,
         instagram: true,
         snapchat: true,
+        isBanned: true,
+        isAgeApproved: true,
         school: {
           select: {
             id: true,
@@ -732,6 +740,12 @@ export class UserService {
     const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
     this.algoliaService.deleteObject(algoliaUserIndex, userId)
+
+    return true
+  }
+
+  async approveAge(authUser: AuthUser, userId: string): Promise<boolean> {
+    await this.prismaService.user.update({ where: { id: userId }, data: { isAgeApproved: true } })
 
     return true
   }
