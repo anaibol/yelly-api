@@ -35,6 +35,16 @@ export class CronModule implements OnModuleInit {
   async onModuleInit() {
     await this.queue.drain(true)
 
+    // Clean repeatable jobs
+    const repeatableJobs = await this.queue.getRepeatableJobs()
+    console.log('onModuleInit:repeatableJobs', { repeatableJobs })
+
+    // eslint-disable-next-line functional/no-loop-statement, functional/no-let
+    for (let i = 0; i < repeatableJobs.length; i++) {
+      const job = repeatableJobs[i]
+      await this.queue.removeRepeatable(job.name, { cron: job.cron, tz: job.tz })
+    }
+
     await this.queue.add('sendDailyReminder', undefined, {
       repeat: {
         cron: `0 ${RESET_HOURS} * * *`,
@@ -48,5 +58,8 @@ export class CronModule implements OnModuleInit {
         tz: 'Europe/Paris',
       },
     })
+
+    const repeatableJobsAfter = await this.queue.getRepeatableJobs()
+    console.log('onModuleInit:repeatableJobsAfter', { repeatableJobsAfter })
   }
 }
