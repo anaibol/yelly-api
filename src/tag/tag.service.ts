@@ -367,6 +367,8 @@ export class TagService {
     const items = tags.map((tag) => {
       return {
         ...tag,
+        // Performance optimization to not call tag.rank resolver today rank computation
+        rank: isYesterday ? tag.rank : undefined,
         postCount: tag._count.posts,
         reactionsCount: tag._count.reactions,
       }

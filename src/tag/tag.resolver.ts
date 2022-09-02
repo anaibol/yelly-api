@@ -201,6 +201,12 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @ResolveField()
   async rank(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<number | undefined> {
+    // Return 0 if tag rank is undefined
+    // tag service set the rank to undefined to optimize performance on some queries
+    if (tag.rank === undefined) {
+      return 0
+    }
+
     // Return existing tag rank
     if (tag.rank && tag.rank > 0) {
       return tag.rank
