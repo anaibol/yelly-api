@@ -133,6 +133,7 @@ type Me {
   firstName: String
   followeesCount: Int
   followersCount: Int
+  frontPageTagsCount: Int
   id: ID!
   instagram: String
   isAgeApproved: Boolean
@@ -435,6 +436,7 @@ type User {
   firstName: String
   followeesCount: Int
   followersCount: Int
+  frontPageTagsCount: Int
   hasBlockedAuthUser: Boolean
   id: ID!
   instagram: String

@@ -39,6 +39,7 @@ export class Me {
   tagViewsCount?: number
   tagReactionsCount?: number
   trendingTagsCount?: number
+  frontPageTagsCount?: number
 }
 
 @ObjectType()

@@ -15,6 +15,7 @@ import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { SchoolService } from '../school/school.service'
+import { TagService } from '../tag/tag.service'
 import { deleteObject, getObject } from '../utils/aws'
 import { getLastResetDate } from '../utils/dates'
 import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
@@ -96,7 +97,8 @@ export class UserService {
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
     private pushNotificationService: PushNotificationService,
-    private postService: PostService
+    private postService: PostService,
+    private tagService: TagService
   ) {}
 
   async trackUserView(userId: string): Promise<boolean> {
@@ -590,6 +592,40 @@ export class UserService {
         authorId: userId,
       },
     })
+  }
+
+  async getFrontPageTagsCount(user: User): Promise<number> {
+    const pastFrontPageTagsCount = await this.prismaService.tag.count({
+      where: {
+        rank: {
+          gt: 0,
+          lte: 5,
+        },
+        authorId: user.id,
+      },
+    })
+
+    const todayTags = await this.prismaService.tag.findMany({
+      where: {
+        authorId: user.id,
+        createdAt: {
+          gte: getLastResetDate(),
+        },
+      },
+      orderBy: {
+        score: SortDirection.desc,
+      },
+    })
+
+    if (todayTags.length === 0) return pastFrontPageTagsCount
+
+    // We take only the first created tag of the day
+    // TODO: Performance optimzation via caching or data loader?
+    const rank = await this.tagService.getTodayTagRank(user, todayTags[0].id)
+    const increment = rank > 0 && rank <= 5 ? 1 : 0
+    const totalFrontPageTagsCount = pastFrontPageTagsCount + increment
+
+    return totalFrontPageTagsCount
   }
 
   async findMe(userId: string): Promise<Me> {

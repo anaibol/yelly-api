@@ -1,6 +1,5 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
-import { orderBy, uniqBy } from 'lodash'
 
 import { SortDirection } from '../app.module'
 import { AuthUser } from '../auth/auth.service'
@@ -145,55 +144,7 @@ export class TagResolver {
 
     const { isYesterday, skip, limit } = tagsByRankArgs
 
-    // We need the score factor to compute the ranking
-    const showScoreFactor = true
-
-    const { items, totalCount } = await this.tagService.getTags(
-      authUser,
-      isYesterday,
-      showScoreFactor,
-      1000,
-      undefined,
-      isYesterday ? TagSortBy.rank : TagSortBy.score,
-      isYesterday ? SortDirection.asc : SortDirection.desc
-    )
-
-    // Today rank is computed at runtime
-    if (!isYesterday) {
-      // Get tags with at least 10 interactions ordered by engagment score
-      const selectedTags = orderBy(
-        items.filter((tag) => tag.interactionsCount >= 10),
-        'score',
-        'desc'
-      )
-
-      // eslint-disable-next-line functional/immutable-data
-      selectedTags.push(...items)
-
-      const tags = uniqBy(selectedTags, 'id')
-        .slice(skip, skip + limit)
-        .map((tag) => ({
-          ...tag,
-          // Display score for admin only
-          score: authUser.isAdmin ? tag?.score : undefined,
-          scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
-        }))
-
-      const nextSkip = skip + limit
-
-      return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
-    }
-
-    const tags = items.slice(skip, skip + limit).map((tag) => ({
-      ...tag,
-      // Display score for admin only
-      score: authUser.isAdmin ? tag?.score : undefined,
-      scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
-    }))
-
-    const nextSkip = skip + limit
-
-    return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
+    return await this.tagService.getTagsByRank(authUser, isYesterday, limit, skip)
   }
 
   @UseGuards(AuthGuard)
@@ -245,6 +196,27 @@ export class TagResolver {
   @ResolveField()
   async authUserReaction(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<TagReaction | null> {
     return this.tagService.getAuthUserReaction(tag.id, authUser)
+  }
+
+  @UseGuards(AuthGuard)
+  @ResolveField()
+  async rank(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<number | undefined> {
+    // Return existing tag rank
+    if (tag.rank && tag.rank > 0) {
+      return tag.rank
+    }
+
+    const tagCreatedAt = tag?.createdAt
+    const lastResetDate = getLastResetDate()
+
+    // Return 0 for old tags without rank
+    if (tagCreatedAt === undefined || tagCreatedAt < lastResetDate) {
+      return tag.rank
+    }
+
+    // Compute tag rank at runtime
+    // TODO: performance optimization with cache? data loader?
+    return this.tagService.getTodayTagRank(authUser, tag.id)
   }
 
   @UseGuards(AuthGuard)

@@ -9,6 +9,7 @@ import { AlgoliaService } from '../core/algolia.service'
 import { PrismaService } from '../core/prisma.service'
 import { PushNotificationService } from '../core/push-notification.service'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
+import { User } from '../user/user.model'
 import {
   getLastResetDate,
   getLastResetDateFromDate,
@@ -284,7 +285,7 @@ export class TagService {
   }
 
   async getTags(
-    authUser: AuthUser,
+    authUser: User | AuthUser,
     isYesterday: boolean,
     showScoreFactor: boolean,
     limit: number,
@@ -294,7 +295,10 @@ export class TagService {
     showHidden?: boolean,
     authorId?: string
   ) {
-    if (showHidden && !authUser?.isAdmin) return Promise.reject(new Error('No admin'))
+    const isAuthUserType = (authUser as AuthUser).isAdmin !== undefined
+    const isAdmin = isAuthUserType && (authUser as AuthUser).isAdmin
+
+    if (showHidden && isAdmin) return Promise.reject(new Error('No admin'))
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
@@ -373,6 +377,69 @@ export class TagService {
     const nextCursor = lastItem ? lastItem.id : null
 
     return { items, nextCursor, totalCount }
+  }
+
+  async getTodayTagRank(user: AuthUser | User, tagId: bigint): Promise<number> {
+    const { items } = await this.getTagsByRank(user, false, 1000, 0)
+
+    const index = items.findIndex(({ id }) => id === tagId)
+
+    return index < 0 ? 0 : index + 1
+  }
+
+  async getTagsByRank(authUser: User | AuthUser, isYesterday: boolean, limit: number, skip: number) {
+    // We need the score factor to compute the ranking
+    const showScoreFactor = true
+    const isAuthUserType = (authUser as AuthUser).isAdmin !== undefined
+    const isAdmin = isAuthUserType && (authUser as AuthUser).isAdmin
+
+    const { items, totalCount } = await this.getTags(
+      authUser,
+      isYesterday,
+      showScoreFactor,
+      1000,
+      undefined,
+      isYesterday ? TagSortBy.rank : TagSortBy.score,
+      isYesterday ? SortDirection.asc : SortDirection.desc
+    )
+
+    // Today rank is computed at runtime
+    if (!isYesterday) {
+      // Get tags with at least 10 interactions ordered by engagment score
+      const selectedTags = orderBy(
+        items.filter((tag) => tag.interactionsCount >= 10),
+        'score',
+        'desc'
+      )
+
+      // eslint-disable-next-line functional/immutable-data
+      selectedTags.push(...items)
+
+      const tags = uniqBy(selectedTags, 'id')
+        .slice(skip, skip + limit)
+        .map((tag, index) => ({
+          ...tag,
+          rank: skip + index + 1,
+          // Display score for admin only
+          score: isAdmin ? tag?.score : undefined,
+          scoreFactor: isAdmin ? tag.scoreFactor : undefined,
+        }))
+
+      const nextSkip = skip + limit
+
+      return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
+    }
+
+    const tags = items.slice(skip, skip + limit).map((tag) => ({
+      ...tag,
+      // Display score for admin only
+      score: isAdmin ? tag?.score : undefined,
+      scoreFactor: isAdmin ? tag.scoreFactor : undefined,
+    }))
+
+    const nextSkip = skip + limit
+
+    return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
   }
 
   getWhereTagsForRanking(date: Date, isLessThanFifteen: boolean): Prisma.TagWhereInput {
