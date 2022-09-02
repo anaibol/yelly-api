@@ -236,7 +236,7 @@ type PaginatedTags {
 
 type PaginatedTagsByRank {
   items: [Tag!]!
-  nextSkip: BigInt
+  nextSkip: Int
   totalCount: Int!
 }
 
