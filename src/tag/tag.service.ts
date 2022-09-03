@@ -364,11 +364,14 @@ export class TagService {
       }),
     ])
 
+    // Performance optimization to not do rank computation in the tag.rank resolver
+    // for today tags
+    const isPerformanceOptimization = authorId === undefined && !isYesterday
+
     const items = tags.map((tag) => {
       return {
         ...tag,
-        // Performance optimization to not call tag.rank resolver today rank computation
-        rank: isYesterday ? tag.rank : undefined,
+        rank: isPerformanceOptimization && tag.rank === 0 ? undefined : tag.rank,
         postCount: tag._count.posts,
         reactionsCount: tag._count.reactions,
       }
