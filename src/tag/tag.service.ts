@@ -298,7 +298,9 @@ export class TagService {
     const isAuthUserType = (authUser as AuthUser).isAdmin !== undefined
     const isAdmin = isAuthUserType && (authUser as AuthUser).isAdmin
 
-    if (showHidden && isAdmin) return Promise.reject(new Error('No admin'))
+    if (showHidden && !isAdmin) {
+      return Promise.reject(new Error('No admin'))
+    }
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
