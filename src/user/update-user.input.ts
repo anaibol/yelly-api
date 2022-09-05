@@ -12,6 +12,7 @@ export class UpdateUserInput {
   pictureId?: string
   trainingName?: string
   schoolGooglePlaceId?: string
+  countryCode?: string
   about?: string
   isFilled?: boolean
 }

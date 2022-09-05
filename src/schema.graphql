@@ -411,6 +411,7 @@ input UpdateTagInput {
 input UpdateUserInput {
   about: String
   birthdate: DateTime
+  countryCode: String
   email: String
   firstName: String
   instagram: String

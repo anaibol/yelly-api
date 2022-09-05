@@ -962,6 +962,8 @@ export class UserService {
 
   async update(userId: string, data: UpdateUserInput): Promise<Me> {
     const schoolData = data.schoolGooglePlaceId && (await this.schoolService.getOrCreate(data.schoolGooglePlaceId))
+    const country =
+      data.countryCode && (await this.prismaService.country.findUnique({ where: { code: data.countryCode } }))
 
     const updatedUser = await this.prismaService.user.update({
       where: {
@@ -981,6 +983,7 @@ export class UserService {
         instagram: true,
         snapchat: true,
         about: true,
+        countryId: true,
         school: {
           select: {
             id: true,
@@ -1026,6 +1029,13 @@ export class UserService {
           country: {
             connect: {
               id: schoolData.city.countryId,
+            },
+          },
+        }),
+        ...(country && {
+          country: {
+            connect: {
+              id: country.id,
             },
           },
         }),
