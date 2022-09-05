@@ -6,6 +6,7 @@ import { AlgoliaService } from 'src/core/algolia.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
 
 import { SortDirection } from '../app.module'
+import { BodyguardService } from '../core/bodyguard.service'
 import { PrismaService } from '../core/prisma.service'
 import { PostsSortBy } from '../posts/posts.args'
 import { TagService } from '../tag/tag.service'
@@ -70,7 +71,8 @@ export class PostService {
     private prismaService: PrismaService,
     private pushNotificationService: PushNotificationService,
     private tagService: TagService,
-    private algoliaService: AlgoliaService
+    private algoliaService: AlgoliaService,
+    private bodyguardService: BodyguardService
   ) {}
   async trackPostViews(postIds: bigint[]): Promise<boolean> {
     await this.prismaService.post.updateMany({
@@ -393,12 +395,22 @@ export class PostService {
       },
     })
 
-    if (tagIds && tagIds.length > 0) {
-      this.tagService.updateInteractionsCount(tagIds[0])
-    } else {
-      if (parent && parent.tags && parent.tags.length > 0) {
-        this.tagService.updateInteractionsCount(parent.tags[0].id)
+    const getAssociatedTag = async () => {
+      if (tagIds && tagIds.length > 0) {
+        // TODO: Performance optimization: add a tag parameter to create post
+        return await this.tagService.getTag(tagIds[0], authUser)
+      } else {
+        if (parent && parent.tags && parent.tags.length > 0) {
+          return parent.tags[0]
+        }
       }
+    }
+
+    const associatedTag = await getAssociatedTag()
+
+    if (associatedTag) {
+      this.tagService.updateInteractionsCount(associatedTag.id)
+      this.bodyguardService.analyseComment(post, authUser, associatedTag)
     }
 
     this.syncPostIndexWithAlgolia(post.id)

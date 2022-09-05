@@ -6,6 +6,7 @@ import { customAlphabet } from 'nanoid'
 import { SortDirection } from '../app.module'
 import { AuthUser } from '../auth/auth.service'
 import { AlgoliaService } from '../core/algolia.service'
+import { BodyguardService } from '../core/bodyguard.service'
 import { PrismaService } from '../core/prisma.service'
 import { PushNotificationService } from '../core/push-notification.service'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
@@ -87,7 +88,8 @@ export class TagService {
   constructor(
     private prismaService: PrismaService,
     private algoliaService: AlgoliaService,
-    private pushNotificationService: PushNotificationService
+    private pushNotificationService: PushNotificationService,
+    private bodyguardService: BodyguardService
   ) {}
   async syncTagIndexWithAlgolia(tagId: bigint) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
@@ -265,6 +267,8 @@ export class TagService {
         },
       },
     })
+
+    this.bodyguardService.analyseTopic(tag, authUser)
 
     this.syncTagIndexWithAlgolia(tag.id)
 

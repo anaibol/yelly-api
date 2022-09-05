@@ -4,6 +4,7 @@ import { ExpoPushNotificationsTokenService } from 'src/user/expoPushNotification
 
 import { AlgoliaService } from './algolia.service'
 import { AmplitudeService } from './amplitude.service'
+import { BodyguardService } from './bodyguard.service'
 import { EmailService } from './email.service'
 import { PrismaService } from './prisma.service'
 import { PushNotificationService } from './push-notification.service'
@@ -19,6 +20,7 @@ import TwilioService from './twilio.service'
     ExpoPushNotificationsTokenService,
     PushNotificationService,
     AmplitudeService,
+    BodyguardService,
   ],
   exports: [
     PrismaService,
@@ -28,6 +30,7 @@ import TwilioService from './twilio.service'
     ExpoPushNotificationsTokenService,
     PushNotificationService,
     AmplitudeService,
+    BodyguardService,
   ],
 })
 export class CoreModule {}
