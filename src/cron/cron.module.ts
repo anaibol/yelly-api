@@ -45,12 +45,12 @@ export class CronModule implements OnModuleInit {
       await this.queue.removeRepeatable(job.name, { cron: job.cron, tz: job.tz })
     }
 
-    await this.queue.add('sendDailyReminder', undefined, {
-      repeat: {
-        cron: `0 ${RESET_HOURS} * * *`,
-        tz: 'Europe/Paris',
-      },
-    })
+    // await this.queue.add('sendDailyReminder', undefined, {
+    //   repeat: {
+    //     cron: `0 ${RESET_HOURS} * * *`,
+    //     tz: 'Europe/Paris',
+    //   },
+    // })
 
     await this.queue.add('computeTagRanking', undefined, {
       repeat: {
