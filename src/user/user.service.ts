@@ -1032,6 +1032,9 @@ export class UserService {
             },
           },
         }),
+        ...(data.schoolGooglePlaceId === null && {
+          school: { disconnect: true },
+        }),
         ...(country && {
           country: {
             connect: {
@@ -1050,6 +1053,9 @@ export class UserService {
               },
             },
           },
+        }),
+        ...(data.trainingName === null && {
+          training: { disconnect: true },
         }),
       },
     })
