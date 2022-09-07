@@ -121,62 +121,6 @@ export class TagService {
     return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id.toString())
   }
 
-  // async createOrUpdateLiveTag(text: string, isLive: boolean, authUser: AuthUser): Promise<Tag> {
-  //   if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-  //   const authUserCountry = await this.prismaService.school
-  //     .findUnique({
-  //       where: { id: authUser.schoolId },
-  //     })
-  //     .city()
-  //     .country()
-
-  //   // Get tag from text
-  //   const tag = await this.prismaService.tag.findUnique({
-  //     where: {
-  //       text,
-  //     },
-  //   })
-
-  //   const newTag = tag
-  //     ? // If tag exists update isLive
-  //       await this.prismaService.tag.update({
-  //         where: {
-  //           id: tag.id,
-  //         },
-  //         data: {
-  //           isLive,
-  //           countryId: authUserCountry?.id,
-  //         },
-  //       })
-  //     : // Else create it with isLive: true
-  //       await this.prismaService.tag.create({
-  //         data: {
-  //           text,
-  //           isLive,
-  //           countryId: authUserCountry?.id,
-  //         },
-  //       })
-
-  //   // Delete all tags without posts and isLive: false
-  //   await this.prismaService.tag.deleteMany({
-  //     where: {
-  //       isLive: false,
-  //       posts: {
-  //         every: {
-  //           id: {
-  //             in: [],
-  //           },
-  //         },
-  //       },
-  //     },
-  //   })
-
-  //   if (isLive) this.pushNotificationService.newLiveTag(newTag.id)
-
-  //   return newTag
-  // }
-
   async getTag(tagId: bigint, authUser: AuthUser): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
@@ -291,6 +235,7 @@ export class TagService {
   async getTags(
     authUser: User | AuthUser,
     isYesterday: boolean,
+    isForYou: boolean,
     showScoreFactor: boolean,
     limit: number,
     after?: bigint,
@@ -349,6 +294,18 @@ export class TagService {
           : {
               lte: new Date(fifteenYoYear + '-01-01'),
             },
+        ...(isForYou && {
+          id: {
+            not: authUser.id,
+          },
+        }),
+        ...(isForYou && {
+          followers: {
+            some: {
+              userId: authUser.id,
+            },
+          },
+        }),
       },
     }
 
@@ -391,14 +348,14 @@ export class TagService {
   }
 
   async getTodayTagRank(user: AuthUser | User, tagId: bigint): Promise<number> {
-    const { items } = await this.getTagsByRank(user, false, 1000, 0)
+    const { items } = await this.getTagsByRank(user, false, false, 1000, 0)
 
     const index = items.findIndex(({ id }) => id === tagId)
 
     return index < 0 ? 0 : index + 1
   }
 
-  async getTagsByRank(authUser: User | AuthUser, isYesterday: boolean, limit: number, skip: number) {
+  async getTagsByRank(authUser: User | AuthUser, isYesterday: boolean, isForYou: boolean, limit: number, skip: number) {
     // We need the score factor to compute the ranking
     const showScoreFactor = true
     const isAuthUserType = (authUser as AuthUser).isAdmin !== undefined
@@ -407,6 +364,7 @@ export class TagService {
     const { items, totalCount } = await this.getTags(
       authUser,
       isYesterday,
+      isForYou,
       showScoreFactor,
       1000,
       undefined,
@@ -525,27 +483,6 @@ export class TagService {
   }
 
   async createPromotedTag(tagText: string, _authUser: AuthUser): Promise<Tag> {
-    // if (!authUser.schoolId) return Promise.reject(new Error('No school'))
-
-    // const authUserCountry = await this.prismaService.school
-    //   .findUnique({
-    //     where: { id: authUser.schoolId },
-    //   })
-    //   .city()
-    //   .country()
-
-    // Get tag from text
-    // const tag = await this.prismaService.tag.upsert({
-    //   where: {
-    //     text: tagText,
-    //   },
-    //   create: {
-    //     text: tagText,
-    //     countryId: authUserCountry?.id,
-    //   },
-    //   update: {},
-    // })
-
     const tag = await this.prismaService.tag.findFirst({
       where: {
         text: tagText,
@@ -684,6 +621,7 @@ export class TagService {
         isAdmin: false,
         isNotAdmin: true,
       },
+      false,
       false,
       false,
       5,

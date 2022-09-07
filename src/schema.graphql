@@ -322,8 +322,8 @@ type Query {
   tag(tagId: BigInt!): Tag!
   tagByNanoId(tagNanoId: String!): Tag!
   tagExists(tagText: String!): Boolean!
-  tags(after: BigInt, authorId: String, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
-  tagsByRank(isYesterday: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTagsByRank!
+  tags(after: BigInt, authorId: String, isForYou: Boolean = false, isYesterday: Boolean = false, limit: Int = 10, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
+  tagsByRank(isForYou: Boolean = false, isYesterday: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTagsByRank!
   tagsByScore(limit: Int = 10, skip: Int = 0): PaginatedTagsByScore!
   unreadNotificationsCount: Int!
   user(id: String!): User!

@@ -72,7 +72,7 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
   async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
-    const { authorId, isYesterday, after, limit, sortBy, sortDirection, showHidden } = tagsArgs
+    const { authorId, isYesterday, isForYou, after, limit, sortBy, sortDirection, showHidden } = tagsArgs
     const showScoreFactor = authUser.isAdmin
 
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
@@ -80,6 +80,7 @@ export class TagResolver {
     const { items, nextCursor, totalCount } = await this.tagService.getTags(
       authUser,
       isYesterday,
+      isForYou,
       showScoreFactor,
       limit,
       after,
@@ -114,6 +115,7 @@ export class TagResolver {
     const { items, totalCount } = await this.tagService.getTags(
       authUser,
       false,
+      false,
       showScoreFactor,
       1000,
       undefined,
@@ -141,9 +143,9 @@ export class TagResolver {
   ): Promise<PaginatedTagsByRank> {
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
-    const { isYesterday, skip, limit } = tagsByRankArgs
+    const { isYesterday, isForYou, skip, limit } = tagsByRankArgs
 
-    return await this.tagService.getTagsByRank(authUser, isYesterday, limit, skip)
+    return await this.tagService.getTagsByRank(authUser, isYesterday, isForYou, limit, skip)
   }
 
   @UseGuards(AuthGuard)
