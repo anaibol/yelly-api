@@ -318,4 +318,6 @@ enum ActivityType {
 enum TagType {
   STANDARD
   BREAKING
+  VERSUS
+  POLL
 }
