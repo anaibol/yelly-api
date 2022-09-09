@@ -11,6 +11,7 @@ import { PrismaService } from '../core/prisma.service'
 import { PushNotificationService } from '../core/push-notification.service'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { User } from '../user/user.model'
+import { UserService } from '../user/user.service'
 import {
   getLastResetDate,
   getLastResetDateFromDate,
@@ -89,7 +90,8 @@ export class TagService {
     private prismaService: PrismaService,
     private algoliaService: AlgoliaService,
     private pushNotificationService: PushNotificationService,
-    private bodyguardService: BodyguardService
+    private bodyguardService: BodyguardService,
+    private userService: UserService
   ) {}
   async syncTagIndexWithAlgolia(tagId: bigint) {
     const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
@@ -216,7 +218,8 @@ export class TagService {
 
     this.syncTagIndexWithAlgolia(tag.id)
 
-    this.pushNotificationService.followeeCreatedTag(tag.id)
+    // No more needed with the audience feature
+    //this.pushNotificationService.followeeCreatedTag(tag.id)
 
     return tag
   }
@@ -494,7 +497,7 @@ export class TagService {
 
     if (!tag) return Promise.reject(new Error('No tag'))
 
-    this.pushNotificationService.promotedTag(tag)
+    //this.pushNotificationService.promotedTag(tag)
 
     return tag
   }
@@ -555,6 +558,9 @@ export class TagService {
     })
 
     this.updateInteractionsCount(tag.id)
+    if (tag.authorId && tag.authorId !== authUser.id) {
+      this.userService.follow(authUser.id, tag.authorId)
+    }
 
     if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
 

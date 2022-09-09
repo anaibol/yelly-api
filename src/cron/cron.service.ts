@@ -25,9 +25,22 @@ export class CronWorker {
   public async process(job: Job): Promise<{ status: string }> {
     console.log('APP_QUEUE CRON RUN', { date: new Date(), job })
 
-    if (job.name === 'sendDailyReminder') {
+    // if (job.name === 'sendDailyReminder') {
+    //   try {
+    //     await this.pushNotificationService.sendDailyReminder()
+
+    //     return { status: 'ok' }
+    //   } catch (error) {
+    //     console.log({ error })
+
+    //     return { status: 'error' }
+    //   }
+    // }
+
+    // TODO: Create a dedicated cron service with a dedicated Worker?
+    if (job.name === 'computeTagRanking') {
       try {
-        await this.pushNotificationService.sendDailyReminder()
+        await this.tagService.computeTagRanking(new Date())
 
         return { status: 'ok' }
       } catch (error) {
@@ -37,11 +50,9 @@ export class CronWorker {
       }
     }
 
-    // TODO: Create a dedicated cron service with a dedicated Worker?
-    if (job.name === 'computeTagRanking') {
+    if (job.name === 'sendDailyAudience') {
       try {
-        // TODO: Check which date/hour to set
-        await this.tagService.computeTagRanking(new Date())
+        await this.pushNotificationService.sendDailyAudience()
 
         return { status: 'ok' }
       } catch (error) {

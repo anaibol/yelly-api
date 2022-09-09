@@ -59,6 +59,14 @@ export class CronModule implements OnModuleInit {
       },
     })
 
+    await this.queue.add('sendDailyAudience', undefined, {
+      repeat: {
+        cron: `55 ${RESET_HOURS - 1} * * *`,
+        // DEBUG cron: `05 17 * * *`,
+        tz: 'Europe/Paris',
+      },
+    })
+
     const repeatableJobsAfter = await this.queue.getRepeatableJobs()
     console.log('onModuleInit:repeatableJobsAfter', { repeatableJobsAfter })
   }

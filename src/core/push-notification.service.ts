@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import { ExpoPushNotificationAccessToken, Follower, NotificationType, Tag } from '@prisma/client'
+import { ExpoPushNotificationAccessToken, Follower, NotificationType } from '@prisma/client'
 import { ExpoPushMessage } from 'expo-server-sdk'
 import { I18nService } from 'nestjs-i18n'
 
 import { TrackEventPrefix } from '../types/trackEventPrefix'
 import { ExpoPushNotificationsTokenService } from '../user/expoPushNotificationsToken.service'
+import { getLastResetDate } from '../utils/dates'
 import expo from '../utils/expo'
 import { AmplitudeService } from './amplitude.service'
 import { PrismaService } from './prisma.service'
@@ -346,51 +347,51 @@ export class PushNotificationService {
     return Promise.allSettled(promises)
   }
 
-  async promotedTag(tag: Tag): Promise<void> {
-    if (process.env.NODE_ENV === 'development') return
+  // async promotedTag(tag: Tag): Promise<void> {
+  //   if (process.env.NODE_ENV === 'development') return
 
-    if (!tag?.countryId) return Promise.reject(new Error('No tag'))
+  //   if (!tag?.countryId) return Promise.reject(new Error('No tag'))
 
-    const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
-      .$queryRaw`
-    SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken", "City", "School"
-    WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"
-    AND "User"."schoolId" = "School"."id"
-    AND "School"."cityId" = "City"."id"
-    AND "City"."countryId" =  ${tag.countryId}`
-    const url = `${process.env.APP_BASE_URL}/tags/${tag.id}`
+  //   const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
+  //     .$queryRaw`
+  //   SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken", "City", "School"
+  //   WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"
+  //   AND "User"."schoolId" = "School"."id"
+  //   AND "School"."cityId" = "City"."id"
+  //   AND "City"."countryId" =  ${tag.countryId}`
+  //   const url = `${process.env.APP_BASE_URL}/tags/${tag.id}`
 
-    // eslint-disable-next-line functional/no-try-statement
-    try {
-      const messages = await Promise.all(
-        allPushTokens
-          .map(async ({ token, locale: lang }) => {
-            return {
-              to: token,
-              sound: 'default' as const,
-              body: 'Debrief ton bac philo sur Yelly! #DebriefBacPhilo',
-              data: { url },
-            }
-            // return {
-            //   to: token,
-            //   sound: 'default' as const,
-            //   title: await this.i18n
-            //     .translate('notifications.promotedTag', { ...(lang && { lang }) })
-            //     .catch(() => null),
-            //   body: '#' + tag.text,
-            //   data: { url },
-            // }
-          })
-          .filter((v) => v)
-      )
+  //   // eslint-disable-next-line functional/no-try-statement
+  //   try {
+  //     const messages = await Promise.all(
+  //       allPushTokens
+  //         .map(async ({ token }) => {
+  //           return {
+  //             to: token,
+  //             sound: 'default' as const,
+  //             body: 'Debrief ton bac philo sur Yelly! #DebriefBacPhilo',
+  //             data: { url },
+  //           }
+  //           // return {
+  //           //   to: token,
+  //           //   sound: 'default' as const,
+  //           //   title: await this.i18n
+  //           //     .translate('notifications.promotedTag', { ...(lang && { lang }) })
+  //           //     .catch(() => null),
+  //           //   body: '#' + tag.text,
+  //           //   data: { url },
+  //           // }
+  //         })
+  //         .filter((v) => v)
+  //     )
 
-      // Typescript is not smart to recognize it will never be undefined
-      await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_PROMOTED_TAG')
-    } catch (e) {
-      // eslint-disable-next-line functional/no-throw-statement
-      throw e
-    }
-  }
+  //     // Typescript is not smart to recognize it will never be undefined
+  //     await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_PROMOTED_TAG')
+  //   } catch (e) {
+  //     // eslint-disable-next-line functional/no-throw-statement
+  //     throw e
+  //   }
+  // }
 
   async sendDailyReminder(): Promise<void> {
     // eslint-disable-next-line functional/no-try-statement
@@ -426,6 +427,68 @@ export class PushNotificationService {
       // eslint-disable-next-line functional/no-throw-statement
       throw e
     }
+  }
+
+  async sendDailyAudience(): Promise<void> {
+    console.log('sendDailyAudience:started')
+
+    const followers = await this.prismaService.follower.groupBy({
+      by: ['followeeId'],
+      _count: {
+        userId: true,
+      },
+      where: {
+        createdAt: {
+          gte: getLastResetDate(),
+        },
+      },
+    })
+
+    console.log('sendDailyAudience', { followersCount: followers.length })
+
+    if (followers.length === 0) {
+      console.log('sendDailyAudience:completed:nothing to do')
+      return
+    }
+
+    // TODO: Performance: Use a single query (raw?) to get the group by and the language and tokens
+    followers.forEach(async (follower) => {
+      const user = await this.prismaService.user.findUnique({
+        where: {
+          id: follower.followeeId,
+        },
+        select: {
+          firstName: true,
+          locale: true,
+          expoPushNotificationTokens: true,
+        },
+      })
+
+      if (!user || user.expoPushNotificationTokens.length === 0) {
+        return
+      }
+
+      const newPeopleCount = follower._count.userId
+      const lang = user.locale
+      const pushTokens = user.expoPushNotificationTokens
+
+      const messages = await Promise.all(
+        pushTokens.map(async (expoPushNotificationToken) => ({
+          to: expoPushNotificationToken.token,
+          sound: 'default' as const,
+          body: await this.i18n.translate('notifications.newAudience', {
+            args: { newPeopleCount },
+            ...(lang && { lang }),
+          }),
+        }))
+      )
+
+      // DEBUG
+      // console.log('sendDailyAudience:sendNotifications', { firstName: user.firstName, messages })
+      await this.sendNotifications(messages, pushTokens, 'PUSH_NOTIFICATION_NEW_AUDIENCE')
+    })
+
+    console.log('sendDailyAudience:completed')
   }
 
   async reactedToYourTag(tagReactionId: bigint) {

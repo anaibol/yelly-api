@@ -13,5 +13,6 @@
   "promotedTag": "Tendance Yelly live",
   "followeeCreatedTag": "{otherUserFirstName} a lancé le sujet #{tagText}",
   "youHaveBeenMentioned": "{otherUserFirstName} a mentionné ton nom sur #{tagText}",
-  "youHaveBeenMentionedNoTag": "{otherUserFirstName} a mentionné ton nom"
+  "youHaveBeenMentionedNoTag": "{otherUserFirstName} a mentionné ton nom",
+  "newAudience":  "Bravo pour ton sujet ! {newPeopleCount} nouvelles personnes ont rejoint ton audience"
 }

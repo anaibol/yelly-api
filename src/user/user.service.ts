@@ -1,5 +1,5 @@
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
-import { Injectable } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { NotificationType, Prisma } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
@@ -97,7 +97,9 @@ export class UserService {
     private algoliaService: AlgoliaService,
     private schoolService: SchoolService,
     private pushNotificationService: PushNotificationService,
+    @Inject(forwardRef(() => PostService))
     private postService: PostService,
+    @Inject(forwardRef(() => TagService))
     private tagService: TagService
   ) {}
 
@@ -839,12 +841,21 @@ export class UserService {
   }
 
   async follow(userId: string, followeeId: string): Promise<boolean> {
-    const [isBlockerByUser, hasBlockedUser] = await Promise.all([
+    if (userId === followeeId) {
+      return false
+    }
+
+    const [isBlockerByUser, hasBlockedUser, isAlreadyFollowed] = await Promise.all([
       this.isBlockedByUser(followeeId, userId),
       this.isBlockedByUser(userId, followeeId),
+      this.isFollowedByUser(followeeId, userId),
     ])
 
     if (isBlockerByUser || hasBlockedUser) return Promise.reject(new Error('User is blocked'))
+
+    if (isAlreadyFollowed) {
+      return true
+    }
 
     const follower = await this.prismaService.follower.create({
       data: {

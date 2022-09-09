@@ -10,6 +10,7 @@ import { BodyguardService } from '../core/bodyguard.service'
 import { PrismaService } from '../core/prisma.service'
 import { PostsSortBy } from '../posts/posts.args'
 import { TagService } from '../tag/tag.service'
+import { UserService } from '../user/user.service'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { CreatePostInput } from './create-post.input'
 import { PaginatedPosts } from './paginated-posts.model'
@@ -72,7 +73,8 @@ export class PostService {
     private pushNotificationService: PushNotificationService,
     private tagService: TagService,
     private algoliaService: AlgoliaService,
-    private bodyguardService: BodyguardService
+    private bodyguardService: BodyguardService,
+    private userService: UserService
   ) {}
   async trackPostViews(postIds: bigint[]): Promise<boolean> {
     await this.prismaService.post.updateMany({
@@ -82,144 +84,6 @@ export class PostService {
 
     return true
   }
-
-  // async findForYou(authUser: AuthUser, limit: number, currentCursor?: string): Promise<PaginatedPosts> {
-  //   const userAge = authUser.birthdate && dates.getAge(authUser.birthdate)
-  //   const datesRanges = userAge ? dates.getDateRanges(userAge) : undefined
-
-  //   if (!authUser.schoolId) return Promise.reject(new Error('No user school'))
-
-  //   const school = await this.prismaService.school.findUnique({
-  //     where: { id: authUser.schoolId },
-  //   })
-  // if (!school) return Promise.reject(new Error('No school'))
-
-  // const maxDistance = 5 // 5Km
-  // const maxSchools = 50
-
-  // const nearSchools: { id: string; distance: number }[] = await this.prismaService.$queryRaw`
-  //   select * from (
-  //     select id, round(cast(ST_DistanceSphere(ST_SetSRID(ST_MakePoint(lng,lat),4326), ST_SetSRID(ST_MakePoint(${school.lng}, ${school.lat}),4326)) / 1000 as Numeric), 2) as distance
-  //     from public."School"
-  //   ) as schools
-  //   where distance < ${maxDistance}
-  //   order by distance asc
-  //   limit ${maxSchools}
-  // `
-
-  //   const authUserCountry = await this.prismaService.city
-  //     .findUnique({
-  //       where: { id: school.cityId },
-  //     })
-  //     .country()
-
-  //   if (!authUserCountry) return Promise.reject(new Error('No country'))
-
-  //   if (!school) return Promise.reject(new Error('No school'))
-
-  // const maxDistance = 5 // 5Km
-  // const maxSchools = 50
-
-  // const nearSchools: { id: string; distance: number }[] = await this.prismaService.$queryRaw`
-  //   select * from (
-  //     select id, round(cast(ST_Distance(ST_MakePoint(lng,lat)::geography, ST_MakePoint(${school.lng}, ${school.lat})::geography) / 1000 as Numeric), 2) as distance
-  //     from public."School"
-  //   ) as schools
-  //   where distance < ${maxDistance}
-  //   order by distance asc
-  //   limit ${maxSchools}
-  // `
-
-  //   const posts = await this.prismaService.post.findMany({
-  //     take: limit,
-  //     where: {
-  //       author: {
-  //         NOT: {
-  //           id: authUser.id,
-  //         },
-  //         OR: [
-  //           {
-  //             // Users from the around schools and on the same date range (it includes his school)
-  //             birthdate: datesRanges,
-  //             schoolId: {
-  //               in: nearSchools.map(({ id }) => id), // it includes his school
-  //             },
-  //           },
-  //           {
-  //             friends: {
-  //               some: {
-  //                 // his friends
-  //                 otherUser: {
-  //                   OR: [
-  //                     {
-  //                       id: authUser.id,
-  //                     },
-  //                     // {
-  //                     //   // and the friends of his friends
-  //                     //   // if the author has as a friend in common with me it means he is a friend of a friend
-  //                     //   school: {
-  //                     //     city: {
-  //                     //       countryId: authUserCountry.id,
-  //                     //     },
-  //                     //   },
-  //                     //   friends: {
-  //                     //     some: {
-  //                     //       otherUserId: authUser.id,
-  //                     //     },
-  //                     //   },
-  //                     // },
-  //                   ],
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         ],
-  //       },
-  //     },
-  //     ...(currentCursor && {
-  //       cursor: {
-  //         id: currentCursor,
-  //       },
-  //       skip: 1,
-  //     }),
-  //     orderBy: {
-  //       createdAt: 'desc',
-  //     },
-  //     select: PostSelectWithParent,
-  //   })
-
-  //   const items = posts.map((post) => {
-  //     const { school } = post.author
-
-  //     if (!school) return post
-
-  //     const nearSchool = nearSchools.find(({ id }) => id === school?.id)
-
-  //     if (!nearSchool) return post
-
-  //     const pollOptions = post.pollOptions.map((o) => ({
-  //       id: o.id,
-  //       text: o.text,
-  //       votesCount: o._count.votes,
-  //     }))
-
-  //     return {
-  //       ...post,
-  //       ...(pollOptions.length && { pollOptions }),
-  //       author: {
-  //         ...post.author,
-  //         school: {
-  //           ...school,
-  //           distance: nearSchool.distance,
-  //         },
-  //       },
-  //     }
-  //   })
-
-  //   const nextCursor = items.length === limit ? items[limit - 1].createdAt.getTime().toString() : ''
-
-  //   return { items, nextCursor }
-  // }
 
   async getPost(
     postId: bigint,
@@ -395,21 +259,14 @@ export class PostService {
       },
     })
 
-    const getAssociatedTag = async () => {
-      if (tagIds && tagIds.length > 0) {
-        // TODO: Performance optimization: add a tag parameter to create post
-        return await this.tagService.getTag(tagIds[0], authUser)
-      } else {
-        if (parent && parent.tags && parent.tags.length > 0) {
-          return parent.tags[0]
-        }
-      }
-    }
-
-    const associatedTag = await getAssociatedTag()
+    const parentTagIds = parent ? parent?.tags?.map((tag) => tag.id) : undefined
+    const associatedTag = await this.getAssociatedTag(authUser, tagIds, parentTagIds)
 
     if (associatedTag) {
       this.tagService.updateInteractionsCount(associatedTag.id)
+      if (associatedTag?.author?.id && associatedTag?.author?.id !== authUser.id) {
+        this.userService.follow(authUser.id, associatedTag?.author?.id)
+      }
       this.bodyguardService.analyseComment(post, authUser, associatedTag)
     }
 
@@ -585,15 +442,16 @@ export class PostService {
       },
     })
 
-    if (post.author.id !== authUser.id) this.pushNotificationService.reactedToYourPost(reaction.id)
+    const associatedTag = await this.getPostAssociatedTag(authUser, post)
 
-    if (post.tags && post.tags.length > 0) {
-      this.tagService.updateInteractionsCount(post.tags[0].id)
-    } else {
-      if (post.parent && post.parent.tags && post.parent.tags.length > 0) {
-        this.tagService.updateInteractionsCount(post.parent.tags[0].id)
+    if (associatedTag) {
+      this.tagService.updateInteractionsCount(associatedTag.id)
+      if (associatedTag?.author?.id && associatedTag?.author?.id !== authUser.id) {
+        this.userService.follow(authUser.id, associatedTag.author.id)
       }
     }
+
+    if (post.author.id !== authUser.id) this.pushNotificationService.reactedToYourPost(reaction.id)
 
     return {
       ...reaction,
@@ -785,5 +643,22 @@ export class PostService {
         reaction,
       }
     })
+  }
+
+  async getPostAssociatedTag(authUser: AuthUser, post: Post) {
+    const tagIds = post.tags?.map((tag) => tag.id)
+    const parentTagIds = post?.parent?.tags && post.parent?.tags.map((tag) => tag.id)
+    return this.getAssociatedTag(authUser, tagIds, parentTagIds)
+  }
+
+  async getAssociatedTag(authUser: AuthUser, tagIds: bigint[] | undefined, parentTagIds: bigint[] | undefined) {
+    if (tagIds && tagIds.length > 0) {
+      // TODO: Performance optimization: add a tag parameter to create post
+      return await this.tagService.getTag(tagIds[0], authUser)
+    } else {
+      if (parentTagIds && parentTagIds.length > 0) {
+        return await this.tagService.getTag(parentTagIds[0], authUser)
+      }
+    }
   }
 }
