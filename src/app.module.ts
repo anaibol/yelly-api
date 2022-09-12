@@ -2,7 +2,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { Module } from '@nestjs/common'
 import { GraphQLModule, registerEnumType } from '@nestjs/graphql'
 import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginUsageReporting } from 'apollo-server-core'
-import { I18nJsonParser, I18nModule } from 'nestjs-i18n'
+import { I18nModule } from 'nestjs-i18n'
 import { join } from 'path'
 
 // import { CommonFriendsLoader } from './user/common-friends.loader'
@@ -97,9 +97,9 @@ registerEnumType(SortDirection, {
         'es-*': 'es',
         'fr-*': 'fr',
       },
-      parser: I18nJsonParser,
-      parserOptions: {
+      loaderOptions: {
         path: join(process.cwd(), 'src/i18n'),
+        watch: true,
       },
     }),
   ],

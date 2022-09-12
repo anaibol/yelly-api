@@ -20,7 +20,7 @@ declare global {
       NEO4J_URI: string
       PHONE_VERIFICATION_DISABLED: boolean
       AMPLITUDE_API_KEY: string
-      REDIS_PORT: string
+      REDIS_PORT: number
       REDIS_HOST: string
       YOTI_CLIEND_SDK_ID: string
       YOTI_KEY_FILE_PATH: string
