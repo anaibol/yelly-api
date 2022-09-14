@@ -1,11 +1,28 @@
 import { INestApplication, Injectable, OnModuleInit } from '@nestjs/common'
 import { PrismaClient } from '@prisma/client'
+import gql from 'graphql-tag'
 import { camelCase } from 'lodash'
-import { format } from 'sql-formatter'
+
+import { RequestContext } from './request-context.interceptor'
+
+const parseGraphQLQuery = (query: string) => {
+  // eslint-disable-next-line functional/no-try-statement
+  try {
+    const queryObj: any = gql(query)
+    const operationName = queryObj.definitions[0].selectionSet.selections[0].name.value
+
+    return {
+      operationName,
+      operation: queryObj.definitions[0].operation,
+    }
+  } catch (e) {
+    return {}
+  }
+}
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
-  private readonlyInstance?: PrismaClient
+  private readOnlyInstance?: PrismaClient
 
   constructor() {
     // eslint-disable-next-line functional/no-expression-statement
@@ -21,7 +38,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
           : [],
     })
 
-    this.readonlyInstance = process.env.DATABASE_READ_URL
+    this.readOnlyInstance = process.env.DATABASE_READ_URL
       ? new PrismaClient({
           datasources: { db: { url: process.env.DATABASE_READ_URL } },
         })
@@ -29,46 +46,55 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   }
 
   async onModuleInit(): Promise<void> {
-    await Promise.all([this.$connect(), this.readonlyInstance?.$connect()])
+    await Promise.all([this.$connect(), this.readOnlyInstance?.$connect()])
 
-    if (this.readonlyInstance) {
-      this.$use(async (params, next) => {
-        if (!params.runInTransaction && params.action.includes('find')) {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          const res = await this.readonlyInstance[camelCase(params.model)][params.action](params.args)
-          return res
-        }
+    this.$use(async (params, next) => {
+      const graphQLQuery = RequestContext.ctx?.req.body.query
+      const { operation, operationName } = parseGraphQLQuery(graphQLQuery)
 
-        const res = await next(params)
-        return res
+      const isGraphQLQuery = operation === 'query'
+
+      console.log({
+        requestId: RequestContext.ctx?.requestId,
+        isGraphQLQuery,
+        operationName,
       })
-    }
 
-    if (process.env.ENABLE_SQL_LOGS === 'true') {
-      // this.$use(async (params, next) => {
-      //   const before = Date.now()
-      //   const result = await next(params)
-      //   const after = Date.now()
-      //   console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
-      //   return result
-      // })
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      this.$on('query', async (e) => {
+      if (!params.runInTransaction && isGraphQLQuery && this.readOnlyInstance) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        const { query, params, duration } = e
+        const res = await this.readOnlyInstance[camelCase(params.model)][params.action](params.args)
+        return res
+      }
 
-        if (process.env.FORMAT_SQL_LOGS === 'true') {
-          console.log(Date.now(), { params, duration })
-          console.log(format(query))
-        } else {
-          console.log({ params, duration, query })
-        }
+      const res = await next(params)
+      return res
+    })
+
+    if (process.env.ENABLE_SQL_LOGS === 'true') {
+      this.$use(async (params, next) => {
+        const before = Date.now()
+        const result = await next(params)
+        const after = Date.now()
+        console.log(`Query ${params.model}.${params.action} took ${after - before}ms`)
+        return result
       })
     }
+
+    // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // // @ts-ignore
+    // this.$on('query', async (e) => {
+    //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //   // @ts-ignore
+    //   const { query, params, duration } = e
+
+    //   if (process.env.FORMAT_SQL_LOGS === 'true') {
+    //     console.log(Date.now(), { params, duration })
+    //     console.log(format(query))
+    //   } else {
+    //     console.log({ params, duration, query })
+    //   }
+    // })
   }
 
   async enableShutdownHooks(app: INestApplication) {
