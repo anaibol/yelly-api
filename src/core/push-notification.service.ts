@@ -5,7 +5,6 @@ import { I18nService } from 'nestjs-i18n'
 
 import { TrackEventPrefix } from '../types/trackEventPrefix'
 import { ExpoPushNotificationsTokenService } from '../user/expoPushNotificationsToken.service'
-import { getLastResetDate } from '../utils/dates'
 import expo from '../utils/expo'
 import { AmplitudeService } from './amplitude.service'
 import { PrismaService } from './prisma.service'
@@ -305,6 +304,33 @@ export class PushNotificationService {
     }
   }
 
+  async followersCountIsGrowing(followeeId: string, followersGrowth: number) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: followeeId },
+      select: UserPushTokenSelect,
+    })
+
+    if (!user) return Promise.reject(new Error('No user'))
+
+    const { locale: lang, expoPushNotificationTokens } = user
+
+    const message = {
+      to: expoPushNotificationTokens.map(({ token }) => token),
+      body: await this.i18n.translate('notifications.followersCountIsGrowing', {
+        ...(lang && { lang }),
+        args: { followersGrowth },
+      }),
+      sound: 'default' as const,
+    }
+
+    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_FOLLOWERS_COUNT_IS_GROWING')
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({}),
+    }
+  }
+
   async sendNotifications(
     messages: ExpoPushMessage[],
     tokens: ExpoPushNotificationAccessToken[],
@@ -427,68 +453,6 @@ export class PushNotificationService {
       // eslint-disable-next-line functional/no-throw-statement
       throw e
     }
-  }
-
-  async sendDailyAudience(): Promise<void> {
-    console.log('sendDailyAudience:started')
-
-    const followers = await this.prismaService.follower.groupBy({
-      by: ['followeeId'],
-      _count: {
-        userId: true,
-      },
-      where: {
-        createdAt: {
-          gte: getLastResetDate(),
-        },
-      },
-    })
-
-    console.log('sendDailyAudience', { followersCount: followers.length })
-
-    if (followers.length === 0) {
-      console.log('sendDailyAudience:completed:nothing to do')
-      return
-    }
-
-    // TODO: Performance: Use a single query (raw?) to get the group by and the language and tokens
-    followers.forEach(async (follower) => {
-      const user = await this.prismaService.user.findUnique({
-        where: {
-          id: follower.followeeId,
-        },
-        select: {
-          firstName: true,
-          locale: true,
-          expoPushNotificationTokens: true,
-        },
-      })
-
-      if (!user || user.expoPushNotificationTokens.length === 0) {
-        return
-      }
-
-      const newPeopleCount = follower._count.userId
-      const lang = user.locale
-      const pushTokens = user.expoPushNotificationTokens
-
-      const messages = await Promise.all(
-        pushTokens.map(async (expoPushNotificationToken) => ({
-          to: expoPushNotificationToken.token,
-          sound: 'default' as const,
-          body: await this.i18n.translate('notifications.newAudience', {
-            args: { newPeopleCount },
-            ...(lang && { lang }),
-          }),
-        }))
-      )
-
-      // DEBUG
-      // console.log('sendDailyAudience:sendNotifications', { firstName: user.firstName, messages })
-      await this.sendNotifications(messages, pushTokens, 'PUSH_NOTIFICATION_NEW_AUDIENCE')
-    })
-
-    console.log('sendDailyAudience:completed')
   }
 
   async reactedToYourTag(tagReactionId: bigint) {

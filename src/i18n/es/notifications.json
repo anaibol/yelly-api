@@ -14,6 +14,6 @@
   "followeeCreatedTag": "{otherUserFirstName} created the topic #{tagText}",
   "youHaveBeenMentioned": "{otherUserFirstName} a mentionné ton nom sur #{tagText}",
   "youHaveBeenMentionedNoTag": "{otherUserFirstName} a mentionné ton nom",
-  "newAudience":  "Congratulations for your topic! You added {newPeopleCount} people to your audience"
-
+  "newAudience": "Congratulations for your topic! You added {newPeopleCount} people to your audience",
+  "followersCountIsGrowing": "⚡ {followersGrowth} people joined your audience !"
 }

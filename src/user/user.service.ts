@@ -874,6 +874,18 @@ export class UserService {
 
     this.pushNotificationService.isNowFollowingYou(follower)
 
+    const followersCountGrowth = await this.checkFollowersGrowth(follower.userId, false)
+
+    if (
+      followersCountGrowth === 5 ||
+      followersCountGrowth === 10 ||
+      followersCountGrowth === 20 ||
+      followersCountGrowth === 50 ||
+      followersCountGrowth === 100
+    ) {
+      this.pushNotificationService.followersCountIsGrowing(followeeId, followersCountGrowth)
+    }
+
     return true
   }
 
@@ -1162,5 +1174,43 @@ export class UserService {
     })
 
     return !!!tag
+  }
+
+  async checkFollowersGrowth(userId: string, isUpdateCheck = true): Promise<number> {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        followersCheckCount: true,
+        _count: {
+          select: {
+            followers: true,
+          },
+        },
+      },
+    })
+
+    if (!user) return Promise.reject(new Error('not found'))
+
+    const previousFollowersCheckCount = user.followersCheckCount ?? 0
+    const followersCheckCount = user._count.followers
+    const followersGrowth = followersCheckCount - previousFollowersCheckCount
+
+    if (!isUpdateCheck) {
+      return followersGrowth
+    }
+
+    await this.prismaService.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        followersCheckedAt: new Date(Date.now()).toISOString(),
+        followersCheckCount,
+      },
+    })
+
+    return followersGrowth
   }
 }

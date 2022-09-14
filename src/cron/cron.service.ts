@@ -50,18 +50,6 @@ export class CronWorker {
       }
     }
 
-    if (job.name === 'sendDailyAudience') {
-      try {
-        await this.pushNotificationService.sendDailyAudience()
-
-        return { status: 'ok' }
-      } catch (error) {
-        console.log({ error })
-
-        return { status: 'error' }
-      }
-    }
-
     console.log({ error: 'Invalid job name' })
     return { status: 'error' }
   }

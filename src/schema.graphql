@@ -159,6 +159,7 @@ type Mutation {
   approveUserAge(userId: String!): Boolean!
   banUser(userId: String!): Boolean!
   blockUser(otherUserId: String!): Boolean!
+  checkFollowersGrowth: Int!
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createAnonymousTagReaction(input: CreateAnonymousTagReactionInput!): Boolean!
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): PostReaction!
