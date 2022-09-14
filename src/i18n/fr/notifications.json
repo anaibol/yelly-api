@@ -1,7 +1,7 @@
 {
   "reactedToYourTag": "{otherUserFirstName} a voté pour ton sujet du jour !",
   "someoneReactedToYourTag": "Quelqu'un hors de Yelly a voté pour ton sujet du jour !",
-  "reactedToYourPost": "{otherUserFirstName} a aimé ton post sur sur #{tagText}",
+  "reactedToYourPost": "{otherUserFirstName} a aimé ton post sur #{tagText}",
   "reactedToYourPostNoTag": "{otherUserFirstName} a aimé ton post",
   "repliedToYourPost": "{otherUserFirstName} a répondu à ton post sur #{tagText}",
   "repliedToYourPostNoTag": "{otherUserFirstName} a répondu à ton post",
@@ -9,7 +9,7 @@
   "repliedToSamePostAsYouNoTag": "{otherUserFirstName} a répondu au même post que toi",
   "thereAreNewPostsOnYourTag": "{newPostCount} nouveaux posts sur ton sujet du jour !",
   "yourTagIsTrending": "Ton sujet intéresse, tu es à la Une !",
-  "isNowFollowingYou": "{otherUserFirstName} te suis désormais",
+  "isNowFollowingYou": "{otherUserFirstName} a rejoint ton audience",
   "promotedTag": "Tendance Yelly live",
   "followeeCreatedTag": "{otherUserFirstName} a lancé le sujet #{tagText}",
   "youHaveBeenMentioned": "{otherUserFirstName} a mentionné ton nom sur #{tagText}",

@@ -42,7 +42,7 @@ export class UserResolver {
   @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   follow(@Args('otherUserId') otherUserId: string, @CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.follow(authUser.id, otherUserId)
+    return this.userService.follow(authUser.id, otherUserId, true)
   }
 
   @UseGuards(AuthGuard)

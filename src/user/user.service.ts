@@ -840,7 +840,7 @@ export class UserService {
     return true
   }
 
-  async follow(userId: string, followeeId: string): Promise<boolean> {
+  async follow(userId: string, followeeId: string, shouldNotify: boolean = false): Promise<boolean> {
     if (userId === followeeId) {
       return false
     }
@@ -864,15 +864,16 @@ export class UserService {
       },
     })
 
-    this.prismaService.notification.create({
-      data: {
-        userId: followeeId,
-        followerUserId: userId,
-        type: NotificationType.IS_NOW_FOLLOWING_YOU,
-      },
-    })
-
-    this.pushNotificationService.isNowFollowingYou(follower)
+    if (shouldNotify) {
+      this.prismaService.notification.create({
+        data: {
+          userId: followeeId,
+          followerUserId: userId,
+          type: NotificationType.IS_NOW_FOLLOWING_YOU,
+        },
+      })
+      this.pushNotificationService.isNowFollowingYou(follower)
+    }
 
     const followersCountGrowth = await this.checkFollowersGrowth(follower.userId, false)
 

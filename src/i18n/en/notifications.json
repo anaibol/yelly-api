@@ -9,11 +9,11 @@
   "repliedToSamePostAsYouNoTag": "{otherUserFirstName} replied to the same post as you",
   "thereAreNewPostsOnYourTag": "{newPostCount} new posts on your topic!",
   "yourTagIsTrending": "Your topic is on the Front Page!",
-  "isNowFollowingYou": "{otherUserFirstName} is now following you",
+  "isNowFollowingYou": "{otherUserFirstName} joined your audience",
   "promotedTag": "Tendance Yelly live",
   "followeeCreatedTag": "{otherUserFirstName} created the topic #{tagText}",
-  "youHaveBeenMentioned": "{otherUserFirstName} a mentionné ton nom sur #{tagText}",
-  "youHaveBeenMentionedNoTag": "{otherUserFirstName} a mentionné ton nom",
+  "youHaveBeenMentioned": "{otherUserFirstName} has mentionned your name on #{tagText}",
+  "youHaveBeenMentionedNoTag": "{otherUserFirstName} has mentionned your name",
   "newAudience": "Congratulations for your topic! You added {newPeopleCount} people to your audience",
   "followersCountIsGrowing": "⚡ {followersGrowth} people joined your audience !"
 }
