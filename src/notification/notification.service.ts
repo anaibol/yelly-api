@@ -38,8 +38,8 @@ export class NotificationService {
               author: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  displayName: true,
+                  username: true,
                   pictureId: true,
                   birthdate: true,
                 },
@@ -53,8 +53,8 @@ export class NotificationService {
               author: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  displayName: true,
+                  username: true,
                   pictureId: true,
                   birthdate: true,
                 },
@@ -71,8 +71,8 @@ export class NotificationService {
                   author: {
                     select: {
                       id: true,
-                      firstName: true,
-                      lastName: true,
+                      displayName: true,
+                      username: true,
                       pictureId: true,
                       birthdate: true,
                     },
@@ -88,8 +88,8 @@ export class NotificationService {
               author: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  displayName: true,
+                  username: true,
                   pictureId: true,
                   birthdate: true,
                 },
@@ -109,8 +109,8 @@ export class NotificationService {
               author: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  displayName: true,
+                  username: true,
                   pictureId: true,
                   birthdate: true,
                 },
@@ -122,8 +122,8 @@ export class NotificationService {
                   author: {
                     select: {
                       id: true,
-                      firstName: true,
-                      lastName: true,
+                      displayName: true,
+                      username: true,
                       pictureId: true,
                       birthdate: true,
                     },
@@ -135,8 +135,8 @@ export class NotificationService {
           followerUser: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              displayName: true,
+              username: true,
               pictureId: true,
               birthdate: true,
             },

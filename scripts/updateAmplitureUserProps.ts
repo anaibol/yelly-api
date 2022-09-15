@@ -39,8 +39,8 @@ async function main() {
 
     console.log({
       id: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      displayName: user.displayName,
+      username: user.username,
       createdAt: user.createdAt,
       YEAR_OF_BIRTH: user.birthdate?.getFullYear(),
       FOLLOWERS_COUNT: user._count.followers,

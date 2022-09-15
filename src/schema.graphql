@@ -128,9 +128,9 @@ type Me {
   birthdate: DateTime
   countryId: String
   createdAt: DateTime
+  displayName: String
   email: String
   expoPushNotificationTokens: [String!]
-  firstName: String
   followeesCount: Int
   followersCount: Int
   frontPageTagsCount: Int
@@ -138,7 +138,6 @@ type Me {
   instagram: String
   isAgeApproved: Boolean
   isFilled: Boolean
-  lastName: String
   locale: String
   phoneNumber: String
   pictureId: String
@@ -151,6 +150,7 @@ type Me {
   tagViewsCount: Int
   training: Training
   trendingTagsCount: Int
+  username: String
   viewsCount: Int
 }
 
@@ -330,7 +330,7 @@ type Query {
   user(id: String!): User!
   userActivities(after: BigInt, limit: Int = 10, userId: String!): Activities!
   userByPhoneNumber(phoneNumber: String!): User!
-  userFollowees(firstNameStartsWith: String, limit: Int = 10, skip: Int = 0, sortBy: UserFolloweesSortBy = createdAt, sortDirection: SortDirection = desc, userId: String!): PaginatedUsers!
+  userFollowees(displayNameStartsWith: String, limit: Int = 10, skip: Int = 0, sortBy: UserFolloweesSortBy = createdAt, sortDirection: SortDirection = desc, userId: String!): PaginatedUsers!
   userFollowers(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
   users(ids: [String!]!): PaginatedUsers!
 }
@@ -415,16 +415,16 @@ input UpdateUserInput {
   about: String
   birthdate: DateTime
   countryCode: String
+  displayName: String
   email: String
-  firstName: String
   instagram: String
   isFilled: Boolean
-  lastName: String
   password: String
   pictureId: String
   schoolGooglePlaceId: String
   snapchat: String
   trainingName: String
+  username: String
 }
 
 type Upload {
@@ -437,7 +437,7 @@ type User {
   birthdate: DateTime
   countryId: String
   createdAt: DateTime
-  firstName: String
+  displayName: String
   followeesCount: Int
   followersCount: Int
   frontPageTagsCount: Int
@@ -448,7 +448,6 @@ type User {
   isBanned: Boolean
   isBlockedByAuthUser: Boolean
   isFollowedByAuthUser: Boolean
-  lastName: String
   locale: String
   pictureId: String
   postCount: Int
@@ -459,12 +458,13 @@ type User {
   tagViewsCount: Int
   training: Training
   trendingTagsCount: Int
+  username: String
   viewsCount: Int
 }
 
 enum UserFolloweesSortBy {
   createdAt
-  firstName
+  displayName
 }
 
 enum UserRole {

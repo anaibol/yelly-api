@@ -38,10 +38,10 @@ const getUserFolloweesSort = (
   sortDirection?: SortDirection
 ): Prisma.Enumerable<Prisma.FollowerOrderByWithRelationInput> => {
   switch (sortBy) {
-    case 'firstName':
+    case 'displayName':
       return {
         followee: {
-          firstName: sortDirection,
+          displayName: sortDirection,
         },
       }
 
@@ -151,8 +151,8 @@ export class UserService {
       select: {
         id: true,
         createdAt: true,
-        firstName: true,
-        lastName: true,
+        displayName: true,
+        username: true,
         pictureId: true,
         birthdate: true,
         about: true,
@@ -220,8 +220,8 @@ export class UserService {
       select: {
         id: true,
         createdAt: true,
-        firstName: true,
-        lastName: true,
+        displayName: true,
+        username: true,
         pictureId: true,
         birthdate: true,
         about: true,
@@ -489,17 +489,17 @@ export class UserService {
     userId: string,
     skip: number,
     limit: number,
-    firstNameStartsWith?: string,
+    displayNameStartsWith?: string,
     sortBy?: UserFolloweesSortBy,
     sortDirection?: SortDirection
   ): Promise<PaginatedUsers> {
     console.log({ sortBy })
     const where: Prisma.FollowerWhereInput = {
       userId,
-      ...(firstNameStartsWith && {
+      ...(displayNameStartsWith && {
         followee: {
-          firstName: {
-            startsWith: firstNameStartsWith,
+          displayName: {
+            startsWith: displayNameStartsWith,
             mode: 'insensitive',
           },
         },
@@ -640,8 +640,8 @@ export class UserService {
         createdAt: true,
         role: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        displayName: true,
+        username: true,
         pictureId: true,
         birthdate: true,
         about: true,
@@ -1000,8 +1000,8 @@ export class UserService {
         isFilled: true,
         isAgeApproved: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        displayName: true,
+        username: true,
         pictureId: true,
         birthdate: true,
         instagram: true,
@@ -1034,8 +1034,8 @@ export class UserService {
         },
       },
       data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
+        displayName: data.displayName,
+        username: data.username,
         email: data.email,
         password: data.password,
         birthdate: data.birthdate,
@@ -1108,8 +1108,8 @@ export class UserService {
       // await this.neo4jService.user.update({
       //   where: { id: userId },
       //   update: {
-      //     firstName: updatedUser.firstName,
-      //     lastName: updatedUser.lastName,
+      //     displayName: updatedUser.displayName,
+      //     username: updatedUser.username,
       //     pictureId: updatedUser.pictureId,
       //   },
       // })

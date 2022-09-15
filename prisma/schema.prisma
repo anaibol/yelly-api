@@ -92,6 +92,8 @@ model User {
   id                           String                            @id @default(dbgenerated("generate_id()"))
   firstName                    String?
   lastName                     String?
+  displayName                  String?
+  username                     String?                           @unique
   email                        String?                           @unique
   role                         UserRole                          @default(USER)
   password                     String?
@@ -139,7 +141,7 @@ model User {
   reported                     UserReport[]                      @relation("userReports")
   followersCheckCount          Int?
   followersCheckedAt           DateTime?
-  
+
   @@index([birthdate], map: "User_birthdate")
 }
 

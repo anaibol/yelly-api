@@ -1,7 +1,8 @@
 /* eslint-disable functional/no-let */
 /* eslint-disable functional/no-loop-statement */
 import { PrismaClient } from '@prisma/client'
-import { getGooglePlaceDetails, getGooglePlaceCityAndCountry, getGoogleCityByName } from '../src/utils/googlePlaces'
+
+import { getGoogleCityByName, getGooglePlaceCityAndCountry, getGooglePlaceDetails } from '../src/utils/googlePlaces'
 
 async function main() {
   const prisma = new PrismaClient()

@@ -46,8 +46,8 @@ export class ActivityService {
           user: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              displayName: true,
+              username: true,
               pictureId: true,
               birthdate: true,
             },
@@ -64,8 +64,8 @@ export class ActivityService {
               user: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  displayName: true,
+                  username: true,
                   pictureId: true,
                   birthdate: true,
                 },
@@ -126,8 +126,8 @@ export class ActivityService {
           user: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              displayName: true,
+              username: true,
               pictureId: true,
               birthdate: true,
             },
@@ -144,8 +144,8 @@ export class ActivityService {
               user: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  displayName: true,
+                  username: true,
                   pictureId: true,
                   birthdate: true,
                 },
