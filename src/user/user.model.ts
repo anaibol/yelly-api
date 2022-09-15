@@ -8,8 +8,8 @@ export class User {
   @Field(() => ID)
   id: string
   createdAt?: Date | null
-  firstName?: string | null
-  lastName?: string | null
+  displayName?: string | null
+  username?: string | null
   birthdate?: Date | null
   pictureId?: string | null
   snapchat?: string | null

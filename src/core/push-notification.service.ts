@@ -11,7 +11,7 @@ import { PrismaService } from './prisma.service'
 
 const UserPushTokenSelect = {
   id: true,
-  firstName: true,
+  displayName: true,
   locale: true,
   expoPushNotificationTokens: {
     select: {
@@ -84,7 +84,7 @@ export class PushNotificationService {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
         body: await this.i18n.translate('notifications.followeeCreatedTag', {
           ...(lang && { lang }),
-          args: { otherUserFirstName: tag.author?.firstName, tagText: tag.text },
+          args: { otherUserDisplayName: tag.author?.displayName, tagText: tag.text },
         }),
         data: { url: `${process.env.APP_BASE_URL}/tags/${tagId}` },
         sound: 'default' as const,
@@ -137,11 +137,11 @@ export class PushNotificationService {
         postReply.parent.tags.length > 0
           ? await this.i18n.translate('notifications.repliedToYourPost', {
               ...(lang && { lang }),
-              args: { otherUserFirstName: postReply.author.firstName, tagText: postReply.parent.tags[0].text },
+              args: { otherUserDisplayName: postReply.author.displayName, tagText: postReply.parent.tags[0].text },
             })
           : await this.i18n.translate('notifications.repliedToYourPostNoTag', {
               ...(lang && { lang }),
-              args: { otherUserFirstName: postReply.author.firstName },
+              args: { otherUserDisplayName: postReply.author.displayName },
             }),
       data: { url: `${process.env.APP_BASE_URL}/posts/${postReply.parent.id}` },
       sound: 'default' as const,
@@ -180,11 +180,11 @@ export class PushNotificationService {
           postReply.parent && postReply.parent.tags.length > 0
             ? await this.i18n.translate('notifications.repliedToSamePostAsYou', {
                 ...(lang && { lang }),
-                args: { otherUserFirstName: postReply.author.firstName, tagText: postReply.parent?.tags[0].text },
+                args: { otherUserDisplayName: postReply.author.displayName, tagText: postReply.parent?.tags[0].text },
               })
             : await this.i18n.translate('notifications.repliedToSamePostAsYouNoTag', {
                 ...(lang && { lang }),
-                args: { otherUserFirstName: postReply.author.firstName },
+                args: { otherUserDisplayName: postReply.author.displayName },
               }),
         data: { url: `${process.env.APP_BASE_URL}/post/${postReply.parent?.id}` },
         sound: 'default' as const,
@@ -268,7 +268,7 @@ export class PushNotificationService {
     const getFollowerUser = this.prismaService.user.findUnique({
       select: {
         id: true,
-        firstName: true,
+        displayName: true,
       },
       where: { id: follower.userId },
     })
@@ -290,7 +290,7 @@ export class PushNotificationService {
       to: expoPushNotificationTokens.map(({ token }) => token),
       body: await this.i18n.translate('notifications.isNowFollowingYou', {
         ...(lang && { lang }),
-        args: { otherUserFirstName: followerUser.firstName },
+        args: { otherUserDisplayName: followerUser.displayName },
       }),
       data: { userId, url },
       sound: 'default' as const,
@@ -463,7 +463,7 @@ export class PushNotificationService {
       select: {
         author: {
           select: {
-            firstName: true,
+            displayName: true,
           },
         },
         tag: {
@@ -486,7 +486,7 @@ export class PushNotificationService {
     const message = tagReaction.author
       ? {
           body: await this.i18n.translate('notifications.reactedToYourTag', {
-            args: { otherUserFirstName: tagReaction.author.firstName },
+            args: { otherUserDisplayName: tagReaction.author.displayName },
             ...(lang && { lang }),
           }),
         }
@@ -516,7 +516,7 @@ export class PushNotificationService {
       select: {
         author: {
           select: {
-            firstName: true,
+            displayName: true,
           },
         },
         post: {
@@ -549,11 +549,11 @@ export class PushNotificationService {
       body:
         postReaction.post.tags.length > 0
           ? await this.i18n.translate('notifications.reactedToYourPost', {
-              args: { otherUserFirstName: postReaction.author.firstName, tagText: postReaction.post.tags[0].text },
+              args: { otherUserDisplayName: postReaction.author.displayName, tagText: postReaction.post.tags[0].text },
               ...(lang && { lang }),
             })
           : await this.i18n.translate('notifications.reactedToYourPostNoTag', {
-              args: { otherUserFirstName: postReaction.author.firstName },
+              args: { otherUserDisplayName: postReaction.author.displayName },
               ...(lang && { lang }),
             }),
     }
@@ -607,11 +607,11 @@ export class PushNotificationService {
             post.tags.length > 0
               ? await this.i18n.translate('notifications.youHaveBeenMentioned', {
                   ...(lang && { lang }),
-                  args: { otherUserFirstName: author.firstName, tagText: post.tags[0].text },
+                  args: { otherUserDisplayName: author.displayName, tagText: post.tags[0].text },
                 })
               : await this.i18n.translate('notifications.youHaveBeenMentionedNoTag', {
                   ...(lang && { lang }),
-                  args: { otherUserFirstName: author.firstName },
+                  args: { otherUserDisplayName: author.displayName },
                 }),
           data: { userId, url },
           sound: 'default' as const,

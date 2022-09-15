@@ -64,8 +64,8 @@ export class SchoolService {
         users: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            displayName: true,
+            username: true,
             pictureId: true,
           },
         },

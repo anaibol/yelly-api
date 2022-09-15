@@ -6,7 +6,7 @@ import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 @ArgsType()
 export class UserFolloweesArgs extends OffsetPaginationArgs {
   userId: string
-  firstNameStartsWith?: string
+  displayNameStartsWith?: string
   @Field(() => UserFolloweesSortBy)
   sortBy?: UserFolloweesSortBy = UserFolloweesSortBy.createdAt
   @Field(() => SortDirection)
@@ -15,7 +15,7 @@ export class UserFolloweesArgs extends OffsetPaginationArgs {
 
 export enum UserFolloweesSortBy {
   createdAt = 'createdAt',
-  firstName = 'firstName',
+  displayName = 'displayName',
 }
 
 registerEnumType(UserFolloweesSortBy, {

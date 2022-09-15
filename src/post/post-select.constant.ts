@@ -28,8 +28,8 @@ export const PostSelect = {
     select: {
       id: true,
       createdAt: true,
-      firstName: true,
-      lastName: true,
+      displayName: true,
+      username: true,
       birthdate: true,
       pictureId: true,
       school: {
@@ -73,8 +73,8 @@ export const PostSelect = {
       user: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          displayName: true,
+          username: true,
           birthdate: true,
           pictureId: true,
         },

@@ -21,8 +21,8 @@ export const tagSelect = {
   author: {
     select: {
       id: true,
-      firstName: true,
-      lastName: true,
+      displayName: true,
+      username: true,
       birthdate: true,
       pictureId: true,
       training: {

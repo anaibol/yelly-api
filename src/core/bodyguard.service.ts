@@ -69,7 +69,7 @@ export class BodyguardService implements OnModuleInit {
                   type: 'AUTHOR',
                   data: {
                     identifier: author.id,
-                    username: author.firstName + ' ' + author.lastName,
+                    username: author.username,
                     profilePictureURL: 'http://yelly.imgix.net/' + author.pictureId,
                   },
                 },

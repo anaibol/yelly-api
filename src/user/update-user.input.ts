@@ -2,8 +2,8 @@ import { InputType } from '@nestjs/graphql'
 
 @InputType()
 export class UpdateUserInput {
-  firstName?: string
-  lastName?: string
+  displayName?: string
+  username?: string
   email?: string
   password?: string
   birthdate?: Date

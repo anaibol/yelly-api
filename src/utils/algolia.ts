@@ -4,8 +4,8 @@ export type UserIndexAlgoliaInterface = {
   id: string
   createdAt: Date
   objectID: string
-  firstName: string | null
-  lastName: string | null
+  displayName: string | null
+  username: string | null
   pictureId: string | null
   createdAtTimestamp: number | null
   birthdateTimestamp: number | null
@@ -47,8 +47,8 @@ export type PostIndexAlgoliaInterface = {
   author: {
     id: string
     createdAt: Date
-    firstName: string
-    lastName: string
+    displayName: string
+    username: string
     birthdate: string
     pictureId: string | null
     school: {
@@ -77,8 +77,8 @@ export type PostIndexAlgoliaInterface = {
 export const algoliaUserSelect = {
   id: true,
   createdAt: true,
-  firstName: true,
-  lastName: true,
+  displayName: true,
+  username: true,
   isFilled: true,
   isAgeApproved: true,
   pictureId: true,
@@ -150,8 +150,8 @@ export const algoliaPostSelect = {
     select: {
       id: true,
       createdAt: true,
-      firstName: true,
-      lastName: true,
+      displayName: true,
+      username: true,
       birthdate: true,
       pictureId: true,
       school: {
@@ -196,8 +196,8 @@ export function mapAlgoliaUser(user: UserWithPosts): UserIndexAlgoliaInterface {
     id: user.id,
     createdAt: user.createdAt,
     objectID: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
+    displayName: user.displayName,
+    username: user.username,
     pictureId: user.pictureId,
     birthdateTimestamp: user.birthdate ? Date.parse(user.birthdate.toString()) : null,
     createdAtTimestamp: user.createdAt ? Date.parse(user.createdAt.toString()) : null,
@@ -238,9 +238,9 @@ const algoliaPost = Prisma.validator<Prisma.PostArgs>()({
 type AlgoliaPost = Prisma.PostGetPayload<typeof algoliaPost>
 
 export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | null {
-  const { id, createdAt, firstName, lastName, birthdate, pictureId, school } = post.author
+  const { id, createdAt, displayName, username, birthdate, pictureId, school } = post.author
 
-  if (!createdAt || !firstName || !lastName || !birthdate || !lastName || !school?.city?.country) return null
+  if (!createdAt || !displayName || !username || !birthdate || !username || !school?.city?.country) return null
 
   return {
     id: post.id.toString(),
@@ -251,8 +251,8 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
     author: {
       id,
       createdAt,
-      firstName,
-      lastName,
+      displayName,
+      username,
       birthdate: birthdate.toDateString(),
       pictureId,
       school: {

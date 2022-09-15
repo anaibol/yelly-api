@@ -17,8 +17,8 @@ export class Me {
   createdAt?: Date | null
   email?: string | null
   phoneNumber?: string | null
-  firstName?: string | null
-  lastName?: string | null
+  displayName?: string | null
+  username?: string | null
   birthdate?: Date | null
   pictureId?: string | null
   snapchat?: string | null
