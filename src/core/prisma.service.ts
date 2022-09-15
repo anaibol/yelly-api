@@ -60,9 +60,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         operationName,
       })
 
-      if (!params.runInTransaction && isGraphQLQuery && this.readOnlyInstance) {
+      if (!params.runInTransaction && params.action !== 'count' && isGraphQLQuery && this.readOnlyInstance) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
+
         const res = await this.readOnlyInstance[camelCase(params.model)][params.action](params.args)
         return res
       }
