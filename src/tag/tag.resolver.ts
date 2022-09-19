@@ -143,9 +143,9 @@ export class TagResolver {
   ): Promise<PaginatedTagsByRank> {
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
-    const { isYesterday, isForYou, skip, limit } = tagsByRankArgs
+    const { isForYou, skip, limit } = tagsByRankArgs
 
-    return await this.tagService.getTagsByRank(authUser, isYesterday, isForYou, limit, skip)
+    return await this.tagService.getTagsByRank(authUser, false, isForYou, limit, skip)
   }
 
   @UseGuards(AuthGuard)

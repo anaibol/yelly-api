@@ -12,12 +12,7 @@ import { PushNotificationService } from '../core/push-notification.service'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { User } from '../user/user.model'
 import { UserService } from '../user/user.service'
-import {
-  getLastResetDate,
-  getLastResetDateFromDate,
-  getPreviousResetDate,
-  getPreviousResetDateFromDate,
-} from '../utils/dates'
+import { getLastResetDate, getLastResetDateFromDate, getPreviousResetDateFromDate } from '../utils/dates'
 import { CreateAnonymousTagReactionInput, CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { Tag } from './tag.model'
 import { TagReaction } from './tag-reaction.model'
@@ -242,7 +237,7 @@ export class TagService {
 
   async getTags(
     authUser: User | AuthUser,
-    isYesterday: boolean,
+    shouldIncludeExpired: boolean,
     isForYou: boolean,
     showScoreFactor: boolean,
     limit: number,
@@ -269,15 +264,13 @@ export class TagService {
         ? {
             authorId,
           }
+        : null),
+      ...(shouldIncludeExpired
+        ? null
         : {
-            createdAt: isYesterday
-              ? {
-                  gte: getPreviousResetDate(),
-                  lt: getLastResetDate(),
-                }
-              : {
-                  gte: getLastResetDate(),
-                },
+            expiredAt: {
+              gt: new Date(Date.now()),
+            },
           }),
       countryId: authUser.countryId,
       ...(!showHidden && {
@@ -337,7 +330,7 @@ export class TagService {
 
     // Performance optimization to not do rank computation in the tag.rank resolver
     // for today tags
-    const isPerformanceOptimization = authorId === undefined && !isYesterday
+    const isPerformanceOptimization = authorId === undefined && !shouldIncludeExpired
 
     const items = tags.map((tag) => {
       return {
@@ -363,7 +356,13 @@ export class TagService {
     return index < 0 ? 0 : index + 1
   }
 
-  async getTagsByRank(authUser: User | AuthUser, isYesterday: boolean, isForYou: boolean, limit: number, skip: number) {
+  async getTagsByRank(
+    authUser: User | AuthUser,
+    shouldIncludeExpired: boolean,
+    isForYou: boolean,
+    limit: number,
+    skip: number
+  ) {
     // We need the score factor to compute the ranking
     const showScoreFactor = true
     const isAuthUserType = (authUser as AuthUser).isAdmin !== undefined
@@ -371,17 +370,17 @@ export class TagService {
 
     const { items, totalCount } = await this.getTags(
       authUser,
-      isYesterday,
+      shouldIncludeExpired,
       isForYou,
       showScoreFactor,
       1000,
       undefined,
-      isYesterday ? TagSortBy.rank : TagSortBy.score,
-      isYesterday ? SortDirection.asc : SortDirection.desc
+      shouldIncludeExpired ? TagSortBy.rank : TagSortBy.score,
+      shouldIncludeExpired ? SortDirection.asc : SortDirection.desc
     )
 
     // Today rank is computed at runtime
-    if (!isYesterday) {
+    if (!shouldIncludeExpired) {
       // Get tags with at least 10 interactions ordered by engagment score
       const selectedTags = orderBy(
         items.filter((tag) => tag.interactionsCount >= 10),

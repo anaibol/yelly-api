@@ -6,3 +6,6 @@
 */
 -- AlterTable
 ALTER TABLE "Tag" ADD COLUMN     "expiredAt" TIMESTAMP(3);
+
+-- Migrate existing rows
+UPDATE "Tag" SET "expiredAt" = "Tag"."createdAt" + interval '24 hour';
