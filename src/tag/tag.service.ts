@@ -566,7 +566,7 @@ export class TagService {
       this.userService.follow(authUser.id, tag.authorId)
     }
 
-    if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
+    // if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
 
     this.pushNotificationService.reactedToYourTag(reaction.id)
 
@@ -605,7 +605,7 @@ export class TagService {
 
     this.updateInteractionsCount(tag.id)
 
-    if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
+    // if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
 
     this.pushNotificationService.reactedToYourTag(reaction.id)
 
