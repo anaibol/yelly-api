@@ -315,7 +315,6 @@ type Query {
   getPreviousResetDate: DateTime!
   getS3PresignedUploadUrl: Upload!
   isUserFollowedByAuthUser(userId: String!): Boolean!
-  isUsernameTaken(username: String!): Boolean!
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: BigInt, childrenSortBy: PostsSortBy = createdAt, childrenSortDirection: SortDirection = desc, limit: Int = 10, postId: BigInt!): Post!

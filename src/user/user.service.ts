@@ -1178,16 +1178,6 @@ export class UserService {
     // return !!!tag
   }
 
-  async getIsUsernameTaken(username: string): Promise<boolean> {
-    const count = await this.prismaService.user.count({
-      where: {
-        username,
-      },
-    })
-
-    return count > 0
-  }
-
   async checkFollowersGrowth(userId: string, isUpdateCheck = true): Promise<number> {
     const user = await this.prismaService.user.findUnique({
       where: {
