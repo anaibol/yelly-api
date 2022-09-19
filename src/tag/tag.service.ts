@@ -171,33 +171,33 @@ export class TagService {
   }
 
   async create(tagText: string, authUser: AuthUser, tagType: TagType | undefined): Promise<Tag> {
-    const tagCreated = await this.prismaService.tag.findFirst({
-      where: {
-        authorId: authUser.id,
-        createdAt: {
-          gte: getLastResetDate(),
-        },
-      },
-      select: {
-        id: true,
-      },
-    })
+    // const tagCreated = await this.prismaService.tag.findFirst({
+    //   where: {
+    //     authorId: authUser.id,
+    //     createdAt: {
+    //       gte: getLastResetDate(),
+    //     },
+    //   },
+    //   select: {
+    //     id: true,
+    //   },
+    // })
 
-    if (tagCreated && !authUser.isAdmin) return Promise.reject(new Error('Already created a tag'))
+    // if (tagCreated && !authUser.isAdmin) return Promise.reject(new Error('Already created a tag'))
 
-    const tagAlreadyExists = await this.prismaService.tag.findFirst({
-      where: {
-        createdAt: {
-          gte: getLastResetDate(),
-        },
-        text: tagText,
-      },
-      select: {
-        id: true,
-      },
-    })
+    // const tagAlreadyExists = await this.prismaService.tag.findFirst({
+    //   where: {
+    //     createdAt: {
+    //       gte: getLastResetDate(),
+    //     },
+    //     text: tagText,
+    //   },
+    //   select: {
+    //     id: true,
+    //   },
+    // })
 
-    if (tagAlreadyExists && !authUser.isAdmin) return Promise.reject(new Error('Already already exists'))
+    // if (tagAlreadyExists && !authUser.isAdmin) return Promise.reject(new Error('Already already exists'))
 
     const tag = await this.prismaService.tag.create({
       data: {

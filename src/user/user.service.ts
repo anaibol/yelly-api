@@ -1162,19 +1162,20 @@ export class UserService {
   }
 
   async canCreateTag(userId: string): Promise<boolean> {
-    const tag = await this.prismaService.tag.findFirst({
-      where: {
-        authorId: userId,
-        createdAt: {
-          gte: getLastResetDate(),
-        },
-      },
-      select: {
-        id: true,
-      },
-    })
+    return true
+    // const tag = await this.prismaService.tag.findFirst({
+    //   where: {
+    //     authorId: userId,
+    //     createdAt: {
+    //       gte: getLastResetDate(),
+    //     },
+    //   },
+    //   select: {
+    //     id: true,
+    //   },
+    // })
 
-    return !!!tag
+    // return !!!tag
   }
 
   async getIsUsernameTaken(username: string): Promise<boolean> {
