@@ -134,12 +134,12 @@ export class TagService {
     return { ...tag, postCount: _count.posts, reactionsCount: _count.reactions }
   }
 
-  async getTagByNanoId(nanoId: string): Promise<Tag> {
+  async getTagByNanoId(nanoId: string, authUser: AuthUser): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         nanoId,
       },
-      select: { ...tagSelect, scoreFactor: false },
+      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: false },
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
