@@ -162,7 +162,7 @@ model Tag {
   text              String
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @default(now()) @updatedAt
-  expiredAt         DateTime?
+  expiresAt         DateTime?
   type              TagType        @default(STANDARD)
   posts             Post[]
   countryId         String?

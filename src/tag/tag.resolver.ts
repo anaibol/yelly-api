@@ -7,7 +7,6 @@ import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { PrismaService } from '../core/prisma.service'
-import { getLastResetDate, getNextResetDate, getPreviousResetDate } from '../utils/dates'
 import { CreateAnonymousTagReactionInput, CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { CreateTagInput } from './create-tag.input'
 import { DeleteTagReactionInput } from './delete-tag-reaction.input'
@@ -45,30 +44,6 @@ export class TagResolver {
   @Mutation(() => Boolean)
   async trackTagViews(@Args({ name: 'tagIds', type: () => [BigInt] }) tagIds: bigint[]) {
     return this.tagService.trackTagViews(tagIds)
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => Boolean)
-  tagExists(@Args('tagText') tagText: string): Promise<boolean> {
-    return this.tagService.getTagExists(tagText)
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => Date)
-  getLastResetDate(): Date {
-    return getLastResetDate()
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => Date)
-  getPreviousResetDate(): Date {
-    return getPreviousResetDate()
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => Date)
-  getNextResetDate(): Date {
-    return getNextResetDate()
   }
 
   @UseGuards(AuthGuard)
@@ -203,36 +178,9 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @ResolveField()
-  async rank(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<number | undefined> {
-    // Return 0 if tag rank is undefined
-    // tag service set the rank to undefined to optimize performance on some queries
-    if (tag.rank === undefined) {
-      return 0
-    }
-
-    // Return existing tag rank
-    if (tag.rank && tag.rank > 0) {
-      return tag.rank
-    }
-
-    const tagCreatedAt = tag?.createdAt
-    const lastResetDate = getLastResetDate()
-
-    // Return 0 for old tags without rank
-    if (tagCreatedAt === undefined || tagCreatedAt < lastResetDate) {
-      return tag.rank
-    }
-
-    // Compute tag rank at runtime
-    // TODO: performance optimization with cache? data loader?
-    return this.tagService.getTodayTagRank(authUser, tag.id)
-  }
-
-  @UseGuards(AuthGuard)
-  @ResolveField()
   isReadOnly(@Parent() tag: Tag): boolean {
-    if (!tag?.createdAt || !tag.expiredAt) return true
+    if (!tag?.createdAt || !tag.expiresAt) return true
 
-    return new Date(Date.now()).getTime() > tag.expiredAt.getTime()
+    return new Date(Date.now()).getTime() > tag.expiresAt.getTime()
   }
 }

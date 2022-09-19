@@ -310,9 +310,6 @@ type Query {
   activities(after: BigInt, limit: Int = 10): Activities!
   authUserCanCreateTag: Boolean!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
-  getLastResetDate: DateTime!
-  getNextResetDate: DateTime!
-  getPreviousResetDate: DateTime!
   getS3PresignedUploadUrl: Upload!
   isUserFollowedByAuthUser(userId: String!): Boolean!
   me: Me!
@@ -322,9 +319,8 @@ type Query {
   school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
   tagByNanoId(tagNanoId: String!): Tag!
-  tagExists(tagText: String!): Boolean!
-  tags(after: BigInt, authorId: String, isForYou: Boolean = false, isYesterday: Boolean = false, limit: Int = 10, shouldIncludeExpired: Boolean = false, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
-  tagsByRank(isForYou: Boolean = false, isYesterday: Boolean = false, limit: Int = 10, shouldIncludeExpired: Boolean = false, skip: Int = 0): PaginatedTagsByRank!
+  tags(after: BigInt, authorId: String, isForYou: Boolean = false, limit: Int = 10, shouldIncludeExpired: Boolean = false, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
+  tagsByRank(isForYou: Boolean = false, limit: Int = 10, shouldIncludeExpired: Boolean = false, skip: Int = 0): PaginatedTagsByRank!
   tagsByScore(limit: Int = 10, skip: Int = 0): PaginatedTagsByScore!
   unreadNotificationsCount: Int!
   user(id: String!): User!
@@ -362,7 +358,7 @@ type Tag {
   authUserReaction: TagReaction
   author: User
   createdAt: DateTime
-  expiredAt: DateTime
+  expiresAt: DateTime
   hasBeenTrending: Boolean
   id: BigInt!
   interactionsCount: Int

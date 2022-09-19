@@ -4,7 +4,6 @@ import { Queue } from 'bullmq'
 
 import { CoreModule } from '../core/core.module'
 import { TagModule } from '../tag/tag.module'
-import { RESET_HOURS } from '../utils/dates'
 import { CronQueue, CronWorker } from './cron.service'
 
 const APP_QUEUE = 'APP_QUEUE'
@@ -44,28 +43,6 @@ export class CronModule implements OnModuleInit {
       const job = repeatableJobs[i]
       await this.queue.removeRepeatable(job.name, { cron: job.cron, tz: job.tz })
     }
-
-    // await this.queue.add('sendDailyReminder', undefined, {
-    //   repeat: {
-    //     cron: `0 ${RESET_HOURS} * * *`,
-    //     tz: 'Europe/Paris',
-    //   },
-    // })
-
-    await this.queue.add('computeTagRanking', undefined, {
-      repeat: {
-        cron: `0 ${RESET_HOURS} * * *`,
-        tz: 'Europe/Paris',
-      },
-    })
-
-    await this.queue.add('sendDailyAudience', undefined, {
-      repeat: {
-        cron: `55 ${RESET_HOURS - 1} * * *`,
-        // DEBUG cron: `05 17 * * *`,
-        tz: 'Europe/Paris',
-      },
-    })
 
     const repeatableJobsAfter = await this.queue.getRepeatableJobs()
     console.log('onModuleInit:repeatableJobsAfter', { repeatableJobsAfter })

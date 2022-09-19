@@ -17,7 +17,6 @@ import { PrismaService } from '../core/prisma.service'
 import { SchoolService } from '../school/school.service'
 import { TagService } from '../tag/tag.service'
 import { deleteObject, getObject } from '../utils/aws'
-import { getLastResetDate } from '../utils/dates'
 import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
@@ -610,9 +609,6 @@ export class UserService {
     const todayTags = await this.prismaService.tag.findMany({
       where: {
         authorId: user.id,
-        createdAt: {
-          gte: getLastResetDate(),
-        },
       },
       orderBy: {
         score: SortDirection.desc,
@@ -1163,19 +1159,6 @@ export class UserService {
 
   async canCreateTag(userId: string): Promise<boolean> {
     return true
-    // const tag = await this.prismaService.tag.findFirst({
-    //   where: {
-    //     authorId: userId,
-    //     createdAt: {
-    //       gte: getLastResetDate(),
-    //     },
-    //   },
-    //   select: {
-    //     id: true,
-    //   },
-    // })
-
-    // return !!!tag
   }
 
   async checkFollowersGrowth(userId: string, isUpdateCheck = true): Promise<number> {

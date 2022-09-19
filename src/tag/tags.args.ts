@@ -18,7 +18,6 @@ registerEnumType(TagSortBy, {
 
 @ArgsType()
 export class TagsArgs extends CursorPaginationArgs {
-  isYesterday: boolean = false
   shouldIncludeExpired: boolean = false
   isForYou: boolean = false
   showHidden: boolean = false
@@ -31,7 +30,6 @@ export class TagsArgs extends CursorPaginationArgs {
 
 @ArgsType()
 export class TagsByRankArgs extends OffsetPaginationArgs {
-  isYesterday: boolean = false
   isForYou: boolean = false
   shouldIncludeExpired: boolean = false
 }

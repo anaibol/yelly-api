@@ -5,7 +5,6 @@ import { AuthUser } from '../auth/auth.service'
 import { PrismaService } from '../core/prisma.service'
 import { mapPost, PostSelectWithParent } from '../post/post-select.constant'
 import { tagSelect } from '../tag/tag-select.constant'
-import { getLastResetDate } from '../utils/dates'
 import { Activities } from './activity.model'
 
 @Injectable()
@@ -14,9 +13,6 @@ export class ActivityService {
 
   async getActivities(authUser: AuthUser, limit: number, after?: bigint): Promise<Activities> {
     const where: Prisma.ActivityWhereInput = {
-      createdAt: {
-        gte: getLastResetDate(),
-      },
       user: {
         followers: {
           some: {
@@ -100,9 +96,6 @@ export class ActivityService {
 
   async getUserActivities(userId: string, limit: number, after?: bigint): Promise<Activities> {
     const where: Prisma.ActivityWhereInput = {
-      createdAt: {
-        gte: getLastResetDate(),
-      },
       userId,
     }
 

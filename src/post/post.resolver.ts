@@ -7,7 +7,6 @@ import { CurrentUser } from '../auth/user.decorator'
 import { PrismaService } from '../core/prisma.service'
 import { PostService } from '../post/post.service'
 import { PostsArgs } from '../posts/posts.args'
-import { getLastResetDate } from '../utils/dates'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { CreatePostInput } from './create-post.input'
 import { CreatePostPollVoteInput } from './create-post-poll-vote.input'
@@ -103,11 +102,5 @@ export class PostResolver {
   @ResolveField()
   async authUserReaction(@Parent() post: Post, @CurrentUser() authUser: AuthUser): Promise<PostReaction | null> {
     return this.postService.getAuthUserReaction(post.id, authUser)
-  }
-
-  @UseGuards(AuthGuard)
-  @ResolveField()
-  isReadOnly(@Parent() post: Post): boolean {
-    return !!(post?.createdAt && post.createdAt < getLastResetDate())
   }
 }

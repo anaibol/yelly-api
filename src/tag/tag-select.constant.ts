@@ -5,7 +5,7 @@ export const tagSelect = {
   type: true,
   createdAt: true,
   updatedAt: true,
-  expiredAt: true,
+  expiresAt: true,
   isHidden: true,
   viewsCount: true,
   interactionsCount: true,

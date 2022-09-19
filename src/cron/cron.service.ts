@@ -37,19 +37,6 @@ export class CronWorker {
     //   }
     // }
 
-    // TODO: Create a dedicated cron service with a dedicated Worker?
-    if (job.name === 'computeTagRanking') {
-      try {
-        await this.tagService.computeTagRanking(new Date())
-
-        return { status: 'ok' }
-      } catch (error) {
-        console.log({ error })
-
-        return { status: 'error' }
-      }
-    }
-
     console.log({ error: 'Invalid job name' })
     return { status: 'error' }
   }
