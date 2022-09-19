@@ -33,6 +33,12 @@ export class UserResolver {
     return this.userService.getUserByPhoneNumber(phoneNumber)
   }
 
+  @Query(() => Boolean)
+  @UseGuards(AuthGuard)
+  isUsernameAvailable(@Args('username') username: string): Promise<boolean> {
+    return this.userService.getIsUsernameAvailable(username)
+  }
+
   @Query(() => PaginatedUsers)
   @UseGuards(AuthGuard)
   users(@Args('ids', { type: () => [String] }) ids: string[]): Promise<PaginatedUsers> {

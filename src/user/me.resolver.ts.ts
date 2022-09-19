@@ -180,12 +180,6 @@ export class MeResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => Boolean)
-  authUserCanCreateTag(@CurrentUser() authUser: AuthUser): Promise<boolean> {
-    return this.userService.canCreateTag(authUser.id)
-  }
-
-  @UseGuards(AuthGuard)
   @Query(() => PaginatedUsers)
   followSuggestions(
     @CurrentUser() authUser: AuthUser,

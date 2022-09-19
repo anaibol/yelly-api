@@ -1157,8 +1157,14 @@ export class UserService {
     }
   }
 
-  async canCreateTag(userId: string): Promise<boolean> {
-    return true
+  async getIsUsernameAvailable(username: string): Promise<boolean> {
+    const count = await this.prismaService.user.count({
+      where: {
+        username,
+      },
+    })
+
+    return count > 0
   }
 
   async checkFollowersGrowth(userId: string, isUpdateCheck = true): Promise<number> {

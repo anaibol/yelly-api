@@ -308,10 +308,10 @@ enum PostsSortBy {
 
 type Query {
   activities(after: BigInt, limit: Int = 10): Activities!
-  authUserCanCreateTag: Boolean!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
   getS3PresignedUploadUrl: Upload!
   isUserFollowedByAuthUser(userId: String!): Boolean!
+  isUsernameAvailable(username: String!): Boolean!
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: BigInt, childrenSortBy: PostsSortBy = createdAt, childrenSortDirection: SortDirection = desc, limit: Int = 10, postId: BigInt!): Post!
