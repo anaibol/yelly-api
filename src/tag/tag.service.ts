@@ -199,6 +199,9 @@ export class TagService {
 
     // if (tagAlreadyExists && !authUser.isAdmin) return Promise.reject(new Error('Already already exists'))
 
+    // Will expire in 24 hours
+    const expiredAt = new Date(new Date(Date.now()).getTime() + 60 * 60 * 24 * 1000)
+
     const tag = await this.prismaService.tag.create({
       data: {
         nanoId: createNanoId(),
@@ -206,6 +209,7 @@ export class TagService {
         type: tagType,
         countryId: authUser.countryId,
         authorId: authUser.id,
+        expiredAt,
         activities: {
           create: {
             userId: authUser.id,

@@ -18,6 +18,7 @@ export class Tag {
   @Field(() => TagType)
   type?: TagType
   createdAt?: Date
+  expiredAt?: Date | null
   isHidden?: boolean
   posts?: PaginatedPosts
   postCount?: number

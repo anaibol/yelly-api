@@ -362,6 +362,7 @@ type Tag {
   authUserReaction: TagReaction
   author: User
   createdAt: DateTime
+  expiredAt: DateTime
   hasBeenTrending: Boolean
   id: BigInt!
   interactionsCount: Int
