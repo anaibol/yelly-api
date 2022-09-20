@@ -5,16 +5,15 @@ import { SortDirection } from '../app.module'
 import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
-import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { PrismaService } from '../core/prisma.service'
-import { CreateAnonymousTagReactionInput, CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
+import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { CreateTagInput } from './create-tag.input'
 import { DeleteTagReactionInput } from './delete-tag-reaction.input'
-import { PaginatedTags, PaginatedTagsByRank, PaginatedTagsByScore } from './paginated-tags.model'
+import { PaginatedTags, PaginatedTagsByScore } from './paginated-tags.model'
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
 import { TagReaction } from './tag-reaction.model'
-import { TagsArgs, TagsByRankArgs, TagSortBy } from './tags.args'
+import { TagsArgs, TagsByScoreArgs, TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 
 @Resolver(Tag)
@@ -38,6 +37,12 @@ export class TagResolver {
   @Mutation(() => Tag)
   async createTag(@Args('input') createTagInput: CreateTagInput, @CurrentUser() authUser: AuthUser) {
     return this.tagService.create(createTagInput.tagText, authUser, createTagInput.type)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Tag)
+  async joinTag(@Args('tagNanoId') nanoId: string, @CurrentUser() authUser: AuthUser) {
+    return this.tagService.joinTag(nanoId, authUser)
   }
 
   @UseGuards(AuthGuard)
@@ -81,18 +86,18 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @Query(() => PaginatedTagsByScore)
   async tagsByScore(
-    @Args() offsetPaginationArgs: OffsetPaginationArgs,
+    @Args() tagsByScoreArgs: TagsByScoreArgs,
     @CurrentUser() authUser: AuthUser
   ): Promise<PaginatedTagsByScore> {
     if (!authUser.countryId) return Promise.reject(new Error('No country'))
 
-    const { skip, limit } = offsetPaginationArgs
+    const { isForYou, skip, limit } = tagsByScoreArgs
     const showScoreFactor = authUser.isAdmin
 
     const { items, totalCount } = await this.tagService.getTags(
       authUser,
       false,
-      false,
+      isForYou,
       showScoreFactor,
       1000,
       undefined,
@@ -109,20 +114,7 @@ export class TagResolver {
       scoreFactor: authUser.isAdmin ? tag.scoreFactor : undefined,
     }))
 
-    return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount, nextCursor: null }
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => PaginatedTagsByRank)
-  async tagsByRank(
-    @Args() tagsByRankArgs: TagsByRankArgs,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<PaginatedTagsByRank> {
-    if (!authUser.countryId) return Promise.reject(new Error('No country'))
-
-    const { isForYou, skip, limit } = tagsByRankArgs
-
-    return await this.tagService.getTagsByRank(authUser, false, isForYou, limit, skip)
+    return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
   }
 
   @UseGuards(AuthGuard)
@@ -161,13 +153,6 @@ export class TagResolver {
     @CurrentUser() authUser: AuthUser
   ): Promise<TagReaction> {
     return this.tagService.createOrUpdateTagReaction(createTagReactionInput, authUser)
-  }
-
-  @Mutation(() => Boolean)
-  async createAnonymousTagReaction(
-    @Args('input') createAnonymousTagReactionInput: CreateAnonymousTagReactionInput
-  ): Promise<boolean> {
-    return this.tagService.createAnonymousTagReaction(createAnonymousTagReactionInput)
   }
 
   @UseGuards(AuthGuard)

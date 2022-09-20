@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import { ActivityType, NotificationType, Prisma, TagType } from '@prisma/client'
-import { orderBy, uniqBy } from 'lodash'
 import { customAlphabet } from 'nanoid'
 
 import { SortDirection } from '../app.module'
@@ -12,7 +11,7 @@ import { PushNotificationService } from '../core/push-notification.service'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { User } from '../user/user.model'
 import { UserService } from '../user/user.service'
-import { CreateAnonymousTagReactionInput, CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
+import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { Tag } from './tag.model'
 import { TagReaction } from './tag-reaction.model'
 import { tagSelect } from './tag-select.constant'
@@ -54,16 +53,6 @@ const getTagsSort = (
       return [
         {
           score: sortDirection,
-        },
-        {
-          createdAt: 'desc' as const,
-        },
-      ]
-
-    case 'rank':
-      return [
-        {
-          rank: sortDirection,
         },
         {
           createdAt: 'desc' as const,
@@ -173,6 +162,22 @@ export class TagService {
     return tag
   }
 
+  async joinTag(nanoId: string, authUser: AuthUser): Promise<Tag> {
+    return this.prismaService.tag.update({
+      select: tagSelect,
+      where: {
+        nanoId,
+      },
+      data: {
+        members: {
+          connect: {
+            id: authUser.id,
+          },
+        },
+      },
+    })
+  }
+
   async delete(tagId: bigint): Promise<boolean> {
     await this.prismaService.tag.delete({
       where: { id: tagId },
@@ -270,14 +275,9 @@ export class TagService {
       }),
     ])
 
-    // Performance optimization to not do rank computation in the tag.rank resolver
-    // for today tags
-    const isPerformanceOptimization = authorId === undefined && !shouldIncludeExpired
-
     const items = tags.map((tag) => {
       return {
         ...tag,
-        rank: isPerformanceOptimization && tag.rank === 0 ? undefined : tag.rank,
         postCount: tag._count.posts,
         reactionsCount: tag._count.reactions,
       }
@@ -288,76 +288,6 @@ export class TagService {
     const nextCursor = lastItem ? lastItem.id : null
 
     return { items, nextCursor, totalCount }
-  }
-
-  async getTodayTagRank(user: AuthUser | User, tagId: bigint): Promise<number> {
-    const { items } = await this.getTagsByRank(user, false, false, 1000, 0)
-
-    const index = items.findIndex(({ id }) => id === tagId)
-
-    return index < 0 ? 0 : index + 1
-  }
-
-  async getTagsByRank(
-    authUser: User | AuthUser,
-    shouldIncludeExpired: boolean,
-    isForYou: boolean,
-    limit: number,
-    skip: number
-  ) {
-    // We need the score factor to compute the ranking
-    const showScoreFactor = true
-    const isAuthUserType = (authUser as AuthUser).isAdmin !== undefined
-    const isAdmin = isAuthUserType && (authUser as AuthUser).isAdmin
-
-    const { items, totalCount } = await this.getTags(
-      authUser,
-      shouldIncludeExpired,
-      isForYou,
-      showScoreFactor,
-      1000,
-      undefined,
-      shouldIncludeExpired ? TagSortBy.rank : TagSortBy.score,
-      shouldIncludeExpired ? SortDirection.asc : SortDirection.desc
-    )
-
-    // Today rank is computed at runtime
-    if (!shouldIncludeExpired) {
-      // Get tags with at least 10 interactions ordered by engagment score
-      const selectedTags = orderBy(
-        items.filter((tag) => tag.interactionsCount >= 10),
-        'score',
-        'desc'
-      )
-
-      // eslint-disable-next-line functional/immutable-data
-      selectedTags.push(...items)
-
-      const tags = uniqBy(selectedTags, 'id')
-        .slice(skip, skip + limit)
-        .map((tag, index) => ({
-          ...tag,
-          rank: skip + index + 1,
-          // Display score for admin only
-          score: isAdmin ? tag?.score : undefined,
-          scoreFactor: isAdmin ? tag.scoreFactor : undefined,
-        }))
-
-      const nextSkip = skip + limit
-
-      return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
-    }
-
-    const tags = items.slice(skip, skip + limit).map((tag) => ({
-      ...tag,
-      // Display score for admin only
-      score: isAdmin ? tag?.score : undefined,
-      scoreFactor: isAdmin ? tag.scoreFactor : undefined,
-    }))
-
-    const nextSkip = skip + limit
-
-    return { items: tags, nextSkip: totalCount > nextSkip ? nextSkip : null, totalCount }
   }
 
   async updateTag(tagId: bigint, { isHidden, scoreFactor }: UpdateTagInput): Promise<Tag> {
@@ -446,96 +376,9 @@ export class TagService {
       this.userService.follow(authUser.id, tag.authorId)
     }
 
-    // if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
-
     this.pushNotificationService.reactedToYourTag(reaction.id)
 
     return reaction
-  }
-
-  async createAnonymousTagReaction(createAnonymousTagReactionInput: CreateAnonymousTagReactionInput): Promise<boolean> {
-    const { tagNanoId } = createAnonymousTagReactionInput
-
-    const tag = await this.prismaService.tag.findUnique({
-      where: {
-        nanoId: tagNanoId,
-      },
-    })
-
-    if (!tag) return Promise.reject(new Error('No tag'))
-
-    const reaction = await this.prismaService.tagReaction.create({
-      data: {
-        text: '',
-        tag: {
-          connect: {
-            nanoId: tagNanoId,
-          },
-        },
-        ...(tag.authorId && {
-          notification: {
-            create: {
-              type: NotificationType.REACTED_TO_YOUR_TAG,
-              userId: tag.authorId,
-            },
-          },
-        }),
-      },
-    })
-
-    this.updateInteractionsCount(tag.id)
-
-    // if (!tag.hasBeenTrending) this.checkIfTagIsTrendingTrending(reaction.tagId)
-
-    this.pushNotificationService.reactedToYourTag(reaction.id)
-
-    return true
-  }
-
-  async checkIfTagIsTrendingTrending(tagId: bigint) {
-    const tag = await this.prismaService.tag.findUnique({
-      where: {
-        id: tagId,
-      },
-      select: {
-        id: true,
-        author: true,
-      },
-    })
-
-    if (!tag?.author?.countryId) return Promise.reject(new Error('No country'))
-
-    const topTags = await this.getTags(
-      {
-        ...tag.author,
-        isAdmin: false,
-        isNotAdmin: true,
-      },
-      false,
-      false,
-      false,
-      5,
-      undefined,
-      TagSortBy.reactionsCount,
-      SortDirection.desc
-    )
-
-    if (topTags.items.some(({ id }) => id === tag.id)) {
-      await this.prismaService.notification.create({
-        data: {
-          userId: tag.author.id,
-          type: NotificationType.YOUR_TAG_IS_TRENDING,
-          tagId: tag.id,
-        },
-      })
-
-      await this.prismaService.tag.update({
-        where: { id: tag.id },
-        data: { hasBeenTrending: true },
-      })
-
-      this.pushNotificationService.yourTagIsTrending(tag.id)
-    }
   }
 
   async deleteTagReaction(tagId: bigint, authUser: AuthUser): Promise<boolean> {

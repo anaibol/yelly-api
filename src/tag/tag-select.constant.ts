@@ -12,7 +12,6 @@ export const tagSelect = {
   hasBeenTrending: true,
   score: true,
   scoreFactor: true,
-  rank: true,
   _count: {
     select: {
       posts: true,

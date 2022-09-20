@@ -133,6 +133,7 @@ model User {
   activities                   Activity[]
   viewsCount                   Int                               @default(0)
   tags                         Tag[]
+  memberOfTags                 Tag[]                             @relation("memberOfTags")
   notifications                Notification[]
   postMentions                 PostUserMention[]
   blockedUsers                 User[]                            @relation("blockedUsers")
@@ -178,7 +179,7 @@ model Tag {
   hasBeenTrending   Boolean        @default(false)
   score             Float?         @default(0)
   scoreFactor       Float?         @default(1)
-  rank              Int            @default(0)
+  members           User[]         @relation("memberOfTags")
 
   @@index([createdAt])
   @@index([authorId])

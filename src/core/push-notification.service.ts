@@ -200,36 +200,6 @@ export class PushNotificationService {
     )
   }
 
-  async yourTagIsTrending(tagId: bigint) {
-    const tag = await this.prismaService.tag.findUnique({
-      where: { id: tagId },
-      include: {
-        author: {
-          select: UserPushTokenSelect,
-        },
-      },
-    })
-
-    if (!tag?.author) return Promise.reject(new Error('No tag'))
-
-    const { locale: lang, expoPushNotificationTokens } = tag.author
-
-    const message = {
-      to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.yourTagIsTrending', {
-        ...(lang && { lang }),
-      }),
-      sound: 'default' as const,
-    }
-
-    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_YOUR_TAG_IS_TRENDING')
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({}),
-    }
-  }
-
   async thereAreNewPostsOnYourTag(tagAuthorId: string, tagId: bigint, newPostCount: number) {
     const user = await this.prismaService.user.findUnique({
       where: { id: tagAuthorId },
@@ -265,43 +235,7 @@ export class PushNotificationService {
   }
 
   async isNowFollowingYou(follower: Follower) {
-    const getFollowerUser = this.prismaService.user.findUnique({
-      select: {
-        id: true,
-        displayName: true,
-      },
-      where: { id: follower.userId },
-    })
-
-    const getReceiverUser = this.prismaService.user.findUnique({
-      select: UserPushTokenSelect,
-      where: { id: follower.followeeId },
-    })
-
-    const [followerUser, receiverUser] = await Promise.all([getFollowerUser, getReceiverUser])
-
-    if (!followerUser || !receiverUser) return Promise.reject(new Error('followerUser or receiverUser not found'))
-
-    const url = `${process.env.APP_BASE_URL}/users/${followerUser.id}`
-
-    const { locale: lang, expoPushNotificationTokens, id: userId } = receiverUser
-
-    const message = {
-      to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.isNowFollowingYou', {
-        ...(lang && { lang }),
-        args: { otherUserDisplayName: followerUser.displayName },
-      }),
-      data: { userId, url },
-      sound: 'default' as const,
-    }
-
-    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_IS_NOW_FOLLOWING_YOU')
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({}),
-    }
+    return follower
   }
 
   async followersCountIsGrowing(followeeId: string, followersGrowth: number) {
@@ -418,42 +352,6 @@ export class PushNotificationService {
   //     throw e
   //   }
   // }
-
-  async sendDailyReminder(): Promise<void> {
-    // eslint-disable-next-line functional/no-try-statement
-    try {
-      console.log('sendDailyReminder')
-      const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
-        .$queryRaw`
-    SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken"
-    WHERE ("User"."id" = "ExpoPushNotificationAccessToken"."userId")`
-
-      const messages = await Promise.all(
-        allPushTokens
-          .map(async ({ token, locale: lang }) => {
-            return {
-              to: token,
-              sound: 'default' as const,
-              // TODO: use translation file
-              body: 'Il est 19h 🕖 Viens discuter de l’actu de la journée⚡',
-            }
-          })
-          .filter((v) => v)
-      )
-      console.log('sendDailyReminder:started', { messagesLength: messages.length })
-
-      if (process.env.NODE_ENV !== 'development') {
-        // Typescript is not smart to recognize it will never be undefined
-        await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_YELLY_RESET')
-      }
-
-      console.log('sendDailyReminder:completed')
-    } catch (e) {
-      console.log(e)
-      // eslint-disable-next-line functional/no-throw-statement
-      throw e
-    }
-  }
 
   async reactedToYourTag(tagReactionId: bigint) {
     const tagReaction = await this.prismaService.tagReaction.findUnique({

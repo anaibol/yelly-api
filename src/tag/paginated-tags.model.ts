@@ -5,23 +5,13 @@ import { Tag } from './tag.model'
 @ObjectType()
 export class PaginatedTags {
   @Field(() => BigInt)
-  nextCursor: BigInt | null
+  nextCursor: bigint | null
   items: Tag[]
   totalCount: number
 }
 
 @ObjectType()
 export class PaginatedTagsByScore {
-  // TODO: remove nextCursor after migration
-  @Field(() => BigInt)
-  nextCursor: BigInt | null
-  nextSkip?: number | null
-  items: Tag[]
-  totalCount: number
-}
-
-@ObjectType()
-export class PaginatedTagsByRank {
   nextSkip?: number | null
   items: Tag[]
   totalCount: number

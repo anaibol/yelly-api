@@ -25,18 +25,6 @@ export class CronWorker {
   public async process(job: Job): Promise<{ status: string }> {
     console.log('APP_QUEUE CRON RUN', { date: new Date(), job })
 
-    // if (job.name === 'sendDailyReminder') {
-    //   try {
-    //     await this.pushNotificationService.sendDailyReminder()
-
-    //     return { status: 'ok' }
-    //   } catch (error) {
-    //     console.log({ error })
-
-    //     return { status: 'error' }
-    //   }
-    // }
-
     console.log({ error: 'Invalid job name' })
     return { status: 'error' }
   }

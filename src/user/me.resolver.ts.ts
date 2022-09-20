@@ -113,12 +113,6 @@ export class MeResolver {
     return this.userService.getTrendingTagsCount(authUser.id)
   }
 
-  @UseGuards(AuthGuard)
-  @ResolveField()
-  async frontPageTagsCount(@CurrentUser() authUser: AuthUser): Promise<number> {
-    return this.userService.getFrontPageTagsCount(authUser)
-  }
-
   @Mutation(() => AccessToken)
   async refreshAccessToken(@Args('refreshToken') refreshToken: string): Promise<AccessToken> {
     return this.authService.refreshAccessToken(refreshToken)

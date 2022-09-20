@@ -9,7 +9,6 @@ export enum TagSortBy {
   postCount = 'postCount',
   reactionsCount = 'reactionsCount',
   score = 'score',
-  rank = 'rank',
 }
 
 registerEnumType(TagSortBy, {
@@ -29,7 +28,6 @@ export class TagsArgs extends CursorPaginationArgs {
 }
 
 @ArgsType()
-export class TagsByRankArgs extends OffsetPaginationArgs {
+export class TagsByScoreArgs extends OffsetPaginationArgs {
   isForYou: boolean = false
-  shouldIncludeExpired: boolean = false
 }

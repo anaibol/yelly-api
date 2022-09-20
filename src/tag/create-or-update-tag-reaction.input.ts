@@ -6,8 +6,3 @@ export class CreateOrUpdateTagReactionInput {
   tagId: bigint
   text: string
 }
-
-@InputType()
-export class CreateAnonymousTagReactionInput {
-  tagNanoId: string
-}

@@ -595,37 +595,6 @@ export class UserService {
     })
   }
 
-  async getFrontPageTagsCount(user: User): Promise<number> {
-    const pastFrontPageTagsCount = await this.prismaService.tag.count({
-      where: {
-        rank: {
-          gt: 0,
-          lte: 5,
-        },
-        authorId: user.id,
-      },
-    })
-
-    const todayTags = await this.prismaService.tag.findMany({
-      where: {
-        authorId: user.id,
-      },
-      orderBy: {
-        score: SortDirection.desc,
-      },
-    })
-
-    if (todayTags.length === 0) return pastFrontPageTagsCount
-
-    // We take only the first created tag of the day
-    // TODO: Performance optimzation via caching or data loader?
-    const rank = await this.tagService.getTodayTagRank(user, todayTags[0].id)
-    const increment = rank > 0 && rank <= 5 ? 1 : 0
-    const totalFrontPageTagsCount = pastFrontPageTagsCount + increment
-
-    return totalFrontPageTagsCount
-  }
-
   async findMe(userId: string): Promise<Me> {
     const res = await this.prismaService.user.findUnique({
       where: {
@@ -1164,7 +1133,7 @@ export class UserService {
       },
     })
 
-    return count > 0
+    return count < 1
   }
 
   async checkFollowersGrowth(userId: string, isUpdateCheck = true): Promise<number> {

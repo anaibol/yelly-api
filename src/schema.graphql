@@ -60,10 +60,6 @@ type Country {
   id: ID!
 }
 
-input CreateAnonymousTagReactionInput {
-  tagNanoId: String!
-}
-
 input CreateOrUpdatePostReactionInput {
   postId: BigInt!
   text: String!
@@ -161,7 +157,6 @@ type Mutation {
   blockUser(otherUserId: String!): Boolean!
   checkFollowersGrowth: Int!
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
-  createAnonymousTagReaction(input: CreateAnonymousTagReactionInput!): Boolean!
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): PostReaction!
   createOrUpdateTagReaction(input: CreateOrUpdateTagReactionInput!): TagReaction!
   createPost(input: CreatePostInput!): Post!
@@ -179,6 +174,7 @@ type Mutation {
   follow(otherUserId: String!): Boolean!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   initPhoneNumberVerification(input: InitPhoneNumberVerificationInput!): Boolean!
+  joinTag(tagNanoId: String!): Tag!
   markNotificationAsSeen(notificationId: String!): Boolean!
   refreshAccessToken(refreshToken: String!): AccessToken!
   reportUser(otherUserId: String!): Boolean!
@@ -235,15 +231,8 @@ type PaginatedTags {
   totalCount: Int!
 }
 
-type PaginatedTagsByRank {
-  items: [Tag!]!
-  nextSkip: Int
-  totalCount: Int!
-}
-
 type PaginatedTagsByScore {
   items: [Tag!]!
-  nextCursor: BigInt
   nextSkip: Int
   totalCount: Int!
 }
@@ -320,8 +309,7 @@ type Query {
   tag(tagId: BigInt!): Tag!
   tagByNanoId(tagNanoId: String!): Tag!
   tags(after: BigInt, authorId: String, isForYou: Boolean = false, limit: Int = 10, shouldIncludeExpired: Boolean = false, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
-  tagsByRank(isForYou: Boolean = false, limit: Int = 10, shouldIncludeExpired: Boolean = false, skip: Int = 0): PaginatedTagsByRank!
-  tagsByScore(limit: Int = 10, skip: Int = 0): PaginatedTagsByScore!
+  tagsByScore(isForYou: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTagsByScore!
   unreadNotificationsCount: Int!
   user(id: String!): User!
   userActivities(after: BigInt, limit: Int = 10, userId: String!): Activities!
@@ -367,7 +355,6 @@ type Tag {
   nanoId: String
   postCount: Int
   posts: PaginatedPosts
-  rank: Int
   reactionsCount: Int
   score: Float
   scoreFactor: Float
@@ -386,7 +373,6 @@ type TagReaction {
 enum TagSortBy {
   createdAt
   postCount
-  rank
   reactionsCount
   score
 }
