@@ -350,6 +350,7 @@ type Tag {
   id: BigInt!
   interactionsCount: Int
   isHidden: Boolean
+  isPublic: Boolean
   isReadOnly: Boolean
   nanoId: String
   postCount: Int

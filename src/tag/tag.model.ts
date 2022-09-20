@@ -28,6 +28,7 @@ export class Tag {
   author?: User | null
   authUserReaction?: TagReaction | null
   isReadOnly?: boolean
+  isPublic?: boolean
   @Field(() => Float)
   score?: number | null
   hasBeenTrending?: boolean
