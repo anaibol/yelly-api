@@ -6,4 +6,5 @@ export class CreateTagInput {
   tagText: string
   @Field(() => TagType)
   type?: TagType
+  isPublic: boolean = false
 }

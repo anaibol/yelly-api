@@ -135,7 +135,7 @@ export class TagService {
     return { ...tag, postCount: _count.posts, reactionsCount: _count.reactions }
   }
 
-  async create(tagText: string, authUser: AuthUser, tagType: TagType | undefined): Promise<Tag> {
+  async create(tagText: string, authUser: AuthUser, tagType?: TagType, isPublic = false): Promise<Tag> {
     const expiresAt = new Date(new Date(Date.now()).getTime() + 60 * 60 * 24 * 1000)
 
     const tag = await this.prismaService.tag.create({
@@ -143,7 +143,7 @@ export class TagService {
         nanoId: createNanoId(),
         text: tagText,
         type: tagType,
-        countryId: authUser.countryId,
+        isPublic,
         authorId: authUser.id,
         expiresAt,
         activities: {
@@ -210,9 +210,6 @@ export class TagService {
 
     if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
 
-    const fifteenYoYear = 2007
-    const isLessThanFifteen = authUser.birthdate.getFullYear() >= fifteenYoYear
-
     const where: Prisma.TagWhereInput = {
       ...(authorId
         ? {
@@ -226,7 +223,6 @@ export class TagService {
               gt: new Date(Date.now()),
             },
           }),
-      countryId: authUser.countryId,
       ...(!showHidden && {
         isHidden: false,
       }),

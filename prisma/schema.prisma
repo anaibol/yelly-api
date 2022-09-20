@@ -25,7 +25,6 @@ model Country {
   id   String @id @default(dbgenerated("generate_id()"))
   code String @unique
   city City[]
-  tag  Tag[]
   user User[]
 }
 
@@ -166,8 +165,6 @@ model Tag {
   expiresAt         DateTime?
   type              TagType        @default(STANDARD)
   posts             Post[]
-  countryId         String?
-  country           Country?       @relation(fields: [countryId], references: [id])
   isHidden          Boolean        @default(false)
   author            User?          @relation(fields: [authorId], references: [id])
   authorId          String?
@@ -180,6 +177,7 @@ model Tag {
   score             Float?         @default(0)
   scoreFactor       Float?         @default(1)
   members           User[]         @relation("memberOfTags")
+  isPublic          Boolean        @default(false)
 
   @@index([createdAt])
   @@index([authorId])
