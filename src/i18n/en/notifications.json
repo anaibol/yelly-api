@@ -1,6 +1,5 @@
 {
   "reactedToYourTag": "{otherUserDisplayName} upvoted your topic!",
-  "someoneReactedToYourTag": "Someone ouf of Yelly upvoted your topic!",
   "reactedToYourPost": "{otherUserDisplayName} liked your post on #{tagText}",
   "reactedToYourPostNoTag": "{otherUserDisplayName} liked your post",
   "repliedToYourPost": "{otherUserDisplayName} replied to your post on #{tagText}",
@@ -8,12 +7,9 @@
   "repliedToSamePostAsYou": "{otherUserDisplayName} replied to the same post as you on #{tagText}",
   "repliedToSamePostAsYouNoTag": "{otherUserDisplayName} replied to the same post as you",
   "thereAreNewPostsOnYourTag": "{newPostCount} new posts on your topic!",
-  "yourTagIsTrending": "Your topic is on the Front Page!",
-  "isNowFollowingYou": "{otherUserDisplayName} joined your audience",
-  "promotedTag": "Tendance Yelly live",
+  "isNowFollowingYou": "{otherUserDisplayName} is now following you",
   "followeeCreatedTag": "{otherUserDisplayName} created the topic #{tagText}",
   "youHaveBeenMentioned": "{otherUserDisplayName} has mentionned your name on #{tagText}",
   "youHaveBeenMentionedNoTag": "{otherUserDisplayName} has mentionned your name",
-  "newAudience": "Congratulations for your topic! You added {newPeopleCount} people to your audience",
-  "followersCountIsGrowing": "⚡ {followersGrowth} people joined your audience !"
+  "newAudience": "Congratulations for your topic! You added {newPeopleCount} people to your audience"
 }

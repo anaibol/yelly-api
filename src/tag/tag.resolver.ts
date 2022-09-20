@@ -130,14 +130,6 @@ export class TagResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => Tag)
-  createPromotedTag(@CurrentUser() authUser: AuthUser, @Args('tagText') tagText: string): Promise<Tag> {
-    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
-
-    return this.tagService.createPromotedTag(tagText, authUser)
-  }
-
-  @UseGuards(AuthGuard)
   @Mutation(() => Boolean)
   async deleteTagReaction(
     @Args('input') deleteTagReactionInput: DeleteTagReactionInput,

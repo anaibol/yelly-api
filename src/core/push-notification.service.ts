@@ -238,33 +238,6 @@ export class PushNotificationService {
     return follower
   }
 
-  async followersCountIsGrowing(followeeId: string, followersGrowth: number) {
-    const user = await this.prismaService.user.findUnique({
-      where: { id: followeeId },
-      select: UserPushTokenSelect,
-    })
-
-    if (!user) return Promise.reject(new Error('No user'))
-
-    const { locale: lang, expoPushNotificationTokens } = user
-
-    const message = {
-      to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.followersCountIsGrowing', {
-        ...(lang && { lang }),
-        args: { followersGrowth },
-      }),
-      sound: 'default' as const,
-    }
-
-    await this.sendNotifications([message], expoPushNotificationTokens, 'PUSH_NOTIFICATION_FOLLOWERS_COUNT_IS_GROWING')
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({}),
-    }
-  }
-
   async sendNotifications(
     messages: ExpoPushMessage[],
     tokens: ExpoPushNotificationAccessToken[],
@@ -307,52 +280,6 @@ export class PushNotificationService {
     return Promise.allSettled(promises)
   }
 
-  // async promotedTag(tag: Tag): Promise<void> {
-  //   if (process.env.NODE_ENV === 'development') return
-
-  //   if (!tag?.countryId) return Promise.reject(new Error('No tag'))
-
-  //   const allPushTokens: { id: string; token: string; locale: string; userId: string }[] = await this.prismaService
-  //     .$queryRaw`
-  //   SELECT "ExpoPushNotificationAccessToken"."userId", "token", "locale" FROM "User", "ExpoPushNotificationAccessToken", "City", "School"
-  //   WHERE "User"."id" = "ExpoPushNotificationAccessToken"."userId"
-  //   AND "User"."schoolId" = "School"."id"
-  //   AND "School"."cityId" = "City"."id"
-  //   AND "City"."countryId" =  ${tag.countryId}`
-  //   const url = `${process.env.APP_BASE_URL}/tags/${tag.id}`
-
-  //   // eslint-disable-next-line functional/no-try-statement
-  //   try {
-  //     const messages = await Promise.all(
-  //       allPushTokens
-  //         .map(async ({ token }) => {
-  //           return {
-  //             to: token,
-  //             sound: 'default' as const,
-  //             body: 'Debrief ton bac philo sur Yelly! #DebriefBacPhilo',
-  //             data: { url },
-  //           }
-  //           // return {
-  //           //   to: token,
-  //           //   sound: 'default' as const,
-  //           //   title: await this.i18n
-  //           //     .translate('notifications.promotedTag', { ...(lang && { lang }) })
-  //           //     .catch(() => null),
-  //           //   body: '#' + tag.text,
-  //           //   data: { url },
-  //           // }
-  //         })
-  //         .filter((v) => v)
-  //     )
-
-  //     // Typescript is not smart to recognize it will never be undefined
-  //     await this.sendNotifications(messages, allPushTokens, 'PUSH_NOTIFICATION_PROMOTED_TAG')
-  //   } catch (e) {
-  //     // eslint-disable-next-line functional/no-throw-statement
-  //     throw e
-  //   }
-  // }
-
   async reactedToYourTag(tagReactionId: bigint) {
     const tagReaction = await this.prismaService.tagReaction.findUnique({
       where: {
@@ -375,24 +302,18 @@ export class PushNotificationService {
       },
     })
 
-    if (!tagReaction?.tag?.author) return Promise.reject(new Error('No tag'))
+    if (!tagReaction?.tag?.author || !tagReaction?.author) return Promise.reject(new Error('No tag'))
 
     const pushTokens = await this.getPushTokensByUsersIds([tagReaction.tag.author.id])
 
     const lang = tagReaction.tag.author.locale
 
-    const message = tagReaction.author
-      ? {
-          body: await this.i18n.translate('notifications.reactedToYourTag', {
-            args: { otherUserDisplayName: tagReaction.author.displayName },
-            ...(lang && { lang }),
-          }),
-        }
-      : {
-          body: await this.i18n.translate('notifications.someoneReactedToYourTag', {
-            ...(lang && { lang }),
-          }),
-        }
+    const message = {
+      body: await this.i18n.translate('notifications.reactedToYourTag', {
+        args: { otherUserDisplayName: tagReaction.author.displayName },
+        ...(lang && { lang }),
+      }),
+    }
 
     const messages = pushTokens.map((expoPushNotificationToken) => {
       return {

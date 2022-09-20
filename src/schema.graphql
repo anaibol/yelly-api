@@ -156,13 +156,11 @@ type Mutation {
   approveUserAge(userId: String!): Boolean!
   banUser(userId: String!): Boolean!
   blockUser(otherUserId: String!): Boolean!
-  checkFollowersGrowth: Int!
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): PostReaction!
   createOrUpdateTagReaction(input: CreateOrUpdateTagReactionInput!): TagReaction!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
-  createPromotedTag(tagText: String!): Tag!
   createTag(input: CreateTagInput!): Tag!
   deleteAuthUser: Boolean!
   deleteExpoPushNotificationsToken(input: String!): Boolean!

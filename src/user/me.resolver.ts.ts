@@ -181,10 +181,4 @@ export class MeResolver {
   ): Promise<PaginatedUsers> {
     return this.userService.getFollowSuggestions(authUser, offsetPaginationArgs.skip, offsetPaginationArgs.limit)
   }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => Number)
-  checkFollowersGrowth(@CurrentUser() authUser: AuthUser): Promise<number> {
-    return this.userService.checkFollowersGrowth(authUser.id)
-  }
 }

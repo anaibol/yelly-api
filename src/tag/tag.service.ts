@@ -313,20 +313,6 @@ export class TagService {
     })
   }
 
-  async createPromotedTag(tagText: string, _authUser: AuthUser): Promise<Tag> {
-    const tag = await this.prismaService.tag.findFirst({
-      where: {
-        text: tagText,
-      },
-    })
-
-    if (!tag) return Promise.reject(new Error('No tag'))
-
-    //this.pushNotificationService.promotedTag(tag)
-
-    return tag
-  }
-
   getAuthUserReaction(tagId: bigint, authUser: AuthUser): Promise<TagReaction | null> {
     return this.prismaService.tagReaction.findFirst({
       where: {
