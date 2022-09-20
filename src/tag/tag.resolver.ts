@@ -68,6 +68,12 @@ export class TagResolver {
   }
 
   @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async trackTagShare(@Args({ name: 'tagId', type: () => BigInt }) tagId: bigint) {
+    return this.tagService.trackTagShare(tagId)
+  }
+
+  @UseGuards(AuthGuard)
   @Query(() => PaginatedTags)
   async tags(@Args() tagsArgs: TagsArgs, @CurrentUser() authUser: AuthUser): Promise<PaginatedTags> {
     const { authorId, isForYou, after, limit, sortBy, sortDirection, showHidden, shouldIncludeExpired } = tagsArgs

@@ -178,6 +178,7 @@ type Mutation {
   reportUser(otherUserId: String!): Boolean!
   resetPassword(input: ResetPasswordInput!): AccessToken!
   trackPostViews(postIds: [BigInt!]!): Boolean!
+  trackTagShare(tagId: BigInt!): Boolean!
   trackTagViews(tagIds: [BigInt!]!): Boolean!
   trackUserView(userId: String!): Boolean!
   unBlockUser(otherUserId: String!): Boolean!
@@ -359,6 +360,7 @@ type Tag {
   reactionsCount: Int
   score: Float
   scoreFactor: Float
+  shareCount: Int
   text: String!
   type: TagType
   viewsCount: Int

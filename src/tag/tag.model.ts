@@ -35,4 +35,5 @@ export class Tag {
   @Field(() => Float)
   scoreFactor?: number | null
   membersCount?: number | null
+  shareCount?: number | null
 }

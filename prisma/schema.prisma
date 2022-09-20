@@ -170,6 +170,7 @@ model Tag {
   authorId          String?
   reactions         TagReaction[]
   viewsCount        Int            @default(0)
+  shareCount        Int            @default(0)
   interactionsCount Int            @default(0)
   activities        Activity[]
   notifications     Notification[]

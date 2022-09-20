@@ -440,6 +440,17 @@ export class TagService {
     return true
   }
 
+  async trackTagShare(tagId: bigint): Promise<boolean> {
+    await this.prismaService.tag.update({
+      where: { id: tagId },
+      data: {
+        shareCount: { increment: 1 },
+      },
+    })
+
+    return true
+  }
+
   async updateInteractionsCount(tagId: bigint, isIncrement = true): Promise<boolean> {
     const tag = await this.prismaService.tag.findUnique({
       where: {

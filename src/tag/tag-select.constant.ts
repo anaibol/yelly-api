@@ -9,6 +9,7 @@ export const tagSelect = {
   expiresAt: true,
   isHidden: true,
   viewsCount: true,
+  shareCount: true,
   interactionsCount: true,
   hasBeenTrending: true,
   score: true,
