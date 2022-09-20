@@ -3,6 +3,7 @@ export const tagSelect = {
   nanoId: true,
   text: true,
   type: true,
+  isPublic: true,
   createdAt: true,
   updatedAt: true,
   expiresAt: true,
