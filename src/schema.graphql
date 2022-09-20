@@ -165,6 +165,7 @@ type Mutation {
   deleteFollower(otherUserId: String!): Boolean!
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
+  deleteTag(tagId: BigInt!): Tag!
   deleteTagReaction(input: DeleteTagReactionInput!): Boolean!
   deleteUser(userId: String!): Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!
@@ -181,6 +182,7 @@ type Mutation {
   trackUserView(userId: String!): Boolean!
   unBlockUser(otherUserId: String!): Boolean!
   unFollow(otherUserId: String!): Boolean!
+  unJoinTag(tagNanoId: String!): Tag!
   updateAgeVerification(facePictureId: String!): AgeVerificationResult!
   updateMe(input: UpdateUserInput!): Me!
   updateTag(input: UpdateTagInput!, tagId: BigInt!): Tag!

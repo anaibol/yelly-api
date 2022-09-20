@@ -180,6 +180,22 @@ export class TagService {
     })
   }
 
+  async unJoinTag(nanoId: string, authUser: AuthUser): Promise<Tag> {
+    return this.prismaService.tag.update({
+      select: tagSelect,
+      where: {
+        nanoId,
+      },
+      data: {
+        members: {
+          disconnect: {
+            id: authUser.id,
+          },
+        },
+      },
+    })
+  }
+
   async delete(tagId: bigint): Promise<boolean> {
     await this.prismaService.tag.delete({
       where: { id: tagId },

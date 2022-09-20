@@ -41,8 +41,24 @@ export class TagResolver {
 
   @UseGuards(AuthGuard)
   @Mutation(() => Tag)
+  async deleteTag(@Args('tagId') tagId: bigint, @CurrentUser() authUser: AuthUser) {
+    const tag = await this.prismaService.tag.findUnique({ where: { id: tagId } })
+
+    if (authUser.role !== 'ADMIN' && tag?.authorId !== authUser.id) return Promise.reject(new Error('No admin'))
+
+    return this.tagService.delete(tagId)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Tag)
   async joinTag(@Args('tagNanoId') nanoId: string, @CurrentUser() authUser: AuthUser) {
     return this.tagService.joinTag(nanoId, authUser)
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Tag)
+  async unJoinTag(@Args('tagNanoId') nanoId: string, @CurrentUser() authUser: AuthUser) {
+    return this.tagService.unJoinTag(nanoId, authUser)
   }
 
   @UseGuards(AuthGuard)
