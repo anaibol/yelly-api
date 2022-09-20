@@ -45,6 +45,7 @@ async function main() {
         objectID: tag.id,
         text: tag.text,
         postCount: tag._count.posts,
+        membersCount: tag._count.members,
         reactionsCount: tag._count.reactions,
         ...(tag.updatedAt && { updatedAtTimestamp: Date.parse(tag.updatedAt.toString()) }),
         createdAt: tag.createdAt,

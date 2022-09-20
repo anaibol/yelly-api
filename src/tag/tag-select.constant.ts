@@ -17,6 +17,7 @@ export const tagSelect = {
     select: {
       posts: true,
       reactions: true,
+      members: true,
     },
   },
   author: {

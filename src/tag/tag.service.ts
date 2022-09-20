@@ -117,7 +117,7 @@ export class TagService {
 
     const { _count, ...tag } = result
 
-    return { ...tag, postCount: _count.posts, reactionsCount: _count.reactions }
+    return { ...tag, postCount: _count.posts, membersCount: _count.members, reactionsCount: _count.reactions }
   }
 
   async getTagByNanoId(nanoId: string, authUser: AuthUser): Promise<Tag> {
@@ -132,7 +132,7 @@ export class TagService {
 
     const { _count, ...tag } = result
 
-    return { ...tag, postCount: _count.posts, reactionsCount: _count.reactions }
+    return { ...tag, postCount: _count.posts, membersCount: _count.members, reactionsCount: _count.reactions }
   }
 
   async create(tagText: string, authUser: AuthUser, tagType?: TagType, isPublic = false): Promise<Tag> {
@@ -291,6 +291,7 @@ export class TagService {
       return {
         ...tag,
         postCount: tag._count.posts,
+        membersCount: tag._count.members,
         reactionsCount: tag._count.reactions,
       }
     })

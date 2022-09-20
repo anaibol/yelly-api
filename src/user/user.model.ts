@@ -31,6 +31,4 @@ export class User {
   viewsCount?: number
   tagViewsCount?: number
   tagReactionsCount?: number
-  trendingTagsCount?: number
-  frontPageTagsCount?: number
 }

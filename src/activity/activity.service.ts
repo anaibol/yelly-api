@@ -77,6 +77,7 @@ export class ActivityService {
       ...(tag && {
         tag: {
           postCount: tag?._count.posts,
+          membersCount: tag._count.members,
           reactionsCount: tag?._count.reactions,
           ...tag,
         },
@@ -154,6 +155,7 @@ export class ActivityService {
       ...(tag && {
         tag: {
           postCount: tag?._count.posts,
+          membersCount: tag._count.members,
           reactionsCount: tag?._count.reactions,
           ...tag,
         },

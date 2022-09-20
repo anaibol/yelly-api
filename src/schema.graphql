@@ -130,7 +130,6 @@ type Me {
   expoPushNotificationTokens: [String!]
   followeesCount: Int
   followersCount: Int
-  frontPageTagsCount: Int
   id: ID!
   instagram: String
   isAgeApproved: Boolean
@@ -146,7 +145,6 @@ type Me {
   tagReactionsCount: Int
   tagViewsCount: Int
   training: Training
-  trendingTagsCount: Int
   username: String
   viewsCount: Int
 }
@@ -352,6 +350,7 @@ type Tag {
   isHidden: Boolean
   isPublic: Boolean
   isReadOnly: Boolean
+  membersCount: Int
   nanoId: String
   postCount: Int
   posts: PaginatedPosts
@@ -423,7 +422,6 @@ type User {
   displayName: String
   followeesCount: Int
   followersCount: Int
-  frontPageTagsCount: Int
   hasBlockedAuthUser: Boolean
   id: ID!
   instagram: String
@@ -440,7 +438,6 @@ type User {
   tagReactionsCount: Int
   tagViewsCount: Int
   training: Training
-  trendingTagsCount: Int
   username: String
   viewsCount: Int
 }

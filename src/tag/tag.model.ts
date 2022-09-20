@@ -34,4 +34,5 @@ export class Tag {
   hasBeenTrending?: boolean
   @Field(() => Float)
   scoreFactor?: number | null
+  membersCount?: number | null
 }

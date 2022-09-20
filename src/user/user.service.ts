@@ -586,15 +586,6 @@ export class UserService {
     return blockedUsers.length > 0
   }
 
-  async getTrendingTagsCount(userId: string): Promise<number> {
-    return this.prismaService.tag.count({
-      where: {
-        hasBeenTrending: true,
-        authorId: userId,
-      },
-    })
-  }
-
   async findMe(userId: string): Promise<Me> {
     const res = await this.prismaService.user.findUnique({
       where: {
