@@ -159,6 +159,8 @@ export class TagService {
 
     this.syncTagIndexWithAlgolia(tag.id)
 
+    this.pushNotificationService.followeeCreatedTag(tag.id)
+
     return tag
   }
 
@@ -238,19 +240,32 @@ export class TagService {
             id: authUser.id,
           },
         },
-        ...(isForYou && {
+      },
+      ...(isForYou && {
+        author: {
           id: {
             not: authUser.id,
           },
-        }),
-        ...(isForYou && {
-          followers: {
-            some: {
-              userId: authUser.id,
+        },
+        OR: [
+          {
+            author: {
+              followers: {
+                some: {
+                  userId: authUser.id,
+                },
+              },
             },
           },
-        }),
-      },
+          {
+            members: {
+              some: {
+                id: authUser.id,
+              },
+            },
+          },
+        ],
+      }),
     }
 
     const [totalCount, tags] = await Promise.all([
@@ -368,6 +383,7 @@ export class TagService {
     })
 
     this.updateInteractionsCount(tag.id)
+
     if (tag.authorId && tag.authorId !== authUser.id) {
       this.userService.follow(authUser.id, tag.authorId)
     }
