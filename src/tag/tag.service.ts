@@ -249,6 +249,7 @@ export class TagService {
         },
         OR: [
           {
+            isPublic: true,
             author: {
               followers: {
                 some: {
