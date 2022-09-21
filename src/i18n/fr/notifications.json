@@ -1,15 +1,13 @@
 {
-  "reactedToYourTag": "{otherUserDisplayName} a aimé un de tes sujets !",
   "reactedToYourPost": "{otherUserDisplayName} a aimé ton post sur #{tagText}",
   "reactedToYourPostNoTag": "{otherUserDisplayName} a aimé ton post",
   "repliedToYourPost": "{otherUserDisplayName} a répondu à ton post sur #{tagText}",
   "repliedToYourPostNoTag": "{otherUserDisplayName} a répondu à ton post",
   "repliedToSamePostAsYou": "{otherUserDisplayName} a répondu au même post que toi sur #{tagText}",
   "repliedToSamePostAsYouNoTag": "{otherUserDisplayName} a répondu au même post que toi",
-  "thereAreNewPostsOnYourTag": "{newPostCount} nouveaux posts sur un de tes sujets !",
-  "isNowFollowingYou": "{otherUserDisplayName} te suit désormais",
+  "thereAreNewPostsOnYourTag": "{newPostCount} nouveaux posts sur ton sujet !",
+  "isNowFollowingYou": "{otherUserDisplayName} est désormais abonné(e) à toi",
   "followeeCreatedTag": "{otherUserDisplayName} a lancé le sujet #{tagText}",
   "youHaveBeenMentioned": "{otherUserDisplayName} a mentionné ton nom sur #{tagText}",
-  "youHaveBeenMentionedNoTag": "{otherUserDisplayName} a mentionné ton nom",
-  "newAudience": "Bravo pour ton sujet ! {newPeopleCount} nouvelles personnes ont rejoint ton audience"
+  "youHaveBeenMentionedNoTag": "{otherUserDisplayName} a mentionné ton nom"
 }

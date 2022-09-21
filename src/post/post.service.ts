@@ -1,6 +1,6 @@
 import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { Injectable } from '@nestjs/common'
-import { ActivityType, NotificationType, Prisma } from '@prisma/client'
+import { NotificationType, Prisma } from '@prisma/client'
 import { AuthUser } from 'src/auth/auth.service'
 import { AlgoliaService } from 'src/core/algolia.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
@@ -229,13 +229,6 @@ export class PostService {
             tags: {
               connect: tagIds.map((tagId) => ({ id: tagId })),
             },
-            activities: {
-              create: {
-                type: ActivityType.CREATED_POST,
-                tagId: tagIds[0],
-                userId: authUser.id,
-              },
-            },
           }),
         ...(parent && {
           parent: {
@@ -284,15 +277,6 @@ export class PostService {
 
       if (tagIds && tagIds.length > 0) {
         await Promise.all([
-          this.prismaService.activity.createMany({
-            data: postUserMentions.map((mention) => ({
-              postUserMentionId: mention.id,
-              userId: authUser.id,
-              postId: post.id,
-              type: ActivityType.CREATED_POST_USER_MENTION,
-              tagId: tagIds[0],
-            })),
-          }),
           this.prismaService.notification.createMany({
             data: postUserMentions.map((mention) => ({
               postUserMentionId: mention.id,

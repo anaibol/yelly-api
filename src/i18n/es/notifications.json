@@ -1,5 +1,4 @@
 {
-  "reactedToYourTag": "{otherUserDisplayName} upvoted your topic!",
   "reactedToYourPost": "{otherUserDisplayName} liked your post on #{tagText}",
   "reactedToYourPostNoTag": "{otherUserDisplayName} liked your post",
   "repliedToYourPost": "{otherUserDisplayName} replied to your post on #{tagText}",
@@ -10,6 +9,5 @@
   "isNowFollowingYou": "{otherUserDisplayName} is now following you",
   "followeeCreatedTag": "{otherUserDisplayName} created the topic #{tagText}",
   "youHaveBeenMentioned": "{otherUserDisplayName} a mentionné ton nom sur #{tagText}",
-  "youHaveBeenMentionedNoTag": "{otherUserDisplayName} a mentionné ton nom",
-  "newAudience": "Congratulations for your topic! You added {newPeopleCount} people to your audience"
+  "youHaveBeenMentionedNoTag": "{otherUserDisplayName} a mentionné ton nom"
 }

@@ -31,5 +31,4 @@ export class User {
   tagCount?: number
   viewsCount?: number
   tagViewsCount?: number
-  tagReactionsCount?: number
 }

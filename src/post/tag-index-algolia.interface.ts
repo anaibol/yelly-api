@@ -1,8 +1,7 @@
 export interface TagIndexAlgoliaInterface {
-  id: BigInt
+  id: bigint
   text: string
   postCount: number | object
-  reactionsCount: number | object
   createdAt: Date
   createdAtTimestamp: number
   updatedAt?: Date

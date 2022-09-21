@@ -280,53 +280,6 @@ export class PushNotificationService {
     return Promise.allSettled(promises)
   }
 
-  async reactedToYourTag(tagReactionId: bigint) {
-    const tagReaction = await this.prismaService.tagReaction.findUnique({
-      where: {
-        id: tagReactionId,
-      },
-      select: {
-        author: {
-          select: {
-            displayName: true,
-          },
-        },
-        tag: {
-          select: {
-            id: true,
-            author: {
-              select: UserPushTokenSelect,
-            },
-          },
-        },
-      },
-    })
-
-    if (!tagReaction?.tag?.author || !tagReaction?.author) return Promise.reject(new Error('No tag'))
-
-    const pushTokens = await this.getPushTokensByUsersIds([tagReaction.tag.author.id])
-
-    const lang = tagReaction.tag.author.locale
-
-    const message = {
-      body: await this.i18n.translate('notifications.reactedToYourTag', {
-        args: { otherUserDisplayName: tagReaction.author.displayName },
-        ...(lang && { lang }),
-      }),
-    }
-
-    const messages = pushTokens.map((expoPushNotificationToken) => {
-      return {
-        ...message,
-        to: expoPushNotificationToken.token,
-        data: { url: `${process.env.APP_BASE_URL}/tags/${tagReaction.tag.id}` },
-        sound: 'default' as const,
-      }
-    })
-
-    await this.sendNotifications(messages, pushTokens, 'PUSH_NOTIFICATION_REACTED_TO_YOUR_TAG')
-  }
-
   async reactedToYourPost(postReactionId: bigint) {
     const postReaction = await this.prismaService.postReaction.findUnique({
       where: {

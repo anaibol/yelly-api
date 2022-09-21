@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { ActivityType, NotificationType, Prisma, TagType } from '@prisma/client'
+import { Prisma, TagType } from '@prisma/client'
 import { customAlphabet } from 'nanoid'
 
 import { SortDirection } from '../app.module'
@@ -11,9 +11,7 @@ import { PushNotificationService } from '../core/push-notification.service'
 import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { User } from '../user/user.model'
 import { UserService } from '../user/user.service'
-import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { Tag } from './tag.model'
-import { TagReaction } from './tag-reaction.model'
 import { tagSelect } from './tag-select.constant'
 import { TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
@@ -29,18 +27,6 @@ const getTagsSort = (
       return [
         {
           posts: {
-            _count: sortDirection,
-          },
-        },
-        {
-          createdAt: 'desc' as const,
-        },
-      ]
-
-    case 'reactionsCount':
-      return [
-        {
-          reactions: {
             _count: sortDirection,
           },
         },
@@ -94,10 +80,6 @@ export class TagService {
         _operation: 'Increment',
         value: 1,
       },
-      reactionsCount: {
-        _operation: 'Increment',
-        value: 1,
-      },
       createdAtTimestamp: tag.createdAt.getTime(),
       createdAt: tag.createdAt,
     }
@@ -117,7 +99,7 @@ export class TagService {
 
     const { _count, ...tag } = result
 
-    return { ...tag, postCount: _count.posts, membersCount: _count.members, reactionsCount: _count.reactions }
+    return { ...tag, postCount: _count.posts, membersCount: _count.members }
   }
 
   async getTagByNanoId(nanoId: string, authUser: AuthUser): Promise<Tag> {
@@ -132,7 +114,7 @@ export class TagService {
 
     const { _count, ...tag } = result
 
-    return { ...tag, postCount: _count.posts, membersCount: _count.members, reactionsCount: _count.reactions }
+    return { ...tag, postCount: _count.posts, membersCount: _count.members }
   }
 
   async create(tagText: string, authUser: AuthUser, tagType?: TagType, isPublic = false): Promise<Tag> {
@@ -146,12 +128,6 @@ export class TagService {
         isPublic,
         authorId: authUser.id,
         expiresAt,
-        activities: {
-          create: {
-            userId: authUser.id,
-            type: ActivityType.CREATED_TAG,
-          },
-        },
       },
     })
 
@@ -308,7 +284,6 @@ export class TagService {
         ...tag,
         postCount: tag._count.posts,
         membersCount: tag._count.members,
-        reactionsCount: tag._count.reactions,
       }
     })
 
@@ -329,77 +304,6 @@ export class TagService {
         scoreFactor,
       },
     })
-  }
-
-  getAuthUserReaction(tagId: bigint, authUser: AuthUser): Promise<TagReaction | null> {
-    return this.prismaService.tagReaction.findFirst({
-      where: {
-        authorId: authUser.id,
-        tagId,
-      },
-    })
-  }
-
-  async createOrUpdateTagReaction(
-    createOrUpdateTagReactionInput: CreateOrUpdateTagReactionInput,
-    authUser: AuthUser
-  ): Promise<TagReaction> {
-    const { text, tagId } = createOrUpdateTagReactionInput
-
-    const tag = await this.prismaService.tag.findUnique({
-      where: {
-        id: tagId,
-      },
-    })
-
-    if (!tag) return Promise.reject(new Error('No tag'))
-
-    const tagReaction = await this.prismaService.tagReaction.findFirst({
-      where: {
-        tagId,
-        authorId: authUser.id,
-      },
-    })
-
-    if (tagReaction) return Promise.reject(new Error('Already reacted'))
-
-    const reaction = await this.prismaService.tagReaction.create({
-      data: {
-        authorId: authUser.id,
-        text,
-        tagId,
-        activity: {
-          create: {
-            userId: authUser.id,
-            tagId,
-            type: ActivityType.CREATED_TAG_REACTION,
-          },
-        },
-        ...(tag.authorId && {
-          notification: {
-            create: {
-              type: NotificationType.REACTED_TO_YOUR_TAG,
-              userId: tag.authorId,
-            },
-          },
-        }),
-      },
-    })
-
-    this.updateInteractionsCount(tag.id)
-    this.pushNotificationService.reactedToYourTag(reaction.id)
-
-    return reaction
-  }
-
-  async deleteTagReaction(tagId: bigint, authUser: AuthUser): Promise<boolean> {
-    await this.prismaService.tagReaction.deleteMany({
-      where: { authorId: authUser.id, tagId },
-    })
-
-    this.updateInteractionsCount(tagId, false)
-
-    return true
   }
 
   async trackTagViews(tagsIds: bigint[]): Promise<boolean> {

@@ -3,7 +3,6 @@ import { TagType } from '@prisma/client'
 import { User } from 'src/user/user.model'
 
 import { PaginatedPosts } from '../post/paginated-posts.model'
-import { TagReaction } from './tag-reaction.model'
 
 registerEnumType(TagType, {
   name: 'TagType',
@@ -22,16 +21,13 @@ export class Tag {
   isHidden?: boolean
   posts?: PaginatedPosts
   postCount?: number
-  reactionsCount?: number
   viewsCount?: number
   interactionsCount?: number
   author?: User | null
-  authUserReaction?: TagReaction | null
   isReadOnly?: boolean
   isPublic?: boolean
   @Field(() => Float)
   score?: number | null
-  hasBeenTrending?: boolean
   @Field(() => Float)
   scoreFactor?: number | null
   membersCount?: number | null

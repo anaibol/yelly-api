@@ -22,7 +22,6 @@ async function main() {
           postReactions: true,
           posts: true,
           tags: true,
-          tagReactions: true,
         },
       },
     },
@@ -46,7 +45,6 @@ async function main() {
       FOLLOWERS_COUNT: user._count.followers,
       FOLLOWEES_COUNT: user._count.followers,
       TRENDS_CREATED_COUNT: user._count.tags,
-      TRENDS_VOTES_GIVEN_COUNT: user._count.tagReactions,
       POST_CREATED_COUNT: user._count.posts,
       POSTS_REACTIONS_GIVEN_COUNT: user._count.postReactions,
       DATE_OF_SIGNUP: formatDateToISO8601(user.createdAt),
@@ -58,7 +56,6 @@ async function main() {
     identifyObj.set('FOLLOWERS_COUNT', user._count.followers)
     identifyObj.set('FOLLOWEES_COUNT', user._count.followees)
     identifyObj.set('TRENDS_CREATED_COUNT', user._count.tags)
-    identifyObj.set('TRENDS_VOTES_GIVEN_COUNT', user._count.tagReactions)
     identifyObj.set('POST_CREATED_COUNT', user._count.posts)
     identifyObj.set('POSTS_REACTIONS_GIVEN_COUNT', user._count.postReactions)
     identifyObj.set('DATE_OF_SIGNUP', formatDateToISO8601(user.createdAt))

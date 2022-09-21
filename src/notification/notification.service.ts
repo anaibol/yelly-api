@@ -74,27 +74,6 @@ export class NotificationService {
               },
             },
           },
-          tagReaction: {
-            select: {
-              id: true,
-              text: true,
-              author: {
-                select: {
-                  id: true,
-                  displayName: true,
-                  username: true,
-                  pictureId: true,
-                  birthdate: true,
-                },
-              },
-              tag: {
-                select: {
-                  id: true,
-                  text: true,
-                },
-              },
-            },
-          },
           postReaction: {
             select: {
               id: true,

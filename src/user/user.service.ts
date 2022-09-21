@@ -549,16 +549,6 @@ export class UserService {
     return user._sum.viewsCount || 0
   }
 
-  getTagReactionsCount(userId: string): Promise<number> {
-    return this.prismaService.tagReaction.count({
-      where: {
-        tag: {
-          authorId: userId,
-        },
-      },
-    })
-  }
-
   async isFollowedByUser(followeeId: string, userId: string): Promise<boolean> {
     const follow = await this.prismaService.follower.findUnique({
       where: {

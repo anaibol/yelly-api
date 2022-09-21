@@ -8,29 +8,6 @@ type AccessToken {
   refreshToken: String!
 }
 
-type Activities {
-  items: [Activity!]!
-  nextCursor: BigInt
-  totalCount: Int!
-}
-
-type Activity {
-  createdAt: DateTime
-  id: BigInt!
-  mentionedUser: User
-  post: Post
-  tag: Tag
-  type: ActivityType
-  user: User
-}
-
-enum ActivityType {
-  CREATED_POST
-  CREATED_POST_USER_MENTION
-  CREATED_TAG
-  CREATED_TAG_REACTION
-}
-
 type AgeVerificationResult {
   ageEstimation: Int
   agePredictionResult: String
@@ -65,11 +42,6 @@ input CreateOrUpdatePostReactionInput {
   text: String!
 }
 
-input CreateOrUpdateTagReactionInput {
-  tagId: BigInt!
-  text: String!
-}
-
 input CreatePostInput {
   mentionedUserIds: [String!]
   parentId: BigInt
@@ -100,10 +72,6 @@ input DeletePostInput {
 
 input DeletePostReactionInput {
   postId: BigInt!
-}
-
-input DeleteTagReactionInput {
-  tagId: BigInt!
 }
 
 input EmailSignInInput {
@@ -142,7 +110,6 @@ type Me {
   school: School
   snapchat: String
   tagCount: Int
-  tagReactionsCount: Int
   tagViewsCount: Int
   tiktok: String
   training: Training
@@ -157,7 +124,6 @@ type Mutation {
   blockUser(otherUserId: String!): Boolean!
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
   createOrUpdatePostReaction(input: CreateOrUpdatePostReactionInput!): PostReaction!
-  createOrUpdateTagReaction(input: CreateOrUpdateTagReactionInput!): TagReaction!
   createPost(input: CreatePostInput!): Post!
   createPostPollVote(input: CreatePostPollVoteInput!): Post!
   createTag(input: CreateTagInput!): Tag!
@@ -167,7 +133,6 @@ type Mutation {
   deletePost(input: DeletePostInput!): Boolean!
   deletePostReaction(input: DeletePostReactionInput!): Boolean!
   deleteTag(tagId: BigInt!): Tag!
-  deleteTagReaction(input: DeleteTagReactionInput!): Boolean!
   deleteUser(userId: String!): Boolean!
   emailSignIn(input: EmailSignInInput!): AccessToken!
   follow(otherUserId: String!): Boolean!
@@ -201,19 +166,16 @@ type Notification {
   postReaction: PostReaction
   postUserMention: PostUserMention
   tag: Tag
-  tagReaction: TagReaction
   type: NotificationType
 }
 
 enum NotificationType {
   IS_NOW_FOLLOWING_YOU
   REACTED_TO_YOUR_POST
-  REACTED_TO_YOUR_TAG
   REPLIED_TO_SAME_POST_AS_YOU
   REPLIED_TO_YOUR_POST
   THERE_ARE_NEW_POSTS_ON_YOUR_TAG
   USER_MENTIONED_YOU
-  YOUR_TAG_IS_TRENDING
 }
 
 type PaginatedNotifications {
@@ -297,7 +259,6 @@ enum PostsSortBy {
 }
 
 type Query {
-  activities(after: BigInt, limit: Int = 10): Activities!
   followSuggestions(limit: Int = 10, skip: Int = 0): PaginatedUsers!
   getS3PresignedUploadUrl: Upload!
   isUserFollowedByAuthUser(userId: String!): Boolean!
@@ -313,7 +274,6 @@ type Query {
   tagsByScore(isForYou: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTagsByScore!
   unreadNotificationsCount: Int!
   user(id: String!): User!
-  userActivities(after: BigInt, limit: Int = 10, userId: String!): Activities!
   userByPhoneNumber(phoneNumber: String!): User!
   userFollowees(displayNameStartsWith: String, limit: Int = 10, skip: Int = 0, sortBy: UserFolloweesSortBy = createdAt, sortDirection: SortDirection = desc, userId: String!): PaginatedUsers!
   userFollowers(limit: Int = 10, skip: Int = 0, userId: String!): PaginatedUsers!
@@ -344,11 +304,9 @@ enum SortDirection {
 }
 
 type Tag {
-  authUserReaction: TagReaction
   author: User
   createdAt: DateTime
   expiresAt: DateTime
-  hasBeenTrending: Boolean
   id: BigInt!
   interactionsCount: Int
   isHidden: Boolean
@@ -358,7 +316,6 @@ type Tag {
   nanoId: String
   postCount: Int
   posts: PaginatedPosts
-  reactionsCount: Int
   score: Float
   scoreFactor: Float
   shareCount: Int
@@ -367,17 +324,9 @@ type Tag {
   viewsCount: Int
 }
 
-type TagReaction {
-  author: User
-  id: BigInt!
-  tag: Tag
-  text: String
-}
-
 enum TagSortBy {
   createdAt
   postCount
-  reactionsCount
   score
 }
 
@@ -441,7 +390,6 @@ type User {
   school: School
   snapchat: String
   tagCount: Int
-  tagReactionsCount: Int
   tagViewsCount: Int
   tiktok: String
   training: Training

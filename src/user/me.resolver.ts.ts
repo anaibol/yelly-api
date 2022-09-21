@@ -101,12 +101,6 @@ export class MeResolver {
     return this.userService.getTagViewsCount(authUser.id)
   }
 
-  @UseGuards(AuthGuard)
-  @ResolveField(() => Number)
-  async tagReactionsCount(@CurrentUser() authUser: AuthUser): Promise<number> {
-    return this.userService.getTagReactionsCount(authUser.id)
-  }
-
   @Mutation(() => AccessToken)
   async refreshAccessToken(@Args('refreshToken') refreshToken: string): Promise<AccessToken> {
     return this.authService.refreshAccessToken(refreshToken)

@@ -11,7 +11,6 @@ export const tagSelect = {
   viewsCount: true,
   shareCount: true,
   interactionsCount: true,
-  hasBeenTrending: true,
   score: true,
   scoreFactor: true,
   _count: {

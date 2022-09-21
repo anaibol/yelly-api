@@ -6,7 +6,6 @@ import { I18nModule } from 'nestjs-i18n'
 import { join } from 'path'
 
 // import { CommonFriendsLoader } from './user/common-friends.loader'
-import { ActivityModule } from './activity/activity.module'
 import { AuthModule } from './auth/auth.module'
 import { CommonModule } from './common/common.module'
 import { CoreModule } from './core/core.module'
@@ -82,7 +81,6 @@ registerEnumType(SortDirection, {
     }),
     ...(process.env.REDIS_HOST && process.env.REDIS_PORT ? [CronModule] : []),
     UserModule,
-    ActivityModule,
     PostModule,
     TagModule,
     CoreModule,

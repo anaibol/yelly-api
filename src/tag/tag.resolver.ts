@@ -6,13 +6,10 @@ import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { PrismaService } from '../core/prisma.service'
-import { CreateOrUpdateTagReactionInput } from './create-or-update-tag-reaction.input'
 import { CreateTagInput } from './create-tag.input'
-import { DeleteTagReactionInput } from './delete-tag-reaction.input'
 import { PaginatedTags, PaginatedTagsByScore } from './paginated-tags.model'
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
-import { TagReaction } from './tag-reaction.model'
 import { TagsArgs, TagsByScoreArgs, TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 
@@ -149,30 +146,6 @@ export class TagResolver {
     if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
 
     return this.tagService.updateTag(tagId, updateTagInput)
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => Boolean)
-  async deleteTagReaction(
-    @Args('input') deleteTagReactionInput: DeleteTagReactionInput,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<boolean> {
-    return this.tagService.deleteTagReaction(deleteTagReactionInput.tagId, authUser)
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => TagReaction)
-  async createOrUpdateTagReaction(
-    @Args('input') createTagReactionInput: CreateOrUpdateTagReactionInput,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<TagReaction> {
-    return this.tagService.createOrUpdateTagReaction(createTagReactionInput, authUser)
-  }
-
-  @UseGuards(AuthGuard)
-  @ResolveField()
-  async authUserReaction(@Parent() tag: Tag, @CurrentUser() authUser: AuthUser): Promise<TagReaction | null> {
-    return this.tagService.getAuthUserReaction(tag.id, authUser)
   }
 
   @UseGuards(AuthGuard)

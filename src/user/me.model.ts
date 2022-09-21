@@ -38,7 +38,6 @@ export class Me {
   viewsCount?: number
   isAgeApproved?: null | boolean
   tagViewsCount?: number
-  tagReactionsCount?: number
 }
 
 @ObjectType()

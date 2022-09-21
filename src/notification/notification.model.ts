@@ -1,7 +1,6 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { NotificationType } from '@prisma/client'
 import { PostReaction } from 'src/post/post-reaction.model'
-import { TagReaction } from 'src/tag/tag-reaction.model'
 
 import { Post } from '../post/post.model'
 import { Tag } from '../tag/tag.model'
@@ -25,7 +24,6 @@ export class Notification {
   isSeen?: boolean
   createdAt: Date
   postReaction?: PostReaction | null
-  tagReaction?: TagReaction | null
   followerUser?: User | null
   tag?: Tag | null
   post?: Post | null
