@@ -387,11 +387,6 @@ export class TagService {
     })
 
     this.updateInteractionsCount(tag.id)
-
-    if (tag.authorId && tag.authorId !== authUser.id) {
-      this.userService.follow(authUser.id, tag.authorId)
-    }
-
     this.pushNotificationService.reactedToYourTag(reaction.id)
 
     return reaction

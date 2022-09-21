@@ -264,9 +264,6 @@ export class PostService {
 
     if (associatedTag) {
       this.tagService.updateInteractionsCount(associatedTag.id)
-      if (associatedTag?.author?.id && associatedTag?.author?.id !== authUser.id) {
-        this.userService.follow(authUser.id, associatedTag?.author?.id)
-      }
       this.bodyguardService.analyseComment(post, authUser, associatedTag)
     }
 
@@ -446,9 +443,6 @@ export class PostService {
 
     if (associatedTag) {
       this.tagService.updateInteractionsCount(associatedTag.id)
-      if (associatedTag?.author?.id && associatedTag?.author?.id !== authUser.id) {
-        this.userService.follow(authUser.id, associatedTag.author.id)
-      }
     }
 
     if (post.author.id !== authUser.id) this.pushNotificationService.reactedToYourPost(reaction.id)
