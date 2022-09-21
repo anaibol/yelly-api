@@ -9,6 +9,7 @@ export class UpdateUserInput {
   birthdate?: Date
   instagram?: string
   snapchat?: string
+  tiktok?: string
   pictureId?: string
   trainingName?: string
   schoolGooglePlaceId?: string

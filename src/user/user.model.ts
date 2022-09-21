@@ -12,8 +12,9 @@ export class User {
   username?: string | null
   birthdate?: Date | null
   pictureId?: string | null
-  snapchat?: string | null
   instagram?: string | null
+  snapchat?: string | null
+  tiktok?: string | null
   about?: string | null
   locale?: string | null
   training?: Training | null

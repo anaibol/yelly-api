@@ -21,8 +21,9 @@ export class Me {
   username?: string | null
   birthdate?: Date | null
   pictureId?: string | null
-  snapchat?: string | null
   instagram?: string | null
+  snapchat?: string | null
+  tiktok?: string | null
   isFilled?: boolean
   expoPushNotificationTokens?: string[]
   about?: string | null

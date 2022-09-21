@@ -104,6 +104,7 @@ model User {
   agePredictionResult          String?
   snapchat                     String?
   instagram                    String?
+  tiktok                       String?
   resetToken                   String?
   isVerified                   Boolean                           @default(true)
   createdAt                    DateTime                          @default(now())

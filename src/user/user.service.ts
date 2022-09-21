@@ -157,6 +157,7 @@ export class UserService {
         about: true,
         instagram: true,
         snapchat: true,
+        tiktok: true,
         isBanned: true,
         isAgeApproved: true,
         school: {
@@ -226,6 +227,7 @@ export class UserService {
         about: true,
         instagram: true,
         snapchat: true,
+        tiktok: true,
         school: {
           select: {
             id: true,
@@ -606,6 +608,7 @@ export class UserService {
         expoPushNotificationTokens: true,
         instagram: true,
         snapchat: true,
+        tiktok: true,
         school: {
           select: {
             id: true,
@@ -950,6 +953,7 @@ export class UserService {
         birthdate: true,
         instagram: true,
         snapchat: true,
+        tiktok: true,
         about: true,
         countryId: true,
         school: {
@@ -983,8 +987,9 @@ export class UserService {
         email: data.email,
         password: data.password,
         birthdate: data.birthdate,
-        instagram: data.instagram,
         snapchat: data.snapchat,
+        instagram: data.instagram,
+        tiktok: data.tiktok,
         pictureId: data.pictureId,
         about: data.about,
         isFilled: data.isFilled,
