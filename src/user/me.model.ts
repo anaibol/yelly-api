@@ -1,7 +1,6 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { UserRole } from '@prisma/client'
 
-import { School } from '../school/school.model'
 import { Training } from './training.model'
 
 registerEnumType(UserRole, {
@@ -29,7 +28,6 @@ export class Me {
   about?: string | null
   locale?: string
   training?: Training | null
-  school?: School | null
   countryId?: string | null
   followersCount?: number
   followeesCount?: number

@@ -4,13 +4,10 @@ import { customAlphabet } from 'nanoid'
 
 import { SortDirection } from '../app.module'
 import { AuthUser } from '../auth/auth.service'
-import { AlgoliaService } from '../core/algolia.service'
 import { BodyguardService } from '../core/bodyguard.service'
 import { PrismaService } from '../core/prisma.service'
 import { PushNotificationService } from '../core/push-notification.service'
-import { TagIndexAlgoliaInterface } from '../post/tag-index-algolia.interface'
 import { User } from '../user/user.model'
-import { UserService } from '../user/user.service'
 import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
 import { TagSortBy } from './tags.args'
@@ -56,37 +53,9 @@ const getTagsSort = (
 export class TagService {
   constructor(
     private prismaService: PrismaService,
-    private algoliaService: AlgoliaService,
     private pushNotificationService: PushNotificationService,
-    private bodyguardService: BodyguardService,
-    private userService: UserService
+    private bodyguardService: BodyguardService
   ) {}
-  async syncTagIndexWithAlgolia(tagId: bigint) {
-    const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
-
-    const tag = await this.prismaService.tag.findUnique({
-      select: tagSelect,
-      where: {
-        id: tagId,
-      },
-    })
-
-    if (!tag) return Promise.reject(new Error('Tag not found'))
-
-    const objectToUpdateOrCreate: TagIndexAlgoliaInterface = {
-      id: tag.id,
-      text: tag.text,
-      postCount: {
-        _operation: 'Increment',
-        value: 1,
-      },
-      createdAtTimestamp: tag.createdAt.getTime(),
-      createdAt: tag.createdAt,
-    }
-
-    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToUpdateOrCreate, tag.id.toString())
-  }
-
   async getTag(tagId: bigint, authUser: AuthUser): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
@@ -133,8 +102,6 @@ export class TagService {
 
     this.bodyguardService.analyseTopic(tag, authUser)
 
-    this.syncTagIndexWithAlgolia(tag.id)
-
     if (isPublic) this.pushNotificationService.followeeCreatedTag(tag.id)
 
     return tag
@@ -176,9 +143,6 @@ export class TagService {
     await this.prismaService.tag.delete({
       where: { id: tagId },
     })
-
-    const algoliaTagIndex = await this.algoliaService.initIndex('TAGS')
-    this.algoliaService.deleteObject(algoliaTagIndex, tagId.toString())
 
     return true
   }

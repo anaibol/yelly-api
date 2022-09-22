@@ -23,20 +23,6 @@ input CheckPhoneNumberVerificationCodeInput {
   verificationCode: String!
 }
 
-type City {
-  country: Country
-  googlePlaceId: String
-  id: ID!
-  lat: String
-  lng: String
-  name: String!
-}
-
-type Country {
-  code: String!
-  id: ID!
-}
-
 input CreateOrUpdatePostReactionInput {
   postId: BigInt!
   text: String!
@@ -107,7 +93,6 @@ type Me {
   pictureId: String
   postCount: Int
   role: UserRole!
-  school: School
   snapchat: String
   tagCount: Int
   tagViewsCount: Int
@@ -267,7 +252,6 @@ type Query {
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: BigInt, childrenSortBy: PostsSortBy = createdAt, childrenSortDirection: SortDirection = desc, limit: Int = 10, postId: BigInt!): Post!
   posts(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt): PaginatedPosts!
-  school(googlePlaceId: String, id: String): School
   tag(tagId: BigInt!): Tag!
   tagByNanoId(tagNanoId: String!): Tag!
   tags(after: BigInt, authorId: String, isForYou: Boolean = false, limit: Int = 10, shouldIncludeExpired: Boolean = false, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
@@ -283,19 +267,6 @@ type Query {
 input ResetPasswordInput {
   password: String!
   resetToken: String!
-}
-
-type School {
-  city: City
-  distance: Float
-  googlePlaceId: String
-  id: ID!
-  lat: Float
-  lng: Float
-  name: String
-  posts: PaginatedPosts
-  totalUsersCount: Int
-  users: [User!]
 }
 
 enum SortDirection {
@@ -386,7 +357,6 @@ type User {
   locale: String
   pictureId: String
   postCount: Int
-  school: School
   snapchat: String
   tagCount: Int
   tagViewsCount: Int
