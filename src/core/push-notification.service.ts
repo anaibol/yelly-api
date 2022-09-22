@@ -58,6 +58,7 @@ export class PushNotificationService {
       where: { id: tagId },
       select: {
         text: true,
+        nanoId: true,
         author: {
           select: {
             ...UserPushTokenSelect,
@@ -86,7 +87,7 @@ export class PushNotificationService {
           ...(lang && { lang }),
           args: { otherUserDisplayName: tag.author?.displayName, tagText: tag.text },
         }),
-        data: { url: `${process.env.APP_BASE_URL}/tags/${tagId}` },
+        data: { url: `${process.env.APP_BASE_URL}/topics/${tag.nanoId}` },
         sound: 'default' as const,
       }
     })
@@ -210,7 +211,7 @@ export class PushNotificationService {
 
     const { locale: lang, expoPushNotificationTokens } = user
 
-    const url = `${process.env.APP_BASE_URL}/tags/${tagId}`
+    const url = `${process.env.APP_BASE_URL}/mytopics/${tagId}`
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
