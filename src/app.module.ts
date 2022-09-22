@@ -14,7 +14,6 @@ import { NotificationModule } from './notification/notification.module'
 import { PostModule } from './post/post.module'
 // import { GraphQLError, GraphQLFormattedError } from 'graphql'
 import { BigIntScalar } from './scalars/big-int.scalar'
-import { SchoolModule } from './school/school.module'
 import { TagModule } from './tag/tag.module'
 import { UserModule } from './user/user.module'
 
@@ -87,7 +86,6 @@ registerEnumType(SortDirection, {
     CommonModule,
     AuthModule,
     NotificationModule,
-    SchoolModule,
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       fallbacks: {

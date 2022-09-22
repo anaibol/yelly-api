@@ -14,7 +14,6 @@ import { SortDirection } from '../app.module'
 import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
-import { SchoolService } from '../school/school.service'
 import { TagService } from '../tag/tag.service'
 import { deleteObject, getObject } from '../utils/aws'
 import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
@@ -94,7 +93,6 @@ export class UserService {
     private prismaService: PrismaService,
     private emailService: EmailService,
     private algoliaService: AlgoliaService,
-    private schoolService: SchoolService,
     private pushNotificationService: PushNotificationService,
     @Inject(forwardRef(() => PostService))
     private postService: PostService,
@@ -226,30 +224,6 @@ export class UserService {
         instagram: true,
         snapchat: true,
         tiktok: true,
-        school: {
-          select: {
-            id: true,
-            name: true,
-            city: {
-              select: {
-                id: true,
-                name: true,
-                country: {
-                  select: {
-                    id: true,
-                    code: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        training: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
         _count: {
           select: {
             posts: true,
@@ -852,12 +826,6 @@ export class UserService {
     return this.algoliaService.partialUpdateObject(usersIndex, newUserAlgoliaObject, user.id)
   }
 
-  async syncPostsIndexWithAlgolia(userId: string): Promise<(PartialUpdateObjectResponse | undefined)[]> {
-    const posts = await this.prismaService.post.findMany({ where: { authorId: userId }, select: { id: true } })
-
-    return Promise.all(posts.map((post) => this.postService.syncPostIndexWithAlgolia(post.id)))
-  }
-
   async getFollowSuggestions(authUser: AuthUser, skip: number, limit: number): Promise<PaginatedUsers> {
     if (!authUser.schoolId) return Promise.reject(new Error('No school'))
 
@@ -919,7 +887,6 @@ export class UserService {
   }
 
   async update(userId: string, data: UpdateUserInput): Promise<Me> {
-    const schoolData = data.schoolGooglePlaceId && (await this.schoolService.getOrCreate(data.schoolGooglePlaceId))
     const country =
       data.countryCode && (await this.prismaService.country.findUnique({ where: { code: data.countryCode } }))
 
@@ -983,7 +950,6 @@ export class UserService {
       // eslint-disable-next-line functional/no-try-statement
       try {
         this.syncUsersIndexWithAlgolia(userId)
-        this.syncPostsIndexWithAlgolia(userId)
       } catch (error) {
         console.log({ error })
         // CATCH ERROR SO IT CONTINUES
@@ -999,20 +965,6 @@ export class UserService {
       //     pictureId: updatedUser.pictureId,
       //   },
       // })
-    }
-
-    if (schoolData) {
-      this.schoolService.syncAlgoliaSchool(schoolData.id)
-
-      const previousSchool =
-        schoolData &&
-        (await this.prismaService.user.findUnique({
-          where: { id: userId },
-        }))
-
-      if (previousSchool?.schoolId && previousSchool.schoolId !== schoolData.id) {
-        this.schoolService.syncAlgoliaSchool(previousSchool.schoolId)
-      }
     }
 
     return updatedUser

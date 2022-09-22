@@ -1,4 +1,3 @@
-import { PartialUpdateObjectResponse } from '@algolia/client-search'
 import { Injectable } from '@nestjs/common'
 import { NotificationType, Prisma } from '@prisma/client'
 import { AuthUser } from 'src/auth/auth.service'
@@ -260,8 +259,6 @@ export class PostService {
       this.bodyguardService.analyseComment(post, authUser, associatedTag)
     }
 
-    this.syncPostIndexWithAlgolia(post.id)
-
     if (parent && authUser.id !== parent.authorId) {
       this.pushNotificationService.repliedToYourPost(post.id)
     } else if (tagIds && tagIds.length > 0) {
@@ -358,8 +355,6 @@ export class PostService {
         this.tagService.updateInteractionsCount(post.parent.tags[0].id, false)
       }
     }
-
-    this.deletePostFromAlgolia(postId)
 
     return true
   }
@@ -539,38 +534,6 @@ export class PostService {
         },
       },
     })
-  }
-
-  async syncPostIndexWithAlgolia(postId: bigint): Promise<PartialUpdateObjectResponse | undefined> {
-    const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
-
-    const post = await this.prismaService.post.findUnique({
-      where: {
-        id: postId,
-      },
-      select: PostSelectWithParent,
-    })
-
-    if (!post) return
-
-    const postIdString = post.id.toString()
-
-    const objectToCreate = {
-      id: postIdString,
-      objectID: postIdString,
-      createdAt: post.createdAt,
-      createdAtTimestamp: Date.parse(post.createdAt.toString()),
-      text: post.text,
-      author: post.author,
-      tags: post.tags,
-    }
-
-    return this.algoliaService.partialUpdateObject(algoliaTagIndex, objectToCreate, postIdString)
-  }
-
-  async deletePostFromAlgolia(postId: bigint): Promise<void> {
-    const algoliaTagIndex = await this.algoliaService.initIndex('POSTS')
-    this.algoliaService.deleteObject(algoliaTagIndex, postId.toString())
   }
 
   async postsUserReactions(
