@@ -1,7 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql'
 
-import { Training } from './training.model'
-
 @ObjectType()
 export class User {
   @Field(() => ID)
@@ -16,7 +14,6 @@ export class User {
   tiktok?: string | null
   about?: string | null
   locale?: string | null
-  training?: Training | null
   countryId?: string | null
   isFollowedByAuthUser?: boolean
   hasBlockedAuthUser?: boolean

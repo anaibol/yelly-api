@@ -97,7 +97,6 @@ type Me {
   tagCount: Int
   tagViewsCount: Int
   tiktok: String
-  training: Training
   username: String
   viewsCount: Int
 }
@@ -308,11 +307,6 @@ enum TagType {
   VERSUS
 }
 
-type Training {
-  id: ID!
-  name: String!
-}
-
 input UpdateTagInput {
   isHidden: Boolean
   scoreFactor: Float
@@ -361,7 +355,6 @@ type User {
   tagCount: Int
   tagViewsCount: Int
   tiktok: String
-  training: Training
   username: String
   viewsCount: Int
 }
