@@ -1,8 +1,6 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { UserRole } from '@prisma/client'
 
-import { Training } from './training.model'
-
 registerEnumType(UserRole, {
   name: 'UserRole',
 })
@@ -27,7 +25,6 @@ export class Me {
   expoPushNotificationTokens?: string[]
   about?: string | null
   locale?: string
-  training?: Training | null
   countryId?: string | null
   followersCount?: number
   followeesCount?: number
