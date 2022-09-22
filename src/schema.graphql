@@ -349,7 +349,6 @@ input UpdateTagInput {
 
 input UpdateUserInput {
   about: String
-  birthdate: DateTime
   countryCode: String
   displayName: String
   email: String

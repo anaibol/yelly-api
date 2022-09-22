@@ -41,7 +41,6 @@ async function main() {
       displayName: user.displayName,
       username: user.username,
       createdAt: user.createdAt,
-      YEAR_OF_BIRTH: user.birthdate?.getFullYear(),
       FOLLOWERS_COUNT: user._count.followers,
       FOLLOWEES_COUNT: user._count.followers,
       TRENDS_CREATED_COUNT: user._count.tags,
@@ -52,7 +51,6 @@ async function main() {
     })
 
     const identifyObj = new Identify()
-    if (user.birthdate) identifyObj.set('YEAR_OF_BIRTH', user.birthdate?.getFullYear())
     identifyObj.set('FOLLOWERS_COUNT', user._count.followers)
     identifyObj.set('FOLLOWEES_COUNT', user._count.followees)
     identifyObj.set('TRENDS_CREATED_COUNT', user._count.tags)

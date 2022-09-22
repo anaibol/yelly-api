@@ -30,28 +30,7 @@ export const PostSelect = {
       createdAt: true,
       displayName: true,
       username: true,
-      birthdate: true,
       pictureId: true,
-      school: {
-        select: {
-          id: true,
-          name: true,
-          lat: true,
-          lng: true,
-          city: {
-            select: {
-              id: true,
-              name: true,
-              country: {
-                select: {
-                  id: true,
-                  code: true,
-                },
-              },
-            },
-          },
-        },
-      },
     },
   },
   tags: {
@@ -75,7 +54,6 @@ export const PostSelect = {
           id: true,
           displayName: true,
           username: true,
-          birthdate: true,
           pictureId: true,
         },
       },

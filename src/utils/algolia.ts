@@ -8,34 +8,7 @@ export type UserIndexAlgoliaInterface = {
   username: string | null
   pictureId: string | null
   createdAtTimestamp: number | null
-  birthdateTimestamp: number | null
   hasPicture: boolean
-  training: {
-    id?: string
-    name?: string
-  }
-  school: {
-    id?: string
-    name?: string
-    googlePlaceId?: string | null
-    city: {
-      id?: string
-      name?: string
-      googlePlaceId?: string | null
-      country: {
-        id?: string
-        code?: string
-      }
-      _geoloc: {
-        lat?: number | null
-        lng?: number | null
-      }
-    }
-    _geoloc: {
-      lat?: number | null
-      lng?: number | null
-    }
-  }
 }
 
 export type PostIndexAlgoliaInterface = {
@@ -49,22 +22,7 @@ export type PostIndexAlgoliaInterface = {
     createdAt: Date
     displayName: string
     username: string
-    birthdate: string
     pictureId: string | null
-    school: {
-      id: string
-      name: string
-      lat: number | null
-      lng: number | null
-      city: {
-        id: string
-        name: string
-        country: {
-          id: string
-          code: string
-        }
-      }
-    }
   }
   tags: {
     id: string
@@ -82,37 +40,6 @@ export const algoliaUserSelect = {
   isFilled: true,
   isAgeApproved: true,
   pictureId: true,
-  birthdate: true,
-  school: {
-    select: {
-      id: true,
-      name: true,
-      googlePlaceId: true,
-      lat: true,
-      lng: true,
-      city: {
-        select: {
-          id: true,
-          name: true,
-          googlePlaceId: true,
-          lat: true,
-          lng: true,
-          country: {
-            select: {
-              id: true,
-              code: true,
-            },
-          },
-        },
-      },
-    },
-  },
-  training: {
-    select: {
-      id: true,
-      name: true,
-    },
-  },
 }
 
 export const algoliaSchoolSelect = {
@@ -152,28 +79,7 @@ export const algoliaPostSelect = {
       createdAt: true,
       displayName: true,
       username: true,
-      birthdate: true,
       pictureId: true,
-      school: {
-        select: {
-          id: true,
-          name: true,
-          lat: true,
-          lng: true,
-          city: {
-            select: {
-              id: true,
-              name: true,
-              country: {
-                select: {
-                  id: true,
-                  code: true,
-                },
-              },
-            },
-          },
-        },
-      },
     },
   },
   tags: {
@@ -199,35 +105,8 @@ export function mapAlgoliaUser(user: UserWithPosts): UserIndexAlgoliaInterface {
     displayName: user.displayName,
     username: user.username,
     pictureId: user.pictureId,
-    birthdateTimestamp: user.birthdate ? Date.parse(user.birthdate.toString()) : null,
     createdAtTimestamp: user.createdAt ? Date.parse(user.createdAt.toString()) : null,
     hasPicture: user.pictureId != null,
-    training: {
-      id: user.training?.id,
-      name: user.training?.name,
-    },
-    school: {
-      id: user.school?.id,
-      name: user.school?.name,
-      googlePlaceId: user.school?.googlePlaceId,
-      city: {
-        id: user.school?.city.id,
-        name: user.school?.city.name,
-        googlePlaceId: user.school?.city?.googlePlaceId,
-        country: {
-          id: user.school?.city.country.id,
-          code: user.school?.city.country.code,
-        },
-        _geoloc: {
-          lat: user.school?.city?.lat,
-          lng: user.school?.city?.lng,
-        },
-      },
-      _geoloc: {
-        lat: user.school?.lat,
-        lng: user.school?.lng,
-      },
-    },
   }
 }
 
@@ -238,9 +117,9 @@ const algoliaPost = Prisma.validator<Prisma.PostArgs>()({
 type AlgoliaPost = Prisma.PostGetPayload<typeof algoliaPost>
 
 export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | null {
-  const { id, createdAt, displayName, username, birthdate, pictureId, school } = post.author
+  const { id, createdAt, displayName, username, pictureId } = post.author
 
-  if (!createdAt || !displayName || !username || !birthdate || !username || !school?.city?.country) return null
+  if (!createdAt || !displayName || !username) return null
 
   return {
     id: post.id.toString(),
@@ -253,22 +132,7 @@ export function mapAlgoliaPost(post: AlgoliaPost): PostIndexAlgoliaInterface | n
       createdAt,
       displayName,
       username,
-      birthdate: birthdate.toDateString(),
       pictureId,
-      school: {
-        id: school.id,
-        name: school.name,
-        lat: school.lat,
-        lng: school.lng,
-        city: {
-          id: school.city.id,
-          name: school.city.name,
-          country: {
-            id: school.city.country.id,
-            code: school.city.country.code,
-          },
-        },
-      },
     },
     tags: post.tags.map((tag) => {
       return {

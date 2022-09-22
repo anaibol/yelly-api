@@ -202,8 +202,6 @@ export class TagService {
       return Promise.reject(new Error('No admin'))
     }
 
-    if (!authUser.birthdate) return Promise.reject(new Error('No birthdate'))
-
     const where: Prisma.TagWhereInput = {
       ...(authorId
         ? {

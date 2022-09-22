@@ -24,7 +24,6 @@ export const tagSelect = {
       id: true,
       displayName: true,
       username: true,
-      birthdate: true,
       pictureId: true,
       training: {
         select: {

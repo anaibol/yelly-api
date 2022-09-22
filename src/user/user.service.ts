@@ -153,7 +153,6 @@ export class UserService {
         displayName: true,
         username: true,
         pictureId: true,
-        birthdate: true,
         about: true,
         instagram: true,
         snapchat: true,
@@ -223,7 +222,6 @@ export class UserService {
         displayName: true,
         username: true,
         pictureId: true,
-        birthdate: true,
         about: true,
         instagram: true,
         snapchat: true,
@@ -591,7 +589,6 @@ export class UserService {
         displayName: true,
         username: true,
         pictureId: true,
-        birthdate: true,
         about: true,
         isFilled: true,
         isAgeApproved: true,
@@ -940,61 +937,23 @@ export class UserService {
         displayName: true,
         username: true,
         pictureId: true,
-        birthdate: true,
         instagram: true,
         snapchat: true,
         tiktok: true,
         about: true,
         countryId: true,
-        school: {
-          select: {
-            id: true,
-            name: true,
-            city: {
-              select: {
-                id: true,
-                name: true,
-                country: {
-                  select: {
-                    id: true,
-                    code: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        training: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
       },
       data: {
         displayName: data.displayName,
         username: data.username,
         email: data.email,
         password: data.password,
-        birthdate: data.birthdate,
         snapchat: data.snapchat,
         instagram: data.instagram,
         tiktok: data.tiktok,
         pictureId: data.pictureId,
         about: data.about,
         isFilled: data.isFilled,
-        ...(schoolData && {
-          school: {
-            connect: {
-              id: schoolData.id,
-            },
-          },
-          country: {
-            connect: {
-              id: schoolData.city.countryId,
-            },
-          },
-        }),
         ...(data.schoolGooglePlaceId === null && {
           school: { disconnect: true },
         }),
@@ -1002,18 +961,6 @@ export class UserService {
           country: {
             connect: {
               id: country.id,
-            },
-          },
-        }),
-        ...(data.trainingName && {
-          training: {
-            connectOrCreate: {
-              where: {
-                name: data.trainingName,
-              },
-              create: {
-                name: data.trainingName,
-              },
             },
           },
         }),

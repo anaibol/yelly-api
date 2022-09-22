@@ -11,7 +11,7 @@ const COMMENT_2006_AND_BELOW_CHANNEL_ID = 'b720a421-b277-4467-8b97-92dba9920a74'
 const COMMENT_2007_AND_ABOVE_CHANNEL_ID = 'a77837b5-24f2-4759-98b7-5519a22ef1db'
 const TOPIC_2006_AND_BELOW_CHANNEL_ID = '411ebb5b-5dc5-45a9-aa4c-399406b56123'
 const TOPIC_2007_AND_ABOVE_CHANNEL_ID = '0edbeba2-894a-4866-8f7c-4cb12d652ea3'
-const fifteenYoYear = 2007
+// const fifteenYoYear = 2007
 
 @Injectable()
 export class BodyguardService implements OnModuleInit {
@@ -34,10 +34,11 @@ export class BodyguardService implements OnModuleInit {
 
   // eslint-disable-next-line functional/no-return-void
   async analyseTopic(tag: Tag, author: User) {
-    if (!author?.birthdate) {
-      return
-    }
-    const isLessThanFifteen = author.birthdate.getFullYear() >= fifteenYoYear
+    // if (!author?.birthdate) {
+    //   return
+    // }
+    // const isLessThanFifteen = author.birthdate.getFullYear() >= fifteenYoYear
+    const isLessThanFifteen = false
     const channelId = isLessThanFifteen ? TOPIC_2007_AND_ABOVE_CHANNEL_ID : TOPIC_2006_AND_BELOW_CHANNEL_ID
     const apiKey = isLessThanFifteen ? this.apiKey2007AndAbove : this.apiKey2006AndBelow
     return this.analyse(apiKey, channelId, tag.text, author)
@@ -45,13 +46,14 @@ export class BodyguardService implements OnModuleInit {
 
   // eslint-disable-next-line functional/no-return-void
   async analyseComment(comment: Post, author: User, post: Tag) {
-    if (!author.birthdate || !comment.text) {
-      return
-    }
-    const isLessThanFifteen = author.birthdate.getFullYear() >= fifteenYoYear
+    // if (!author.birthdate || !comment.text) {
+    //   return
+    // }
+    //const isLessThanFifteen = author.birthdate.getFullYear() >= fifteenYoYear
+    const isLessThanFifteen = false
     const channelId = isLessThanFifteen ? COMMENT_2007_AND_ABOVE_CHANNEL_ID : COMMENT_2006_AND_BELOW_CHANNEL_ID
     const apiKey = isLessThanFifteen ? this.apiKey2007AndAbove : this.apiKey2006AndBelow
-    return this.analyse(apiKey, channelId, comment.text, author, post)
+    return this.analyse(apiKey, channelId, comment.text ?? '', author, post)
   }
 
   async analyse(apiKey: string, channelId: string, text: string, author: User, post?: Tag) {

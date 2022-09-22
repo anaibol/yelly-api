@@ -6,7 +6,6 @@ export class UpdateUserInput {
   username?: string
   email?: string
   password?: string
-  birthdate?: Date
   instagram?: string
   snapchat?: string
   tiktok?: string
