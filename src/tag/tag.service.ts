@@ -135,7 +135,7 @@ export class TagService {
 
     this.syncTagIndexWithAlgolia(tag.id)
 
-    this.pushNotificationService.followeeCreatedTag(tag.id)
+    if (isPublic) this.pushNotificationService.followeeCreatedTag(tag.id)
 
     return tag
   }
