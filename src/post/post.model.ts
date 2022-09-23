@@ -21,7 +21,7 @@ export class Post {
   wordsCount?: number | null
   createdAt?: Date
   viewsCount?: number
-  tags?: Tag[]
+  tag?: Tag
   author?: User
   pollOptions?: PostPollOption[]
   reactions?: PostReaction[]

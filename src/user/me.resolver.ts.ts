@@ -13,7 +13,7 @@ import { EmailSignInInput } from './email-sign-in.input'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 import { ForgotPasswordInput } from './forgot-password.input'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
-import { AgeVerificationResult, Me } from './me.model'
+import { Me } from './me.model'
 import { ResetPasswordInput } from './reset-password.input'
 import { UpdateUserInput } from './update-user.input'
 import { UserService } from './user.service'
@@ -144,15 +144,6 @@ export class MeResolver {
   @Mutation(() => Me)
   updateMe(@Args('input') updateUserInput: UpdateUserInput, @CurrentUser() authUser: AuthUser): Promise<Me> {
     return this.userService.update(authUser.id, updateUserInput)
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => AgeVerificationResult)
-  updateAgeVerification(
-    @Args('facePictureId') facePictureId: string,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<AgeVerificationResult> {
-    return this.userService.updateAgeVerification(authUser, facePictureId)
   }
 
   @UseGuards(AuthGuard)

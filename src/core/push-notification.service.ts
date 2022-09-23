@@ -111,7 +111,7 @@ export class PushNotificationService {
         parent: {
           select: {
             id: true,
-            tags: {
+            tag: {
               select: {
                 id: true,
                 text: true,
@@ -134,16 +134,15 @@ export class PushNotificationService {
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
-      body:
-        postReply.parent.tags.length > 0
-          ? await this.i18n.translate('notifications.repliedToYourPost', {
-              ...(lang && { lang }),
-              args: { otherUserDisplayName: postReply.author.displayName, tagText: postReply.parent.tags[0].text },
-            })
-          : await this.i18n.translate('notifications.repliedToYourPostNoTag', {
-              ...(lang && { lang }),
-              args: { otherUserDisplayName: postReply.author.displayName },
-            }),
+      body: postReply.parent.tag
+        ? await this.i18n.translate('notifications.repliedToYourPost', {
+            ...(lang && { lang }),
+            args: { otherUserDisplayName: postReply.author.displayName, tagText: postReply.parent.tag.text },
+          })
+        : await this.i18n.translate('notifications.repliedToYourPostNoTag', {
+            ...(lang && { lang }),
+            args: { otherUserDisplayName: postReply.author.displayName },
+          }),
       data: { url: `${process.env.APP_BASE_URL}/posts/${postReply.parent.id}` },
       sound: 'default' as const,
     }
@@ -178,10 +177,10 @@ export class PushNotificationService {
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
         body:
-          postReply.parent && postReply.parent.tags.length > 0
+          postReply.parent && postReply.parent.tag
             ? await this.i18n.translate('notifications.repliedToSamePostAsYou', {
                 ...(lang && { lang }),
-                args: { otherUserDisplayName: postReply.author.displayName, tagText: postReply.parent?.tags[0].text },
+                args: { otherUserDisplayName: postReply.author.displayName, tagText: postReply.parent?.tag.text },
               })
             : await this.i18n.translate('notifications.repliedToSamePostAsYouNoTag', {
                 ...(lang && { lang }),
@@ -295,7 +294,7 @@ export class PushNotificationService {
         post: {
           select: {
             id: true,
-            tags: {
+            tag: {
               select: {
                 id: true,
                 text: true,
@@ -319,16 +318,15 @@ export class PushNotificationService {
     const lang = postReaction.post.author.locale
 
     const message = {
-      body:
-        postReaction.post.tags.length > 0
-          ? await this.i18n.translate('notifications.reactedToYourPost', {
-              args: { otherUserDisplayName: postReaction.author.displayName, tagText: postReaction.post.tags[0].text },
-              ...(lang && { lang }),
-            })
-          : await this.i18n.translate('notifications.reactedToYourPostNoTag', {
-              args: { otherUserDisplayName: postReaction.author.displayName },
-              ...(lang && { lang }),
-            }),
+      body: postReaction.post.tag
+        ? await this.i18n.translate('notifications.reactedToYourPost', {
+            args: { otherUserDisplayName: postReaction.author.displayName, tagText: postReaction.post.tag.text },
+            ...(lang && { lang }),
+          })
+        : await this.i18n.translate('notifications.reactedToYourPostNoTag', {
+            args: { otherUserDisplayName: postReaction.author.displayName },
+            ...(lang && { lang }),
+          }),
     }
 
     const messages = pushTokens.map((expoPushNotificationToken) => {
@@ -353,7 +351,7 @@ export class PushNotificationService {
             },
           },
         },
-        tags: {
+        tag: {
           select: {
             id: true,
             text: true,
@@ -376,16 +374,15 @@ export class PushNotificationService {
 
         return {
           to: expoPushNotificationTokens.map(({ token }) => token),
-          body:
-            post.tags.length > 0
-              ? await this.i18n.translate('notifications.youHaveBeenMentioned', {
-                  ...(lang && { lang }),
-                  args: { otherUserDisplayName: author.displayName, tagText: post.tags[0].text },
-                })
-              : await this.i18n.translate('notifications.youHaveBeenMentionedNoTag', {
-                  ...(lang && { lang }),
-                  args: { otherUserDisplayName: author.displayName },
-                }),
+          body: post.tag
+            ? await this.i18n.translate('notifications.youHaveBeenMentioned', {
+                ...(lang && { lang }),
+                args: { otherUserDisplayName: author.displayName, tagText: post.tag.text },
+              })
+            : await this.i18n.translate('notifications.youHaveBeenMentionedNoTag', {
+                ...(lang && { lang }),
+                args: { otherUserDisplayName: author.displayName },
+              }),
           data: { userId, url },
           sound: 'default' as const,
         }

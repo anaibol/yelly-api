@@ -1,10 +1,9 @@
 /* eslint-disable functional/immutable-data */
 import { Injectable, OnModuleInit } from '@nestjs/common'
+import { Post, User } from '@prisma/client'
 import axios from 'axios'
 
-import { Post } from '../post/post.model'
 import { Tag } from '../tag/tag.model'
-import { User } from '../user/user.model'
 
 const BODYGUARD_API = 'https://bamboo.bodyguard.ai/api/analyze'
 const COMMENT_2006_AND_BELOW_CHANNEL_ID = 'b720a421-b277-4467-8b97-92dba9920a74'
@@ -32,8 +31,7 @@ export class BodyguardService implements OnModuleInit {
     this.apiKey2007AndAbove = process.env.BODYGUARD_2007_AND_ABOVE_API_KEY
   }
 
-  // eslint-disable-next-line functional/no-return-void
-  async analyseTopic(tag: Tag, author: User) {
+  async analyseTopic(tag: Tag, author: User): Promise<void> {
     // if (!author?.birthdate) {
     //   return
     // }
@@ -44,8 +42,7 @@ export class BodyguardService implements OnModuleInit {
     return this.analyse(apiKey, channelId, tag.text, author)
   }
 
-  // eslint-disable-next-line functional/no-return-void
-  async analyseComment(comment: Post, author: User, post: Tag) {
+  async analyseComment(comment: Post, author: User, post: Tag): Promise<void> {
     // if (!author.birthdate || !comment.text) {
     //   return
     // }

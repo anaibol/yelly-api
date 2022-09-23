@@ -7,7 +7,6 @@ import { AuthUser } from 'src/auth/auth.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { PostService } from 'src/post/post.service'
-import { Payload, RequestBuilder } from 'yoti'
 
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { SortDirection } from '../app.module'
@@ -15,21 +14,10 @@ import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { TagService } from '../tag/tag.service'
-import { deleteObject, getObject } from '../utils/aws'
-import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
+import { Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
 import { UserFolloweesSortBy } from './user-followees.args'
-
-type YotiResponse = {
-  antispoofing: {
-    prediction: AgePredictionResult
-  }
-  age: {
-    st_dev: number
-    age: number
-  }
-}
 
 const getUserFolloweesSort = (
   sortBy?: UserFolloweesSortBy,
@@ -48,41 +36,6 @@ const getUserFolloweesSort = (
         createdAt: sortDirection,
       }
   }
-}
-
-const checkAge = async (
-  pictureId: string
-): Promise<{
-  isAgeApproved: boolean
-  ageEstimation: number
-  agePredictionResult: string
-}> => {
-  const img = await getObject(pictureId)
-
-  const data = {
-    img,
-  }
-
-  const request = new RequestBuilder()
-    .withBaseUrl('https://api.yoti.com/ai/v1')
-    .withPemFilePath(process.env.YOTI_KEY_FILE_PATH)
-    .withEndpoint('/age-antispoofing')
-    .withPayload(new Payload(data))
-    .withMethod('POST')
-    .withHeader('X-Yoti-Auth-Id', process.env.YOTI_CLIEND_SDK_ID)
-    .build()
-
-  const response = await request.execute()
-
-  const result: YotiResponse = JSON.parse(response.body)
-
-  const isAgeApproved = result.antispoofing.prediction === 'real' && result.age.age >= 13 && result.age.age <= 25
-
-  return Promise.resolve({
-    isAgeApproved,
-    ageEstimation: Math.floor(result.age.age),
-    agePredictionResult: result.antispoofing.prediction,
-  })
 }
 
 @Injectable()
@@ -156,7 +109,6 @@ export class UserService {
         snapchat: true,
         tiktok: true,
         isBanned: true,
-        isAgeApproved: true,
         school: {
           select: {
             id: true,
@@ -565,7 +517,6 @@ export class UserService {
         pictureId: true,
         about: true,
         isFilled: true,
-        isAgeApproved: true,
         expoPushNotificationTokens: true,
         instagram: true,
         snapchat: true,
@@ -698,12 +649,6 @@ export class UserService {
     const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
     this.algoliaService.deleteObject(algoliaUserIndex, userId)
-
-    return true
-  }
-
-  async approveAge(authUser: AuthUser, userId: string): Promise<boolean> {
-    await this.prismaService.user.update({ where: { id: userId }, data: { isAgeApproved: true } })
 
     return true
   }
@@ -899,7 +844,6 @@ export class UserService {
         createdAt: true,
         role: true,
         isFilled: true,
-        isAgeApproved: true,
         email: true,
         displayName: true,
         username: true,
@@ -968,35 +912,6 @@ export class UserService {
     }
 
     return updatedUser
-  }
-
-  async updateAgeVerification(authUser: AuthUser, facePictureId: string): Promise<AgeVerificationResult> {
-    const { isAgeApproved, ageEstimation, agePredictionResult } = await checkAge(facePictureId)
-
-    deleteObject(facePictureId)
-
-    await this.prismaService.user.update({
-      where: {
-        id: authUser.id,
-      },
-      data: {
-        isAgeApproved,
-        ageEstimation,
-        agePredictionResult,
-      },
-    })
-
-    if (authUser.isAdmin) {
-      return {
-        isAgeApproved,
-        ageEstimation,
-        agePredictionResult,
-      }
-    } else {
-      return {
-        isAgeApproved,
-      }
-    }
   }
 
   async getIsUsernameAvailable(username: string): Promise<boolean> {

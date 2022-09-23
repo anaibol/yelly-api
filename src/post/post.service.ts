@@ -1,20 +1,18 @@
 import { Injectable } from '@nestjs/common'
 import { NotificationType, Prisma } from '@prisma/client'
 import { AuthUser } from 'src/auth/auth.service'
-import { AlgoliaService } from 'src/core/algolia.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
 
 import { SortDirection } from '../app.module'
 import { BodyguardService } from '../core/bodyguard.service'
 import { PrismaService } from '../core/prisma.service'
 import { PostsSortBy } from '../posts/posts.args'
+import { Tag } from '../tag/tag.model'
 import { TagService } from '../tag/tag.service'
-import { UserService } from '../user/user.service'
 import { CreateOrUpdatePostReactionInput } from './create-or-update-post-reaction.input'
 import { CreatePostInput } from './create-post.input'
 import { PaginatedPosts } from './paginated-posts.model'
-import { Post } from './post.model'
-import { PostPollVote } from './post.model'
+import { Post, PostPollVote } from './post.model'
 import { PostReaction } from './post-reaction.model'
 import { mapPost, mapPostChild, PostChildSelect, PostSelectWithParent } from './post-select.constant'
 
@@ -71,9 +69,7 @@ export class PostService {
     private prismaService: PrismaService,
     private pushNotificationService: PushNotificationService,
     private tagService: TagService,
-    private algoliaService: AlgoliaService,
-    private bodyguardService: BodyguardService,
-    private userService: UserService
+    private bodyguardService: BodyguardService
   ) {}
   async trackPostViews(postIds: bigint[]): Promise<boolean> {
     await this.prismaService.post.updateMany({
@@ -154,11 +150,7 @@ export class PostService {
           authorId,
         }),
         ...(tagId && {
-          tags: {
-            some: {
-              id: tagId,
-            },
-          },
+          tagId,
         }),
       },
       ...(after && {
@@ -182,7 +174,7 @@ export class PostService {
   }
 
   async create(createPostInput: CreatePostInput, authUser: AuthUser): Promise<Post> {
-    const { text, tagIds, pollOptions, parentId, mentionedUserIds } = createPostInput
+    const { text, tagId, pollOptions, parentId, mentionedUserIds } = createPostInput
 
     const parent =
       parentId &&
@@ -191,7 +183,7 @@ export class PostService {
           id: parentId,
         },
         include: {
-          tags: true,
+          tag: true,
         },
       }))
 
@@ -223,12 +215,11 @@ export class PostService {
               },
             },
           }),
-        ...(tagIds &&
-          tagIds.length > 0 && {
-            tags: {
-              connect: tagIds.map((tagId) => ({ id: tagId })),
-            },
-          }),
+        tag: {
+          connect: {
+            id: tagId,
+          },
+        },
         ...(parent && {
           parent: {
             connect: {
@@ -240,10 +231,9 @@ export class PostService {
               create: {
                 userId: parent.authorId,
                 type: NotificationType.REPLIED_TO_YOUR_POST,
-                ...(parent &&
-                  parent.tags.length > 0 && {
-                    tagId: parent.tags[0].id,
-                  }),
+                ...(parent && {
+                  tagId: parent.tag.id,
+                }),
               },
             },
           }),
@@ -251,8 +241,8 @@ export class PostService {
       },
     })
 
-    const parentTagIds = parent ? parent?.tags?.map((tag) => tag.id) : undefined
-    const associatedTag = await this.getAssociatedTag(authUser, tagIds, parentTagIds)
+    const parentTagId = parent ? parent?.tag.id : undefined
+    const associatedTag = await this.getAssociatedTag(authUser, post.tagId, parentTagId)
 
     if (associatedTag) {
       this.tagService.updateInteractionsCount(associatedTag.id)
@@ -261,8 +251,8 @@ export class PostService {
 
     if (parent && authUser.id !== parent.authorId) {
       this.pushNotificationService.repliedToYourPost(post.id)
-    } else if (tagIds && tagIds.length > 0) {
-      this.thereAreNewPostsOnYourTag(post.id, tagIds[0])
+    } else if (tagId) {
+      this.thereAreNewPostsOnYourTag(post.id, tagId)
     }
 
     if (mentionedUserIds && mentionedUserIds.length > 0) {
@@ -272,7 +262,7 @@ export class PostService {
 
       if (!postUserMentions) return Promise.reject(new Error('No mentions'))
 
-      if (tagIds && tagIds.length > 0) {
+      if (tagId) {
         await Promise.all([
           this.prismaService.notification.createMany({
             data: postUserMentions.map((mention) => ({
@@ -280,7 +270,7 @@ export class PostService {
               userId: mention.userId,
               postId: post.id,
               type: NotificationType.USER_MENTIONED_YOU,
-              tagId: tagIds[0],
+              tagId: tagId,
             })),
           }),
         ])
@@ -330,10 +320,10 @@ export class PostService {
       },
       select: {
         authorId: true,
-        tags: true,
+        tag: true,
         parent: {
           select: {
-            tags: true,
+            tag: true,
           },
         },
       },
@@ -348,11 +338,11 @@ export class PostService {
       },
     })
 
-    if (post.tags && post.tags.length > 0) {
-      this.tagService.updateInteractionsCount(post.tags[0].id, false)
+    if (post.tag) {
+      this.tagService.updateInteractionsCount(post.tag.id, false)
     } else {
-      if (post.parent && post.parent.tags && post.parent.tags.length > 0) {
-        this.tagService.updateInteractionsCount(post.parent.tags[0].id, false)
+      if (post.parent && post.parent.tag) {
+        this.tagService.updateInteractionsCount(post.parent.tag.id, false)
       }
     }
 
@@ -371,7 +361,7 @@ export class PostService {
         id: postId,
       },
       include: {
-        tags: true,
+        tag: true,
       },
     })
 
@@ -400,9 +390,7 @@ export class PostService {
           create: {
             userId: postBeforeReaction.authorId,
             type: NotificationType.REACTED_TO_YOUR_POST,
-            ...(postBeforeReaction.tags.length > 0 && {
-              tagId: postBeforeReaction.tags[0].id,
-            }),
+            tagId: postBeforeReaction.tag.id,
           },
         },
       },
@@ -418,7 +406,8 @@ export class PostService {
       },
     })
 
-    const associatedTag = await this.getPostAssociatedTag(authUser, post)
+    const parentTagId = post?.parent?.tag.id
+    const associatedTag = await this.getAssociatedTag(authUser, post.tag.id, parentTagId)
 
     if (associatedTag) {
       this.tagService.updateInteractionsCount(associatedTag.id)
@@ -438,10 +427,10 @@ export class PostService {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       select: {
-        tags: true,
+        tag: true,
         parent: {
           select: {
-            tags: true,
+            tag: true,
           },
         },
       },
@@ -455,11 +444,11 @@ export class PostService {
       },
     })
 
-    if (post.tags && post.tags.length > 0) {
-      this.tagService.updateInteractionsCount(post.tags[0].id, false)
+    if (post.tag) {
+      this.tagService.updateInteractionsCount(post.tag.id, false)
     } else {
-      if (post.parent && post.parent.tags && post.parent.tags.length > 0) {
-        this.tagService.updateInteractionsCount(post.parent.tags[0].id, false)
+      if (post.parent && post.parent.tag && post.parent.tag) {
+        this.tagService.updateInteractionsCount(post.parent.tag.id, false)
       }
     }
 
@@ -586,19 +575,13 @@ export class PostService {
     })
   }
 
-  async getPostAssociatedTag(authUser: AuthUser, post: Post) {
-    const tagIds = post.tags?.map((tag) => tag.id)
-    const parentTagIds = post?.parent?.tags && post.parent?.tags.map((tag) => tag.id)
-    return this.getAssociatedTag(authUser, tagIds, parentTagIds)
-  }
-
-  async getAssociatedTag(authUser: AuthUser, tagIds: bigint[] | undefined, parentTagIds: bigint[] | undefined) {
-    if (tagIds && tagIds.length > 0) {
+  async getAssociatedTag(authUser: AuthUser, tagId?: bigint, parentTagId?: bigint): Promise<Tag | undefined> {
+    if (tagId) {
       // TODO: Performance optimization: add a tag parameter to create post
-      return await this.tagService.getTag(tagIds[0], authUser)
+      return await this.tagService.getTag(tagId, authUser)
     } else {
-      if (parentTagIds && parentTagIds.length > 0) {
-        return await this.tagService.getTag(parentTagIds[0], authUser)
+      if (parentTagId) {
+        return await this.tagService.getTag(parentTagId, authUser)
       }
     }
   }

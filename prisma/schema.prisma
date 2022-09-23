@@ -76,17 +76,11 @@ model User {
   email                        String?                           @unique
   role                         UserRole                          @default(USER)
   password                     String?
-  birthdate                    DateTime?                         @db.Date
   pictureId                    String?
-  facePictureId                String?
-  isAgeApproved                Boolean?
-  ageEstimation                Int?
-  agePredictionResult          String?
   snapchat                     String?
   instagram                    String?
   tiktok                       String?
   resetToken                   String?
-  isVerified                   Boolean                           @default(true)
   createdAt                    DateTime                          @default(now())
   updatedAt                    DateTime                          @default(now()) @updatedAt
   isActive                     Boolean                           @default(true)
@@ -118,10 +112,6 @@ model User {
   blockedByUsers               User[]                            @relation("blockedUsers")
   reports                      UserReport[]                      @relation("reportAuthors")
   reported                     UserReport[]                      @relation("userReports")
-  followersCheckCount          Int?
-  followersCheckedAt           DateTime?
-
-  @@index([birthdate], map: "User_birthdate")
 }
 
 model Follower {
@@ -168,7 +158,7 @@ model Post {
   authorId      String
   viewsCount    Int               @default(0)
   author        User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  tags          Tag[]
+  tag           Tag               @relation(fields: [tagId], references: [id])
   reactions     PostReaction[]
   pollOptions   PostPollOption[]
   pollVotes     PostPollVote[]
@@ -179,6 +169,7 @@ model Post {
   charsCount    Int?
   wordsCount    Int?
   userMentions  PostUserMention[]
+  tagId         BigInt
 
   @@index([authorId])
 }

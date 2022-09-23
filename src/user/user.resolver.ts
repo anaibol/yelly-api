@@ -167,14 +167,6 @@ export class UserResolver {
 
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)
-  approveUserAge(@CurrentUser() authUser: AuthUser, @Args('userId') userId: string): Promise<boolean> {
-    if (authUser.role !== 'ADMIN') return Promise.reject(new Error('No admin'))
-
-    return this.userService.approveAge(authUser, userId)
-  }
-
-  @Mutation(() => Boolean)
-  @UseGuards(AuthGuard)
   reportUser(@CurrentUser() authUser: AuthUser, @Args('otherUserId') otherUserId: string): Promise<boolean> {
     return this.userService.report(authUser, otherUserId)
   }
