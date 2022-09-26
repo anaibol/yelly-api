@@ -196,20 +196,10 @@ export class TagService {
         },
       },
       ...(isForYou && {
-        author: {
-          id: {
-            not: authUser.id,
-          },
-        },
         OR: [
           {
-            isPublic: true,
             author: {
-              followers: {
-                some: {
-                  userId: authUser.id,
-                },
-              },
+              id: authUser.id,
             },
           },
           {
