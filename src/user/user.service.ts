@@ -201,6 +201,16 @@ export class UserService {
     }
   }
 
+  async signUp({ displayName }: { displayName: string }): Promise<{ user: User; isNewUser?: boolean }> {
+    const newUser = await this.prismaService.user.create({
+      data: {
+        displayName,
+      },
+    })
+
+    return { user: newUser, isNewUser: true }
+  }
+
   // async getCommonFriendsCountMultiUser(authUser: AuthUser, otherUserIds: string[]) {
   //   const users = await this.prismaService.user.findMany({
   //     where: {

@@ -119,6 +119,7 @@ type Mutation {
   refreshAccessToken(refreshToken: String!): AccessToken!
   reportUser(otherUserId: String!): Boolean!
   resetPassword(input: ResetPasswordInput!): AccessToken!
+  signUp(input: SignUpInput!): AccessToken!
   trackPostViews(postIds: [BigInt!]!): Boolean!
   trackTagShare(tagId: BigInt!): Boolean!
   trackTagViews(tagIds: [BigInt!]!): Boolean!
@@ -258,6 +259,10 @@ type Query {
 input ResetPasswordInput {
   password: String!
   resetToken: String!
+}
+
+input SignUpInput {
+  displayName: String!
 }
 
 enum SortDirection {

@@ -112,6 +112,7 @@ model User {
   blockedByUsers               User[]                            @relation("blockedUsers")
   reports                      UserReport[]                      @relation("reportAuthors")
   reported                     UserReport[]                      @relation("userReports")
+  isVerified                   Boolean                           @default(false)
 }
 
 model Follower {

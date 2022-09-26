@@ -15,6 +15,7 @@ import { ForgotPasswordInput } from './forgot-password.input'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
 import { Me } from './me.model'
 import { ResetPasswordInput } from './reset-password.input'
+import { SignUpInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { UserService } from './user.service'
 
@@ -76,6 +77,20 @@ export class MeResolver {
     await this.twilioService.checkPhoneNumberVerificationCode(phoneNumber, verificationCode)
 
     const { user, isNewUser } = await this.userService.findOrCreate(phoneNumber, locale)
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.authService.getAccessToken(user.id),
+      this.authService.getRefreshToken(user.id),
+    ])
+
+    return { accessToken, refreshToken, isNewUser }
+  }
+
+  @Mutation(() => AccessToken)
+  async signUp(@Args('input') signUpInput: SignUpInput): Promise<AccessToken> {
+    const { displayName } = signUpInput
+
+    const { user, isNewUser } = await this.userService.signUp({ displayName })
 
     const [accessToken, refreshToken] = await Promise.all([
       this.authService.getAccessToken(user.id),
