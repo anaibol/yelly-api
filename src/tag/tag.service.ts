@@ -100,11 +100,9 @@ export class TagService {
         },
       },
       ...(displayNameStartsWith && {
-        followee: {
-          displayName: {
-            startsWith: displayNameStartsWith,
-            mode: 'insensitive',
-          },
+        displayName: {
+          startsWith: displayNameStartsWith,
+          mode: 'insensitive',
         },
       }),
     }
