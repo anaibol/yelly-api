@@ -7,6 +7,7 @@ import { AuthUser } from '../auth/auth.service'
 import { BodyguardService } from '../core/bodyguard.service'
 import { PrismaService } from '../core/prisma.service'
 import { PushNotificationService } from '../core/push-notification.service'
+import { PaginatedUsers } from '../post/paginated-users.model'
 import { User } from '../user/user.model'
 import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
@@ -84,6 +85,47 @@ export class TagService {
     const { _count, ...tag } = result
 
     return { ...tag, postCount: _count.posts, membersCount: _count.members }
+  }
+
+  async getMembers(
+    tagId: bigint,
+    skip: number,
+    limit: number,
+    displayNameStartsWith?: string
+  ): Promise<PaginatedUsers> {
+    const where: Prisma.UserWhereInput = {
+      tags: {
+        some: {
+          id: tagId,
+        },
+      },
+      ...(displayNameStartsWith && {
+        followee: {
+          displayName: {
+            startsWith: displayNameStartsWith,
+            mode: 'insensitive',
+          },
+        },
+      }),
+    }
+
+    const [totalCount, items] = await Promise.all([
+      this.prismaService.user.count({
+        where,
+      }),
+      this.prismaService.user.findMany({
+        take: limit,
+        skip,
+        where,
+        orderBy: {
+          displayName: 'asc',
+        },
+      }),
+    ])
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : null }
   }
 
   async create(tagText: string, authUser: AuthUser, tagType?: TagType, isPublic = false): Promise<Tag> {

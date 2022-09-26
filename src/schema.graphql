@@ -244,6 +244,7 @@ type Query {
   posts(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt): PaginatedPosts!
   tag(tagId: BigInt!): Tag!
   tagByNanoId(tagNanoId: String!): Tag!
+  tagMembers(displayNameStartsWith: String, limit: Int = 10, skip: Int = 0, tagId: BigInt!): PaginatedUsers!
   tags(after: BigInt, authorId: String, isForYou: Boolean = false, limit: Int = 10, shouldIncludeExpired: Boolean = false, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   tagsByScore(isForYou: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTagsByScore!
   unreadNotificationsCount: Int!

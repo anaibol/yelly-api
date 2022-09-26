@@ -418,7 +418,6 @@ export class UserService {
     sortBy?: UserFolloweesSortBy,
     sortDirection?: SortDirection
   ): Promise<PaginatedUsers> {
-    console.log({ sortBy })
     const where: Prisma.FollowerWhereInput = {
       userId,
       ...(displayNameStartsWith && {
@@ -450,8 +449,6 @@ export class UserService {
         orderBy: getUserFolloweesSort(sortBy, sortDirection),
       }),
     ])
-
-    console.log({ ad: getUserFolloweesSort(sortBy, sortDirection) })
 
     const items = follows.map(({ followee }) => followee)
 
@@ -638,7 +635,6 @@ export class UserService {
 
       return true
     } catch (e) {
-      console.log(e)
       return Promise.reject(new Error('not found'))
     }
   }
@@ -887,7 +883,6 @@ export class UserService {
       // eslint-disable-next-line functional/no-try-statement
       try {
       } catch (error) {
-        console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
 
@@ -895,7 +890,6 @@ export class UserService {
       try {
         this.syncUsersIndexWithAlgolia(userId)
       } catch (error) {
-        console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
     } else if (updatedUser.isFilled) {

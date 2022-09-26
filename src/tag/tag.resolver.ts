@@ -6,11 +6,12 @@ import { AuthUser } from '../auth/auth.service'
 import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { PrismaService } from '../core/prisma.service'
+import { PaginatedUsers } from '../post/paginated-users.model'
 import { CreateTagInput } from './create-tag.input'
 import { PaginatedTags, PaginatedTagsByScore } from './paginated-tags.model'
 import { Tag } from './tag.model'
 import { TagService } from './tag.service'
-import { TagsArgs, TagsByScoreArgs, TagSortBy } from './tags.args'
+import { TagMembersArgs, TagsArgs, TagsByScoreArgs, TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 
 @Resolver(Tag)
@@ -100,6 +101,13 @@ export class TagResolver {
     }
 
     return { items, nextCursor, totalCount }
+  }
+
+  @Query(() => PaginatedUsers)
+  tagMembers(@Args() tagMembersArgs: TagMembersArgs): Promise<PaginatedUsers> {
+    const { tagId, skip, limit, displayNameStartsWith } = tagMembersArgs
+
+    return this.tagService.getMembers(tagId, skip, limit, displayNameStartsWith)
   }
 
   @UseGuards(AuthGuard)
