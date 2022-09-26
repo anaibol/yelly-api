@@ -5,7 +5,7 @@
   "repliedToYourPostNoTag": "{otherUserDisplayName} replied to your post",
   "repliedToSamePostAsYou": "{otherUserDisplayName} replied to the same post as you on #{tagText}",
   "repliedToSamePostAsYouNoTag": "{otherUserDisplayName} replied to the same post as you",
-  "thereAreNewPostsOnYourTag": "{newPostCount} new posts on your topic!",
+  "thereAreNewPostsOnTag": "{newPostCount} new posts on {tagText}",
   "isNowFollowingYou": "{otherUserDisplayName} is now following you",
   "followeeCreatedTag": "{otherUserDisplayName} created the topic #{tagText}",
   "youHaveBeenMentioned": "{otherUserDisplayName} has mentionned your name on #{tagText}",

@@ -252,7 +252,7 @@ export class PostService {
     if (parent && authUser.id !== parent.authorId) {
       this.pushNotificationService.repliedToYourPost(post.id)
     } else if (tagId) {
-      this.thereAreNewPostsOnYourTag(post.id, tagId)
+      this.thereAreNewPostsOnTag(post.id, tagId)
     }
 
     if (mentionedUserIds && mentionedUserIds.length > 0) {
@@ -280,7 +280,7 @@ export class PostService {
     return post
   }
 
-  async thereAreNewPostsOnYourTag(postId: bigint, tagId: bigint) {
+  async thereAreNewPostsOnTag(postId: bigint, tagId: bigint) {
     const tag = await this.prismaService.tag.findUnique({
       where: {
         id: tagId,
@@ -300,17 +300,7 @@ export class PostService {
 
     if (!newPostCount) return
 
-    await this.prismaService.notification.create({
-      data: {
-        userId: tag.authorId,
-        type: NotificationType.THERE_ARE_NEW_POSTS_ON_YOUR_TAG,
-        tagId: tag.id,
-        postId: postId,
-        newPostCount,
-      },
-    })
-
-    this.pushNotificationService.thereAreNewPostsOnYourTag(tag.authorId, tag.id, newPostCount)
+    this.pushNotificationService.thereAreNewPostsOnTag(tag.id, newPostCount)
   }
 
   async delete(postId: bigint, authUser: AuthUser): Promise<boolean> {

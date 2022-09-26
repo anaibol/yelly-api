@@ -200,31 +200,48 @@ export class PushNotificationService {
     )
   }
 
-  async thereAreNewPostsOnYourTag(tagAuthorId: string, tagId: bigint, newPostCount: number) {
-    const user = await this.prismaService.user.findUnique({
-      where: { id: tagAuthorId },
+  async thereAreNewPostsOnTag(tagId: bigint, newPostCount: number) {
+    const tag = await this.prismaService.tag.findUnique({
+      where: { id: tagId },
+      select: {
+        text: true,
+      },
+    })
+
+    const tagMembers = await this.prismaService.user.findMany({
+      where: {
+        tags: {
+          some: {
+            id: tagId,
+          },
+        },
+      },
       select: UserPushTokenSelect,
     })
 
-    if (!user) return Promise.reject(new Error('No user'))
-
-    const { locale: lang, expoPushNotificationTokens } = user
+    if (!tagMembers.length) return Promise.reject(new Error('No user'))
 
     const url = `${process.env.APP_BASE_URL}/mytopics/${tagId}`
 
-    const message = {
-      to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.thereAreNewPostsOnYourTag', {
-        ...(lang && { lang }),
-        args: { newPostCount },
-      }),
-      sound: 'default' as const,
-      data: { url },
-    }
+    const notifications = await Promise.all(
+      tagMembers.map(async (user) => {
+        const { locale: lang, expoPushNotificationTokens } = user
+
+        return {
+          to: expoPushNotificationTokens.map(({ token }) => token),
+          body: await this.i18n.translate('notifications.thereAreNewPostsOnTag', {
+            ...(lang && { lang }),
+            args: { newPostCount, tagText: tag?.text },
+          }),
+          data: { url },
+          sound: 'default' as const,
+        }
+      })
+    )
 
     await this.sendNotifications(
-      [message],
-      expoPushNotificationTokens,
+      notifications,
+      tagMembers.map((user) => user.expoPushNotificationTokens).flat(),
       'PUSH_NOTIFICATION_THERE_ARE_NEW_POSTS_ON_YOUR_TAG'
     )
 
