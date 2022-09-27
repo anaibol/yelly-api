@@ -568,10 +568,10 @@ export class PostService {
   async getAssociatedTag(authUser: AuthUser, tagId?: bigint, parentTagId?: bigint): Promise<Tag | undefined> {
     if (tagId) {
       // TODO: Performance optimization: add a tag parameter to create post
-      return await this.tagService.getTag(tagId, authUser)
+      return await this.tagService.getTag(tagId)
     } else {
       if (parentTagId) {
-        return await this.tagService.getTag(parentTagId, authUser)
+        return await this.tagService.getTag(parentTagId)
       }
     }
   }

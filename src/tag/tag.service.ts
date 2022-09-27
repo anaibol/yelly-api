@@ -57,12 +57,12 @@ export class TagService {
     private pushNotificationService: PushNotificationService,
     private bodyguardService: BodyguardService
   ) {}
-  async getTag(tagId: bigint, authUser: AuthUser): Promise<Tag> {
+  async getTag(tagId: bigint): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         id: tagId,
       },
-      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: false },
+      select: tagSelect,
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -72,12 +72,12 @@ export class TagService {
     return { ...tag, postCount: _count.posts, membersCount: _count.members }
   }
 
-  async getTagByNanoId(nanoId: string, authUser: AuthUser): Promise<Tag> {
+  async getTagByNanoId(nanoId: string): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         nanoId,
       },
-      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: false },
+      select: tagSelect,
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
