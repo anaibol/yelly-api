@@ -153,7 +153,7 @@ export class TagService {
   }
 
   async joinTag(nanoId: string, authUser: AuthUser): Promise<Tag> {
-    return this.prismaService.tag.update({
+    const tag = await this.prismaService.tag.update({
       select: tagSelect,
       where: {
         nanoId,
@@ -166,6 +166,12 @@ export class TagService {
         },
       },
     })
+
+    return {
+      ...tag,
+      postCount: tag._count.posts,
+      membersCount: tag._count.members,
+    }
   }
 
   async unJoinTag(nanoId: string, authUser: AuthUser): Promise<Tag> {
