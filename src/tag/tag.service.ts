@@ -142,7 +142,7 @@ export class TagService {
 
     this.bodyguardService.analyseTopic(tag, authUser)
 
-    if (isPublic) this.pushNotificationService.followeeCreatedTag(tag.id)
+    //if (isPublic) this.pushNotificationService.followeeCreatedTag(tag.id)
 
     return tag
   }

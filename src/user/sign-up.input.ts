@@ -1,6 +1,7 @@
 import { InputType } from '@nestjs/graphql'
 
 @InputType()
-export class SignUpInput {
+export class SignUpAndCreateTagInput {
   displayName: string
+  tagText: string
 }

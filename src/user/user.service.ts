@@ -13,6 +13,7 @@ import { SortDirection } from '../app.module'
 import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
+import { Tag } from '../tag/tag.model'
 import { TagService } from '../tag/tag.service'
 import { Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
@@ -201,7 +202,14 @@ export class UserService {
     }
   }
 
-  async signUp({ displayName }: { displayName: string }): Promise<{ user: User; isNewUser?: boolean }> {
+  async signUpAndCreateTag({
+    displayName,
+    tagText,
+  }: {
+    displayName: string
+    tagText: string
+  }): Promise<{ user: User; tag: Tag }> {
+    // TODO: check displayName min max length
     const newUser = await this.prismaService.user.create({
       data: {
         displayName,
@@ -211,7 +219,11 @@ export class UserService {
       },
     })
 
-    return { user: newUser, isNewUser: true }
+    // TODO: check tagText min max length
+    // TODO: tagService.create should accept a User and not a AuthUser
+    const newTag = await this.tagService.create(tagText, { ...newUser, isAdmin: false, isNotAdmin: true })
+
+    return { user: newUser, tag: newTag }
   }
 
   // async getCommonFriendsCountMultiUser(authUser: AuthUser, otherUserIds: string[]) {

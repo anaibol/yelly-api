@@ -8,6 +8,13 @@ type AccessToken {
   refreshToken: String!
 }
 
+type AccessTokenWithTag {
+  accessToken: String!
+  isNewUser: Boolean
+  refreshToken: String!
+  tag: Tag!
+}
+
 """BigInt scalar type"""
 scalar BigInt
 
@@ -120,7 +127,7 @@ type Mutation {
   refreshAccessToken(refreshToken: String!): AccessToken!
   reportUser(otherUserId: String!): Boolean!
   resetPassword(input: ResetPasswordInput!): AccessToken!
-  signUp(input: SignUpInput!): AccessToken!
+  signUpAndCreateTag(input: SignUpAndCreateTagInput!): AccessTokenWithTag!
   trackPostViews(postIds: [BigInt!]!): Boolean!
   trackTagShare(tagId: BigInt!): Boolean!
   trackTagViews(tagIds: [BigInt!]!): Boolean!
@@ -262,8 +269,9 @@ input ResetPasswordInput {
   resetToken: String!
 }
 
-input SignUpInput {
+input SignUpAndCreateTagInput {
   displayName: String!
+  tagText: String!
 }
 
 enum SortDirection {

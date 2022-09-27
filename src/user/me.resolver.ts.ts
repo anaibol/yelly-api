@@ -7,7 +7,7 @@ import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { PaginatedUsers } from '../post/paginated-users.model'
-import { AccessToken } from './accessToken.model'
+import { AccessToken, AccessTokenWithTag } from './accessToken.model'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
 import { EmailSignInInput } from './email-sign-in.input'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
@@ -15,7 +15,7 @@ import { ForgotPasswordInput } from './forgot-password.input'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
 import { Me } from './me.model'
 import { ResetPasswordInput } from './reset-password.input'
-import { SignUpInput } from './sign-up.input'
+import { SignUpAndCreateTagInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { UserService } from './user.service'
 
@@ -86,18 +86,18 @@ export class MeResolver {
     return { accessToken, refreshToken, isNewUser }
   }
 
-  @Mutation(() => AccessToken)
-  async signUp(@Args('input') signUpInput: SignUpInput): Promise<AccessToken> {
-    const { displayName } = signUpInput
+  @Mutation(() => AccessTokenWithTag)
+  async signUpAndCreateTag(@Args('input') signUpInput: SignUpAndCreateTagInput): Promise<AccessTokenWithTag> {
+    const { displayName, tagText } = signUpInput
 
-    const { user, isNewUser } = await this.userService.signUp({ displayName })
+    const { user, tag } = await this.userService.signUpAndCreateTag({ displayName, tagText })
 
     const [accessToken, refreshToken] = await Promise.all([
       this.authService.getAccessToken(user.id),
       this.authService.getRefreshToken(user.id),
     ])
 
-    return { accessToken, refreshToken, isNewUser }
+    return { accessToken, refreshToken, tag }
   }
 
   @UseGuards(AuthGuard)
