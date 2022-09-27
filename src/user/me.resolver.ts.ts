@@ -88,9 +88,9 @@ export class MeResolver {
 
   @Mutation(() => AccessTokenWithTag)
   async signUpAndCreateTag(@Args('input') signUpInput: SignUpAndCreateTagInput): Promise<AccessTokenWithTag> {
-    const { displayName, tagText } = signUpInput
+    const { userDisplayName, tagText } = signUpInput
 
-    const { user, tag } = await this.userService.signUpAndCreateTag({ displayName, tagText })
+    const { user, tag } = await this.userService.signUpAndCreateTag({ userDisplayName, tagText })
 
     const [accessToken, refreshToken] = await Promise.all([
       this.authService.getAccessToken(user.id),

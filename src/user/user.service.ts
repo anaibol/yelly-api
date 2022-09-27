@@ -3,6 +3,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { NotificationType, Prisma } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
+import { customAlphabet } from 'nanoid'
 import { AuthUser } from 'src/auth/auth.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
@@ -19,6 +20,8 @@ import { Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
 import { UserFolloweesSortBy } from './user-followees.args'
+
+const createNanoId = customAlphabet('0123456789', 8)
 
 const getUserFolloweesSort = (
   sortBy?: UserFolloweesSortBy,
@@ -202,20 +205,32 @@ export class UserService {
     }
   }
 
+  generateUsername(displayName: string): string {
+    const username =
+      displayName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .replace(/ /g, '')
+        .replace(/-+/g, '') + createNanoId()
+
+    return username
+  }
+
   async signUpAndCreateTag({
-    displayName,
+    userDisplayName,
     tagText,
   }: {
-    displayName: string
+    userDisplayName: string
     tagText: string
   }): Promise<{ user: User; tag: Tag }> {
     // TODO: check displayName min max length
     const newUser = await this.prismaService.user.create({
       data: {
-        displayName,
+        displayName: userDisplayName,
         // TODO: Which default countryId?
         // Workaround: use FR
         countryId: 'e4eee8e7-2770-4fb0-97bb-4839b06ff37b',
+        username: this.generateUsername(userDisplayName),
       },
     })
 
