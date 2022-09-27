@@ -248,6 +248,37 @@ export class UserService {
     return { user: newUser, tag: newUser.tags[0] }
   }
 
+  async signUpAndJoinTag({
+    userDisplayName,
+    tagNanoId,
+  }: {
+    userDisplayName: string
+    tagNanoId: string
+  }): Promise<{ user: User; tag: Tag }> {
+    // TODO: check displayName min max length
+    const newUser = await this.prismaService.user.create({
+      include: {
+        tags: {
+          select: tagSelect,
+        },
+      },
+      data: {
+        displayName: userDisplayName,
+        // TODO: Which default countryId?
+        // Workaround: use FR
+        countryId: 'e4eee8e7-2770-4fb0-97bb-4839b06ff37b',
+        username: this.generateUsername(userDisplayName),
+        tags: {
+          connect: {
+            nanoId: tagNanoId,
+          },
+        },
+      },
+    })
+
+    return { user: newUser, tag: newUser.tags[0] }
+  }
+
   // async getCommonFriendsCountMultiUser(authUser: AuthUser, otherUserIds: string[]) {
   //   const users = await this.prismaService.user.findMany({
   //     where: {

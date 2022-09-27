@@ -15,7 +15,7 @@ import { ForgotPasswordInput } from './forgot-password.input'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
 import { Me } from './me.model'
 import { ResetPasswordInput } from './reset-password.input'
-import { SignUpAndCreateTagInput } from './sign-up.input'
+import { SignUpAndCreateTagInput, SignUpAndJoinTagInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { UserService } from './user.service'
 
@@ -87,10 +87,26 @@ export class MeResolver {
   }
 
   @Mutation(() => AccessTokenWithTag)
-  async signUpAndCreateTag(@Args('input') signUpInput: SignUpAndCreateTagInput): Promise<AccessTokenWithTag> {
-    const { userDisplayName, tagText } = signUpInput
+  async signUpAndCreateTag(
+    @Args('input') signUpAndCreateTagInput: SignUpAndCreateTagInput
+  ): Promise<AccessTokenWithTag> {
+    const { userDisplayName, tagText } = signUpAndCreateTagInput
 
     const { user, tag } = await this.userService.signUpAndCreateTag({ userDisplayName, tagText })
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.authService.getAccessToken(user.id),
+      this.authService.getRefreshToken(user.id),
+    ])
+
+    return { accessToken, refreshToken, tag }
+  }
+
+  @Mutation(() => AccessTokenWithTag)
+  async signUpAndJoinTag(@Args('input') signUpAndJoinTagInput: SignUpAndJoinTagInput): Promise<AccessTokenWithTag> {
+    const { userDisplayName, tagNanoId } = signUpAndJoinTagInput
+
+    const { user, tag } = await this.userService.signUpAndJoinTag({ userDisplayName, tagNanoId })
 
     const [accessToken, refreshToken] = await Promise.all([
       this.authService.getAccessToken(user.id),

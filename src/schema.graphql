@@ -128,6 +128,7 @@ type Mutation {
   reportUser(otherUserId: String!): Boolean!
   resetPassword(input: ResetPasswordInput!): AccessToken!
   signUpAndCreateTag(input: SignUpAndCreateTagInput!): AccessTokenWithTag!
+  signUpAndJoinTag(input: SignUpAndJoinTagInput!): AccessTokenWithTag!
   trackPostViews(postIds: [BigInt!]!): Boolean!
   trackTagShare(tagId: BigInt!): Boolean!
   trackTagViews(tagIds: [BigInt!]!): Boolean!
@@ -271,6 +272,11 @@ input ResetPasswordInput {
 
 input SignUpAndCreateTagInput {
   tagText: String!
+  userDisplayName: String!
+}
+
+input SignUpAndJoinTagInput {
+  tagNanoId: String!
   userDisplayName: String!
 }
 
