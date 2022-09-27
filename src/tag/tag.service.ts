@@ -137,6 +137,11 @@ export class TagService {
         isPublic,
         authorId: authUser.id,
         expiresAt,
+        members: {
+          connect: {
+            id: authUser.id,
+          },
+        },
       },
     })
 
