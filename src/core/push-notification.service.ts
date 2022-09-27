@@ -87,7 +87,7 @@ export class PushNotificationService {
           ...(lang && { lang }),
           args: { otherUserDisplayName: tag.author?.displayName, tagText: tag.text },
         }),
-        data: { url: `${process.env.APP_BASE_URL}/topics/${tag.nanoId}` },
+        data: { url: `${process.env.APP_BASE_URL}/${tag.nanoId}` },
         sound: 'default' as const,
       }
     })
@@ -205,8 +205,11 @@ export class PushNotificationService {
       where: { id: tagId },
       select: {
         text: true,
+        nanoId: true,
       },
     })
+
+    if (!tag) return Promise.reject(new Error('Tag  not found'))
 
     const tagMembers = await this.prismaService.user.findMany({
       where: {
@@ -221,7 +224,7 @@ export class PushNotificationService {
 
     if (!tagMembers.length) return Promise.reject(new Error('No user'))
 
-    const url = `${process.env.APP_BASE_URL}/mytopics/${tagId}`
+    const url = `${process.env.APP_BASE_URL}/${tag.nanoId}`
 
     const notifications = await Promise.all(
       tagMembers.map(async (user) => {
