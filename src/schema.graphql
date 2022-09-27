@@ -81,6 +81,7 @@ type Me {
   id: ID!
   instagram: String
   isFilled: Boolean
+  isVerified: Boolean
   locale: String
   phoneNumber: String
   pictureId: String

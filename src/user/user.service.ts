@@ -205,6 +205,9 @@ export class UserService {
     const newUser = await this.prismaService.user.create({
       data: {
         displayName,
+        // TODO: Which default countryId?
+        // Workaround: use FR
+        countryId: 'e4eee8e7-2770-4fb0-97bb-4839b06ff37b',
       },
     })
 
@@ -524,6 +527,7 @@ export class UserService {
         pictureId: true,
         about: true,
         isFilled: true,
+        isVerified: true,
         expoPushNotificationTokens: true,
         instagram: true,
         snapchat: true,
@@ -831,6 +835,7 @@ export class UserService {
       data: {
         phoneNumber,
         locale,
+        isVerified: true,
       },
     })
 

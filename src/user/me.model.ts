@@ -22,6 +22,7 @@ export class Me {
   snapchat?: string | null
   tiktok?: string | null
   isFilled?: boolean
+  isVerified?: boolean
   expoPushNotificationTokens?: string[]
   about?: string | null
   locale?: string
