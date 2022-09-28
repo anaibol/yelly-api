@@ -47,10 +47,9 @@ export class PostResolver {
 
   @Query(() => PaginatedPosts)
   async postsByTagNanoId(@Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
-    return this.postService.getPosts(
-      null,
+    return this.postService.getPostsByTagNanoId(
       postsArgs.authorId,
-      postsArgs.tagId,
+      postsArgs.tagNanoId,
       postsArgs.after,
       postsArgs.limit,
       postsArgs.sortBy,

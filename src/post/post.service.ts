@@ -123,7 +123,7 @@ export class PostService {
   }
 
   async getPosts(
-    authUser: AuthUser | null,
+    authUser: AuthUser,
     authorId?: string,
     tagId?: bigint,
     after?: bigint,
@@ -135,22 +135,64 @@ export class PostService {
       where: {
         author: {
           isBanned: false,
-          // blockedUsers: {
-          //   none: {
-          //     id: authUser.id,
-          //   },
-          // },
-          // blockedByUsers: {
-          //   none: {
-          //     id: authUser.id,
-          //   },
-          // },
+          blockedUsers: {
+            none: {
+              id: authUser.id,
+            },
+          },
+          blockedByUsers: {
+            none: {
+              id: authUser.id,
+            },
+          },
         },
         ...(authorId && {
           authorId,
         }),
         ...(tagId && {
           tagId,
+        }),
+      },
+      ...(after && {
+        cursor: {
+          id: after,
+        },
+        skip: 1,
+      }),
+      orderBy: getPostsSort(sortBy, sortDirection),
+      take: limit,
+      select: PostSelectWithParent,
+    })
+
+    const items = posts.map(mapPost)
+
+    const lastItem = items.length === limit ? items[limit - 1] : null
+
+    const nextCursor = lastItem ? lastItem.id : null
+
+    return { items, nextCursor }
+  }
+
+  async getPostsByTagNanoId(
+    authorId?: string,
+    tagNanoId?: string,
+    after?: bigint,
+    limit?: number,
+    sortBy?: PostsSortBy,
+    sortDirection?: SortDirection
+  ): Promise<PaginatedPosts> {
+    const posts = await this.prismaService.post.findMany({
+      where: {
+        author: {
+          isBanned: false,
+        },
+        ...(authorId && {
+          authorId,
+        }),
+        ...(tagNanoId && {
+          tag: {
+            nanoId: tagNanoId,
+          },
         }),
       },
       ...(after && {
