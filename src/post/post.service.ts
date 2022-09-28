@@ -123,7 +123,7 @@ export class PostService {
   }
 
   async getPosts(
-    authUser: AuthUser,
+    authUser: AuthUser | null,
     authorId?: string,
     tagId?: bigint,
     after?: bigint,
@@ -135,16 +135,16 @@ export class PostService {
       where: {
         author: {
           isBanned: false,
-          blockedUsers: {
-            none: {
-              id: authUser.id,
-            },
-          },
-          blockedByUsers: {
-            none: {
-              id: authUser.id,
-            },
-          },
+          // blockedUsers: {
+          //   none: {
+          //     id: authUser.id,
+          //   },
+          // },
+          // blockedByUsers: {
+          //   none: {
+          //     id: authUser.id,
+          //   },
+          // },
         },
         ...(authorId && {
           authorId,

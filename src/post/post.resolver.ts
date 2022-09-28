@@ -45,6 +45,19 @@ export class PostResolver {
     )
   }
 
+  @Query(() => PaginatedPosts)
+  async postsByTagNanoId(@Args() postsArgs: PostsArgs): Promise<PaginatedPosts> {
+    return this.postService.getPosts(
+      null,
+      postsArgs.authorId,
+      postsArgs.tagId,
+      postsArgs.after,
+      postsArgs.limit,
+      postsArgs.sortBy,
+      postsArgs.sortDirection
+    )
+  }
+
   @UseGuards(AuthGuard)
   @Mutation(() => Post)
   async createPost(@Args('input') createPostInput: CreatePostInput, @CurrentUser() authUser: AuthUser) {

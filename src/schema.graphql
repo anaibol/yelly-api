@@ -251,7 +251,8 @@ type Query {
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: BigInt, childrenSortBy: PostsSortBy = createdAt, childrenSortDirection: SortDirection = desc, limit: Int = 10, postId: BigInt!): Post!
-  posts(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt): PaginatedPosts!
+  posts(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt, tagNanoId: String): PaginatedPosts!
+  postsByTagNanoId(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt, tagNanoId: String): PaginatedPosts!
   tag(tagId: BigInt!): Tag!
   tagByNanoId(tagNanoId: String!): Tag!
   tagMembers(displayNameStartsWith: String, limit: Int = 10, skip: Int = 0, tagId: BigInt!): PaginatedUsers!
