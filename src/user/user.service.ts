@@ -15,14 +15,14 @@ import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
 import { Tag } from '../tag/tag.model'
-import { TagService } from '../tag/tag.service'
+import { createTagNanoId, TagService } from '../tag/tag.service'
 import { tagSelect } from '../tag/tag-select.constant'
 import { Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
 import { UserFolloweesSortBy } from './user-followees.args'
 
-const createNanoId = customAlphabet('0123456789', 8)
+const createUsernameNanoId = customAlphabet('0123456789', 8)
 
 const getUserFolloweesSort = (
   sortBy?: UserFolloweesSortBy,
@@ -212,7 +212,7 @@ export class UserService {
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '')
         .replace(/ /g, '')
-        .replace(/-+/g, '') + createNanoId()
+        .replace(/-+/g, '') + createUsernameNanoId()
 
     return username
   }
@@ -240,7 +240,7 @@ export class UserService {
         tags: {
           create: {
             text: tagText,
-            nanoId: createNanoId(),
+            nanoId: createTagNanoId(),
           },
         },
       },

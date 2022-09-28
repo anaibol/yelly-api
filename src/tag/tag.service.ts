@@ -14,7 +14,7 @@ import { tagSelect } from './tag-select.constant'
 import { TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 
-const createNanoId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 8)
+export const createTagNanoId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 8)
 
 const getTagsSort = (
   sortBy?: TagSortBy,
@@ -132,7 +132,7 @@ export class TagService {
 
     const tag = await this.prismaService.tag.create({
       data: {
-        nanoId: createNanoId(),
+        nanoId: createTagNanoId(),
         text: tagText,
         type: tagType,
         isPublic,
