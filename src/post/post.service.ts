@@ -133,6 +133,7 @@ export class PostService {
   ): Promise<PaginatedPosts> {
     const posts = await this.prismaService.post.findMany({
       where: {
+        parentId: null,
         author: {
           isBanned: false,
           blockedUsers: {
@@ -183,6 +184,7 @@ export class PostService {
   ): Promise<PaginatedPosts> {
     const posts = await this.prismaService.post.findMany({
       where: {
+        parentId: null,
         author: {
           isBanned: false,
         },
