@@ -240,6 +240,7 @@ export class UserService {
         tags: {
           create: {
             text: tagText,
+            nanoId: createNanoId(),
           },
         },
       },
