@@ -127,7 +127,8 @@ export class TagService {
   }
 
   async create(tagText: string, authUser: AuthUser, tagType?: TagType, isPublic = false): Promise<Tag> {
-    const expiresAt = new Date(new Date(Date.now()).getTime() + 60 * 60 * 24 * 1000)
+    // const expiresAt = new Date(new Date(Date.now()).getTime() + 60 * 60 * 24 * 1000)
+    const expiresAt = null
 
     const tag = await this.prismaService.tag.create({
       data: {
@@ -226,9 +227,16 @@ export class TagService {
       ...(shouldIncludeExpired
         ? null
         : {
-            expiresAt: {
-              gt: new Date(Date.now()),
-            },
+            OR: [
+              {
+                expiresAt: {
+                  gt: new Date(Date.now()),
+                },
+              },
+              {
+                expiresAt: null,
+              },
+            ],
           }),
       ...(!showHidden && {
         isHidden: false,

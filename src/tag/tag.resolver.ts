@@ -157,7 +157,7 @@ export class TagResolver {
   @UseGuards(AuthGuard)
   @ResolveField()
   isReadOnly(@Parent() tag: Tag): boolean {
-    if (!tag?.createdAt || !tag.expiresAt) return true
+    if (!tag?.createdAt || !tag.expiresAt) return false
 
     return new Date(Date.now()).getTime() > tag.expiresAt.getTime()
   }
