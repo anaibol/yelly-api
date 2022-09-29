@@ -87,7 +87,7 @@ export class PushNotificationService {
           ...(lang && { lang }),
           args: { otherUserDisplayName: tag.author?.displayName, tagText: tag.text },
         }),
-        data: { url: `${process.env.APP_BASE_URL}/${tag.nanoId}` },
+        data: { url: `${process.env.APP_BASE_URL}/topics/${tag.nanoId}` },
         sound: 'default' as const,
       }
     })

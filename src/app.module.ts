@@ -51,6 +51,7 @@ registerEnumType(SortDirection, {
             ]
           : []),
       ],
+      cors: process.env.NODE_ENV !== 'production' ? { origin: '*', credentials: true } : false,
       debug: process.env.NODE_ENV !== 'production',
       // formatError: (error: GraphQLError) => {
       //   const graphQLFormattedError: GraphQLFormattedError = {
