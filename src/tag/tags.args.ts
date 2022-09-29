@@ -30,3 +30,10 @@ export class TagsArgs extends CursorPaginationArgs {
 export class TagsByScoreArgs extends OffsetPaginationArgs {
   isForYou: boolean = false
 }
+
+@ArgsType()
+export class TagMembersArgs extends OffsetPaginationArgs {
+  @Field(() => BigInt)
+  tagId: bigint
+  displayNameStartsWith?: string
+}

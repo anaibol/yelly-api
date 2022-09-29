@@ -7,13 +7,14 @@ import { AuthUser } from '../auth/auth.service'
 import { BodyguardService } from '../core/bodyguard.service'
 import { PrismaService } from '../core/prisma.service'
 import { PushNotificationService } from '../core/push-notification.service'
+import { PaginatedUsers } from '../post/paginated-users.model'
 import { User } from '../user/user.model'
 import { Tag } from './tag.model'
 import { tagSelect } from './tag-select.constant'
 import { TagSortBy } from './tags.args'
 import { UpdateTagInput } from './update-tag.input'
 
-const createNanoId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 8)
+export const createTagNanoId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 8)
 
 const getTagsSort = (
   sortBy?: TagSortBy,
@@ -56,12 +57,12 @@ export class TagService {
     private pushNotificationService: PushNotificationService,
     private bodyguardService: BodyguardService
   ) {}
-  async getTag(tagId: bigint, authUser: AuthUser): Promise<Tag> {
+  async getTag(tagId: bigint): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         id: tagId,
       },
-      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: false },
+      select: tagSelect,
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -71,12 +72,12 @@ export class TagService {
     return { ...tag, postCount: _count.posts, membersCount: _count.members }
   }
 
-  async getTagByNanoId(nanoId: string, authUser: AuthUser): Promise<Tag> {
+  async getTagByNanoId(nanoId: string): Promise<Tag> {
     const result = await this.prismaService.tag.findUnique({
       where: {
         nanoId,
       },
-      select: authUser.isAdmin ? tagSelect : { ...tagSelect, scoreFactor: false },
+      select: tagSelect,
     })
 
     if (!result) return Promise.reject(new Error('No tag'))
@@ -86,29 +87,74 @@ export class TagService {
     return { ...tag, postCount: _count.posts, membersCount: _count.members }
   }
 
+  async getMembers(
+    tagId: bigint,
+    skip: number,
+    limit: number,
+    displayNameStartsWith?: string
+  ): Promise<PaginatedUsers> {
+    const where: Prisma.UserWhereInput = {
+      tags: {
+        some: {
+          id: tagId,
+        },
+      },
+      ...(displayNameStartsWith && {
+        displayName: {
+          startsWith: displayNameStartsWith,
+          mode: 'insensitive',
+        },
+      }),
+    }
+
+    const [totalCount, items] = await Promise.all([
+      this.prismaService.user.count({
+        where,
+      }),
+      this.prismaService.user.findMany({
+        take: limit,
+        skip,
+        where,
+        orderBy: {
+          displayName: 'asc',
+        },
+      }),
+    ])
+
+    const nextSkip = skip + limit
+
+    return { items, nextSkip: totalCount > nextSkip ? nextSkip : null }
+  }
+
   async create(tagText: string, authUser: AuthUser, tagType?: TagType, isPublic = false): Promise<Tag> {
-    const expiresAt = new Date(new Date(Date.now()).getTime() + 60 * 60 * 24 * 1000)
+    // const expiresAt = new Date(new Date(Date.now()).getTime() + 60 * 60 * 24 * 1000)
+    const expiresAt = null
 
     const tag = await this.prismaService.tag.create({
       data: {
-        nanoId: createNanoId(),
+        nanoId: createTagNanoId(),
         text: tagText,
         type: tagType,
         isPublic,
         authorId: authUser.id,
         expiresAt,
+        members: {
+          connect: {
+            id: authUser.id,
+          },
+        },
       },
     })
 
     this.bodyguardService.analyseTopic(tag, authUser)
 
-    if (isPublic) this.pushNotificationService.followeeCreatedTag(tag.id)
+    //if (isPublic) this.pushNotificationService.followeeCreatedTag(tag.id)
 
     return tag
   }
 
   async joinTag(nanoId: string, authUser: AuthUser): Promise<Tag> {
-    return this.prismaService.tag.update({
+    const tag = await this.prismaService.tag.update({
       select: tagSelect,
       where: {
         nanoId,
@@ -121,6 +167,12 @@ export class TagService {
         },
       },
     })
+
+    return {
+      ...tag,
+      postCount: tag._count.posts,
+      membersCount: tag._count.members,
+    }
   }
 
   async unJoinTag(nanoId: string, authUser: AuthUser): Promise<Tag> {
@@ -175,9 +227,16 @@ export class TagService {
       ...(shouldIncludeExpired
         ? null
         : {
-            expiresAt: {
-              gt: new Date(Date.now()),
-            },
+            OR: [
+              {
+                expiresAt: {
+                  gt: new Date(Date.now()),
+                },
+              },
+              {
+                expiresAt: null,
+              },
+            ],
           }),
       ...(!showHidden && {
         isHidden: false,
@@ -196,20 +255,10 @@ export class TagService {
         },
       },
       ...(isForYou && {
-        author: {
-          id: {
-            not: authUser.id,
-          },
-        },
         OR: [
           {
-            isPublic: true,
             author: {
-              followers: {
-                some: {
-                  userId: authUser.id,
-                },
-              },
+              id: authUser.id,
             },
           },
           {

@@ -3,33 +3,26 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { NotificationType, Prisma } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
+import { customAlphabet } from 'nanoid'
 import { AuthUser } from 'src/auth/auth.service'
 import { PushNotificationService } from 'src/core/push-notification.service'
 import { PaginatedUsers } from 'src/post/paginated-users.model'
 import { PostService } from 'src/post/post.service'
-import { Payload, RequestBuilder } from 'yoti'
 
 import { algoliaUserSelect, mapAlgoliaUser } from '../../src/utils/algolia'
 import { SortDirection } from '../app.module'
 import { AlgoliaService } from '../core/algolia.service'
 import { EmailService } from '../core/email.service'
 import { PrismaService } from '../core/prisma.service'
-import { TagService } from '../tag/tag.service'
-import { deleteObject, getObject } from '../utils/aws'
-import { AgePredictionResult, AgeVerificationResult, Me } from './me.model'
+import { Tag } from '../tag/tag.model'
+import { createTagNanoId, TagService } from '../tag/tag.service'
+import { tagSelect } from '../tag/tag-select.constant'
+import { Me } from './me.model'
 import { UpdateUserInput } from './update-user.input'
 import { User } from './user.model'
 import { UserFolloweesSortBy } from './user-followees.args'
 
-type YotiResponse = {
-  antispoofing: {
-    prediction: AgePredictionResult
-  }
-  age: {
-    st_dev: number
-    age: number
-  }
-}
+const createUsernameNanoId = customAlphabet('0123456789', 8)
 
 const getUserFolloweesSort = (
   sortBy?: UserFolloweesSortBy,
@@ -48,41 +41,6 @@ const getUserFolloweesSort = (
         createdAt: sortDirection,
       }
   }
-}
-
-const checkAge = async (
-  pictureId: string
-): Promise<{
-  isAgeApproved: boolean
-  ageEstimation: number
-  agePredictionResult: string
-}> => {
-  const img = await getObject(pictureId)
-
-  const data = {
-    img,
-  }
-
-  const request = new RequestBuilder()
-    .withBaseUrl('https://api.yoti.com/ai/v1')
-    .withPemFilePath(process.env.YOTI_KEY_FILE_PATH)
-    .withEndpoint('/age-antispoofing')
-    .withPayload(new Payload(data))
-    .withMethod('POST')
-    .withHeader('X-Yoti-Auth-Id', process.env.YOTI_CLIEND_SDK_ID)
-    .build()
-
-  const response = await request.execute()
-
-  const result: YotiResponse = JSON.parse(response.body)
-
-  const isAgeApproved = result.antispoofing.prediction === 'real' && result.age.age >= 13 && result.age.age <= 25
-
-  return Promise.resolve({
-    isAgeApproved,
-    ageEstimation: Math.floor(result.age.age),
-    agePredictionResult: result.antispoofing.prediction,
-  })
 }
 
 @Injectable()
@@ -156,7 +114,6 @@ export class UserService {
         snapchat: true,
         tiktok: true,
         isBanned: true,
-        isAgeApproved: true,
         school: {
           select: {
             id: true,
@@ -247,6 +204,80 @@ export class UserService {
     return {
       items,
     }
+  }
+
+  generateUsername(displayName: string): string {
+    const username =
+      displayName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .replace(/ /g, '')
+        .replace(/-+/g, '') + createUsernameNanoId()
+
+    return username
+  }
+
+  async signUpAndCreateTag({
+    userDisplayName,
+    tagText,
+  }: {
+    userDisplayName: string
+    tagText: string
+  }): Promise<{ user: User; tag: Tag }> {
+    // TODO: check displayName min max length
+    const newUser = await this.prismaService.user.create({
+      include: {
+        tags: {
+          select: tagSelect,
+        },
+      },
+      data: {
+        displayName: userDisplayName,
+        // TODO: Which default countryId?
+        // Workaround: use FR
+        countryId: 'e4eee8e7-2770-4fb0-97bb-4839b06ff37b',
+        username: this.generateUsername(userDisplayName),
+        tags: {
+          create: {
+            text: tagText,
+            nanoId: createTagNanoId(),
+          },
+        },
+      },
+    })
+
+    return { user: newUser, tag: newUser.tags[0] }
+  }
+
+  async signUpAndJoinTag({
+    userDisplayName,
+    tagNanoId,
+  }: {
+    userDisplayName: string
+    tagNanoId: string
+  }): Promise<{ user: User; tag: Tag }> {
+    // TODO: check displayName min max length
+    const newUser = await this.prismaService.user.create({
+      include: {
+        tags: {
+          select: tagSelect,
+        },
+      },
+      data: {
+        displayName: userDisplayName,
+        // TODO: Which default countryId?
+        // Workaround: use FR
+        countryId: 'e4eee8e7-2770-4fb0-97bb-4839b06ff37b',
+        username: this.generateUsername(userDisplayName),
+        tags: {
+          connect: {
+            nanoId: tagNanoId,
+          },
+        },
+      },
+    })
+
+    return { user: newUser, tag: newUser.tags[0] }
   }
 
   // async getCommonFriendsCountMultiUser(authUser: AuthUser, otherUserIds: string[]) {
@@ -466,7 +497,6 @@ export class UserService {
     sortBy?: UserFolloweesSortBy,
     sortDirection?: SortDirection
   ): Promise<PaginatedUsers> {
-    console.log({ sortBy })
     const where: Prisma.FollowerWhereInput = {
       userId,
       ...(displayNameStartsWith && {
@@ -498,8 +528,6 @@ export class UserService {
         orderBy: getUserFolloweesSort(sortBy, sortDirection),
       }),
     ])
-
-    console.log({ ad: getUserFolloweesSort(sortBy, sortDirection) })
 
     const items = follows.map(({ followee }) => followee)
 
@@ -565,7 +593,7 @@ export class UserService {
         pictureId: true,
         about: true,
         isFilled: true,
-        isAgeApproved: true,
+        isVerified: true,
         expoPushNotificationTokens: true,
         instagram: true,
         snapchat: true,
@@ -687,7 +715,6 @@ export class UserService {
 
       return true
     } catch (e) {
-      console.log(e)
       return Promise.reject(new Error('not found'))
     }
   }
@@ -698,12 +725,6 @@ export class UserService {
     const algoliaUserIndex = this.algoliaService.initIndex('USERS')
 
     this.algoliaService.deleteObject(algoliaUserIndex, userId)
-
-    return true
-  }
-
-  async approveAge(authUser: AuthUser, userId: string): Promise<boolean> {
-    await this.prismaService.user.update({ where: { id: userId }, data: { isAgeApproved: true } })
 
     return true
   }
@@ -880,6 +901,7 @@ export class UserService {
       data: {
         phoneNumber,
         locale,
+        isVerified: true,
       },
     })
 
@@ -899,7 +921,6 @@ export class UserService {
         createdAt: true,
         role: true,
         isFilled: true,
-        isAgeApproved: true,
         email: true,
         displayName: true,
         username: true,
@@ -943,7 +964,6 @@ export class UserService {
       // eslint-disable-next-line functional/no-try-statement
       try {
       } catch (error) {
-        console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
 
@@ -951,7 +971,6 @@ export class UserService {
       try {
         this.syncUsersIndexWithAlgolia(userId)
       } catch (error) {
-        console.log({ error })
         // CATCH ERROR SO IT CONTINUES
       }
     } else if (updatedUser.isFilled) {
@@ -968,35 +987,6 @@ export class UserService {
     }
 
     return updatedUser
-  }
-
-  async updateAgeVerification(authUser: AuthUser, facePictureId: string): Promise<AgeVerificationResult> {
-    const { isAgeApproved, ageEstimation, agePredictionResult } = await checkAge(facePictureId)
-
-    deleteObject(facePictureId)
-
-    await this.prismaService.user.update({
-      where: {
-        id: authUser.id,
-      },
-      data: {
-        isAgeApproved,
-        ageEstimation,
-        agePredictionResult,
-      },
-    })
-
-    if (authUser.isAdmin) {
-      return {
-        isAgeApproved,
-        ageEstimation,
-        agePredictionResult,
-      }
-    } else {
-      return {
-        isAgeApproved,
-      }
-    }
   }
 
   async getIsUsernameAvailable(username: string): Promise<boolean> {

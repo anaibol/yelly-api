@@ -19,7 +19,6 @@ export class User {
   hasBlockedAuthUser?: boolean
   isBlockedByAuthUser?: boolean
   isBanned?: boolean | null
-  isAgeApproved?: boolean | null
   followersCount?: number
   followeesCount?: number
   postCount?: number

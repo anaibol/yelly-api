@@ -111,7 +111,7 @@ export class PushNotificationService {
         parent: {
           select: {
             id: true,
-            tags: {
+            tag: {
               select: {
                 id: true,
                 text: true,
@@ -134,16 +134,15 @@ export class PushNotificationService {
 
     const message = {
       to: expoPushNotificationTokens.map(({ token }) => token),
-      body:
-        postReply.parent.tags.length > 0
-          ? await this.i18n.translate('notifications.repliedToYourPost', {
-              ...(lang && { lang }),
-              args: { otherUserDisplayName: postReply.author.displayName, tagText: postReply.parent.tags[0].text },
-            })
-          : await this.i18n.translate('notifications.repliedToYourPostNoTag', {
-              ...(lang && { lang }),
-              args: { otherUserDisplayName: postReply.author.displayName },
-            }),
+      body: postReply.parent.tag
+        ? await this.i18n.translate('notifications.repliedToYourPost', {
+            ...(lang && { lang }),
+            args: { otherUserDisplayName: postReply.author.displayName, tagText: postReply.parent.tag.text },
+          })
+        : await this.i18n.translate('notifications.repliedToYourPostNoTag', {
+            ...(lang && { lang }),
+            args: { otherUserDisplayName: postReply.author.displayName },
+          }),
       data: { url: `${process.env.APP_BASE_URL}/posts/${postReply.parent.id}` },
       sound: 'default' as const,
     }
@@ -178,10 +177,10 @@ export class PushNotificationService {
       return {
         to: user.expoPushNotificationTokens.map(({ token }) => token),
         body:
-          postReply.parent && postReply.parent.tags.length > 0
+          postReply.parent && postReply.parent.tag
             ? await this.i18n.translate('notifications.repliedToSamePostAsYou', {
                 ...(lang && { lang }),
-                args: { otherUserDisplayName: postReply.author.displayName, tagText: postReply.parent?.tags[0].text },
+                args: { otherUserDisplayName: postReply.author.displayName, tagText: postReply.parent?.tag.text },
               })
             : await this.i18n.translate('notifications.repliedToSamePostAsYouNoTag', {
                 ...(lang && { lang }),
@@ -201,31 +200,51 @@ export class PushNotificationService {
     )
   }
 
-  async thereAreNewPostsOnYourTag(tagAuthorId: string, tagId: bigint, newPostCount: number) {
-    const user = await this.prismaService.user.findUnique({
-      where: { id: tagAuthorId },
+  async thereAreNewPostsOnTag(tagId: bigint, newPostCount: number) {
+    const tag = await this.prismaService.tag.findUnique({
+      where: { id: tagId },
+      select: {
+        text: true,
+        nanoId: true,
+      },
+    })
+
+    if (!tag) return Promise.reject(new Error('Tag  not found'))
+
+    const tagMembers = await this.prismaService.user.findMany({
+      where: {
+        tags: {
+          some: {
+            id: tagId,
+          },
+        },
+      },
       select: UserPushTokenSelect,
     })
 
-    if (!user) return Promise.reject(new Error('No user'))
+    if (!tagMembers.length) return Promise.reject(new Error('No user'))
 
-    const { locale: lang, expoPushNotificationTokens } = user
+    const url = `${process.env.APP_BASE_URL}/${tag.nanoId}`
 
-    const url = `${process.env.APP_BASE_URL}/mytopics/${tagId}`
+    const notifications = await Promise.all(
+      tagMembers.map(async (user) => {
+        const { locale: lang, expoPushNotificationTokens } = user
 
-    const message = {
-      to: expoPushNotificationTokens.map(({ token }) => token),
-      body: await this.i18n.translate('notifications.thereAreNewPostsOnYourTag', {
-        ...(lang && { lang }),
-        args: { newPostCount },
-      }),
-      sound: 'default' as const,
-      data: { url },
-    }
+        return {
+          to: expoPushNotificationTokens.map(({ token }) => token),
+          body: await this.i18n.translate('notifications.thereAreNewPostsOnTag', {
+            ...(lang && { lang }),
+            args: { newPostCount, tagText: tag?.text },
+          }),
+          data: { url },
+          sound: 'default' as const,
+        }
+      })
+    )
 
     await this.sendNotifications(
-      [message],
-      expoPushNotificationTokens,
+      notifications,
+      tagMembers.map((user) => user.expoPushNotificationTokens).flat(),
       'PUSH_NOTIFICATION_THERE_ARE_NEW_POSTS_ON_YOUR_TAG'
     )
 
@@ -295,7 +314,7 @@ export class PushNotificationService {
         post: {
           select: {
             id: true,
-            tags: {
+            tag: {
               select: {
                 id: true,
                 text: true,
@@ -319,16 +338,15 @@ export class PushNotificationService {
     const lang = postReaction.post.author.locale
 
     const message = {
-      body:
-        postReaction.post.tags.length > 0
-          ? await this.i18n.translate('notifications.reactedToYourPost', {
-              args: { otherUserDisplayName: postReaction.author.displayName, tagText: postReaction.post.tags[0].text },
-              ...(lang && { lang }),
-            })
-          : await this.i18n.translate('notifications.reactedToYourPostNoTag', {
-              args: { otherUserDisplayName: postReaction.author.displayName },
-              ...(lang && { lang }),
-            }),
+      body: postReaction.post.tag
+        ? await this.i18n.translate('notifications.reactedToYourPost', {
+            args: { otherUserDisplayName: postReaction.author.displayName, tagText: postReaction.post.tag.text },
+            ...(lang && { lang }),
+          })
+        : await this.i18n.translate('notifications.reactedToYourPostNoTag', {
+            args: { otherUserDisplayName: postReaction.author.displayName },
+            ...(lang && { lang }),
+          }),
     }
 
     const messages = pushTokens.map((expoPushNotificationToken) => {
@@ -353,7 +371,7 @@ export class PushNotificationService {
             },
           },
         },
-        tags: {
+        tag: {
           select: {
             id: true,
             text: true,
@@ -376,16 +394,15 @@ export class PushNotificationService {
 
         return {
           to: expoPushNotificationTokens.map(({ token }) => token),
-          body:
-            post.tags.length > 0
-              ? await this.i18n.translate('notifications.youHaveBeenMentioned', {
-                  ...(lang && { lang }),
-                  args: { otherUserDisplayName: author.displayName, tagText: post.tags[0].text },
-                })
-              : await this.i18n.translate('notifications.youHaveBeenMentionedNoTag', {
-                  ...(lang && { lang }),
-                  args: { otherUserDisplayName: author.displayName },
-                }),
+          body: post.tag
+            ? await this.i18n.translate('notifications.youHaveBeenMentioned', {
+                ...(lang && { lang }),
+                args: { otherUserDisplayName: author.displayName, tagText: post.tag.text },
+              })
+            : await this.i18n.translate('notifications.youHaveBeenMentionedNoTag', {
+                ...(lang && { lang }),
+                args: { otherUserDisplayName: author.displayName },
+              }),
           data: { userId, url },
           sound: 'default' as const,
         }

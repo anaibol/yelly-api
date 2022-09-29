@@ -8,10 +8,11 @@ type AccessToken {
   refreshToken: String!
 }
 
-type AgeVerificationResult {
-  ageEstimation: Int
-  agePredictionResult: String
-  isAgeApproved: Boolean
+type AccessTokenWithTag {
+  accessToken: String!
+  isNewUser: Boolean
+  refreshToken: String!
+  tag: Tag!
 }
 
 """BigInt scalar type"""
@@ -32,7 +33,7 @@ input CreatePostInput {
   mentionedUserIds: [String!]
   parentId: BigInt
   pollOptions: [String!]
-  tagIds: [BigInt!]
+  tagId: BigInt!
   text: String!
 }
 
@@ -86,8 +87,8 @@ type Me {
   followersCount: Int
   id: ID!
   instagram: String
-  isAgeApproved: Boolean
   isFilled: Boolean
+  isVerified: Boolean
   locale: String
   phoneNumber: String
   pictureId: String
@@ -103,7 +104,6 @@ type Me {
 
 type Mutation {
   addExpoPushNotificationsToken(input: String!): Boolean!
-  approveUserAge(userId: String!): Boolean!
   banUser(userId: String!): Boolean!
   blockUser(otherUserId: String!): Boolean!
   checkPhoneNumberVerificationCode(input: CheckPhoneNumberVerificationCodeInput!): AccessToken!
@@ -127,6 +127,8 @@ type Mutation {
   refreshAccessToken(refreshToken: String!): AccessToken!
   reportUser(otherUserId: String!): Boolean!
   resetPassword(input: ResetPasswordInput!): AccessToken!
+  signUpAndCreateTag(input: SignUpAndCreateTagInput!): AccessTokenWithTag!
+  signUpAndJoinTag(input: SignUpAndJoinTagInput!): AccessTokenWithTag!
   trackPostViews(postIds: [BigInt!]!): Boolean!
   trackTagShare(tagId: BigInt!): Boolean!
   trackTagViews(tagIds: [BigInt!]!): Boolean!
@@ -134,7 +136,6 @@ type Mutation {
   unBlockUser(otherUserId: String!): Boolean!
   unFollow(otherUserId: String!): Boolean!
   unJoinTag(tagNanoId: String!): Tag!
-  updateAgeVerification(facePictureId: String!): AgeVerificationResult!
   updateMe(input: UpdateUserInput!): Me!
   updateTag(input: UpdateTagInput!, tagId: BigInt!): Tag!
   updateUser(input: UpdateUserInput!, userId: String!): User!
@@ -206,7 +207,7 @@ type Post {
   reactions: [PostReaction!]
   reactionsCount: Int
   score: Int
-  tags: [Tag!]
+  tag: Tag
   text: String
   viewsCount: Int
   wordsCount: Int
@@ -250,9 +251,11 @@ type Query {
   me: Me!
   notifications(limit: Int = 10, skip: Int = 0): PaginatedNotifications!
   post(after: BigInt, childrenSortBy: PostsSortBy = createdAt, childrenSortDirection: SortDirection = desc, limit: Int = 10, postId: BigInt!): Post!
-  posts(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt): PaginatedPosts!
+  posts(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt, tagNanoId: String): PaginatedPosts!
+  postsByTagNanoId(after: BigInt, authorId: String, limit: Int = 10, sortBy: PostsSortBy = reactionsCount, sortDirection: SortDirection = desc, tagId: BigInt, tagNanoId: String): PaginatedPosts!
   tag(tagId: BigInt!): Tag!
   tagByNanoId(tagNanoId: String!): Tag!
+  tagMembers(displayNameStartsWith: String, limit: Int = 10, skip: Int = 0, tagId: BigInt!): PaginatedUsers!
   tags(after: BigInt, authorId: String, isForYou: Boolean = false, limit: Int = 10, shouldIncludeExpired: Boolean = false, showHidden: Boolean = false, sortBy: TagSortBy = createdAt, sortDirection: SortDirection = desc): PaginatedTags!
   tagsByScore(isForYou: Boolean = false, limit: Int = 10, skip: Int = 0): PaginatedTagsByScore!
   unreadNotificationsCount: Int!
@@ -266,6 +269,16 @@ type Query {
 input ResetPasswordInput {
   password: String!
   resetToken: String!
+}
+
+input SignUpAndCreateTagInput {
+  tagText: String!
+  userDisplayName: String!
+}
+
+input SignUpAndJoinTagInput {
+  tagNanoId: String!
+  userDisplayName: String!
 }
 
 enum SortDirection {
@@ -344,7 +357,6 @@ type User {
   hasBlockedAuthUser: Boolean
   id: ID!
   instagram: String
-  isAgeApproved: Boolean
   isBanned: Boolean
   isBlockedByAuthUser: Boolean
   isFollowedByAuthUser: Boolean

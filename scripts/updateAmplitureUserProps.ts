@@ -47,7 +47,6 @@ async function main() {
       POST_CREATED_COUNT: user._count.posts,
       POSTS_REACTIONS_GIVEN_COUNT: user._count.postReactions,
       DATE_OF_SIGNUP: formatDateToISO8601(user.createdAt),
-      AGE_VERIFIED_WITH_YOTI: !!user.isAgeApproved,
     })
 
     const identifyObj = new Identify()
@@ -57,7 +56,6 @@ async function main() {
     identifyObj.set('POST_CREATED_COUNT', user._count.posts)
     identifyObj.set('POSTS_REACTIONS_GIVEN_COUNT', user._count.postReactions)
     identifyObj.set('DATE_OF_SIGNUP', formatDateToISO8601(user.createdAt))
-    identifyObj.set('AGE_VERIFIED_WITH_YOTI', !!user.isAgeApproved)
 
     // TODO: uncomment to apply the changes
     // identify(identifyObj, {

@@ -16,6 +16,7 @@ registerEnumType(PostsSortBy, {
 @ArgsType()
 export class PostsArgs extends CursorPaginationArgs {
   authorId?: string
+  tagNanoId?: string
   @Field(() => BigInt)
   tagId?: bigint
   @Field(() => PostsSortBy)

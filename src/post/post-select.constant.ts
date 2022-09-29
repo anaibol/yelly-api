@@ -33,7 +33,7 @@ export const PostSelect = {
       pictureId: true,
     },
   },
-  tags: {
+  tag: {
     select: {
       id: true,
       createdAt: true,

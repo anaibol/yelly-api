@@ -7,14 +7,15 @@ import { AuthGuard } from '../auth/auth-guard'
 import { CurrentUser } from '../auth/user.decorator'
 import { OffsetPaginationArgs } from '../common/offset-pagination.args'
 import { PaginatedUsers } from '../post/paginated-users.model'
-import { AccessToken } from './accessToken.model'
+import { AccessToken, AccessTokenWithTag } from './accessToken.model'
 import { CheckPhoneNumberVerificationCodeInput } from './CheckPhoneNumberVerificationCode.input'
 import { EmailSignInInput } from './email-sign-in.input'
 import { ExpoPushNotificationsTokenService } from './expoPushNotificationsToken.service'
 import { ForgotPasswordInput } from './forgot-password.input'
 import { InitPhoneNumberVerificationInput } from './init-phone-number-verification.input'
-import { AgeVerificationResult, Me } from './me.model'
+import { Me } from './me.model'
 import { ResetPasswordInput } from './reset-password.input'
+import { SignUpAndCreateTagInput, SignUpAndJoinTagInput } from './sign-up.input'
 import { UpdateUserInput } from './update-user.input'
 import { UserService } from './user.service'
 
@@ -85,6 +86,36 @@ export class MeResolver {
     return { accessToken, refreshToken, isNewUser }
   }
 
+  @Mutation(() => AccessTokenWithTag)
+  async signUpAndCreateTag(
+    @Args('input') signUpAndCreateTagInput: SignUpAndCreateTagInput
+  ): Promise<AccessTokenWithTag> {
+    const { userDisplayName, tagText } = signUpAndCreateTagInput
+
+    const { user, tag } = await this.userService.signUpAndCreateTag({ userDisplayName, tagText })
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.authService.getAccessToken(user.id),
+      this.authService.getRefreshToken(user.id),
+    ])
+
+    return { accessToken, refreshToken, tag }
+  }
+
+  @Mutation(() => AccessTokenWithTag)
+  async signUpAndJoinTag(@Args('input') signUpAndJoinTagInput: SignUpAndJoinTagInput): Promise<AccessTokenWithTag> {
+    const { userDisplayName, tagNanoId } = signUpAndJoinTagInput
+
+    const { user, tag } = await this.userService.signUpAndJoinTag({ userDisplayName, tagNanoId })
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.authService.getAccessToken(user.id),
+      this.authService.getRefreshToken(user.id),
+    ])
+
+    return { accessToken, refreshToken, tag }
+  }
+
   @UseGuards(AuthGuard)
   @Query(() => Me)
   async me(@CurrentUser() authUser: AuthUser): Promise<Me> {
@@ -144,15 +175,6 @@ export class MeResolver {
   @Mutation(() => Me)
   updateMe(@Args('input') updateUserInput: UpdateUserInput, @CurrentUser() authUser: AuthUser): Promise<Me> {
     return this.userService.update(authUser.id, updateUserInput)
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => AgeVerificationResult)
-  updateAgeVerification(
-    @Args('facePictureId') facePictureId: string,
-    @CurrentUser() authUser: AuthUser
-  ): Promise<AgeVerificationResult> {
-    return this.userService.updateAgeVerification(authUser, facePictureId)
   }
 
   @UseGuards(AuthGuard)

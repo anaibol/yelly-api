@@ -22,6 +22,7 @@ export class Me {
   snapchat?: string | null
   tiktok?: string | null
   isFilled?: boolean
+  isVerified?: boolean
   expoPushNotificationTokens?: string[]
   about?: string | null
   locale?: string
@@ -31,15 +32,5 @@ export class Me {
   postCount?: number
   tagCount?: number
   viewsCount?: number
-  isAgeApproved?: null | boolean
   tagViewsCount?: number
 }
-
-@ObjectType()
-export class AgeVerificationResult {
-  isAgeApproved?: null | boolean
-  ageEstimation?: number
-  agePredictionResult?: null | string
-}
-
-export type AgePredictionResult = 'real' | 'fake' | 'undetermined'
