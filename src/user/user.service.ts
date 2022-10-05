@@ -586,6 +586,7 @@ export class UserService {
       select: {
         id: true,
         createdAt: true,
+        lastLoginAt: true,
         role: true,
         email: true,
         displayName: true,
@@ -919,6 +920,7 @@ export class UserService {
       select: {
         id: true,
         createdAt: true,
+        lastLoginAt: true,
         role: true,
         isFilled: true,
         email: true,
@@ -932,6 +934,7 @@ export class UserService {
         countryId: true,
       },
       data: {
+        lastLoginAt: data.lastLoginAt,
         displayName: data.displayName,
         username: data.username,
         email: data.email,

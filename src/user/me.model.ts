@@ -12,6 +12,7 @@ export class Me {
   @Field(() => UserRole)
   role: UserRole
   createdAt?: Date | null
+  lastLoginAt?: Date | null
   email?: string | null
   phoneNumber?: string | null
   displayName?: string | null

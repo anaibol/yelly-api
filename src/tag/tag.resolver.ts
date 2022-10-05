@@ -24,6 +24,12 @@ export class TagResolver {
     return this.tagService.getTag(tagId)
   }
 
+  @UseGuards(AuthGuard)
+  @ResolveField()
+  postCountSince(@Parent() tag: Tag, @Args('date') date: Date, @CurrentUser() authUser: AuthUser): Promise<number> {
+    return this.tagService.getTagPostCountSince({ tagId: tag.id, authUser, date })
+  }
+
   @Query(() => Tag)
   tagByNanoId(@Args('tagNanoId') nanoId: string): Promise<Tag> {
     return this.tagService.getTagByNanoId(nanoId)

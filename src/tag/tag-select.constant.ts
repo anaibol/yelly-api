@@ -25,24 +25,6 @@ export const tagSelect = {
       displayName: true,
       username: true,
       pictureId: true,
-      training: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      school: {
-        select: {
-          id: true,
-          name: true,
-          city: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
     },
   },
 }

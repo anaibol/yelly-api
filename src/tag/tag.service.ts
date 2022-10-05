@@ -399,4 +399,22 @@ export class TagService {
     if (!viewsCount || viewsCount === 0 || !interactionsCount || interactionsCount === 0) return 0
     return (interactionsCount / viewsCount) * (scoreFactor ?? 1)
   }
+
+  async getTagPostCountSince({ tagId, authUser, date }: { tagId: bigint; authUser: User | AuthUser; date: Date }) {
+    const result = await this.prismaService.post.count({
+      where: {
+        tagId,
+        authorId: {
+          not: authUser.id,
+        },
+        ...(authUser?.lastLoginAt && {
+          createdAt: {
+            gt: date,
+          },
+        }),
+      },
+    })
+
+    return result
+  }
 }

@@ -21,6 +21,7 @@ export class Tag {
   isHidden?: boolean
   posts?: PaginatedPosts
   postCount?: number
+  postCountSince?: number
   viewsCount?: number
   interactionsCount?: number
   author?: User | null

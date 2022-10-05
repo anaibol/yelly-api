@@ -15,4 +15,5 @@ export class UpdateUserInput {
   countryCode?: string
   about?: string
   isFilled?: boolean
+  lastLoginAt?: Date
 }

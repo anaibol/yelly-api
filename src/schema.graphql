@@ -89,6 +89,7 @@ type Me {
   instagram: String
   isFilled: Boolean
   isVerified: Boolean
+  lastLoginAt: DateTime
   locale: String
   phoneNumber: String
   pictureId: String
@@ -298,6 +299,7 @@ type Tag {
   membersCount: Int
   nanoId: String
   postCount: Int
+  postCountSince(date: DateTime!): Int
   posts: PaginatedPosts
   score: Float
   scoreFactor: Float
@@ -332,6 +334,7 @@ input UpdateUserInput {
   email: String
   instagram: String
   isFilled: Boolean
+  lastLoginAt: DateTime
   password: String
   pictureId: String
   schoolGooglePlaceId: String
@@ -360,6 +363,7 @@ type User {
   isBanned: Boolean
   isBlockedByAuthUser: Boolean
   isFollowedByAuthUser: Boolean
+  lastLoginAt: DateTime
   locale: String
   pictureId: String
   postCount: Int

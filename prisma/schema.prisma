@@ -83,6 +83,7 @@ model User {
   resetToken                   String?
   createdAt                    DateTime                          @default(now())
   updatedAt                    DateTime                          @default(now()) @updatedAt
+  lastLoginAt                  DateTime?
   isActive                     Boolean                           @default(true)
   isBanned                     Boolean                           @default(false)
   isFilled                     Boolean                           @default(false)

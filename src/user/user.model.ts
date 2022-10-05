@@ -5,6 +5,7 @@ export class User {
   @Field(() => ID)
   id: string
   createdAt?: Date | null
+  lastLoginAt?: Date | null
   displayName?: string | null
   username?: string | null
   birthdate?: Date | null
